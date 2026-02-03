@@ -4,7 +4,21 @@ export default {
     'scope-enum': [
       2,
       'always',
-      ['cfp', 'planning', 'billing', 'crm', 'api', 'core', 'ui', 'deps', 'config']
+      [
+        'cfp',
+        'planning',
+        'billing',
+        'crm',
+        'api',
+        'core',
+        'ui',
+        'deps',
+        'config',
+        'e2e',
+        'test',
+        'docs',
+        'ci'
+      ]
     ],
     'subject-case': [2, 'always', 'lower-case'],
     'header-max-length': [2, 'always', 100]
