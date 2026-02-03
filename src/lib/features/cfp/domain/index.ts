@@ -8,6 +8,16 @@ export {
 } from './category'
 
 export {
+  commentSchema,
+  createCommentSchema,
+  sortCommentsByDate,
+  filterInternalComments,
+  filterPublicComments,
+  type Comment,
+  type CreateComment
+} from './comment'
+
+export {
   formatSchema,
   createFormatSchema,
   updateFormatSchema,
@@ -48,3 +58,18 @@ export {
   type UpdateTalk,
   type SubmitTalk
 } from './talk'
+
+export {
+  reviewSchema,
+  reviewRatingSchema,
+  createReviewSchema,
+  updateReviewSchema,
+  calculateAverageRating,
+  getRatingLabel,
+  hasUserReviewed,
+  getUserReview,
+  type Review,
+  type ReviewRating,
+  type CreateReview,
+  type UpdateReview
+} from './review'
