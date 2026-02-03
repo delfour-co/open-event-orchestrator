@@ -334,6 +334,24 @@ function urlField(name: string, required = false): Record<string, unknown> {
   }
 }
 
+// Helper function to create autodate field (PocketBase 0.23+)
+function autodateField(
+  name: string,
+  onCreate: boolean,
+  onUpdate: boolean
+): Record<string, unknown> {
+  return {
+    id: name,
+    name,
+    type: 'autodate',
+    required: false,
+    hidden: false,
+    presentable: false,
+    onCreate,
+    onUpdate
+  }
+}
+
 // Collection schemas WITHOUT relation fields (relations are added later)
 const collectionSchemas: Array<{
   name: string
@@ -353,7 +371,13 @@ const collectionSchemas: Array<{
     createRule: '',
     updateRule: '',
     deleteRule: '',
-    fields: [textField('name', true), textField('slug', true), textField('description')]
+    fields: [
+      textField('name', true),
+      textField('slug', true),
+      textField('description'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   },
   {
     name: 'events',
@@ -363,7 +387,13 @@ const collectionSchemas: Array<{
     createRule: '',
     updateRule: '',
     deleteRule: '',
-    fields: [textField('name', true), textField('slug', true), textField('description')]
+    fields: [
+      textField('name', true),
+      textField('slug', true),
+      textField('description'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   },
   {
     name: 'editions',
@@ -382,7 +412,9 @@ const collectionSchemas: Array<{
       textField('venue'),
       textField('city'),
       textField('country'),
-      selectField('status', ['draft', 'published', 'archived'])
+      selectField('status', ['draft', 'published', 'archived']),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
     ]
   },
   {
@@ -397,7 +429,9 @@ const collectionSchemas: Array<{
       textField('name', true),
       textField('description'),
       textField('color'),
-      numberField('order')
+      numberField('order'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
     ]
   },
   {
@@ -412,7 +446,9 @@ const collectionSchemas: Array<{
       textField('name', true),
       textField('description'),
       numberField('duration', true),
-      numberField('order')
+      numberField('order'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
     ]
   },
   {
@@ -435,7 +471,9 @@ const collectionSchemas: Array<{
       textField('github'),
       urlField('linkedin'),
       textField('city'),
-      textField('country')
+      textField('country'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
     ]
   },
   {
@@ -463,7 +501,9 @@ const collectionSchemas: Array<{
         'withdrawn'
       ]),
       dateField('submittedAt'),
-      textField('notes')
+      textField('notes'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
     ]
   },
   {
@@ -474,7 +514,12 @@ const collectionSchemas: Array<{
     createRule: '',
     updateRule: '',
     deleteRule: '',
-    fields: [numberField('rating', true), textField('comment')]
+    fields: [
+      numberField('rating', true),
+      textField('comment'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   },
   {
     name: 'comments',
@@ -484,7 +529,19 @@ const collectionSchemas: Array<{
     createRule: '',
     updateRule: '',
     deleteRule: '',
-    fields: [textField('content', true)]
+    fields: [
+      textField('content', true),
+      {
+        id: 'isInternal',
+        name: 'isInternal',
+        type: 'bool',
+        required: false,
+        hidden: false,
+        presentable: false
+      },
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   },
   {
     name: 'email_logs',
@@ -509,7 +566,9 @@ const collectionSchemas: Array<{
       emailField('to', true),
       textField('subject', true),
       selectField('status', ['sent', 'failed', 'pending'], true),
-      textField('error')
+      textField('error'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
     ]
   }
 ]

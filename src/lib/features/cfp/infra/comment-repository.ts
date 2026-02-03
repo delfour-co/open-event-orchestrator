@@ -1,7 +1,7 @@
 import type PocketBase from 'pocketbase'
 import type { Comment, CreateComment } from '../domain'
 
-const COLLECTION = 'talk_comments'
+const COLLECTION = 'comments'
 
 export const createCommentRepository = (pb: PocketBase) => ({
   async findById(id: string): Promise<Comment | null> {

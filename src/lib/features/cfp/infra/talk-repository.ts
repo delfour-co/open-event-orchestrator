@@ -32,7 +32,7 @@ export const createTalkRepository = (pb: PocketBase) => ({
       .collection(COLLECTION)
       .getList(options?.page ?? 1, options?.perPage ?? 50, {
         filter: `editionId = "${editionId}"`,
-        sort: options?.sort ?? '-createdAt'
+        sort: options?.sort ?? '-created'
       })
     return records.items.map(mapRecordToTalk)
   },
@@ -40,7 +40,7 @@ export const createTalkRepository = (pb: PocketBase) => ({
   async findBySpeaker(speakerId: string): Promise<Talk[]> {
     const records = await pb.collection(COLLECTION).getFullList({
       filter: `speakerIds ~ "${speakerId}"`,
-      sort: '-createdAt'
+      sort: '-created'
     })
     return records.map(mapRecordToTalk)
   },
@@ -75,7 +75,7 @@ export const createTalkRepository = (pb: PocketBase) => ({
       .collection(COLLECTION)
       .getList(options?.page ?? 1, options?.perPage ?? 50, {
         filter,
-        sort: options?.sort ?? '-createdAt'
+        sort: options?.sort ?? '-created'
       })
     return records.items.map(mapRecordToTalk)
   },

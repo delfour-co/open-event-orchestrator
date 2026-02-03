@@ -16,7 +16,7 @@ export const createReviewRepository = (pb: PocketBase) => ({
   async findByTalk(talkId: string): Promise<Review[]> {
     const records = await pb.collection(COLLECTION).getFullList({
       filter: `talkId = "${talkId}"`,
-      sort: '-createdAt'
+      sort: '-created'
     })
     return records.map(mapRecordToReview)
   },
@@ -24,7 +24,7 @@ export const createReviewRepository = (pb: PocketBase) => ({
   async findByUser(userId: string): Promise<Review[]> {
     const records = await pb.collection(COLLECTION).getFullList({
       filter: `userId = "${userId}"`,
-      sort: '-createdAt'
+      sort: '-created'
     })
     return records.map(mapRecordToReview)
   },
