@@ -1,0 +1,63 @@
+{
+  "project": {
+    "name": "Open Event Orchestrator",
+    "description": "All-in-one open-source event management platform"
+  },
+  "agents": {
+    "backend": {
+      "instructions": ".claude/agents/backend.md",
+      "labels": ["type:backend"],
+      "canAssign": [
+        "domain:cfp",
+        "domain:planning",
+        "domain:billing",
+        "domain:crm",
+        "domain:api",
+        "domain:foundations"
+      ]
+    },
+    "frontend": {
+      "instructions": ".claude/agents/frontend.md",
+      "labels": ["type:frontend"],
+      "canAssign": [
+        "domain:cfp",
+        "domain:planning",
+        "domain:billing",
+        "domain:crm",
+        "domain:api",
+        "domain:foundations"
+      ]
+    },
+    "qa": {
+      "instructions": ".claude/agents/qa.md",
+      "labels": ["type:qa"],
+      "canAssign": ["domain:foundations"]
+    },
+    "docs": {
+      "instructions": ".claude/agents/docs.md",
+      "labels": ["type:docs"],
+      "canAssign": ["domain:api"]
+    },
+    "orchestrator": {
+      "instructions": ".claude/agents/orchestrator.md",
+      "isLeader": true
+    }
+  },
+  "workflow": {
+    "branchPrefix": "feature/issue-",
+    "useWorktree": true,
+    "requireTests": true,
+    "coverageThreshold": 80,
+    "requireHumanReview": true
+  },
+  "commit": {
+    "noMentionClaude": true,
+    "conventionalCommits": true,
+    "scopes": ["cfp", "planning", "billing", "crm", "api", "core", "ui"]
+  },
+  "pr": {
+    "noMentionClaude": true,
+    "titleFormat": "[#{issue}] {type}({scope}): {description}",
+    "requireLinkedIssue": true
+  }
+}
