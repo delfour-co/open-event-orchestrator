@@ -17,6 +17,7 @@ export default defineConfig({
         'src/lib/**/*.spec.ts',
         'src/lib/**/index.ts',
         'src/lib/**/infra/**',
+        'src/lib/**/usecases/**',
         'src/lib/server/**',
         'src/lib/stores/**',
         'src/lib/utils.ts',
