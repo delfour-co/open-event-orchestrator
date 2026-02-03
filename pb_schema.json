@@ -1,0 +1,138 @@
+[
+  {
+    "name": "users",
+    "type": "auth",
+    "system": false,
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "role", "type": "select", "options": { "values": ["speaker", "organizer", "reviewer", "admin"] } }
+    ],
+    "options": {
+      "allowEmailAuth": true,
+      "allowUsernameAuth": false,
+      "minPasswordLength": 6
+    }
+  },
+  {
+    "name": "organizations",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "slug", "type": "text", "required": true },
+      { "name": "description", "type": "text" }
+    ]
+  },
+  {
+    "name": "events",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "slug", "type": "text", "required": true },
+      { "name": "description", "type": "text" },
+      { "name": "organizationId", "type": "relation", "options": { "collectionId": "organizations", "maxSelect": 1 } }
+    ]
+  },
+  {
+    "name": "editions",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "slug", "type": "text", "required": true },
+      { "name": "year", "type": "number", "required": true },
+      { "name": "startDate", "type": "date", "required": true },
+      { "name": "endDate", "type": "date", "required": true },
+      { "name": "venue", "type": "text" },
+      { "name": "city", "type": "text" },
+      { "name": "country", "type": "text" },
+      { "name": "status", "type": "select", "options": { "values": ["draft", "published", "archived"] } },
+      { "name": "eventId", "type": "relation", "options": { "collectionId": "events", "maxSelect": 1 } }
+    ]
+  },
+  {
+    "name": "categories",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "description", "type": "text" },
+      { "name": "color", "type": "text" },
+      { "name": "order", "type": "number" },
+      { "name": "editionId", "type": "relation", "options": { "collectionId": "editions", "maxSelect": 1 } }
+    ]
+  },
+  {
+    "name": "formats",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "description", "type": "text" },
+      { "name": "duration", "type": "number", "required": true },
+      { "name": "order", "type": "number" },
+      { "name": "editionId", "type": "relation", "options": { "collectionId": "editions", "maxSelect": 1 } }
+    ]
+  },
+  {
+    "name": "speakers",
+    "type": "base",
+    "schema": [
+      { "name": "name", "type": "text", "required": true },
+      { "name": "email", "type": "email", "required": true },
+      { "name": "bio", "type": "text" },
+      { "name": "company", "type": "text" },
+      { "name": "jobTitle", "type": "text" },
+      { "name": "twitter", "type": "text" },
+      { "name": "github", "type": "text" },
+      { "name": "linkedin", "type": "text" },
+      { "name": "website", "type": "url" },
+      { "name": "userId", "type": "relation", "options": { "collectionId": "users", "maxSelect": 1 } }
+    ]
+  },
+  {
+    "name": "talks",
+    "type": "base",
+    "schema": [
+      { "name": "title", "type": "text", "required": true },
+      { "name": "abstract", "type": "text" },
+      { "name": "description", "type": "text" },
+      { "name": "level", "type": "select", "options": { "values": ["beginner", "intermediate", "advanced"] } },
+      { "name": "language", "type": "text" },
+      { "name": "status", "type": "select", "options": { "values": ["draft", "pending", "accepted", "rejected", "confirmed", "declined"] } },
+      { "name": "editionId", "type": "relation", "options": { "collectionId": "editions", "maxSelect": 1 } },
+      { "name": "categoryId", "type": "relation", "options": { "collectionId": "categories", "maxSelect": 1 } },
+      { "name": "formatId", "type": "relation", "options": { "collectionId": "formats", "maxSelect": 1 } },
+      { "name": "speakers", "type": "relation", "options": { "collectionId": "speakers", "maxSelect": 10 } }
+    ]
+  },
+  {
+    "name": "reviews",
+    "type": "base",
+    "schema": [
+      { "name": "rating", "type": "number", "required": true },
+      { "name": "comment", "type": "text" },
+      { "name": "talkId", "type": "relation", "options": { "collectionId": "talks", "maxSelect": 1 } },
+      { "name": "userId", "type": "relation", "options": { "collectionId": "users", "maxSelect": 1 } }
+    ]
+  },
+  {
+    "name": "comments",
+    "type": "base",
+    "schema": [
+      { "name": "content", "type": "text", "required": true },
+      { "name": "talkId", "type": "relation", "options": { "collectionId": "talks", "maxSelect": 1 } },
+      { "name": "userId", "type": "relation", "options": { "collectionId": "users", "maxSelect": 1 } }
+    ]
+  },
+  {
+    "name": "email_logs",
+    "type": "base",
+    "schema": [
+      { "name": "talkId", "type": "relation", "options": { "collectionId": "talks", "maxSelect": 1 } },
+      { "name": "speakerId", "type": "relation", "options": { "collectionId": "speakers", "maxSelect": 1 } },
+      { "name": "editionId", "type": "relation", "options": { "collectionId": "editions", "maxSelect": 1 } },
+      { "name": "type", "type": "select", "required": true, "options": { "values": ["submission_confirmed", "talk_accepted", "talk_rejected", "confirmation_reminder", "cfp_closing_reminder"] } },
+      { "name": "to", "type": "email", "required": true },
+      { "name": "subject", "type": "text", "required": true },
+      { "name": "status", "type": "select", "required": true, "options": { "values": ["sent", "failed", "pending"] } },
+      { "name": "error", "type": "text" }
+    ]
+  }
+]

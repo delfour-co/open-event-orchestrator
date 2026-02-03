@@ -30,11 +30,12 @@ Open Event Orchestrator is an **all-in-one open-source platform** for managing c
 git clone https://github.com/delfour-co/open-event-orchestrator.git
 cd open-event-orchestrator
 
-# Start PocketBase
-docker-compose up -d
-
 # Install dependencies
 pnpm install
+
+# Start PocketBase and seed with test data
+docker compose up -d
+pnpm db:init
 
 # Run development server
 pnpm dev
@@ -42,11 +43,23 @@ pnpm dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+### Test Accounts
+
+After running `pnpm db:init`, these test accounts are available:
+
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@example.com` | `admin123` | Organizer |
+| `speaker@example.com` | `speaker123` | Speaker |
+| `reviewer@example.com` | `reviewer123` | Reviewer |
+
+See [Database Seeding](docs/development/database-seeding.md) for more details.
+
 ### Production
 
 ```bash
 # Build for production
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ## Tech Stack
@@ -103,15 +116,18 @@ feature/
 ### Commands
 
 ```bash
-pnpm dev          # Start development server
-pnpm build        # Build for production
-pnpm preview      # Preview production build
-pnpm test         # Run unit tests
-pnpm test:e2e     # Run E2E tests
+pnpm dev           # Start development server
+pnpm build         # Build for production
+pnpm preview       # Preview production build
+pnpm test          # Run unit tests
+pnpm test:e2e      # Run E2E tests
 pnpm test:coverage # Run tests with coverage
-pnpm lint         # Lint code
-pnpm format       # Format code
-pnpm check        # Type check
+pnpm lint          # Lint code
+pnpm format        # Format code
+pnpm check         # Type check
+pnpm db:init       # Initialize database with test data
+pnpm db:reset      # Reset database and re-seed
+pnpm seed          # Run seed script only
 ```
 
 ### Git Conventions
@@ -159,5 +175,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ## Links
 
 - [Documentation Wiki](https://github.com/delfour-co/open-event-orchestrator/wiki)
+- [Database Seeding Guide](docs/development/database-seeding.md)
 - [Issue Tracker](https://github.com/delfour-co/open-event-orchestrator/issues)
 - [Discussions](https://github.com/delfour-co/open-event-orchestrator/discussions)
