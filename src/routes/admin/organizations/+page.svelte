@@ -138,9 +138,9 @@ const formatDate = (date: Date) => {
       </Card.Content>
     </Card.Root>
   {:else}
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div class="space-y-4">
       {#each data.organizations as org}
-        <Card.Root class="relative">
+        <Card.Root>
           {#if editingOrg === org.id}
             <!-- Edit Form -->
             <Card.Header>
@@ -159,13 +159,15 @@ const formatDate = (date: Date) => {
                 class="space-y-4"
               >
                 <input type="hidden" name="id" value={org.id} />
-                <div class="space-y-2">
-                  <Label for="edit-name-{org.id}">Name</Label>
-                  <Input id="edit-name-{org.id}" name="name" value={org.name} required />
-                </div>
-                <div class="space-y-2">
-                  <Label for="edit-slug-{org.id}">Slug</Label>
-                  <Input id="edit-slug-{org.id}" name="slug" value={org.slug} required />
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div class="space-y-2">
+                    <Label for="edit-name-{org.id}">Name</Label>
+                    <Input id="edit-name-{org.id}" name="name" value={org.name} required />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="edit-slug-{org.id}">Slug</Label>
+                    <Input id="edit-slug-{org.id}" name="slug" value={org.slug} required />
+                  </div>
                 </div>
                 <div class="space-y-2">
                   <Label for="edit-description-{org.id}">Description</Label>
@@ -190,8 +192,8 @@ const formatDate = (date: Date) => {
             </Card.Content>
           {:else}
             <!-- View Mode -->
-            <Card.Header>
-              <div class="flex items-start justify-between">
+            <Card.Header class="pb-3">
+              <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <div
                     class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
@@ -199,11 +201,19 @@ const formatDate = (date: Date) => {
                     <Building2 class="h-5 w-5" />
                   </div>
                   <div>
-                    <Card.Title class="text-lg">{org.name}</Card.Title>
-                    <Card.Description class="text-xs">/{org.slug}</Card.Description>
+                    <Card.Title>{org.name}</Card.Title>
+                    <Card.Description>
+                      /{org.slug} - {org.eventsCount} event(s)
+                    </Card.Description>
                   </div>
                 </div>
-                <div class="flex gap-1">
+                <div class="flex items-center gap-2">
+                  <a href="/admin/events?org={org.id}">
+                    <Button variant="outline" size="sm">
+                      <CalendarDays class="mr-2 h-4 w-4" />
+                      View Events
+                    </Button>
+                  </a>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -220,9 +230,7 @@ const formatDate = (date: Date) => {
                       size="icon"
                       class="h-8 w-8 text-destructive hover:text-destructive"
                       disabled={org.eventsCount > 0}
-                      title={org.eventsCount > 0
-                        ? 'Delete events first'
-                        : 'Delete organization'}
+                      title={org.eventsCount > 0 ? 'Delete events first' : 'Delete organization'}
                       onclick={(e) => {
                         if (!confirm('Delete this organization?')) {
                           e.preventDefault()
@@ -235,29 +243,11 @@ const formatDate = (date: Date) => {
                 </div>
               </div>
             </Card.Header>
-            <Card.Content>
-              {#if org.description}
-                <p class="mb-4 text-sm text-muted-foreground">{org.description}</p>
-              {/if}
-              <div class="flex items-center gap-4 text-sm text-muted-foreground">
-                <div class="flex items-center gap-1">
-                  <CalendarDays class="h-4 w-4" />
-                  <span>{org.eventsCount} event(s)</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <Users class="h-4 w-4" />
-                  <span>Team (soon)</span>
-                </div>
-              </div>
-            </Card.Content>
-            <Card.Footer class="border-t pt-4">
-              <div class="flex w-full items-center justify-between">
-                <span class="text-xs text-muted-foreground">Created {formatDate(org.createdAt)}</span>
-                <a href="/admin/events?org={org.id}">
-                  <Button variant="outline" size="sm">View Events</Button>
-                </a>
-              </div>
-            </Card.Footer>
+            {#if org.description}
+              <Card.Content class="pt-0">
+                <p class="text-sm text-muted-foreground">{org.description}</p>
+              </Card.Content>
+            {/if}
           {/if}
         </Card.Root>
       {/each}

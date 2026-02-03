@@ -1,14 +1,16 @@
 <script lang="ts">
+import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { ArrowRight, Calendar, FileText } from 'lucide-svelte'
-import type { PageData } from './$types'
+import type { ActionData, PageData } from './$types'
 
 interface Props {
   data: PageData
+  form: ActionData
 }
 
-const { data }: Props = $props()
+const { data, form }: Props = $props()
 
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -17,6 +19,21 @@ const formatDate = (date: Date) => {
     year: 'numeric'
   }).format(date)
 }
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'published':
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    case 'draft':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+    case 'archived':
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  }
+}
+
+const statuses = ['draft', 'published', 'archived'] as const
 </script>
 
 <svelte:head>
@@ -44,15 +61,40 @@ const formatDate = (date: Date) => {
       {#each data.editions as edition}
         <Card.Root class="transition-shadow hover:shadow-md">
           <Card.Header>
-            <Card.Title class="flex items-center gap-2">
-              <Calendar class="h-5 w-5" />
-              {edition.name}
-            </Card.Title>
+            <div class="flex items-start justify-between">
+              <Card.Title class="flex items-center gap-2">
+                <Calendar class="h-5 w-5" />
+                {edition.name}
+              </Card.Title>
+              <span
+                class="rounded-full px-2 py-0.5 text-xs font-medium {getStatusColor(edition.status)}"
+              >
+                {edition.status}
+              </span>
+            </div>
             <Card.Description>
               {formatDate(edition.startDate)} - {formatDate(edition.endDate)}
             </Card.Description>
           </Card.Header>
-          <Card.Content>
+          <Card.Content class="space-y-3">
+            <div class="flex items-center gap-1">
+              <span class="mr-2 text-xs text-muted-foreground">Status:</span>
+              {#each statuses as status}
+                <form method="POST" action="?/updateStatus" use:enhance class="inline">
+                  <input type="hidden" name="editionId" value={edition.id} />
+                  <input type="hidden" name="status" value={status} />
+                  <Button
+                    type="submit"
+                    variant={edition.status === status ? 'default' : 'outline'}
+                    size="sm"
+                    class="h-7 px-2 text-xs"
+                    disabled={edition.status === status}
+                  >
+                    {status}
+                  </Button>
+                </form>
+              {/each}
+            </div>
             <a href="/admin/cfp/{edition.slug}/submissions">
               <Button class="w-full" variant="outline">
                 Manage Submissions
