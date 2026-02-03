@@ -139,7 +139,7 @@ const talks = [
       'In this talk, we will explore the key features of SvelteKit that make it ideal for building production-ready applications. We will cover routing, server-side rendering, API endpoints, and deployment strategies.',
     level: 'intermediate',
     language: 'en',
-    status: 'pending',
+    status: 'submitted',
     categoryIndex: 0,
     formatIndex: 1,
     speakerIndex: 0
@@ -164,7 +164,7 @@ const talks = [
       'We will explore the fundamentals of large language models, from transformers to prompt engineering. You will learn how to effectively use APIs like OpenAI and build AI-powered features.',
     level: 'beginner',
     language: 'en',
-    status: 'pending',
+    status: 'under_review',
     categoryIndex: 3,
     formatIndex: 2,
     speakerIndex: 0
@@ -189,7 +189,7 @@ const talks = [
       'Both React Native and Flutter have evolved significantly. This lightning talk gives you a quick comparison to help you choose the right framework for your next mobile project.',
     level: 'beginner',
     language: 'en',
-    status: 'pending',
+    status: 'submitted',
     categoryIndex: 1,
     formatIndex: 0,
     speakerIndex: 0
@@ -424,15 +424,18 @@ const collectionSchemas: Array<{
     updateRule: '',
     deleteRule: '',
     fields: [
-      textField('name', true),
+      textField('firstName', true),
+      textField('lastName', true),
       emailField('email', true),
       textField('bio'),
       textField('company'),
       textField('jobTitle'),
+      urlField('photoUrl'),
       textField('twitter'),
       textField('github'),
-      textField('linkedin'),
-      urlField('website')
+      urlField('linkedin'),
+      textField('city'),
+      textField('country')
     ]
   },
   {
@@ -449,7 +452,18 @@ const collectionSchemas: Array<{
       textField('description'),
       selectField('level', ['beginner', 'intermediate', 'advanced']),
       textField('language'),
-      selectField('status', ['draft', 'pending', 'accepted', 'rejected', 'confirmed', 'declined'])
+      selectField('status', [
+        'draft',
+        'submitted',
+        'under_review',
+        'accepted',
+        'rejected',
+        'confirmed',
+        'declined',
+        'withdrawn'
+      ]),
+      dateField('submittedAt'),
+      textField('notes')
     ]
   },
   {
@@ -510,7 +524,7 @@ const relationDefinitions = [
   { collection: 'talks', field: 'editionId', target: 'editions', maxSelect: 1 },
   { collection: 'talks', field: 'categoryId', target: 'categories', maxSelect: 1 },
   { collection: 'talks', field: 'formatId', target: 'formats', maxSelect: 1 },
-  { collection: 'talks', field: 'speakers', target: 'speakers', maxSelect: 10 },
+  { collection: 'talks', field: 'speakerIds', target: 'speakers', maxSelect: 10 },
   { collection: 'reviews', field: 'talkId', target: 'talks', maxSelect: 1 },
   { collection: 'reviews', field: 'userId', target: 'users', maxSelect: 1 },
   { collection: 'comments', field: 'talkId', target: 'talks', maxSelect: 1 },
@@ -618,6 +632,41 @@ async function createCollections(): Promise<Record<string, string>> {
     console.error('  Failed to get users collection:', err)
   }
 
+  // Collections that need to be deleted and recreated due to schema changes
+  // (PocketBase doesn't allow changing field types, so we need to recreate)
+  const collectionsToRecreate = ['speakers']
+
+  // Step 0: Delete collections that need schema changes (only if empty or during reset)
+  for (const collectionName of collectionsToRecreate) {
+    try {
+      if (await collectionExists(collectionName)) {
+        const existing = await pb.collections.getOne(collectionName)
+        // Check if collection needs recreation by looking for old 'name' field (speakers migration)
+        const hasOldNameField = (existing.fields || []).some(
+          (f: { name: string }) => f.name === 'name'
+        )
+        const hasNewFirstNameField = (existing.fields || []).some(
+          (f: { name: string }) => f.name === 'firstName'
+        )
+
+        if (hasOldNameField && !hasNewFirstNameField) {
+          // Need to delete and recreate - first check if empty
+          const records = await pb.collection(collectionName).getList(1, 1)
+          if (records.items.length === 0) {
+            await pb.collections.delete(existing.id)
+            console.log(`  Deleted collection '${collectionName}' for schema migration`)
+          } else {
+            console.log(
+              `  Warning: Collection '${collectionName}' has records, manual migration needed`
+            )
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`  Failed to check/delete collection ${collectionName}:`, err)
+    }
+  }
+
   // Step 1: Create or update collections with non-relation fields only
   for (const schema of collectionSchemas) {
     try {
@@ -632,7 +681,6 @@ async function createCollections(): Promise<Record<string, string>> {
             .map((f: { name: string }) => f.name)
         )
 
-        const expectedFieldNames = new Set(schema.fields.map((f: { name: string }) => f.name))
         const missingFields = schema.fields.filter(
           (f: { name: string }) => !existingFieldNames.has(f.name)
         )
@@ -949,8 +997,14 @@ async function seed(): Promise<void> {
           console.log(`  Speaker '${user.email}' already exists`)
           ids.speakers.push(existing.items[0].id)
         } else {
+          // Split name into firstName and lastName
+          const nameParts = user.name.split(' ')
+          const firstName = nameParts[0]
+          const lastName = nameParts.slice(1).join(' ') || 'Speaker'
+
           const speaker = await pb.collection('speakers').create({
-            name: user.name,
+            firstName,
+            lastName,
             email: user.email,
             bio: `${user.name} is a passionate developer and speaker.`,
             company: 'Tech Corp',
@@ -996,7 +1050,7 @@ async function seed(): Promise<void> {
             editionId: ids.edition,
             categoryId: ids.categories[talk.categoryIndex],
             formatId: ids.formats[talk.formatIndex],
-            speakers: [speakerId]
+            speakerIds: [speakerId]
           })
           console.log(`  Created talk: ${talk.title.substring(0, 50)}...`)
           ids.talks.push(t.id)

@@ -176,6 +176,23 @@ The seed script follows this order to respect foreign key relationships:
 8. **Talks** - Depends on editions, categories, formats, speakers
 9. **Reviews** - Depends on talks, users
 
+## E2E Testing
+
+E2E tests are available in `tests/e2e/`. To run them:
+
+```bash
+# Start PocketBase and seed data
+pnpm db:init
+
+# Run E2E tests (uses preview server)
+pnpm test:e2e
+
+# Run with UI mode for debugging
+pnpm test:e2e:ui
+```
+
+**Note:** Some tests that depend on PocketBase data loading (admin submissions, talk details) are currently skipped in preview mode. For full E2E testing, run the dev server (`pnpm dev`) in one terminal and run tests manually with Playwright.
+
 ## Related Documentation
 
 - [PocketBase Documentation](https://pocketbase.io/docs/)

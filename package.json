@@ -20,7 +20,7 @@
     "prepare": "husky",
     "seed": "tsx scripts/seed.ts",
     "db:init": "./scripts/init.sh",
-    "db:reset": "docker compose down -v && docker run --rm -v $(pwd)/pb_data:/data alpine sh -c 'rm -rf /data/*' && docker compose up -d && sleep 3 && ./scripts/init.sh"
+    "db:reset": "docker compose down -v && docker run --rm -v $(pwd)/pb_data:/data -v $(pwd)/pb_migrations:/migrations alpine sh -c 'rm -rf /data/* /migrations/*' && docker compose up -d && sleep 3 && ./scripts/init.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
@@ -61,10 +61,7 @@
     "zod": "^3.24.0"
   },
   "lint-staged": {
-    "*.{ts,svelte,js}": [
-      "biome check --fix",
-      "biome format --write"
-    ]
+    "*.{ts,svelte,js}": ["biome check --fix", "biome format --write"]
   },
   "pnpm": {
     "overrides": {
