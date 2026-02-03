@@ -6,6 +6,31 @@ import { SpeakerForm, TalkForm } from '$lib/features/cfp/ui'
 import { Loader2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
+interface SpeakerFormData {
+  firstName?: string
+  lastName?: string
+  email?: string
+  bio?: string
+  company?: string
+  jobTitle?: string
+  city?: string
+  country?: string
+  twitter?: string
+  github?: string
+  linkedin?: string
+}
+
+interface TalkFormData {
+  title?: string
+  abstract?: string
+  description?: string
+  language?: string
+  level?: string
+  categoryId?: string
+  formatId?: string
+  notes?: string
+}
+
 interface Props {
   data: PageData
   form: ActionData
@@ -13,8 +38,29 @@ interface Props {
 
 let { data, form }: Props = $props()
 
-let speaker = $state({} as Record<string, string | undefined>)
-let talk = $state({} as Record<string, string | undefined>)
+let speaker: SpeakerFormData = $state({
+  firstName: '',
+  lastName: '',
+  email: '',
+  bio: '',
+  company: '',
+  jobTitle: '',
+  city: '',
+  country: '',
+  twitter: '',
+  github: '',
+  linkedin: ''
+})
+let talk: TalkFormData = $state({
+  title: '',
+  abstract: '',
+  description: '',
+  language: '',
+  level: '',
+  categoryId: '',
+  formatId: '',
+  notes: ''
+})
 let isSubmitting = $state(false)
 
 $effect(() => {

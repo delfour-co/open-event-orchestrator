@@ -16,8 +16,7 @@ test.describe('CFP Talk Submission', () => {
     await expect(page.getByRole('heading', { name: 'Talk Details', level: 2 })).toBeVisible()
   })
 
-  // Speaker profile section is not yet implemented
-  test.skip('should display speaker profile form fields', async ({ page }) => {
+  test('should display speaker profile form fields', async ({ page }) => {
     await page.goto(submitUrl)
 
     await expect(page.getByLabel('First Name *')).toBeVisible()
@@ -108,8 +107,7 @@ test.describe('CFP Talk Submission', () => {
     await expect(page.getByText(/0\/500 characters \(min 50\)/)).toBeVisible()
   })
 
-  // Character count reactivity is broken - skipping until fixed
-  test.skip('should update character count when typing', async ({ page }) => {
+  test('should update character count when typing', async ({ page }) => {
     await page.goto(submitUrl)
 
     const titleInput = page.getByLabel('Title *')
