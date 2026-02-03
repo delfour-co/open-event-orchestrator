@@ -27,6 +27,17 @@ export {
 } from './format'
 
 export {
+  notificationTypeSchema,
+  emailLogSchema,
+  createEmailLogSchema,
+  getNotificationTypeLabel,
+  getNotificationSubject,
+  type NotificationType,
+  type EmailLog,
+  type CreateEmailLog
+} from './notification'
+
+export {
   speakerSchema,
   createSpeakerSchema,
   updateSpeakerSchema,
