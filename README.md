@@ -4,6 +4,8 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-291%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Coverage](https://img.shields.io/badge/coverage-96.9%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 Open Event Orchestrator is an **all-in-one open-source platform** for managing conferences, meetups, and community events. CFP, scheduling, ticketing, and CRM — unified in one place.
 
@@ -80,23 +82,29 @@ src/
 ├── lib/
 │   ├── components/        # Shared UI components
 │   │   ├── layout/        # Sidebar, Header, ThemeToggle
-│   │   └── ui/            # Button, Input, Card, etc.
-│   ├── features/          # Feature modules
-│   │   ├── auth/          # Authentication
-│   │   ├── cfp/           # Call for Papers
-│   │   ├── planning/      # Schedule management
-│   │   ├── billing/       # Ticketing
-│   │   ├── crm/           # Contact management
-│   │   └── core/          # Organization, Event, Edition
-│   ├── server/            # Server-only code
+│   │   └── ui/            # Button, Input, Card, etc. (shadcn-svelte)
+│   ├── features/          # Feature modules (Clean Architecture)
+│   │   ├── auth/          # Authentication & roles
+│   │   ├── cfp/           # Call for Papers (Talk, Speaker, Review, etc.)
+│   │   ├── core/          # Organization, Event, Edition
+│   │   ├── planning/      # Schedule management (Phase 2)
+│   │   ├── billing/       # Ticketing (Phase 3)
+│   │   └── crm/           # Contact management (Phase 4)
+│   ├── server/            # Server-only code (PocketBase client)
 │   └── stores/            # Svelte stores
 ├── routes/                # SvelteKit routes
 │   ├── admin/             # Admin dashboard
+│   │   ├── cfp/           # CFP management (submissions, settings)
+│   │   ├── events/        # Events & editions management
+│   │   ├── editions/      # Edition settings
+│   │   └── organizations/ # Organization management
 │   ├── auth/              # Login, Register
-│   └── (public)/          # Public pages
-└── tests/
-    ├── unit/
-    └── e2e/
+│   ├── cfp/               # Public CFP pages (speaker submission)
+│   └── (public)/          # Public pages (home, etc.)
+├── tests/
+│   ├── e2e/               # Playwright E2E tests
+│   └── unit/              # Vitest unit tests (in src/lib/features/*/domain/)
+└── scripts/               # Database seeding, initialization
 ```
 
 ## Architecture
@@ -130,6 +138,25 @@ pnpm db:reset      # Reset database and re-seed
 pnpm seed          # Run seed script only
 ```
 
+### Testing
+
+The project has comprehensive test coverage:
+
+| Type | Tests | Coverage |
+|------|-------|----------|
+| Unit tests | 141 | 96.9% statements |
+| E2E tests | 150 | - |
+| **Total** | **291** | **96.9%** |
+
+```bash
+pnpm test              # Run unit tests
+pnpm test:coverage     # Run with coverage report
+pnpm test:e2e          # Run Playwright E2E tests
+pnpm test:e2e:ui       # Run E2E with interactive UI
+```
+
+Unit tests cover domain entities (Talk, Speaker, Review, etc.) while E2E tests cover user flows (authentication, CFP submission, organization management).
+
 ### Git Conventions
 
 We use [Conventional Commits](https://www.conventionalcommits.org/):
@@ -144,17 +171,52 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 
 ## Roadmap
 
-- [x] **Phase 0** — Foundations (SvelteKit, PocketBase, Auth, UI Shell)
-- [x] **Phase 1** — CFP (Call for Papers)
-  - Speaker submission form with categories and formats
-  - Organizer dashboard with filters, bulk actions, and CSV export
-  - Review system with ratings and comments
-  - Notification system (email templates)
-  - CFP settings management
-- [ ] **Phase 2** — Planning (Schedule management)
-- [ ] **Phase 3** — Ticketing (Billing, check-in)
-- [ ] **Phase 4** — CRM (Contacts, GDPR, emailing)
-- [ ] **Phase 5** — API (REST, webhooks, widgets)
+### Phase 0 — Foundations ✅
+
+- [x] SvelteKit project setup with TypeScript, Tailwind CSS, shadcn-svelte
+- [x] PocketBase 0.36+ setup with Docker
+- [x] Authentication with role-based access (speaker, organizer, reviewer, admin)
+- [x] UI Shell: sidebar, header, theme toggle (dark/light)
+- [x] Git hooks (Husky, commitlint) and CI/CD (GitHub Actions)
+- [x] Core data model: Organization, Event, Edition
+
+### Phase 1 — CFP (Call for Papers) 🚧
+
+- [x] Speaker submission form with categories and formats
+- [x] Organizer dashboard with filters, bulk actions, and CSV export
+- [x] Review system with ratings and comments
+- [x] Notification system (email templates)
+- [x] CFP settings with database persistence (dates, categories, formats)
+- [x] Edition settings (separate from CFP)
+- [x] Dashboard with stats and edition filter
+- [ ] Organization settings with team management (#45)
+- [ ] Event settings page (#46)
+- [ ] UX cleanup: categories/formats placement (#47)
+
+### Phase 2 — Planning (Schedule management)
+
+- [ ] Data model: Session, Room, Slot, Track
+- [ ] Drag & drop scheduler
+- [ ] Public schedule view
+- [ ] Export: iCal, JSON, PDF
+
+### Phase 3 — Ticketing
+
+- [ ] Ticket types and pricing
+- [ ] Stripe integration
+- [ ] QR code tickets and check-in
+
+### Phase 4 — CRM
+
+- [ ] Unified contact model
+- [ ] GDPR compliance
+- [ ] Email campaigns
+
+### Phase 5 — API
+
+- [ ] REST API with authentication
+- [ ] Webhooks
+- [ ] Embeddable widgets
 
 See the [GitHub Milestones](https://github.com/delfour-co/open-event-orchestrator/milestones) for detailed progress.
 
