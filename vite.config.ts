@@ -1,0 +1,33 @@
+import { sveltekit } from '@sveltejs/kit/vite'
+import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  plugins: [tailwindcss(), sveltekit()],
+  test: {
+    include: ['src/**/*.{test,spec}.{js,ts}'],
+    environment: 'jsdom',
+    globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'json-summary'],
+      include: ['src/lib/**/*.ts'],
+      exclude: [
+        'src/lib/**/*.test.ts',
+        'src/lib/**/*.spec.ts',
+        'src/lib/**/index.ts',
+        'src/lib/**/infra/**',
+        'src/lib/server/**',
+        'src/lib/stores/**',
+        'src/lib/utils.ts',
+        'src/lib/components/**'
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 60,
+        statements: 80
+      }
+    }
+  }
+})

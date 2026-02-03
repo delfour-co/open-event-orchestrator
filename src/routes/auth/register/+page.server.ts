@@ -1,0 +1,45 @@
+import { registerSchema } from '$lib/features/auth/domain'
+import { fail, redirect } from '@sveltejs/kit'
+import type { Actions } from './$types'
+
+export const actions: Actions = {
+  default: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const data = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+      passwordConfirm: formData.get('passwordConfirm') as string
+    }
+
+    const result = registerSchema.safeParse(data)
+    if (!result.success) {
+      const errors: Record<string, string> = {}
+      for (const issue of result.error.issues) {
+        errors[issue.path[0] as string] = issue.message
+      }
+      return fail(400, { errors })
+    }
+
+    try {
+      await locals.pb.collection('users').create({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        passwordConfirm: data.passwordConfirm,
+        role: 'attendee'
+      })
+
+      // Auto login after registration
+      await locals.pb.collection('users').authWithPassword(data.email, data.password)
+    } catch (err) {
+      const error = err as { response?: { data?: Record<string, { message: string }> } }
+      if (error.response?.data?.email) {
+        return fail(400, { errors: { email: 'Email already exists' } })
+      }
+      return fail(500, { error: 'Failed to create account' })
+    }
+
+    throw redirect(303, '/admin')
+  }
+}
