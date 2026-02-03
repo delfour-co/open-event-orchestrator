@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { page } from '$app/stores'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -23,10 +24,10 @@ interface Props {
 
 const { data, form }: Props = $props()
 
-let showNewOrg = $state(false)
 let showNewEvent = $state(false)
 let showNewEdition = $state<string | null>(null)
 let expandedEvents = $state<Set<string>>(new Set())
+let selectedOrgId = $state<string>($page.url.searchParams.get('org') || '')
 
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -64,94 +65,43 @@ const getStatusColor = (status: string) => {
       return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
   }
 }
+
+// Filter events by selected organization
+const filteredEvents = $derived(
+  selectedOrgId ? data.events.filter((e) => e.organizationId === selectedOrgId) : data.events
+)
+
+const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrgId))
 </script>
 
 <svelte:head>
-  <title>Events Management - Open Event Orchestrator</title>
+  <title>Events - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Events Management</h2>
-      <p class="text-muted-foreground">Manage your organizations, events and editions.</p>
+      <h2 class="text-3xl font-bold tracking-tight">Events</h2>
+      <p class="text-muted-foreground">
+        Manage your events and their editions.
+        {#if selectedOrg}
+          Filtered by <strong>{selectedOrg.name}</strong>.
+          <button class="text-primary underline" onclick={() => (selectedOrgId = '')}>
+            Show all
+          </button>
+        {/if}
+      </p>
     </div>
-    <div class="flex gap-2">
-      <Button variant="outline" onclick={() => (showNewOrg = !showNewOrg)}>
-        <Building2 class="mr-2 h-4 w-4" />
-        New Organization
-      </Button>
-      <Button onclick={() => (showNewEvent = !showNewEvent)}>
-        <Plus class="mr-2 h-4 w-4" />
-        New Event
-      </Button>
-    </div>
+    <Button onclick={() => (showNewEvent = !showNewEvent)}>
+      <Plus class="mr-2 h-4 w-4" />
+      New Event
+    </Button>
   </div>
 
   {#if form?.error}
     <div class="rounded-md border border-destructive bg-destructive/10 p-4 text-destructive">
       {form.error}
     </div>
-  {/if}
-
-  <!-- New Organization Form -->
-  {#if showNewOrg}
-    <Card.Root>
-      <Card.Header>
-        <Card.Title class="flex items-center gap-2">
-          <Building2 class="h-5 w-5" />
-          Create Organization
-        </Card.Title>
-        <Card.Description>Organizations group related events together.</Card.Description>
-      </Card.Header>
-      <Card.Content>
-        <form
-          method="POST"
-          action="?/createOrganization"
-          use:enhance={() => {
-            return async ({ update }) => {
-              await update()
-              showNewOrg = false
-            }
-          }}
-          class="space-y-4"
-        >
-          <div class="grid gap-4 md:grid-cols-2">
-            <div class="space-y-2">
-              <Label for="org-name">Name</Label>
-              <Input
-                id="org-name"
-                name="name"
-                placeholder="My Conference Org"
-                required
-                oninput={(e) => {
-                  const slugInput = document.getElementById('org-slug') as HTMLInputElement
-                  if (slugInput) slugInput.value = generateSlug((e.target as HTMLInputElement).value)
-                }}
-              />
-            </div>
-            <div class="space-y-2">
-              <Label for="org-slug">Slug</Label>
-              <Input id="org-slug" name="slug" placeholder="my-conference-org" required />
-            </div>
-          </div>
-          <div class="space-y-2">
-            <Label for="org-description">Description</Label>
-            <Textarea
-              id="org-description"
-              name="description"
-              placeholder="A brief description of the organization..."
-            />
-          </div>
-          <div class="flex gap-2">
-            <Button type="submit">Create Organization</Button>
-            <Button type="button" variant="ghost" onclick={() => (showNewOrg = false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </Card.Content>
-    </Card.Root>
   {/if}
 
   <!-- New Event Form -->
@@ -162,13 +112,21 @@ const getStatusColor = (status: string) => {
           <CalendarDays class="h-5 w-5" />
           Create Event
         </Card.Title>
-        <Card.Description>Events can have multiple editions (yearly occurrences).</Card.Description>
+        <Card.Description>
+          Events can have multiple editions (yearly occurrences). Each edition has its own CFP.
+        </Card.Description>
       </Card.Header>
       <Card.Content>
         {#if data.organizations.length === 0}
-          <p class="text-muted-foreground">
-            Please create an organization first before creating an event.
-          </p>
+          <div class="flex flex-col items-center py-6">
+            <Building2 class="mb-2 h-8 w-8 text-muted-foreground" />
+            <p class="mb-4 text-center text-muted-foreground">
+              Please create an organization first before creating an event.
+            </p>
+            <a href="/admin/organizations">
+              <Button variant="outline">Go to Organizations</Button>
+            </a>
+          </div>
         {:else}
           <form
             method="POST"
@@ -190,7 +148,7 @@ const getStatusColor = (status: string) => {
                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {#each data.organizations as org}
-                  <option value={org.id}>{org.name}</option>
+                  <option value={org.id} selected={org.id === selectedOrgId}>{org.name}</option>
                 {/each}
               </select>
             </div>
@@ -234,20 +192,53 @@ const getStatusColor = (status: string) => {
     </Card.Root>
   {/if}
 
+  <!-- Organization Filter -->
+  {#if data.organizations.length > 1 && !selectedOrgId}
+    <div class="flex items-center gap-2">
+      <Label class="text-sm text-muted-foreground">Filter by organization:</Label>
+      <select
+        class="rounded-md border border-input bg-background px-3 py-1 text-sm"
+        onchange={(e) => (selectedOrgId = (e.target as HTMLSelectElement).value)}
+      >
+        <option value="">All organizations</option>
+        {#each data.organizations as org}
+          <option value={org.id}>{org.name}</option>
+        {/each}
+      </select>
+    </div>
+  {/if}
+
   <!-- Events List -->
-  {#if data.events.length === 0}
+  {#if filteredEvents.length === 0}
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <CalendarDays class="mb-4 h-12 w-12 text-muted-foreground" />
         <h3 class="text-lg font-semibold">No events yet</h3>
-        <p class="text-sm text-muted-foreground">
-          Create an organization and event to get started.
+        <p class="mb-4 text-sm text-muted-foreground">
+          {#if data.organizations.length === 0}
+            Create an organization first, then add events.
+          {:else}
+            Create your first event to get started.
+          {/if}
         </p>
+        {#if data.organizations.length === 0}
+          <a href="/admin/organizations">
+            <Button>
+              <Building2 class="mr-2 h-4 w-4" />
+              Create Organization
+            </Button>
+          </a>
+        {:else}
+          <Button onclick={() => (showNewEvent = true)}>
+            <Plus class="mr-2 h-4 w-4" />
+            Create Event
+          </Button>
+        {/if}
       </Card.Content>
     </Card.Root>
   {:else}
     <div class="space-y-4">
-      {#each data.events as event}
+      {#each filteredEvents as event}
         <Card.Root>
           <Card.Header class="pb-3">
             <div class="flex items-center justify-between">
@@ -274,8 +265,11 @@ const getStatusColor = (status: string) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onclick={() =>
-                    (showNewEdition = showNewEdition === event.id ? null : event.id)}
+                  onclick={() => {
+                    showNewEdition = showNewEdition === event.id ? null : event.id
+                    expandedEvents.add(event.id)
+                    expandedEvents = new Set(expandedEvents)
+                  }}
                 >
                   <Plus class="mr-2 h-4 w-4" />
                   Add Edition
@@ -403,7 +397,9 @@ const getStatusColor = (status: string) => {
 
               <!-- Editions List -->
               {#if event.editions.length === 0}
-                <p class="text-sm text-muted-foreground">No editions yet. Create one to get started.</p>
+                <p class="text-sm text-muted-foreground">
+                  No editions yet. Create one to get started.
+                </p>
               {:else}
                 <div class="space-y-2">
                   {#each event.editions as edition}

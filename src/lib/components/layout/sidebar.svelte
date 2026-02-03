@@ -1,6 +1,7 @@
 <script lang="ts">
 import { cn } from '$lib/utils'
 import {
+  Building2,
   Calendar,
   CalendarDays,
   ChevronLeft,
@@ -29,6 +30,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: '/admin', icon: Home, label: 'Dashboard' },
+  { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
   { href: '/admin/events', icon: CalendarDays, label: 'Events' },
   { href: '/admin/cfp', icon: Calendar, label: 'CFP' },
   { href: '/admin/planning', icon: Calendar, label: 'Planning' },

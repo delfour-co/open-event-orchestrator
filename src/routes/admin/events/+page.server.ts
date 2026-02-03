@@ -51,29 +51,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 }
 
 export const actions: Actions = {
-  createOrganization: async ({ request, locals }) => {
-    const data = await request.formData()
-    const name = data.get('name') as string
-    const slug = data.get('slug') as string
-    const description = data.get('description') as string
-
-    if (!name || !slug) {
-      return fail(400, { error: 'Name and slug are required' })
-    }
-
-    try {
-      await locals.pb.collection('organizations').create({
-        name,
-        slug,
-        description
-      })
-      return { success: true }
-    } catch (e) {
-      console.error('Failed to create organization:', e)
-      return fail(500, { error: 'Failed to create organization' })
-    }
-  },
-
   createEvent: async ({ request, locals }) => {
     const data = await request.formData()
     const organizationId = data.get('organizationId') as string

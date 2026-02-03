@@ -1,5 +1,48 @@
 import { expect, test } from '@playwright/test'
 
+test.describe('Organizations Management', () => {
+  test.beforeEach(async ({ page }) => {
+    // Login as admin/organizer
+    await page.goto('/auth/login')
+    await page.getByLabel('Email').fill('admin@example.com')
+    await page.getByLabel('Password').fill('admin123')
+    await page.getByRole('button', { name: 'Sign in' }).click()
+    await page.waitForURL(/\/admin/, { timeout: 10000 })
+  })
+
+  test('should display the organizations page', async ({ page }) => {
+    await page.goto('/admin/organizations')
+
+    await expect(page.getByRole('heading', { name: 'Organizations' })).toBeVisible()
+    await expect(page.getByText(/Manage your organizations/)).toBeVisible()
+  })
+
+  test('should display existing organization from seed data', async ({ page }) => {
+    await page.goto('/admin/organizations')
+
+    await expect(page.getByText('Demo Conference Org')).toBeVisible()
+  })
+
+  test('should show create organization form when clicking button', async ({ page }) => {
+    await page.goto('/admin/organizations')
+
+    await page.getByRole('button', { name: /New Organization/ }).click()
+
+    await expect(page.getByRole('heading', { name: 'Create Organization' })).toBeVisible()
+    await expect(page.getByLabel('Name')).toBeVisible()
+    await expect(page.getByLabel('Slug')).toBeVisible()
+  })
+
+  test('should be accessible from sidebar', async ({ page }) => {
+    await page.goto('/admin')
+
+    await page.getByRole('link', { name: 'Organizations' }).click()
+
+    await expect(page).toHaveURL('/admin/organizations')
+    await expect(page.getByRole('heading', { name: 'Organizations' })).toBeVisible()
+  })
+})
+
 test.describe('Events Management', () => {
   test.beforeEach(async ({ page }) => {
     // Login as admin/organizer
@@ -10,17 +53,16 @@ test.describe('Events Management', () => {
     await page.waitForURL(/\/admin/, { timeout: 10000 })
   })
 
-  test('should display the events management page', async ({ page }) => {
+  test('should display the events page', async ({ page }) => {
     await page.goto('/admin/events')
 
-    await expect(page.getByRole('heading', { name: 'Events Management' })).toBeVisible()
-    await expect(page.getByText('Manage your organizations, events and editions.')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Events' })).toBeVisible()
+    await expect(page.getByText(/Manage your events/)).toBeVisible()
   })
 
-  test('should have new organization and new event buttons', async ({ page }) => {
+  test('should have new event button', async ({ page }) => {
     await page.goto('/admin/events')
 
-    await expect(page.getByRole('button', { name: /New Organization/ })).toBeVisible()
     await expect(page.getByRole('button', { name: /New Event/ })).toBeVisible()
   })
 
@@ -29,7 +71,8 @@ test.describe('Events Management', () => {
 
     // The seed data creates a DevFest event
     await expect(page.getByText('DevFest')).toBeVisible()
-    await expect(page.getByText('Demo Conference Org')).toBeVisible()
+    // Organization name is shown in the event card description
+    await expect(page.locator('text=Demo Conference Org - 1 edition')).toBeVisible()
   })
 
   test('should expand event to show editions', async ({ page }) => {
@@ -40,16 +83,6 @@ test.describe('Events Management', () => {
 
     // Should show the DevFest Paris 2025 edition
     await expect(page.getByText('DevFest Paris 2025')).toBeVisible()
-  })
-
-  test('should show create organization form when clicking button', async ({ page }) => {
-    await page.goto('/admin/events')
-
-    await page.getByRole('button', { name: /New Organization/ }).click()
-
-    await expect(page.getByRole('heading', { name: 'Create Organization' })).toBeVisible()
-    await expect(page.getByLabel('Name')).toBeVisible()
-    await expect(page.getByLabel('Slug')).toBeVisible()
   })
 
   test('should show create event form when clicking button', async ({ page }) => {
@@ -116,6 +149,6 @@ test.describe('Events Management', () => {
     await page.getByRole('link', { name: 'Events' }).click()
 
     await expect(page).toHaveURL('/admin/events')
-    await expect(page.getByRole('heading', { name: 'Events Management' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Events' })).toBeVisible()
   })
 })
