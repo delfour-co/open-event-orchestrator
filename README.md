@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-291%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-297%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 [![Coverage](https://img.shields.io/badge/coverage-96.9%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 Open Event Orchestrator is an **all-in-one open-source platform** for managing conferences, meetups, and community events. CFP, scheduling, ticketing, and CRM — unified in one place.
@@ -145,8 +145,8 @@ The project has comprehensive test coverage:
 | Type | Tests | Coverage |
 |------|-------|----------|
 | Unit tests | 141 | 96.9% statements |
-| E2E tests | 150 | - |
-| **Total** | **291** | **96.9%** |
+| E2E tests | 156 | - |
+| **Total** | **297** | **96.9%** |
 
 ```bash
 pnpm test              # Run unit tests
