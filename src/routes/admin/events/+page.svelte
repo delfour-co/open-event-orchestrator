@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
+  Settings,
   Trash2
 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
@@ -347,7 +348,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                           name="year"
                           type="number"
                           placeholder="2025"
-                          value={new Date().getFullYear()}
+                          value={String(new Date().getFullYear())}
                           required
                         />
                       </div>
@@ -424,13 +425,18 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                         <a href="/admin/cfp/{edition.slug}/submissions">
                           <Button variant="outline" size="sm">Manage CFP</Button>
                         </a>
+                        <a href="/admin/editions/{edition.slug}/settings" title="Edition Settings">
+                          <Button variant="ghost" size="icon" class="h-8 w-8">
+                            <Settings class="h-4 w-4" />
+                          </Button>
+                        </a>
                         <form method="POST" action="?/deleteEdition" use:enhance>
                           <input type="hidden" name="editionId" value={edition.id} />
                           <Button
                             type="submit"
                             variant="ghost"
-                            size="sm"
-                            class="text-destructive hover:text-destructive"
+                            size="icon"
+                            class="h-8 w-8 text-destructive hover:text-destructive"
                             onclick={(e) => {
                               if (!confirm('Delete this edition?')) {
                                 e.preventDefault()

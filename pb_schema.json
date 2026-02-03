@@ -203,6 +203,26 @@
     ]
   },
   {
+    "name": "cfp_settings",
+    "type": "base",
+    "schema": [
+      {
+        "name": "editionId",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "editions", "maxSelect": 1 }
+      },
+      { "name": "cfpOpenDate", "type": "date" },
+      { "name": "cfpCloseDate", "type": "date" },
+      { "name": "introText", "type": "text" },
+      { "name": "maxSubmissionsPerSpeaker", "type": "number" },
+      { "name": "requireAbstract", "type": "bool" },
+      { "name": "requireDescription", "type": "bool" },
+      { "name": "allowCoSpeakers", "type": "bool" },
+      { "name": "anonymousReview", "type": "bool" }
+    ]
+  },
+  {
     "name": "email_logs",
     "type": "base",
     "schema": [
