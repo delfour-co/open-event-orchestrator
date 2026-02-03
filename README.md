@@ -129,7 +129,12 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 ## Roadmap
 
 - [x] **Phase 0** — Foundations (SvelteKit, PocketBase, Auth, UI Shell)
-- [ ] **Phase 1** — CFP (Call for Papers)
+- [x] **Phase 1** — CFP (Call for Papers)
+  - Speaker submission form with categories and formats
+  - Organizer dashboard with filters, bulk actions, and CSV export
+  - Review system with ratings and comments
+  - Notification system (email templates)
+  - CFP settings management
 - [ ] **Phase 2** — Planning (Schedule management)
 - [ ] **Phase 3** — Ticketing (Billing, check-in)
 - [ ] **Phase 4** — CRM (Contacts, GDPR, emailing)
