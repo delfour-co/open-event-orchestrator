@@ -152,7 +152,7 @@ export const actions: Actions = {
     }
   },
 
-  deleteComment: async ({ request, locals, params }) => {
+  deleteComment: async ({ request, locals }) => {
     if (!locals.user) {
       return fail(401, { error: 'You must be logged in' })
     }

@@ -1,5 +1,4 @@
 <script lang="ts">
-import { getRatingLabel } from '$lib/features/cfp/domain'
 import { cn } from '$lib/utils'
 import { Star } from 'lucide-svelte'
 
@@ -23,8 +22,6 @@ const textSizeClasses = {
   md: 'text-base',
   lg: 'text-lg'
 }
-
-const label = $derived(average !== null ? getRatingLabel(average) : 'No ratings')
 </script>
 
 <div class={cn('flex items-center gap-2', className)}>

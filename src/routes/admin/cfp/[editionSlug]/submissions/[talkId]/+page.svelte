@@ -27,11 +27,16 @@ interface Props {
 const { data, form }: Props = $props()
 
 let showDeleteConfirm = $state(false)
-let reviewRating = $state(data.userReview?.rating ?? 0)
-let reviewComment = $state(data.userReview?.comment ?? '')
+let reviewRating = $state(0)
+let reviewComment = $state('')
 let newComment = $state('')
 let isSubmittingReview = $state(false)
 let isSubmittingComment = $state(false)
+
+$effect(() => {
+  reviewRating = data.userReview?.rating ?? 0
+  reviewComment = data.userReview?.comment ?? ''
+})
 
 const allStatuses = talkStatusSchema.options
 
