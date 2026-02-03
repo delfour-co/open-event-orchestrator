@@ -18,3 +18,10 @@ export {
   type GetSpeakerSubmissionsResult,
   type GetSpeakerSubmissionsUseCase
 } from './get-speaker-submissions'
+
+export {
+  createSendNotificationUseCase,
+  type SendNotificationInput,
+  type SendNotificationResult,
+  type SendNotificationUseCase
+} from './send-notification'
