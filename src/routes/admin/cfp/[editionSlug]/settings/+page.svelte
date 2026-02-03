@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { invalidateAll } from '$app/navigation'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Checkbox } from '$lib/components/ui/checkbox'
@@ -21,13 +22,81 @@ let isSubmitting = $state(false)
 function formatDateForInput(date: Date): string {
   return date.toISOString().split('T')[0]
 }
+
+const statuses = ['draft', 'published', 'archived'] as const
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'published':
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    case 'draft':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+    case 'archived':
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  }
+}
 </script>
 
 <svelte:head>
   <title>CFP Settings - {data.edition.name} - Open Event Orchestrator</title>
 </svelte:head>
 
-<Card.Root>
+<div class="space-y-6">
+  <!-- Status Card -->
+  <Card.Root>
+    <Card.Header>
+      <Card.Title>CFP Status</Card.Title>
+      <Card.Description>
+        Control whether this CFP is visible to speakers and accepting submissions
+      </Card.Description>
+    </Card.Header>
+    <Card.Content>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-muted-foreground">Current status:</span>
+        <span
+          class="rounded-full px-3 py-1 text-sm font-medium {getStatusColor(data.edition.status)}"
+        >
+          {data.edition.status}
+        </span>
+      </div>
+      <div class="mt-4 flex items-center gap-2">
+        <span class="mr-2 text-sm text-muted-foreground">Change to:</span>
+        {#each statuses as status}
+          <form
+            method="POST"
+            action="?/updateStatus"
+            use:enhance={() => {
+              return async ({ update }) => {
+                await update()
+                await invalidateAll()
+              }
+            }}
+            class="inline"
+          >
+            <input type="hidden" name="status" value={status} />
+            <Button
+              type="submit"
+              variant={data.edition.status === status ? 'default' : 'outline'}
+              size="sm"
+              disabled={data.edition.status === status}
+            >
+              {status}
+            </Button>
+          </form>
+        {/each}
+      </div>
+      <p class="mt-3 text-xs text-muted-foreground">
+        <strong>Draft:</strong> CFP not visible, no submissions allowed.
+        <strong>Published:</strong> CFP open for submissions.
+        <strong>Archived:</strong> CFP closed, submissions preserved.
+      </p>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- General Settings Card -->
+  <Card.Root>
   <Card.Header>
     <Card.Title>General Settings</Card.Title>
     <Card.Description>Configure the basic CFP settings for {data.edition.name}</Card.Description>
@@ -151,3 +220,4 @@ function formatDateForInput(date: Date): string {
     </form>
   </Card.Content>
 </Card.Root>
+</div>

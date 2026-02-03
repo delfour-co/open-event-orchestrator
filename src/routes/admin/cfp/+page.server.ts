@@ -1,5 +1,4 @@
-import { fail } from '@sveltejs/kit'
-import type { Actions, PageServerLoad } from './$types'
+import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Get all editions (draft, published, archived)
@@ -18,29 +17,5 @@ export const load: PageServerLoad = async ({ locals }) => {
       endDate: new Date(e.endDate as string),
       status: e.status as string
     }))
-  }
-}
-
-export const actions: Actions = {
-  updateStatus: async ({ request, locals }) => {
-    const data = await request.formData()
-    const editionId = data.get('editionId') as string
-    const status = data.get('status') as string
-
-    if (!editionId || !status) {
-      return fail(400, { error: 'Edition ID and status are required' })
-    }
-
-    if (!['draft', 'published', 'archived'].includes(status)) {
-      return fail(400, { error: 'Invalid status' })
-    }
-
-    try {
-      await locals.pb.collection('editions').update(editionId, { status })
-      return { success: true }
-    } catch (e) {
-      console.error('Failed to update edition status:', e)
-      return fail(500, { error: 'Failed to update status' })
-    }
   }
 }

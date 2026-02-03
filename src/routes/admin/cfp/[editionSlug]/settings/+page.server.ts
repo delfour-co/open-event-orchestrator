@@ -54,5 +54,27 @@ export const actions: Actions = {
     })
 
     return { success: true, message: 'Settings saved successfully' }
+  },
+
+  updateStatus: async ({ request, locals, params }) => {
+    const formData = await request.formData()
+    const status = formData.get('status') as string
+
+    if (!status || !['draft', 'published', 'archived'].includes(status)) {
+      return fail(400, { error: 'Invalid status' })
+    }
+
+    try {
+      // Get edition by slug
+      const edition = await locals.pb
+        .collection('editions')
+        .getFirstListItem(`slug="${params.editionSlug}"`)
+
+      await locals.pb.collection('editions').update(edition.id, { status })
+      return { success: true, message: `Status updated to ${status}` }
+    } catch (e) {
+      console.error('Failed to update status:', e)
+      return fail(500, { error: 'Failed to update status' })
+    }
   }
 }
