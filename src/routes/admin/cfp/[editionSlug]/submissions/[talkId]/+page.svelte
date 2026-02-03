@@ -2,9 +2,21 @@
 import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import { Textarea } from '$lib/components/ui/textarea'
 import { talkStatusSchema } from '$lib/features/cfp/domain'
-import { StatusBadge } from '$lib/features/cfp/ui'
-import { ArrowLeft, Check, ExternalLink, Mail, MapPin, Trash2, X } from 'lucide-svelte'
+import { RatingDisplay, RatingInput, StatusBadge } from '$lib/features/cfp/ui'
+import {
+  ArrowLeft,
+  Check,
+  ExternalLink,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Send,
+  Star,
+  Trash2,
+  X
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -15,6 +27,11 @@ interface Props {
 const { data, form }: Props = $props()
 
 let showDeleteConfirm = $state(false)
+let reviewRating = $state(data.userReview?.rating ?? 0)
+let reviewComment = $state(data.userReview?.comment ?? '')
+let newComment = $state('')
+let isSubmittingReview = $state(false)
+let isSubmittingComment = $state(false)
 
 const allStatuses = talkStatusSchema.options
 
@@ -25,6 +42,15 @@ function formatDate(date: Date | undefined): string {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+function formatShortDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   }).format(date)
@@ -47,6 +73,15 @@ function getLanguageLabel(lang: string): string {
   }
   return labels[lang] || lang
 }
+
+$effect(() => {
+  if (form?.reviewSuccess) {
+    // Review was submitted successfully
+  }
+  if (form?.commentSuccess) {
+    newComment = ''
+  }
+})
 </script>
 
 <svelte:head>
@@ -228,10 +263,200 @@ function getLanguageLabel(lang: string): string {
           </div>
         </Card.Content>
       </Card.Root>
+
+      <!-- Comments Section -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="flex items-center gap-2">
+            <MessageSquare class="h-5 w-5" />
+            Internal Comments ({data.comments.length})
+          </Card.Title>
+          <Card.Description>
+            Comments are only visible to organizers and reviewers
+          </Card.Description>
+        </Card.Header>
+        <Card.Content class="space-y-4">
+          <!-- Add Comment Form -->
+          {#if data.currentUserId}
+            <form
+              method="POST"
+              action="?/addComment"
+              use:enhance={() => {
+                isSubmittingComment = true
+                return async ({ update }) => {
+                  isSubmittingComment = false
+                  await update()
+                }
+              }}
+              class="space-y-3"
+            >
+              <Textarea
+                name="content"
+                placeholder="Add a comment..."
+                bind:value={newComment}
+                rows={3}
+              />
+              {#if form?.commentError}
+                <p class="text-sm text-destructive">{form.commentError}</p>
+              {/if}
+              <div class="flex justify-end">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSubmittingComment || !newComment.trim()}
+                >
+                  <Send class="mr-2 h-4 w-4" />
+                  Post Comment
+                </Button>
+              </div>
+            </form>
+          {/if}
+
+          <!-- Comments List -->
+          {#if data.comments.length === 0}
+            <p class="py-8 text-center text-sm text-muted-foreground">
+              No comments yet. Be the first to comment!
+            </p>
+          {:else}
+            <div class="space-y-4 pt-4">
+              {#each data.comments as comment}
+                <div class="flex gap-3">
+                  <div
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium"
+                  >
+                    {comment.user?.name?.[0] || '?'}
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium">
+                          {comment.user?.name || 'Unknown'}
+                        </span>
+                        <span class="text-xs text-muted-foreground">
+                          {formatShortDate(comment.createdAt)}
+                        </span>
+                      </div>
+                      {#if comment.userId === data.currentUserId}
+                        <form method="POST" action="?/deleteComment" use:enhance>
+                          <input type="hidden" name="commentId" value={comment.id} />
+                          <Button
+                            type="submit"
+                            variant="ghost"
+                            size="icon"
+                            class="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 class="h-3 w-3" />
+                          </Button>
+                        </form>
+                      {/if}
+                    </div>
+                    <p class="mt-1 whitespace-pre-wrap text-sm">{comment.content}</p>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </Card.Content>
+      </Card.Root>
     </div>
 
     <!-- Sidebar -->
     <div class="space-y-6">
+      <!-- Rating Overview -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="flex items-center gap-2">
+            <Star class="h-5 w-5" />
+            Reviews
+          </Card.Title>
+        </Card.Header>
+        <Card.Content class="space-y-4">
+          <RatingDisplay
+            average={data.ratingStats.average}
+            count={data.ratingStats.count}
+            size="lg"
+          />
+
+          <!-- Your Review -->
+          {#if data.currentUserId}
+            <div class="border-t pt-4">
+              <h4 class="mb-3 text-sm font-medium">Your Review</h4>
+              <form
+                method="POST"
+                action="?/submitReview"
+                use:enhance={() => {
+                  isSubmittingReview = true
+                  return async ({ update }) => {
+                    isSubmittingReview = false
+                    await update()
+                  }
+                }}
+                class="space-y-3"
+              >
+                <div>
+                  <RatingInput bind:value={reviewRating} showLabel />
+                  <input type="hidden" name="rating" value={reviewRating} />
+                </div>
+                <Textarea
+                  name="comment"
+                  placeholder="Add a note about your rating (optional)..."
+                  bind:value={reviewComment}
+                  rows={2}
+                />
+                {#if form?.reviewError}
+                  <p class="text-sm text-destructive">{form.reviewError}</p>
+                {/if}
+                {#if form?.reviewSuccess}
+                  <p class="text-sm text-green-600">Review submitted!</p>
+                {/if}
+                <Button
+                  type="submit"
+                  size="sm"
+                  class="w-full"
+                  disabled={isSubmittingReview || reviewRating === 0}
+                >
+                  {data.userReview ? 'Update Review' : 'Submit Review'}
+                </Button>
+              </form>
+            </div>
+          {/if}
+
+          <!-- Other Reviews -->
+          {#if data.reviews.length > 0}
+            <div class="border-t pt-4">
+              <h4 class="mb-3 text-sm font-medium">All Reviews ({data.reviews.length})</h4>
+              <div class="space-y-3">
+                {#each data.reviews as review}
+                  <div class="flex items-start gap-2">
+                    <div
+                      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium"
+                    >
+                      {review.user?.name?.[0] || '?'}
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium">
+                          {review.user?.name || 'Unknown'}
+                        </span>
+                        <RatingDisplay
+                          average={review.rating}
+                          count={0}
+                          size="sm"
+                          class="[&>span:last-child]:hidden"
+                        />
+                      </div>
+                      {#if review.comment}
+                        <p class="mt-1 text-xs text-muted-foreground">{review.comment}</p>
+                      {/if}
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </Card.Content>
+      </Card.Root>
+
       <!-- Status Actions -->
       <Card.Root>
         <Card.Header>
