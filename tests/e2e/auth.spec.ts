@@ -90,21 +90,41 @@ test.describe('Authentication', () => {
       // Try to access admin page without login
       await page.goto('/admin/cfp/devfest-paris-2025/submissions')
 
-      // Should either redirect to login or show unauthorized
-      const currentUrl = page.url()
-      const isOnLogin = currentUrl.includes('/auth/login')
-      const isOnAdmin = currentUrl.includes('/admin')
+      // Should redirect to login
+      await expect(page).toHaveURL(/\/auth\/login/)
+    })
 
-      // If not on admin page, we're redirected (expected behavior)
-      // If on admin page, check for unauthorized message
-      if (isOnAdmin) {
-        // Check for unauthorized state
-        await expect(page.getByText(/unauthorized|access denied|sign in/i))
-          .toBeVisible({ timeout: 3000 })
-          .catch(() => {
-            // If no message, the page might still load - which could indicate auth is optional
-          })
-      }
+    test('should deny speaker access to admin pages with 403', async ({ page }) => {
+      // Login as speaker (role: speaker, not organizer/admin/reviewer)
+      await page.goto('/auth/login')
+      await page.getByLabel('Email').fill('speaker@example.com')
+      await page.getByLabel('Password').fill('speaker123')
+      await page.getByRole('button', { name: 'Sign in' }).click()
+
+      // Wait for login to complete
+      await page.waitForURL(/^(?!.*\/auth\/login).*$/, { timeout: 5000 })
+
+      // Try to access admin page
+      const response = await page.goto('/admin/cfp/devfest-paris-2025/submissions')
+
+      // Should get 403 Forbidden
+      expect(response?.status()).toBe(403)
+      await expect(page.getByText(/access denied|forbidden/i)).toBeVisible()
+    })
+
+    test('should allow organizer access to admin pages', async ({ page }) => {
+      // Login as admin/organizer
+      await page.goto('/auth/login')
+      await page.getByLabel('Email').fill('admin@example.com')
+      await page.getByLabel('Password').fill('admin123')
+      await page.getByRole('button', { name: 'Sign in' }).click()
+
+      // Wait for login to complete
+      await page.waitForURL(/^(?!.*\/auth\/login).*$/, { timeout: 5000 })
+
+      // Access admin page - should succeed
+      const response = await page.goto('/admin/cfp/devfest-paris-2025/submissions')
+      expect(response?.status()).toBe(200)
     })
   })
 

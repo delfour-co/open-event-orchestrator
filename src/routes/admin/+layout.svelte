@@ -4,9 +4,18 @@ import type { Snippet } from 'svelte'
 
 type Props = {
   children: Snippet
+  data: {
+    user: {
+      id: string
+      email: string
+      name: string
+      role: string
+      avatar?: string
+    }
+  }
 }
 
-const { children }: Props = $props()
+const { children, data }: Props = $props()
 
 let sidebarCollapsed = $state(false)
 
@@ -19,7 +28,7 @@ function toggleSidebar() {
   <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
 
   <div class="flex flex-1 flex-col overflow-hidden">
-    <Header onMenuClick={toggleSidebar} />
+    <Header onMenuClick={toggleSidebar} userName={data.user.name} />
 
     <main class="flex-1 overflow-y-auto p-4 md:p-6">
       {@render children()}

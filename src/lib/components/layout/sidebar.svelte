@@ -1,6 +1,15 @@
 <script lang="ts">
 import { cn } from '$lib/utils'
-import { Calendar, ChevronLeft, Home, Mail, Settings, Ticket, Users } from 'lucide-svelte'
+import {
+  Calendar,
+  CalendarDays,
+  ChevronLeft,
+  Home,
+  Mail,
+  Settings,
+  Ticket,
+  Users
+} from 'lucide-svelte'
 import type { Snippet } from 'svelte'
 
 type Props = {
@@ -20,6 +29,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: '/admin', icon: Home, label: 'Dashboard' },
+  { href: '/admin/events', icon: CalendarDays, label: 'Events' },
   { href: '/admin/cfp', icon: Calendar, label: 'CFP' },
   { href: '/admin/planning', icon: Calendar, label: 'Planning' },
   { href: '/admin/tickets', icon: Ticket, label: 'Billetterie' },
