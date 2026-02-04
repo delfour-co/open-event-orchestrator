@@ -94,8 +94,34 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
 
+      # Start PocketBase with Docker Compose
+      - name: Start PocketBase
+        run: docker compose up -d
+
+      # Wait for PocketBase to be ready
+      - name: Wait for PocketBase
+        run: |
+          echo "Waiting for PocketBase to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8090/api/health > /dev/null 2>&1; then
+              echo "PocketBase is ready!"
+              break
+            fi
+            echo "Attempt $i: PocketBase not ready yet..."
+            sleep 2
+          done
+
+      # Initialize database with seed data
+      - name: Seed database
+        run: pnpm db:init
+
       - run: pnpm build
       - run: pnpm test:e2e --project=chromium
+
+      # Stop PocketBase
+      - name: Stop PocketBase
+        if: always()
+        run: docker compose down
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
