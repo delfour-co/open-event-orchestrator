@@ -1,6 +1,6 @@
 import { createSpeakerSchema, createTalkSchema } from '$lib/features/cfp/domain'
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
-import { error, fail, redirect } from '@sveltejs/kit'
+import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
@@ -199,7 +199,7 @@ export const actions: Actions = {
         `/cfp/${params.editionSlug}/submissions?email=${encodeURIComponent(email)}`
       )
     } catch (err) {
-      if (err instanceof Response) {
+      if (isRedirect(err)) {
         throw err
       }
       console.error('Failed to update submission:', err)

@@ -2,7 +2,7 @@ import { createSpeakerSchema, createTalkSchema } from '$lib/features/cfp/domain'
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
 import { createSubmitTalkUseCase } from '$lib/features/cfp/usecases'
 import { sendCfpNotification } from '$lib/server/cfp-notifications'
-import { error, fail, redirect } from '@sveltejs/kit'
+import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -162,7 +162,7 @@ export const actions: Actions = {
         `/cfp/${params.editionSlug}/submissions?success=true&email=${encodeURIComponent(result.speaker.email)}`
       )
     } catch (err) {
-      if (err instanceof Response) {
+      if (isRedirect(err)) {
         throw err // Re-throw redirect
       }
       console.error('Failed to submit talk:', err)

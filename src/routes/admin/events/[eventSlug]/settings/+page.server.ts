@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit'
+import { fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -88,7 +88,7 @@ export const actions: Actions = {
 
       return { success: true, message: 'Event updated successfully' }
     } catch (e) {
-      if (e instanceof Response) throw e // Re-throw redirects
+      if (isRedirect(e)) throw e // Re-throw redirects
       console.error('Failed to update event:', e)
       return fail(500, { error: 'Failed to update event' })
     }
@@ -114,7 +114,7 @@ export const actions: Actions = {
       await locals.pb.collection('events').delete(event.id)
       throw redirect(303, '/admin/events')
     } catch (e) {
-      if (e instanceof Response) throw e // Re-throw redirects
+      if (isRedirect(e)) throw e // Re-throw redirects
       console.error('Failed to delete event:', e)
       return fail(500, { error: 'Failed to delete event' })
     }
