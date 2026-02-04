@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronLeft,
   Home,
+  LayoutGrid,
   Mail,
   Settings,
   Ticket,
@@ -40,7 +41,7 @@ const allNavItems: NavItem[] = [
   },
   { href: '/admin/events', icon: CalendarDays, label: 'Events', requiresOrganizerAccess: true },
   { href: '/admin/cfp', icon: Calendar, label: 'CFP' },
-  { href: '/admin/planning', icon: Calendar, label: 'Planning', requiresOrganizerAccess: true },
+  { href: '/admin/planning', icon: LayoutGrid, label: 'Planning', requiresOrganizerAccess: true },
   { href: '/admin/tickets', icon: Ticket, label: 'Billetterie', requiresOrganizerAccess: true },
   { href: '/admin/crm', icon: Users, label: 'CRM', requiresOrganizerAccess: true },
   { href: '/admin/emails', icon: Mail, label: 'Emails', requiresOrganizerAccess: true }
