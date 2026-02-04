@@ -78,7 +78,7 @@ $effect(() => {
 <div class="mx-auto max-w-3xl">
   <div class="mb-8">
     <a
-      href="/cfp/{data.edition.slug}/submissions?email={encodeURIComponent(data.speaker.email)}"
+      href="/cfp/{data.edition.slug}/submissions?token={data.token}"
       class="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
     >
       <ArrowLeft class="h-4 w-4" />
@@ -137,7 +137,7 @@ $effect(() => {
 
       <!-- Submit -->
       <div class="flex justify-end gap-4">
-        <a href="/cfp/{data.edition.slug}/submissions?email={encodeURIComponent(data.speaker.email)}">
+        <a href="/cfp/{data.edition.slug}/submissions?token={data.token}">
           <Button variant="outline" type="button">Cancel</Button>
         </a>
         <Button type="submit" disabled={isSubmitting}>

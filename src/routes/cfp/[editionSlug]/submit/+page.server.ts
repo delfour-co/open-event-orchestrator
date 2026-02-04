@@ -2,6 +2,7 @@ import { createSpeakerSchema, createTalkSchema } from '$lib/features/cfp/domain'
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
 import { createSubmitTalkUseCase } from '$lib/features/cfp/usecases'
 import { sendCfpNotification } from '$lib/server/cfp-notifications'
+import { buildSubmissionsUrl, generateSpeakerToken } from '$lib/server/speaker-tokens'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -141,7 +142,12 @@ export const actions: Actions = {
         // Use edition name as fallback
       }
 
-      // Send confirmation email (don't await - fire and forget)
+      // Generate secure token for speaker access
+      const token = await generateSpeakerToken(locals.pb, result.speaker.id, editionId)
+      const baseUrl = request.url.split('/cfp')[0]
+      const submissionsUrl = buildSubmissionsUrl(baseUrl, params.editionSlug, token)
+
+      // Send confirmation email with secure token URL
       sendCfpNotification({
         pb: locals.pb,
         type: 'submission_confirmed',
@@ -151,16 +157,14 @@ export const actions: Actions = {
         editionSlug: params.editionSlug,
         editionName: edition.name as string,
         eventName,
-        baseUrl: request.url.split('/cfp')[0]
+        baseUrl,
+        customCfpUrl: submissionsUrl
       }).catch((err) => {
         console.error('Failed to send submission confirmation email:', err)
       })
 
-      // Redirect to success page or submissions list
-      throw redirect(
-        303,
-        `/cfp/${params.editionSlug}/submissions?success=true&email=${encodeURIComponent(result.speaker.email)}`
-      )
+      // Redirect to submissions page with token
+      throw redirect(303, `/cfp/${params.editionSlug}/submissions?success=true&token=${token}`)
     } catch (err) {
       if (isRedirect(err)) {
         throw err // Re-throw redirect

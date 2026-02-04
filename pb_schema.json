@@ -357,5 +357,25 @@
       },
       { "name": "expiresAt", "type": "date" }
     ]
+  },
+  {
+    "name": "speaker_tokens",
+    "type": "base",
+    "schema": [
+      {
+        "name": "speakerId",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "speakers", "maxSelect": 1 }
+      },
+      {
+        "name": "editionId",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "editions", "maxSelect": 1 }
+      },
+      { "name": "token", "type": "text", "required": true },
+      { "name": "expiresAt", "type": "date", "required": true }
+    ]
   }
 ]

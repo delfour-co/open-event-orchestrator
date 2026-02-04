@@ -202,7 +202,7 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
   {/if}
 
   <!-- CTA -->
-  <div class="text-center">
+  <div class="flex flex-col items-center gap-4">
     {#if data.cfpStatus === 'open'}
       <a href="/cfp/{data.edition.slug}/submit">
         <Button size="lg" class="gap-2">Submit a Talk</Button>
@@ -212,5 +212,8 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
     {:else}
       <Button size="lg" disabled class="gap-2">CFP Closed</Button>
     {/if}
+    <a href="/cfp/{data.edition.slug}/submissions">
+      <Button variant="outline" size="lg" class="gap-2">My Submissions</Button>
+    </a>
   </div>
 </div>

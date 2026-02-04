@@ -33,14 +33,26 @@ export interface SendCfpNotificationParams {
   editionName: string
   eventName: string
   baseUrl: string
+  /** Optional custom URL for CFP access (e.g., with secure token) */
+  customCfpUrl?: string
 }
 
 export async function sendCfpNotification(params: SendCfpNotificationParams): Promise<{
   success: boolean
   error?: string
 }> {
-  const { pb, type, talkId, speakerId, editionId, editionSlug, editionName, eventName, baseUrl } =
-    params
+  const {
+    pb,
+    type,
+    talkId,
+    speakerId,
+    editionId,
+    editionSlug,
+    editionName,
+    eventName,
+    baseUrl,
+    customCfpUrl
+  } = params
 
   const speakerRepo = createSpeakerRepository(pb)
   const talkRepo = createTalkRepository(pb)
@@ -61,13 +73,18 @@ export async function sendCfpNotification(params: SendCfpNotificationParams): Pr
     }
 
     // Build template data
+    // Use customCfpUrl if provided (secure token-based URL), otherwise build legacy URL
+    const submissionsUrl =
+      customCfpUrl ||
+      `${baseUrl}/cfp/${editionSlug}/submissions?email=${encodeURIComponent(speaker.email)}`
+
     const templateData: EmailTemplateData = {
       speakerName: `${speaker.firstName} ${speaker.lastName}`,
       talkTitle: talk.title,
       editionName,
       eventName,
-      cfpUrl: `${baseUrl}/cfp/${editionSlug}/submissions?email=${encodeURIComponent(speaker.email)}`,
-      confirmationUrl: `${baseUrl}/cfp/${editionSlug}/submissions?email=${encodeURIComponent(speaker.email)}`
+      cfpUrl: submissionsUrl,
+      confirmationUrl: submissionsUrl
     }
 
     // Generate email content

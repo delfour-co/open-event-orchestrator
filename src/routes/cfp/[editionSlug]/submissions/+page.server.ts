@@ -1,5 +1,11 @@
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
 import { createGetSpeakerSubmissionsUseCase } from '$lib/features/cfp/usecases'
+import { sendCfpNotification } from '$lib/server/cfp-notifications'
+import {
+  buildSubmissionsUrl,
+  generateSpeakerToken,
+  validateSpeakerToken
+} from '$lib/server/speaker-tokens'
 import { fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -20,12 +26,31 @@ interface TalkWithCoSpeakers {
   coSpeakers: Array<{ id: string; firstName: string; lastName: string; email: string }>
 }
 
+async function getSpeakerFromAuth(
+  locals: App.Locals,
+  url: URL,
+  editionId: string
+): Promise<{ speakerId: string | null; token: string | null }> {
+  const token = url.searchParams.get('token')
+
+  if (token) {
+    const validation = await validateSpeakerToken(locals.pb, token, editionId)
+    if (validation.valid && validation.speakerId) {
+      return { speakerId: validation.speakerId, token }
+    }
+  }
+
+  return { speakerId: null, token: null }
+}
+
 export const load: PageServerLoad = async ({ parent, url, locals }) => {
   const { edition, cfpStatus, allowCoSpeakers } = await parent()
-  const email = url.searchParams.get('email')
   const success = url.searchParams.get('success') === 'true'
 
-  if (!email) {
+  // Try token-based authentication
+  const { speakerId, token } = await getSpeakerFromAuth(locals, url, edition.id)
+
+  if (!speakerId) {
     return {
       edition,
       cfpStatus,
@@ -33,19 +58,36 @@ export const load: PageServerLoad = async ({ parent, url, locals }) => {
       speaker: null,
       talks: [],
       success,
-      needsEmail: true
+      needsToken: true,
+      token: null
     }
   }
 
   const talkRepository = createTalkRepository(locals.pb)
   const speakerRepository = createSpeakerRepository(locals.pb)
+
+  // Get speaker by ID
+  const speaker = await speakerRepository.findById(speakerId)
+  if (!speaker) {
+    return {
+      edition,
+      cfpStatus,
+      allowCoSpeakers,
+      speaker: null,
+      talks: [],
+      success,
+      needsToken: true,
+      token: null
+    }
+  }
+
   const getSpeakerSubmissions = createGetSpeakerSubmissionsUseCase(
     talkRepository,
     speakerRepository
   )
 
   const result = await getSpeakerSubmissions({
-    email,
+    email: speaker.email,
     editionId: edition.id
   })
 
@@ -56,7 +98,8 @@ export const load: PageServerLoad = async ({ parent, url, locals }) => {
       let coSpeakerInvitations: CoSpeakerInvitation[] = []
       try {
         const invitations = await locals.pb.collection('cospeaker_invitations').getFullList({
-          filter: `talkId="${talk.id}" && status="pending"`
+          filter: `talkId="${talk.id}" && status="pending"`,
+          requestKey: `cospeaker-invitations-${talk.id}`
         })
         coSpeakerInvitations = invitations.map((inv) => ({
           id: inv.id as string,
@@ -93,26 +136,56 @@ export const load: PageServerLoad = async ({ parent, url, locals }) => {
     speaker: result.speaker,
     talks: talksWithCoSpeakers,
     success,
-    needsEmail: false
+    needsToken: false,
+    token
   }
 }
 
+async function validateTokenAndGetSpeaker(
+  locals: App.Locals,
+  url: URL,
+  editionId: string
+): Promise<{ speaker: { id: string; email: string } | null; error: string | null }> {
+  const token = url.searchParams.get('token')
+
+  if (!token) {
+    return { speaker: null, error: 'Authentication token is required' }
+  }
+
+  const validation = await validateSpeakerToken(locals.pb, token, editionId)
+  if (!validation.valid || !validation.speakerId) {
+    return { speaker: null, error: 'Invalid or expired token' }
+  }
+
+  const speakerRepository = createSpeakerRepository(locals.pb)
+  const speaker = await speakerRepository.findById(validation.speakerId)
+  if (!speaker) {
+    return { speaker: null, error: 'Speaker not found' }
+  }
+
+  return { speaker: { id: speaker.id, email: speaker.email }, error: null }
+}
+
 export const actions: Actions = {
-  withdraw: async ({ request, locals, url }) => {
+  withdraw: async ({ request, locals, url, params }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
-    const email = url.searchParams.get('email')
 
     if (!talkId) {
       return fail(400, { error: 'Talk ID is required' })
     }
 
-    if (!email) {
-      return fail(400, { error: 'Email is required' })
+    // Get edition ID from params
+    const edition = await locals.pb
+      .collection('editions')
+      .getFirstListItem(`slug="${params.editionSlug}"`)
+
+    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    if (error || !speaker) {
+      return fail(401, { error: error || 'Authentication required' })
     }
 
     const talkRepository = createTalkRepository(locals.pb)
-    const speakerRepository = createSpeakerRepository(locals.pb)
 
     try {
       // Verify the talk belongs to this speaker
@@ -121,9 +194,10 @@ export const actions: Actions = {
         return fail(404, { error: 'Talk not found' })
       }
 
-      // Get speaker by email
-      const speaker = await speakerRepository.findByEmail(email)
-      if (!speaker || !talk.speakerIds.includes(speaker.id)) {
+      // Check speaker authorization using speaker ID
+      const speakerRepository = createSpeakerRepository(locals.pb)
+      const fullSpeaker = await speakerRepository.findById(speaker.id)
+      if (!fullSpeaker || !talk.speakerIds.includes(fullSpeaker.id)) {
         return fail(403, { error: 'You are not authorized to withdraw this talk' })
       }
 
@@ -145,13 +219,21 @@ export const actions: Actions = {
     }
   },
 
-  confirm: async ({ request, locals, url }) => {
+  confirm: async ({ request, locals, url, params }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
-    const email = url.searchParams.get('email')
 
-    if (!talkId || !email) {
-      return fail(400, { error: 'Talk ID and email are required' })
+    if (!talkId) {
+      return fail(400, { error: 'Talk ID is required' })
+    }
+
+    const edition = await locals.pb
+      .collection('editions')
+      .getFirstListItem(`slug="${params.editionSlug}"`)
+
+    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    if (error || !speaker) {
+      return fail(401, { error: error || 'Authentication required' })
     }
 
     const talkRepository = createTalkRepository(locals.pb)
@@ -163,8 +245,8 @@ export const actions: Actions = {
         return fail(404, { error: 'Talk not found' })
       }
 
-      const speaker = await speakerRepository.findByEmail(email)
-      if (!speaker || !talk.speakerIds.includes(speaker.id)) {
+      const fullSpeaker = await speakerRepository.findById(speaker.id)
+      if (!fullSpeaker || !talk.speakerIds.includes(fullSpeaker.id)) {
         return fail(403, { error: 'You are not authorized to confirm this talk' })
       }
 
@@ -181,13 +263,21 @@ export const actions: Actions = {
     }
   },
 
-  decline: async ({ request, locals, url }) => {
+  decline: async ({ request, locals, url, params }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
-    const email = url.searchParams.get('email')
 
-    if (!talkId || !email) {
-      return fail(400, { error: 'Talk ID and email are required' })
+    if (!talkId) {
+      return fail(400, { error: 'Talk ID is required' })
+    }
+
+    const edition = await locals.pb
+      .collection('editions')
+      .getFirstListItem(`slug="${params.editionSlug}"`)
+
+    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    if (error || !speaker) {
+      return fail(401, { error: error || 'Authentication required' })
     }
 
     const talkRepository = createTalkRepository(locals.pb)
@@ -199,8 +289,8 @@ export const actions: Actions = {
         return fail(404, { error: 'Talk not found' })
       }
 
-      const speaker = await speakerRepository.findByEmail(email)
-      if (!speaker || !talk.speakerIds.includes(speaker.id)) {
+      const fullSpeaker = await speakerRepository.findById(speaker.id)
+      if (!fullSpeaker || !talk.speakerIds.includes(fullSpeaker.id)) {
         return fail(403, { error: 'You are not authorized to decline this talk' })
       }
 
@@ -217,14 +307,22 @@ export const actions: Actions = {
     }
   },
 
-  inviteCospeaker: async ({ request, locals, url }) => {
+  inviteCospeaker: async ({ request, locals, url, params }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
     const cospeakerEmail = formData.get('cospeakerEmail') as string
-    const email = url.searchParams.get('email')
 
-    if (!talkId || !cospeakerEmail || !email) {
+    if (!talkId || !cospeakerEmail) {
       return fail(400, { error: 'All fields are required' })
+    }
+
+    const edition = await locals.pb
+      .collection('editions')
+      .getFirstListItem(`slug="${params.editionSlug}"`)
+
+    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    if (error || !speaker) {
+      return fail(401, { error: error || 'Authentication required' })
     }
 
     // Validate email format
@@ -234,7 +332,7 @@ export const actions: Actions = {
     }
 
     // Can't invite yourself
-    if (cospeakerEmail.toLowerCase() === email.toLowerCase()) {
+    if (cospeakerEmail.toLowerCase() === speaker.email.toLowerCase()) {
       return fail(400, { inviteError: "You can't invite yourself as a co-speaker" })
     }
 
@@ -248,8 +346,8 @@ export const actions: Actions = {
         return fail(404, { error: 'Talk not found' })
       }
 
-      const speaker = await speakerRepository.findByEmail(email)
-      if (!speaker || !talk.speakerIds.includes(speaker.id)) {
+      const fullSpeaker = await speakerRepository.findById(speaker.id)
+      if (!fullSpeaker || !talk.speakerIds.includes(fullSpeaker.id)) {
         return fail(403, { error: 'You are not authorized to invite co-speakers for this talk' })
       }
 
@@ -279,7 +377,7 @@ export const actions: Actions = {
         talkId,
         email: cospeakerEmail,
         status: 'pending',
-        invitedBy: speaker.id,
+        invitedBy: fullSpeaker.id,
         expiresAt: expiresAt.toISOString()
       })
 
@@ -290,13 +388,21 @@ export const actions: Actions = {
     }
   },
 
-  cancelCospeakerInvitation: async ({ request, locals, url }) => {
+  cancelCospeakerInvitation: async ({ request, locals, url, params }) => {
     const formData = await request.formData()
     const invitationId = formData.get('invitationId') as string
-    const email = url.searchParams.get('email')
 
-    if (!invitationId || !email) {
-      return fail(400, { error: 'Invitation ID and email are required' })
+    if (!invitationId) {
+      return fail(400, { error: 'Invitation ID is required' })
+    }
+
+    const edition = await locals.pb
+      .collection('editions')
+      .getFirstListItem(`slug="${params.editionSlug}"`)
+
+    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    if (error || !speaker) {
+      return fail(401, { error: error || 'Authentication required' })
     }
 
     const speakerRepository = createSpeakerRepository(locals.pb)
@@ -312,8 +418,8 @@ export const actions: Actions = {
         return fail(404, { error: 'Talk not found' })
       }
 
-      const speaker = await speakerRepository.findByEmail(email)
-      if (!speaker || !talk.speakerIds.includes(speaker.id)) {
+      const fullSpeaker = await speakerRepository.findById(speaker.id)
+      if (!fullSpeaker || !talk.speakerIds.includes(fullSpeaker.id)) {
         return fail(403, { error: 'You are not authorized to cancel this invitation' })
       }
 
@@ -326,6 +432,86 @@ export const actions: Actions = {
     } catch (err) {
       console.error('Failed to cancel invitation:', err)
       return fail(500, { error: 'Failed to cancel invitation. Please try again.' })
+    }
+  },
+
+  requestAccess: async ({ request, locals, params }) => {
+    const formData = await request.formData()
+    const email = formData.get('email') as string
+
+    if (!email) {
+      return fail(400, { accessError: 'Email is required' })
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return fail(400, { accessError: 'Please enter a valid email address' })
+    }
+
+    const speakerRepository = createSpeakerRepository(locals.pb)
+    const speaker = await speakerRepository.findByEmail(email)
+
+    if (!speaker) {
+      // Don't reveal if the email exists or not for security
+      return {
+        accessRequested: true,
+        message: 'If you have submissions with this email, you will receive an access link shortly.'
+      }
+    }
+
+    // Get edition
+    const edition = await locals.pb
+      .collection('editions')
+      .getFirstListItem(`slug="${params.editionSlug}"`)
+
+    // Check if this speaker has any talks for this edition
+    const talkRepository = createTalkRepository(locals.pb)
+    const talks = await talkRepository.findByFilters({
+      speakerId: speaker.id,
+      editionId: edition.id
+    })
+
+    if (talks.length === 0) {
+      // Don't reveal if they have submissions or not
+      return {
+        accessRequested: true,
+        message: 'If you have submissions with this email, you will receive an access link shortly.'
+      }
+    }
+
+    // Generate token and send email
+    const token = await generateSpeakerToken(locals.pb, speaker.id, edition.id)
+
+    // Get event name
+    let eventName = edition.name as string
+    try {
+      const event = await locals.pb.collection('events').getOne(edition.eventId as string)
+      eventName = event.name as string
+    } catch {
+      // Use edition name as fallback
+    }
+
+    // Send email with access link using the first talk as reference
+    const baseUrl = request.url.split('/cfp')[0]
+    const accessUrl = buildSubmissionsUrl(baseUrl, params.editionSlug, token)
+
+    await sendCfpNotification({
+      pb: locals.pb,
+      type: 'submission_confirmed',
+      talkId: talks[0].id,
+      speakerId: speaker.id,
+      editionId: edition.id,
+      editionSlug: params.editionSlug,
+      editionName: edition.name as string,
+      eventName,
+      baseUrl,
+      customCfpUrl: accessUrl
+    })
+
+    return {
+      accessRequested: true,
+      message: 'If you have submissions with this email, you will receive an access link shortly.'
     }
   }
 }

@@ -1,19 +1,26 @@
 import { createSpeakerSchema, createTalkSchema } from '$lib/features/cfp/domain'
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
+import { validateSpeakerToken } from '$lib/server/speaker-tokens'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
   const { edition, categories, formats, cfpStatus } = await parent()
-  const email = url.searchParams.get('email')
+  const token = url.searchParams.get('token')
 
   // Check CFP is still open
   if (cfpStatus !== 'open') {
     throw error(403, 'Editing is not available when the CFP is closed.')
   }
 
-  if (!email) {
-    throw error(400, 'Email is required to edit a submission.')
+  if (!token) {
+    throw error(400, 'A valid access token is required to edit a submission.')
+  }
+
+  // Validate token
+  const tokenResult = await validateSpeakerToken(locals.pb, token, edition.id)
+  if (!tokenResult.valid || !tokenResult.speakerId) {
+    throw error(403, 'Invalid or expired access token. Please request a new access link.')
   }
 
   const talkRepository = createTalkRepository(locals.pb)
@@ -36,8 +43,8 @@ export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
     throw error(403, `Cannot edit a talk with status "${talk.status}"`)
   }
 
-  // Get the speaker and verify ownership
-  const speaker = await speakerRepository.findByEmail(email)
+  // Get the speaker and verify ownership via token
+  const speaker = await speakerRepository.findById(tokenResult.speakerId)
   if (!speaker || !talk.speakerIds.includes(speaker.id)) {
     throw error(403, 'You are not authorized to edit this talk')
   }
@@ -47,16 +54,17 @@ export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
     categories,
     formats,
     talk,
-    speaker
+    speaker,
+    token
   }
 }
 
 export const actions: Actions = {
   update: async ({ request, locals, params, url }) => {
-    const email = url.searchParams.get('email')
+    const token = url.searchParams.get('token')
 
-    if (!email) {
-      return fail(400, { error: 'Email is required' })
+    if (!token) {
+      return fail(400, { error: 'A valid access token is required' })
     }
 
     // Verify CFP is still open
@@ -69,6 +77,14 @@ export const actions: Actions = {
     }
 
     const editionId = editions.items[0].id as string
+
+    // Validate token
+    const tokenResult = await validateSpeakerToken(locals.pb, token, editionId)
+    if (!tokenResult.valid || !tokenResult.speakerId) {
+      return fail(403, {
+        error: 'Invalid or expired access token. Please request a new access link.'
+      })
+    }
 
     let cfpSettings = null
     try {
@@ -97,7 +113,7 @@ export const actions: Actions = {
       return fail(404, { error: 'Talk not found' })
     }
 
-    const speaker = await speakerRepository.findByEmail(email)
+    const speaker = await speakerRepository.findById(tokenResult.speakerId)
     if (!speaker || !talk.speakerIds.includes(speaker.id)) {
       return fail(403, { error: 'You are not authorized to edit this talk' })
     }
@@ -194,10 +210,7 @@ export const actions: Actions = {
         notes: talkValidation.data.notes
       })
 
-      throw redirect(
-        303,
-        `/cfp/${params.editionSlug}/submissions?email=${encodeURIComponent(email)}`
-      )
+      throw redirect(303, `/cfp/${params.editionSlug}/submissions?token=${token}`)
     } catch (err) {
       if (isRedirect(err)) {
         throw err

@@ -1,6 +1,5 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { goto } from '$app/navigation'
 import { Button } from '$lib/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -12,6 +11,8 @@ import {
   Clock,
   Edit,
   FileText,
+  Loader2,
+  Mail,
   Plus,
   ThumbsDown,
   ThumbsUp,
@@ -29,17 +30,11 @@ interface Props {
 let { data, form }: Props = $props()
 
 let email = $state('')
+let isRequestingAccess = $state(false)
 let showWithdrawConfirm = $state<string | null>(null)
 let showDeclineConfirm = $state<string | null>(null)
 let showInviteForm = $state<string | null>(null)
 let cospeakerEmail = $state('')
-
-const handleEmailSubmit = (e: Event) => {
-  e.preventDefault()
-  if (email) {
-    goto(`/cfp/${data.edition.slug}/submissions?email=${encodeURIComponent(email)}`)
-  }
-}
 
 const canWithdraw = (status: string) => {
   return ['draft', 'submitted', 'under_review', 'accepted'].includes(status)
@@ -70,7 +65,7 @@ const statusColors: Record<string, string> = {
   {#if data.success}
     <div class="mb-6 flex items-center gap-3 rounded-lg border border-green-500 bg-green-50 p-4 dark:border-green-700 dark:bg-green-950">
       <CheckCircle class="h-5 w-5 text-green-600 dark:text-green-400" />
-      <p class="text-sm text-green-800 dark:text-green-200">Your talk has been submitted successfully!</p>
+      <p class="text-sm text-green-800 dark:text-green-200">Your talk has been submitted successfully! Check your email for the access link.</p>
     </div>
   {/if}
 
@@ -116,29 +111,73 @@ const statusColors: Record<string, string> = {
     </div>
   {/if}
 
-  {#if data.needsEmail}
-    <!-- Email lookup form -->
+  {#if form?.accessRequested}
+    <div class="mb-6 flex items-center gap-3 rounded-lg border border-blue-500 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-950">
+      <Mail class="h-5 w-5 text-blue-600 dark:text-blue-400" />
+      <p class="text-sm text-blue-800 dark:text-blue-200">{form.message}</p>
+    </div>
+  {/if}
+
+  {#if data.needsToken}
+    <!-- Request access form -->
     <Card>
       <CardHeader>
-        <CardTitle>Find Your Submissions</CardTitle>
-        <CardDescription>Enter your email address to view your submissions</CardDescription>
+        <CardTitle>Access Your Submissions</CardTitle>
+        <CardDescription>
+          Enter your email address and we'll send you a secure link to view and manage your submissions.
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onsubmit={handleEmailSubmit} class="space-y-4">
+        <form
+          method="POST"
+          action="?/requestAccess"
+          use:enhance={() => {
+            isRequestingAccess = true
+            return async ({ update }) => {
+              isRequestingAccess = false
+              await update()
+            }
+          }}
+          class="space-y-4"
+        >
           <div class="space-y-2">
             <Label for="email">Email Address</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               bind:value={email}
-              placeholder="john@example.com"
+              placeholder="speaker@example.com"
               required
             />
           </div>
-          <Button type="submit">View Submissions</Button>
+          {#if form?.accessError}
+            <p class="text-sm text-destructive">{form.accessError}</p>
+          {/if}
+          <Button type="submit" disabled={isRequestingAccess} class="gap-2">
+            {#if isRequestingAccess}
+              <Loader2 class="h-4 w-4 animate-spin" />
+              Sending...
+            {:else}
+              <Mail class="h-4 w-4" />
+              Send Access Link
+            {/if}
+          </Button>
         </form>
       </CardContent>
     </Card>
+
+    <div class="mt-8 text-center">
+      <p class="text-sm text-muted-foreground">
+        Don't have any submissions yet?
+      </p>
+      <a href="/cfp/{data.edition.slug}/submit" class="mt-2 inline-block">
+        <Button variant="outline" class="gap-2">
+          <Plus class="h-4 w-4" />
+          Submit a Talk
+        </Button>
+      </a>
+    </div>
   {:else if data.speaker}
     <!-- Speaker info and talks -->
     <div class="space-y-6">
@@ -359,7 +398,7 @@ const statusColors: Record<string, string> = {
                 {#if canEdit(talk.status) || canWithdraw(talk.status)}
                   <div class="flex flex-wrap gap-2 border-t pt-4">
                     {#if canEdit(talk.status)}
-                      <a href="/cfp/{data.edition.slug}/submissions/{talk.id}/edit?email={encodeURIComponent(data.speaker?.email || '')}">
+                      <a href="/cfp/{data.edition.slug}/submissions/{talk.id}/edit?token={data.token}">
                         <Button variant="outline" size="sm" class="gap-2">
                           <Edit class="h-4 w-4" />
                           Edit
@@ -417,18 +456,18 @@ const statusColors: Record<string, string> = {
       {/if}
     </div>
   {:else}
-    <!-- No speaker found -->
+    <!-- Invalid or expired token -->
     <Card>
       <CardContent class="py-12 text-center">
-        <FileText class="mx-auto h-12 w-12 text-muted-foreground" />
-        <h3 class="mt-4 text-lg font-medium">No submissions found</h3>
+        <X class="mx-auto h-12 w-12 text-red-500" />
+        <h3 class="mt-4 text-lg font-medium">Invalid or Expired Link</h3>
         <p class="mt-2 text-sm text-muted-foreground">
-          We couldn't find any submissions for this email address.
+          This access link is invalid or has expired. Please request a new one.
         </p>
-        <a href="/cfp/{data.edition.slug}/submit" class="mt-4 inline-block">
+        <a href="/cfp/{data.edition.slug}/submissions" class="mt-4 inline-block">
           <Button class="gap-2">
-            <Plus class="h-4 w-4" />
-            Submit a Talk
+            <Mail class="h-4 w-4" />
+            Request New Access Link
           </Button>
         </a>
       </CardContent>
