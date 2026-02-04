@@ -353,6 +353,12 @@ function autodateField(
 }
 
 // Collection schemas WITHOUT relation fields (relations are added later)
+// Test tokens for E2E tests (64 hex chars = 32 bytes)
+const TEST_SPEAKER_TOKENS = {
+  speaker1: 'a'.repeat(64), // For speaker@example.com
+  speaker2: 'b'.repeat(64) // For speaker2@example.com
+}
+
 const collectionSchemas: Array<{
   name: string
   type: 'base' | 'auth'
@@ -601,6 +607,21 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  {
+    name: 'speaker_tokens',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('token', true),
+      dateField('expiresAt', true),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -635,7 +656,9 @@ const relationDefinitions = [
     target: 'organizations',
     maxSelect: 1
   },
-  { collection: 'organization_invitations', field: 'invitedBy', target: 'users', maxSelect: 1 }
+  { collection: 'organization_invitations', field: 'invitedBy', target: 'users', maxSelect: 1 },
+  { collection: 'speaker_tokens', field: 'speakerId', target: 'speakers', maxSelect: 1 },
+  { collection: 'speaker_tokens', field: 'editionId', target: 'editions', maxSelect: 1 }
 ]
 
 // ============================================================================
@@ -1125,6 +1148,42 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 7b. Create Speaker Tokens for E2E tests
+    // ========================================================================
+    console.log('🔑 Creating speaker tokens...')
+    const tokenKeys = Object.keys(TEST_SPEAKER_TOKENS) as Array<keyof typeof TEST_SPEAKER_TOKENS>
+    for (let i = 0; i < Math.min(ids.speakers.length, tokenKeys.length); i++) {
+      const speakerId = ids.speakers[i]
+      const tokenKey = tokenKeys[i]
+      const token = TEST_SPEAKER_TOKENS[tokenKey]
+
+      try {
+        const existing = await pb.collection('speaker_tokens').getList(1, 1, {
+          filter: `speakerId = "${speakerId}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Token already exists for speaker ${i + 1}`)
+        } else {
+          // Token expires in 30 days
+          const expiresAt = new Date()
+          expiresAt.setDate(expiresAt.getDate() + 30)
+
+          await pb.collection('speaker_tokens').create({
+            speakerId,
+            editionId: ids.edition,
+            token,
+            expiresAt: expiresAt.toISOString()
+          })
+          console.log(`  Created token for speaker ${i + 1}`)
+        }
+      } catch (err) {
+        console.error(`  Failed to create token for speaker ${i + 1}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
     // 8. Create Talks
     // ========================================================================
     console.log('💬 Creating talks...')
@@ -1222,6 +1281,14 @@ async function seed(): Promise<void> {
     console.log('')
     console.log(`🌐 Edition URL: /cfp/${edition.slug}`)
     console.log(`🔧 Admin URL: /admin/cfp/${edition.slug}/submissions`)
+    console.log('')
+    console.log('🔑 Test tokens for E2E:')
+    console.log(
+      `   Speaker 1: /cfp/${edition.slug}/submissions?token=${TEST_SPEAKER_TOKENS.speaker1}`
+    )
+    console.log(
+      `   Speaker 2: /cfp/${edition.slug}/submissions?token=${TEST_SPEAKER_TOKENS.speaker2}`
+    )
   } catch (err) {
     console.error('❌ Seed failed:', err)
     process.exit(1)
