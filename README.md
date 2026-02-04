@@ -196,13 +196,14 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 - [ ] Event settings page (#46)
 - [ ] UX cleanup: categories/formats placement (#47)
 
-### Phase 2 — Planning (Schedule management) 🚧
+### Phase 2 — Planning (Schedule management) ✅
 
 - [x] Data model: Session, Room, Slot, Track (#15)
 - [x] CRUD Rooms, Tracks, Slots with equipment management (#56, #57)
 - [x] Session management: assign talks to slots (#58)
 - [x] Staff assignments: assign team members to rooms (#56)
 - [x] Schedule view switcher (by room / by track)
+- [x] Session form dialog modal (UX improvement)
 - [x] Public schedule view (#18)
 - [x] Export: iCal, JSON, PDF (#19)
 - [x] E2E tests (#59)
