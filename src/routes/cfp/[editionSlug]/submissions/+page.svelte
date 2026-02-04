@@ -5,10 +5,9 @@ import { Button } from '$lib/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { getStatusColor, getStatusLabel } from '$lib/features/cfp/domain'
+import { type TalkStatus, getStatusColor, getStatusLabel } from '$lib/features/cfp/domain'
 import {
   AlertTriangle,
-  Check,
   CheckCircle,
   Clock,
   Edit,
@@ -44,10 +43,6 @@ const handleEmailSubmit = (e: Event) => {
 
 const canWithdraw = (status: string) => {
   return ['draft', 'submitted', 'under_review', 'accepted'].includes(status)
-}
-
-const canConfirmDecline = (status: string) => {
-  return status === 'accepted'
 }
 
 const canEdit = (status: string) => {
@@ -188,9 +183,9 @@ const statusColors: Record<string, string> = {
                     </CardDescription>
                   </div>
                   <span
-                    class={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[getStatusColor(talk.status)]}`}
+                    class={`rounded-full px-3 py-1 text-xs font-medium ${statusColors[getStatusColor(talk.status as TalkStatus)]}`}
                   >
-                    {getStatusLabel(talk.status)}
+                    {getStatusLabel(talk.status as TalkStatus)}
                   </span>
                 </div>
               </CardHeader>

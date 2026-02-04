@@ -6,8 +6,7 @@ import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent }) => {
-  const { edition, categories, formats, cfpStatus, cfpOpenDate, cfpCloseDate, allowCoSpeakers } =
-    await parent()
+  const { edition, categories, formats, cfpStatus, allowCoSpeakers } = await parent()
 
   // Block access if CFP is not open
   if (cfpStatus !== 'open') {

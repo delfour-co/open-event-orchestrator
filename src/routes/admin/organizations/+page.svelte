@@ -5,7 +5,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
-import { Building2, CalendarDays, Edit2, Plus, Settings, Trash2 } from 'lucide-svelte'
+import { Building2, CalendarDays, Plus, Settings, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -16,7 +16,6 @@ interface Props {
 const { data, form }: Props = $props()
 
 let showNewOrg = $state(false)
-let editingOrg = $state<string | null>(null)
 
 const generateSlug = (name: string) => {
   return name
@@ -133,118 +132,58 @@ const generateSlug = (name: string) => {
     <div class="space-y-4">
       {#each data.organizations as org}
         <Card.Root>
-          {#if editingOrg === org.id}
-            <!-- Edit Form -->
-            <Card.Header>
-              <Card.Title class="text-lg">Edit Organization</Card.Title>
-            </Card.Header>
-            <Card.Content>
-              <form
-                method="POST"
-                action="?/update"
-                use:enhance={() => {
-                  return async ({ update }) => {
-                    await update()
-                    editingOrg = null
-                  }
-                }}
-                class="space-y-4"
-              >
-                <input type="hidden" name="id" value={org.id} />
-                <div class="grid gap-4 md:grid-cols-2">
-                  <div class="space-y-2">
-                    <Label for="edit-name-{org.id}">Name</Label>
-                    <Input id="edit-name-{org.id}" name="name" value={org.name} required />
-                  </div>
-                  <div class="space-y-2">
-                    <Label for="edit-slug-{org.id}">Slug</Label>
-                    <Input id="edit-slug-{org.id}" name="slug" value={org.slug} required />
-                  </div>
+          <Card.Header class="pb-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div
+                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                >
+                  <Building2 class="h-5 w-5" />
                 </div>
-                <div class="space-y-2">
-                  <Label for="edit-description-{org.id}">Description</Label>
-                  <Textarea
-                    id="edit-description-{org.id}"
-                    name="description"
-                    value={org.description}
-                  />
-                </div>
-                <div class="flex gap-2">
-                  <Button type="submit" size="sm">Save</Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onclick={() => (editingOrg = null)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </Card.Content>
-          {:else}
-            <!-- View Mode -->
-            <Card.Header class="pb-3">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                  >
-                    <Building2 class="h-5 w-5" />
-                  </div>
-                  <div>
-                    <Card.Title>{org.name}</Card.Title>
-                    <Card.Description>
-                      /{org.slug} - {org.eventsCount} event(s)
-                    </Card.Description>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <a href="/admin/events?org={org.id}">
-                    <Button variant="outline" size="sm">
-                      <CalendarDays class="mr-2 h-4 w-4" />
-                      View Events
-                    </Button>
-                  </a>
-                  <a href="/admin/organizations/{org.slug}/settings" title="Organization Settings">
-                    <Button variant="ghost" size="icon" class="h-8 w-8">
-                      <Settings class="h-4 w-4" />
-                    </Button>
-                  </a>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8"
-                    onclick={() => (editingOrg = org.id)}
-                  >
-                    <Edit2 class="h-4 w-4" />
-                  </Button>
-                  <form method="POST" action="?/delete" use:enhance>
-                    <input type="hidden" name="id" value={org.id} />
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="icon"
-                      class="h-8 w-8 text-destructive hover:text-destructive"
-                      disabled={org.eventsCount > 0}
-                      title={org.eventsCount > 0 ? 'Delete events first' : 'Delete organization'}
-                      onclick={(e) => {
-                        if (!confirm('Delete this organization?')) {
-                          e.preventDefault()
-                        }
-                      }}
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </Button>
-                  </form>
+                <div>
+                  <Card.Title>{org.name}</Card.Title>
+                  <Card.Description>
+                    /{org.slug} - {org.eventsCount} event(s)
+                  </Card.Description>
                 </div>
               </div>
-            </Card.Header>
-            {#if org.description}
-              <Card.Content class="pt-0">
-                <p class="text-sm text-muted-foreground">{org.description}</p>
-              </Card.Content>
-            {/if}
+              <div class="flex items-center gap-2">
+                <a href="/admin/events?org={org.id}">
+                  <Button variant="outline" size="sm">
+                    <CalendarDays class="mr-2 h-4 w-4" />
+                    View Events
+                  </Button>
+                </a>
+                <a href="/admin/organizations/{org.slug}/settings" title="Organization Settings">
+                  <Button variant="ghost" size="icon" class="h-8 w-8">
+                    <Settings class="h-4 w-4" />
+                  </Button>
+                </a>
+                <form method="POST" action="?/delete" use:enhance>
+                  <input type="hidden" name="id" value={org.id} />
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8 text-destructive hover:text-destructive"
+                    disabled={org.eventsCount > 0}
+                    title={org.eventsCount > 0 ? 'Delete events first' : 'Delete organization'}
+                    onclick={(e) => {
+                      if (!confirm('Delete this organization?')) {
+                        e.preventDefault()
+                      }
+                    }}
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </Card.Header>
+          {#if org.description}
+            <Card.Content class="pt-0">
+              <p class="text-sm text-muted-foreground">{org.description}</p>
+            </Card.Content>
           {/if}
         </Card.Root>
       {/each}

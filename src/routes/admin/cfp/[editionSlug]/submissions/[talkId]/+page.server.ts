@@ -89,7 +89,6 @@ export const actions: Actions = {
     }
 
     const talkRepo = createTalkRepository(locals.pb)
-    const speakerRepo = createSpeakerRepository(locals.pb)
 
     try {
       // Get talk before update to get speaker info
