@@ -467,7 +467,13 @@ $effect(() => {
                 </div>
                 <div class="space-y-2">
                   <Label for="slot-date">Date *</Label>
-                  <Input id="slot-date" name="date" type="date" required />
+                  <Input
+                    id="slot-date"
+                    name="date"
+                    type="date"
+                    required
+                    value={data.edition.startDate.toISOString().split('T')[0]}
+                  />
                 </div>
                 <div class="space-y-2">
                   <Label for="slot-start">Start Time *</Label>
