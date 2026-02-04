@@ -29,6 +29,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   create: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageOrganizations(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage organizations' })
+    }
+
     const data = await request.formData()
     const name = data.get('name') as string
     const slug = data.get('slug') as string
@@ -64,6 +70,12 @@ export const actions: Actions = {
   },
 
   update: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageOrganizations(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage organizations' })
+    }
+
     const data = await request.formData()
     const id = data.get('id') as string
     const name = data.get('name') as string
@@ -88,6 +100,12 @@ export const actions: Actions = {
   },
 
   delete: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageOrganizations(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage organizations' })
+    }
+
     const data = await request.formData()
     const id = data.get('id') as string
 

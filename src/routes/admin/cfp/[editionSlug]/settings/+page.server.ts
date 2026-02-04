@@ -107,6 +107,12 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 
 export const actions: Actions = {
   updateSettings: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify CFP settings' })
+    }
+
     const formData = await request.formData()
 
     const cfpOpenDate = formData.get('cfpOpenDate') as string
@@ -177,6 +183,12 @@ export const actions: Actions = {
   },
 
   addCategory: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage categories' })
+    }
+
     const formData = await request.formData()
     const name = formData.get('name') as string
     const description = formData.get('description') as string
@@ -214,6 +226,12 @@ export const actions: Actions = {
   },
 
   deleteCategory: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage categories' })
+    }
+
     const formData = await request.formData()
     const id = formData.get('id') as string
 
@@ -227,6 +245,12 @@ export const actions: Actions = {
   },
 
   addFormat: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage formats' })
+    }
+
     const formData = await request.formData()
     const name = formData.get('name') as string
     const description = formData.get('description') as string
@@ -264,6 +288,12 @@ export const actions: Actions = {
   },
 
   deleteFormat: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage formats' })
+    }
+
     const formData = await request.formData()
     const id = formData.get('id') as string
 

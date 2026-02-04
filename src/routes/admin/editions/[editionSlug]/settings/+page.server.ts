@@ -40,6 +40,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
   updateEdition: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify edition settings' })
+    }
+
     const formData = await request.formData()
     const name = formData.get('name') as string
     const startDate = formData.get('startDate') as string
@@ -78,6 +84,12 @@ export const actions: Actions = {
   },
 
   updateStatus: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify edition status' })
+    }
+
     const formData = await request.formData()
     const status = formData.get('status') as string
 

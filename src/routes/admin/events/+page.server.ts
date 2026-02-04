@@ -58,6 +58,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   createEvent: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageEvents(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage events' })
+    }
+
     const data = await request.formData()
     const organizationId = data.get('organizationId') as string
     const name = data.get('name') as string
@@ -83,6 +89,12 @@ export const actions: Actions = {
   },
 
   createEdition: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageEvents(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage events' })
+    }
+
     const data = await request.formData()
     const eventId = data.get('eventId') as string
     const name = data.get('name') as string
@@ -119,6 +131,12 @@ export const actions: Actions = {
   },
 
   deleteEvent: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageEvents(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage events' })
+    }
+
     const data = await request.formData()
     const eventId = data.get('eventId') as string
 
@@ -144,6 +162,12 @@ export const actions: Actions = {
   },
 
   deleteEdition: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageEvents(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage events' })
+    }
+
     const data = await request.formData()
     const editionId = data.get('editionId') as string
 

@@ -97,6 +97,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
   updateOrganization: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify organization settings' })
+    }
+
     const formData = await request.formData()
     const name = formData.get('name') as string
     const slug = formData.get('slug') as string
@@ -150,6 +156,12 @@ export const actions: Actions = {
   },
 
   addMember: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage members' })
+    }
+
     const formData = await request.formData()
     const email = formData.get('email') as string
     const role = formData.get('role') as string
@@ -225,6 +237,12 @@ export const actions: Actions = {
   },
 
   cancelInvitation: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage invitations' })
+    }
+
     const formData = await request.formData()
     const invitationId = formData.get('invitationId') as string
 
@@ -244,6 +262,12 @@ export const actions: Actions = {
   },
 
   updateMemberRole: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage members' })
+    }
+
     const formData = await request.formData()
     const memberId = formData.get('memberId') as string
     const role = formData.get('role') as string
@@ -266,6 +290,12 @@ export const actions: Actions = {
   },
 
   removeMember: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage members' })
+    }
+
     const formData = await request.formData()
     const memberId = formData.get('memberId') as string
 
@@ -283,6 +313,12 @@ export const actions: Actions = {
   },
 
   deleteOrganization: async ({ locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to delete organizations' })
+    }
+
     try {
       const organization = await locals.pb
         .collection('organizations')

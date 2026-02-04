@@ -44,6 +44,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
   updateEvent: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify event settings' })
+    }
+
     const formData = await request.formData()
     const name = formData.get('name') as string
     const slug = formData.get('slug') as string
@@ -101,6 +107,12 @@ export const actions: Actions = {
   },
 
   deleteEvent: async ({ locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to delete events' })
+    }
+
     try {
       const event = await locals.pb
         .collection('events')
