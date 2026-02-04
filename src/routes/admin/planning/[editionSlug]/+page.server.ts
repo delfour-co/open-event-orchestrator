@@ -16,39 +16,58 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const edition = editions.items[0]
   const editionId = edition.id as string
 
-  // Load rooms, tracks, slots, sessions, and accepted talks in parallel
-  const [rooms, tracks, slots, sessions, acceptedTalks, formats] = await Promise.all([
-    locals.pb.collection('rooms').getFullList({
-      filter: `editionId = "${editionId}"`,
-      sort: 'order,name'
-    }),
-    locals.pb.collection('tracks').getFullList({
-      filter: `editionId = "${editionId}"`,
-      sort: 'order,name'
-    }),
-    locals.pb.collection('slots').getFullList({
-      filter: `editionId = "${editionId}"`,
-      sort: 'date,startTime'
-    }),
-    locals.pb.collection('sessions').getFullList({
-      filter: `editionId = "${editionId}"`
-    }),
-    // Load accepted talks with speaker information expanded
-    locals.pb
-      .collection('talks')
-      .getFullList({
-        filter: `editionId = "${editionId}" && (status = "accepted" || status = "confirmed")`,
-        expand: 'speakerIds',
-        sort: 'title'
-      }),
-    // Load formats for duration information
-    locals.pb
-      .collection('formats')
-      .getFullList({
+  // Get organization ID from edition -> event -> organization
+  const event = await locals.pb.collection('events').getOne(edition.eventId as string)
+  const organizationId = event.organizationId as string
+
+  // Load rooms, tracks, slots, sessions, accepted talks, and organization members in parallel
+  const [rooms, tracks, slots, sessions, acceptedTalks, formats, orgMembers, roomAssignments] =
+    await Promise.all([
+      locals.pb.collection('rooms').getFullList({
         filter: `editionId = "${editionId}"`,
         sort: 'order,name'
-      })
-  ])
+      }),
+      locals.pb.collection('tracks').getFullList({
+        filter: `editionId = "${editionId}"`,
+        sort: 'order,name'
+      }),
+      locals.pb.collection('slots').getFullList({
+        filter: `editionId = "${editionId}"`,
+        sort: 'date,startTime'
+      }),
+      locals.pb.collection('sessions').getFullList({
+        filter: `editionId = "${editionId}"`
+      }),
+      // Load accepted talks with speaker information expanded
+      locals.pb
+        .collection('talks')
+        .getFullList({
+          filter: `editionId = "${editionId}" && (status = "accepted" || status = "confirmed")`,
+          expand: 'speakerIds',
+          sort: 'title'
+        }),
+      // Load formats for duration information
+      locals.pb
+        .collection('formats')
+        .getFullList({
+          filter: `editionId = "${editionId}"`,
+          sort: 'order,name'
+        }),
+      // Load organization members for room assignments
+      locals.pb
+        .collection('organization_members')
+        .getFullList({
+          filter: `organizationId = "${organizationId}"`,
+          expand: 'userId'
+        }),
+      // Load room assignments for this edition
+      locals.pb
+        .collection('room_assignments')
+        .getFullList({
+          filter: `editionId = "${editionId}"`,
+          expand: 'memberId,memberId.userId'
+        })
+    ])
 
   // Create a map of formats by ID for easy lookup
   const formatsMap = new Map(formats.map((f) => [f.id, f]))
@@ -116,7 +135,35 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       id: f.id as string,
       name: f.name as string,
       duration: f.duration as number
-    }))
+    })),
+    // Organization members available for room assignments
+    organizationMembers: orgMembers.map((m) => {
+      const user = m.expand?.userId as Record<string, unknown> | undefined
+      return {
+        id: m.id as string,
+        role: m.role as string,
+        userId: m.userId as string,
+        userName: user ? (user.name as string) : 'Unknown',
+        userEmail: user ? (user.email as string) : ''
+      }
+    }),
+    // Room assignments
+    roomAssignments: roomAssignments.map((a) => {
+      const member = a.expand?.memberId as
+        | (Record<string, unknown> & { expand?: Record<string, unknown> })
+        | undefined
+      const user = member?.expand?.userId as Record<string, unknown> | undefined
+      return {
+        id: a.id as string,
+        roomId: a.roomId as string,
+        memberId: a.memberId as string,
+        memberName: user ? (user.name as string) : 'Unknown',
+        date: a.date ? new Date(a.date as string) : undefined,
+        startTime: a.startTime as string | undefined,
+        endTime: a.endTime as string | undefined,
+        notes: a.notes as string | undefined
+      }
+    })
   }
 }
 
@@ -609,6 +656,103 @@ export const actions: Actions = {
     } catch (err) {
       console.error('Failed to delete session:', err)
       return fail(500, { error: 'Failed to delete session', action: 'deleteSession' })
+    }
+  },
+
+  // ============ ROOM ASSIGNMENTS ============
+  createRoomAssignment: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const editionId = formData.get('editionId') as string
+    const roomId = formData.get('roomId') as string
+    const memberId = formData.get('memberId') as string
+    const date = formData.get('date') as string | null
+    const startTime = formData.get('startTime') as string | null
+    const endTime = formData.get('endTime') as string | null
+    const notes = formData.get('notes') as string | null
+
+    if (!editionId) {
+      return fail(400, { error: 'Edition ID is required', action: 'createRoomAssignment' })
+    }
+    if (!roomId) {
+      return fail(400, { error: 'Room is required', action: 'createRoomAssignment' })
+    }
+    if (!memberId) {
+      return fail(400, { error: 'Team member is required', action: 'createRoomAssignment' })
+    }
+
+    try {
+      await locals.pb.collection('room_assignments').create({
+        editionId,
+        roomId,
+        memberId,
+        date: date ? new Date(date).toISOString() : null,
+        startTime: startTime || null,
+        endTime: endTime || null,
+        notes: notes?.trim() || null
+      })
+
+      return { success: true, action: 'createRoomAssignment' }
+    } catch (err) {
+      console.error('Failed to create room assignment:', err)
+      return fail(500, {
+        error: 'Failed to create room assignment',
+        action: 'createRoomAssignment'
+      })
+    }
+  },
+
+  updateRoomAssignment: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+    const memberId = formData.get('memberId') as string
+    const date = formData.get('date') as string | null
+    const startTime = formData.get('startTime') as string | null
+    const endTime = formData.get('endTime') as string | null
+    const notes = formData.get('notes') as string | null
+
+    if (!id) {
+      return fail(400, { error: 'Assignment ID is required', action: 'updateRoomAssignment' })
+    }
+    if (!memberId) {
+      return fail(400, { error: 'Team member is required', action: 'updateRoomAssignment' })
+    }
+
+    try {
+      await locals.pb.collection('room_assignments').update(id, {
+        memberId,
+        date: date ? new Date(date).toISOString() : null,
+        startTime: startTime || null,
+        endTime: endTime || null,
+        notes: notes?.trim() || null
+      })
+
+      return { success: true, action: 'updateRoomAssignment' }
+    } catch (err) {
+      console.error('Failed to update room assignment:', err)
+      return fail(500, {
+        error: 'Failed to update room assignment',
+        action: 'updateRoomAssignment'
+      })
+    }
+  },
+
+  deleteRoomAssignment: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+
+    if (!id) {
+      return fail(400, { error: 'Assignment ID is required', action: 'deleteRoomAssignment' })
+    }
+
+    try {
+      await locals.pb.collection('room_assignments').delete(id)
+      return { success: true, action: 'deleteRoomAssignment' }
+    } catch (err) {
+      console.error('Failed to delete room assignment:', err)
+      return fail(500, {
+        error: 'Failed to delete room assignment',
+        action: 'deleteRoomAssignment'
+      })
     }
   }
 }

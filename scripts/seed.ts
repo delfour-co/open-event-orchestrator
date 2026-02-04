@@ -242,6 +242,114 @@ const reviews = [
   }
 ]
 
+const rooms = [
+  {
+    name: 'Grand Amphithéâtre',
+    capacity: 500,
+    floor: 'Niveau 0',
+    description: 'Salle principale pour les keynotes',
+    equipment: [
+      'projector',
+      'screen',
+      'microphone',
+      'video_recording',
+      'live_streaming',
+      'wifi',
+      'wheelchair_accessible'
+    ],
+    equipmentNotes: 'Système son professionnel, 2 écrans géants',
+    order: 0
+  },
+  {
+    name: 'Salle Turing',
+    capacity: 150,
+    floor: 'Niveau 1',
+    description: 'Salle de conférence standard',
+    equipment: ['projector', 'screen', 'microphone', 'wifi', 'power_outlets'],
+    equipmentNotes: '',
+    order: 1
+  },
+  {
+    name: 'Salle Lovelace',
+    capacity: 80,
+    floor: 'Niveau 1',
+    description: 'Salle pour workshops',
+    equipment: ['projector', 'whiteboard', 'wifi', 'power_outlets', 'air_conditioning'],
+    equipmentNotes: 'Tables configurables pour ateliers',
+    order: 2
+  }
+]
+
+const tracks = [
+  {
+    name: 'Web & Frontend',
+    color: '#3B82F6',
+    description: 'Technologies web et frontend',
+    order: 0
+  },
+  {
+    name: 'Cloud & Backend',
+    color: '#8B5CF6',
+    description: 'Infrastructure cloud et développement backend',
+    order: 1
+  },
+  {
+    name: 'AI & Data',
+    color: '#F59E0B',
+    description: 'Intelligence artificielle et data science',
+    order: 2
+  }
+]
+
+// Time slots for the conference
+// Day 1: 2025-10-15, Day 2: 2025-10-16
+const slotDefinitions = [
+  // Day 1 slots
+  { date: '2025-10-15', startTime: '09:00', endTime: '09:45' },
+  { date: '2025-10-15', startTime: '10:00', endTime: '10:45' },
+  { date: '2025-10-15', startTime: '11:00', endTime: '11:45' },
+  { date: '2025-10-15', startTime: '14:00', endTime: '14:45' },
+  { date: '2025-10-15', startTime: '15:00', endTime: '15:45' },
+  { date: '2025-10-15', startTime: '16:00', endTime: '16:45' },
+  // Day 2 slots
+  { date: '2025-10-16', startTime: '09:00', endTime: '09:45' },
+  { date: '2025-10-16', startTime: '10:00', endTime: '10:45' },
+  { date: '2025-10-16', startTime: '11:00', endTime: '11:45' },
+  { date: '2025-10-16', startTime: '14:00', endTime: '14:45' },
+  { date: '2025-10-16', startTime: '15:00', endTime: '15:45' }
+]
+
+// Session definitions - will be populated with actual IDs during seeding
+// Sessions reference slots, talks, and tracks by index
+const sessionDefinitions = [
+  // Kubernetes talk assigned to Day 1, 10:00 slot in Grand Amphithéâtre
+  {
+    title: 'Kubernetes for Developers: A Practical Guide',
+    description: 'Demystifying Kubernetes for application developers',
+    type: 'talk',
+    talkIndex: 1, // Index of the Kubernetes talk in talks array
+    trackIndex: 1, // Cloud & Backend track
+    slotKey: '2025-10-15_10:00_0' // date_startTime_roomIndex
+  },
+  // Break sessions
+  {
+    title: 'Pause café',
+    description: 'Networking et rafraîchissements',
+    type: 'break',
+    talkIndex: null,
+    trackIndex: null,
+    slotKey: null // Will create without slot assignment
+  },
+  {
+    title: 'Déjeuner',
+    description: 'Repas et networking',
+    type: 'lunch',
+    talkIndex: null,
+    trackIndex: null,
+    slotKey: null
+  }
+]
+
 // ============================================================================
 // Collection schemas for PocketBase 0.36+
 // PB 0.36+ uses 'fields' instead of 'schema'
@@ -714,6 +822,23 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  {
+    name: 'room_assignments',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      dateField('date'),
+      textField('startTime'),
+      textField('endTime'),
+      textField('notes'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -759,7 +884,16 @@ const relationDefinitions = [
   { collection: 'sessions', field: 'editionId', target: 'editions', maxSelect: 1 },
   { collection: 'sessions', field: 'slotId', target: 'slots', maxSelect: 1 },
   { collection: 'sessions', field: 'talkId', target: 'talks', maxSelect: 1 },
-  { collection: 'sessions', field: 'trackId', target: 'tracks', maxSelect: 1 }
+  { collection: 'sessions', field: 'trackId', target: 'tracks', maxSelect: 1 },
+  // Room assignments relations
+  { collection: 'room_assignments', field: 'roomId', target: 'rooms', maxSelect: 1 },
+  {
+    collection: 'room_assignments',
+    field: 'memberId',
+    target: 'organization_members',
+    maxSelect: 1
+  },
+  { collection: 'room_assignments', field: 'editionId', target: 'editions', maxSelect: 1 }
 ]
 
 // ============================================================================
@@ -1046,6 +1180,10 @@ async function seed(): Promise<void> {
     formats: string[]
     speakers: string[]
     talks: string[]
+    rooms: string[]
+    tracks: string[]
+    slots: Map<string, string> // key: date_startTime_roomIndex, value: slot ID
+    sessions: string[]
   } = {
     users: [],
     organization: '',
@@ -1054,7 +1192,11 @@ async function seed(): Promise<void> {
     categories: [],
     formats: [],
     speakers: [],
-    talks: []
+    talks: [],
+    rooms: [],
+    tracks: [],
+    slots: new Map(),
+    sessions: []
   }
 
   try {
@@ -1361,6 +1503,146 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 10. Create Rooms
+    // ========================================================================
+    console.log('🏛️  Creating rooms...')
+    for (const room of rooms) {
+      try {
+        const existing = await pb.collection('rooms').getList(1, 1, {
+          filter: `name = "${room.name}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Room '${room.name}' already exists`)
+          ids.rooms.push(existing.items[0].id)
+        } else {
+          const r = await pb.collection('rooms').create({
+            ...room,
+            editionId: ids.edition
+          })
+          console.log(`  Created room: ${room.name}`)
+          ids.rooms.push(r.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create room ${room.name}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 11. Create Tracks
+    // ========================================================================
+    console.log('🎯 Creating tracks...')
+    for (const track of tracks) {
+      try {
+        const existing = await pb.collection('tracks').getList(1, 1, {
+          filter: `name = "${track.name}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Track '${track.name}' already exists`)
+          ids.tracks.push(existing.items[0].id)
+        } else {
+          const t = await pb.collection('tracks').create({
+            ...track,
+            editionId: ids.edition
+          })
+          console.log(`  Created track: ${track.name}`)
+          ids.tracks.push(t.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create track ${track.name}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 12. Create Slots
+    // ========================================================================
+    console.log('🕐 Creating slots...')
+    // Create slots for each room and each time slot definition
+    for (let roomIndex = 0; roomIndex < ids.rooms.length; roomIndex++) {
+      const roomId = ids.rooms[roomIndex]
+      for (const slotDef of slotDefinitions) {
+        try {
+          const existing = await pb.collection('slots').getList(1, 1, {
+            filter: `date = "${slotDef.date}" && startTime = "${slotDef.startTime}" && roomId = "${roomId}" && editionId = "${ids.edition}"`
+          })
+
+          const slotKey = `${slotDef.date}_${slotDef.startTime}_${roomIndex}`
+
+          if (existing.items.length > 0) {
+            console.log(
+              `  Slot '${slotDef.date} ${slotDef.startTime}' for room ${roomIndex} already exists`
+            )
+            ids.slots.set(slotKey, existing.items[0].id)
+          } else {
+            const s = await pb.collection('slots').create({
+              date: slotDef.date,
+              startTime: slotDef.startTime,
+              endTime: slotDef.endTime,
+              roomId,
+              editionId: ids.edition
+            })
+            console.log(
+              `  Created slot: ${slotDef.date} ${slotDef.startTime}-${slotDef.endTime} (Room ${roomIndex})`
+            )
+            ids.slots.set(slotKey, s.id)
+          }
+        } catch (err) {
+          console.error(`  Failed to create slot ${slotDef.date} ${slotDef.startTime}:`, err)
+        }
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 13. Create Sessions
+    // ========================================================================
+    console.log('📋 Creating sessions...')
+    for (const sessionDef of sessionDefinitions) {
+      try {
+        const existing = await pb.collection('sessions').getList(1, 1, {
+          filter: `title = "${sessionDef.title.replace(/"/g, '\\"')}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Session '${sessionDef.title}' already exists`)
+          ids.sessions.push(existing.items[0].id)
+        } else {
+          const sessionData: Record<string, unknown> = {
+            title: sessionDef.title,
+            description: sessionDef.description,
+            type: sessionDef.type,
+            editionId: ids.edition
+          }
+
+          // Add talk reference if specified
+          if (sessionDef.talkIndex !== null && ids.talks[sessionDef.talkIndex]) {
+            sessionData.talkId = ids.talks[sessionDef.talkIndex]
+          }
+
+          // Add track reference if specified
+          if (sessionDef.trackIndex !== null && ids.tracks[sessionDef.trackIndex]) {
+            sessionData.trackId = ids.tracks[sessionDef.trackIndex]
+          }
+
+          // Add slot reference if specified
+          if (sessionDef.slotKey !== null && ids.slots.has(sessionDef.slotKey)) {
+            sessionData.slotId = ids.slots.get(sessionDef.slotKey)
+          }
+
+          const session = await pb.collection('sessions').create(sessionData)
+          console.log(`  Created session: ${sessionDef.title}`)
+          ids.sessions.push(session.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create session ${sessionDef.title}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -1373,6 +1655,10 @@ async function seed(): Promise<void> {
     console.log(`   Formats: ${ids.formats.length}`)
     console.log(`   Speakers: ${ids.speakers.length}`)
     console.log(`   Talks: ${ids.talks.length}`)
+    console.log(`   Rooms: ${ids.rooms.length}`)
+    console.log(`   Tracks: ${ids.tracks.length}`)
+    console.log(`   Slots: ${ids.slots.size}`)
+    console.log(`   Sessions: ${ids.sessions.length}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer)')
