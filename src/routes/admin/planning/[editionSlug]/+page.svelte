@@ -1556,10 +1556,10 @@ const roomsWithoutAssignments = $derived(() => {
 </div>
 
 <!-- Session Form Dialog -->
-<Dialog.Root bind:open={showSessionForm} onOpenChange={(open) => !open && cancelSessionForm()}>
-  <Dialog.Content class="max-w-lg">
+{#if showSessionForm}
+  <Dialog.Content class="max-w-lg" onClose={cancelSessionForm}>
     <Dialog.Header>
-      <Dialog.Title>{editingSession ? 'Edit Session' : 'Add Session'}</Dialog.Title>
+      <Dialog.Title>{editingSession ? 'Edit Session' : 'Create Session'}</Dialog.Title>
       {#if selectedSlotId}
         {@const slotInfo = getSlotInfo(selectedSlotId)}
         {#if slotInfo}
@@ -1588,6 +1588,7 @@ const roomsWithoutAssignments = $derived(() => {
       }}
       class="space-y-4"
     >
+      <input type="hidden" name="editionId" value={data.edition.id} />
       <input type="hidden" name="slotId" value={selectedSlotId} />
       {#if editingSession}
         <input type="hidden" name="id" value={editingSession.id} />
@@ -1681,7 +1682,7 @@ const roomsWithoutAssignments = $derived(() => {
       </Dialog.Footer>
     </form>
   </Dialog.Content>
-</Dialog.Root>
+{/if}
 
 {#if form?.error && form?.action?.startsWith('delete')}
   <div class="fixed bottom-4 right-4 rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive shadow-lg">
