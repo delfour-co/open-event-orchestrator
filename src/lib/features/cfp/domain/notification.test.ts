@@ -15,7 +15,8 @@ describe('notification domain', () => {
         'talk_accepted',
         'talk_rejected',
         'confirmation_reminder',
-        'cfp_closing_reminder'
+        'cfp_closing_reminder',
+        'cospeaker_invitation'
       ]
       for (const type of types) {
         expect(notificationTypeSchema.safeParse(type).success).toBe(true)
@@ -129,6 +130,7 @@ describe('notification domain', () => {
       expect(getNotificationTypeLabel('talk_rejected')).toBe('Talk Rejected')
       expect(getNotificationTypeLabel('confirmation_reminder')).toBe('Confirmation Reminder')
       expect(getNotificationTypeLabel('cfp_closing_reminder')).toBe('CFP Closing Reminder')
+      expect(getNotificationTypeLabel('cospeaker_invitation')).toBe('Co-Speaker Invitation')
     })
   })
 
@@ -158,6 +160,11 @@ describe('notification domain', () => {
     it('should generate cfp closing reminder subject', () => {
       const subject = getNotificationSubject('cfp_closing_reminder', 'DevFest 2024')
       expect(subject).toBe('[DevFest 2024] CFP closing soon - Submit your talk!')
+    })
+
+    it('should generate cospeaker invitation subject with title', () => {
+      const subject = getNotificationSubject('cospeaker_invitation', 'DevFest 2024', 'My Talk')
+      expect(subject).toBe('[DevFest 2024] You\'ve been invited as a co-speaker for "My Talk"')
     })
   })
 })

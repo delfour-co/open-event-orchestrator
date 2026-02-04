@@ -5,7 +5,8 @@ export const notificationTypeSchema = z.enum([
   'talk_accepted',
   'talk_rejected',
   'confirmation_reminder',
-  'cfp_closing_reminder'
+  'cfp_closing_reminder',
+  'cospeaker_invitation'
 ])
 
 export type NotificationType = z.infer<typeof notificationTypeSchema>
@@ -38,7 +39,8 @@ export const getNotificationTypeLabel = (type: NotificationType): string => {
     talk_accepted: 'Talk Accepted',
     talk_rejected: 'Talk Rejected',
     confirmation_reminder: 'Confirmation Reminder',
-    cfp_closing_reminder: 'CFP Closing Reminder'
+    cfp_closing_reminder: 'CFP Closing Reminder',
+    cospeaker_invitation: 'Co-Speaker Invitation'
   }
   return labels[type]
 }
@@ -53,7 +55,8 @@ export const getNotificationSubject = (
     talk_accepted: `[${editionName}] Congratulations! Your talk "${talkTitle}" has been accepted`,
     talk_rejected: `[${editionName}] Update on your talk submission "${talkTitle}"`,
     confirmation_reminder: `[${editionName}] Please confirm your participation for "${talkTitle}"`,
-    cfp_closing_reminder: `[${editionName}] CFP closing soon - Submit your talk!`
+    cfp_closing_reminder: `[${editionName}] CFP closing soon - Submit your talk!`,
+    cospeaker_invitation: `[${editionName}] You've been invited as a co-speaker for "${talkTitle}"`
   }
   return subjects[type]
 }

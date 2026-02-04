@@ -154,6 +154,24 @@ export const generateEmailHtml = (type: NotificationType, data: EmailTemplateDat
   <p><a href="${data.cfpUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Submit a Talk Now</a></p>
   <p>Best regards,<br>The ${data.eventName} Team</p>
 </body>
+</html>`,
+
+    cospeaker_invitation: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Co-Speaker Invitation</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #8b5cf6;">You've Been Invited as a Co-Speaker!</h1>
+  <p>Dear ${data.speakerName},</p>
+  <p>You have been invited to co-present the talk <strong>"${data.talkTitle}"</strong> at <strong>${data.editionName}</strong>.</p>
+  <p>Click the button below to view the talk and accept or decline this invitation:</p>
+  <p><a href="${data.confirmationUrl}" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">View Invitation</a></p>
+  <p>Best regards,<br>The ${data.eventName} Team</p>
+</body>
 </html>`
   }
 
@@ -224,6 +242,18 @@ Dear ${data.speakerName},
 This is a reminder that the Call for Papers for ${data.editionName} is closing on ${data.cfpDeadline}.
 
 Don't miss your chance to submit a talk: ${data.cfpUrl}
+
+Best regards,
+The ${data.eventName} Team`,
+
+    cospeaker_invitation: `
+You've Been Invited as a Co-Speaker!
+
+Dear ${data.speakerName},
+
+You have been invited to co-present the talk "${data.talkTitle}" at ${data.editionName}.
+
+Click here to view the talk and accept or decline this invitation: ${data.confirmationUrl}
 
 Best regards,
 The ${data.eventName} Team`
