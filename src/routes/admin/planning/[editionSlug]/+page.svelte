@@ -2,6 +2,7 @@
 import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
@@ -539,149 +540,6 @@ const roomsWithoutAssignments = $derived(() => {
         </Card.Content>
       </Card.Root>
     {:else}
-      <!-- Session Form Modal -->
-      {#if showSessionForm}
-        <Card.Root class="mb-4">
-          <Card.Header>
-            <div class="flex items-center justify-between">
-              <Card.Title>{editingSession ? 'Edit Session' : 'Create Session'}</Card.Title>
-              <Button variant="ghost" size="icon" onclick={cancelSessionForm}>
-                <X class="h-4 w-4" />
-              </Button>
-            </div>
-            {#if selectedSlotId}
-              {@const slotInfo = getSlotInfo(selectedSlotId)}
-              {#if slotInfo}
-                <Card.Description>
-                  {slotInfo.roomName} - {formatDate(slotInfo.date)} - {slotInfo.startTime} to {slotInfo.endTime}
-                </Card.Description>
-              {/if}
-            {/if}
-          </Card.Header>
-          <Card.Content>
-            {#if form?.error && (form?.action === 'createSession' || form?.action === 'updateSession')}
-              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
-                {form.error}
-              </div>
-            {/if}
-            <form
-              method="POST"
-              action={editingSession ? '?/updateSession' : '?/createSession'}
-              use:enhance={() => {
-                isSubmitting = true
-                return async ({ update }) => {
-                  isSubmitting = false
-                  await update()
-                }
-              }}
-              class="space-y-4"
-            >
-              <input type="hidden" name="editionId" value={data.edition.id} />
-              <input type="hidden" name="slotId" value={selectedSlotId} />
-              {#if editingSession}
-                <input type="hidden" name="id" value={editingSession.id} />
-              {/if}
-
-              <div class="grid gap-4 md:grid-cols-2">
-                <div class="space-y-2">
-                  <Label for="session-type">Session Type *</Label>
-                  <select
-                    id="session-type"
-                    name="type"
-                    required
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    bind:value={sessionType}
-                  >
-                    {#each sessionTypeOptions as option}
-                      <option value={option.value}>{option.label}</option>
-                    {/each}
-                  </select>
-                </div>
-
-                <div class="space-y-2">
-                  <Label for="session-track">Track (optional)</Label>
-                  <select
-                    id="session-track"
-                    name="trackId"
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    bind:value={selectedTrackId}
-                  >
-                    <option value="">No track</option>
-                    {#each data.tracks as track}
-                      <option value={track.id}>{track.name}</option>
-                    {/each}
-                  </select>
-                </div>
-              </div>
-
-              {#if talkRequiredTypes.includes(sessionType)}
-                <div class="space-y-2">
-                  <Label for="session-talk">Select Talk (optional)</Label>
-                  <select
-                    id="session-talk"
-                    name="talkId"
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    bind:value={selectedTalkId}
-                    onchange={(e) => handleTalkSelection(e.currentTarget.value)}
-                  >
-                    <option value="">-- Select a talk or enter custom title --</option>
-                    {#each availableTalks() as talk}
-                      <option value={talk.id}>{talk.title}</option>
-                    {/each}
-                    {#if editingSession && editingSession.talkId}
-                      {@const currentTalkId = editingSession.talkId}
-                      {@const currentTalk = data.acceptedTalks.find((t) => t.id === currentTalkId)}
-                      {#if currentTalk && !availableTalks().find((t) => t.id === currentTalk.id)}
-                        <option value={currentTalk.id}>{currentTalk.title} (current)</option>
-                      {/if}
-                    {/if}
-                  </select>
-                  {#if availableTalks().length === 0 && !editingSession?.talkId}
-                    <p class="text-xs text-muted-foreground">
-                      No accepted talks available. All talks are already scheduled or none have been accepted yet.
-                    </p>
-                  {/if}
-                </div>
-              {/if}
-
-              <div class="space-y-2">
-                <Label for="session-title">Title *</Label>
-                <Input
-                  id="session-title"
-                  name="title"
-                  placeholder={talkRequiredTypes.includes(sessionType) ? 'Talk title (auto-filled if talk selected)' : 'e.g., Lunch Break, Coffee & Networking'}
-                  required
-                  bind:value={sessionTitle}
-                />
-              </div>
-
-              <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={cancelSessionForm}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {#if isSubmitting}
-                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                  {/if}
-                  {editingSession ? 'Update Session' : 'Create Session'}
-                </Button>
-              </div>
-            </form>
-            {#if editingSession}
-              <div class="mt-4 border-t pt-4">
-                <form method="POST" action="?/deleteSession" use:enhance>
-                  <input type="hidden" name="id" value={editingSession.id} />
-                  <Button type="submit" variant="destructive" size="sm">
-                    <Trash2 class="mr-2 h-4 w-4" />
-                    Delete Session
-                  </Button>
-                </form>
-              </div>
-            {/if}
-          </Card.Content>
-        </Card.Root>
-      {/if}
-
       <!-- View Switcher -->
       <div class="mb-4 flex items-center gap-2">
         <span class="text-sm text-muted-foreground">View:</span>
@@ -1696,6 +1554,134 @@ const roomsWithoutAssignments = $derived(() => {
     </div>
   {/if}
 </div>
+
+<!-- Session Form Dialog -->
+<Dialog.Root bind:open={showSessionForm} onOpenChange={(open) => !open && cancelSessionForm()}>
+  <Dialog.Content class="max-w-lg">
+    <Dialog.Header>
+      <Dialog.Title>{editingSession ? 'Edit Session' : 'Add Session'}</Dialog.Title>
+      {#if selectedSlotId}
+        {@const slotInfo = getSlotInfo(selectedSlotId)}
+        {#if slotInfo}
+          <Dialog.Description>
+            {slotInfo.roomName} • {formatDate(slotInfo.date)} • {slotInfo.startTime} - {slotInfo.endTime}
+          </Dialog.Description>
+        {/if}
+      {/if}
+    </Dialog.Header>
+
+    {#if form?.error && (form?.action === 'createSession' || form?.action === 'updateSession')}
+      <div class="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+        {form.error}
+      </div>
+    {/if}
+
+    <form
+      method="POST"
+      action={editingSession ? '?/updateSession' : '?/createSession'}
+      use:enhance={() => {
+        isSubmitting = true
+        return async ({ update }) => {
+          isSubmitting = false
+          await update()
+        }
+      }}
+      class="space-y-4"
+    >
+      <input type="hidden" name="slotId" value={selectedSlotId} />
+      {#if editingSession}
+        <input type="hidden" name="id" value={editingSession.id} />
+      {/if}
+
+      <div class="space-y-2">
+        <Label for="session-type">Session Type *</Label>
+        <select
+          id="session-type"
+          name="type"
+          required
+          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          bind:value={sessionType}
+        >
+          {#each sessionTypeOptions as option}
+            <option value={option.value}>{option.label}</option>
+          {/each}
+        </select>
+      </div>
+
+      <div class="space-y-2">
+        <Label for="session-track">Track</Label>
+        <select
+          id="session-track"
+          name="trackId"
+          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          bind:value={selectedTrackId}
+        >
+          <option value="">No track</option>
+          {#each data.tracks as track}
+            <option value={track.id}>{track.name}</option>
+          {/each}
+        </select>
+      </div>
+
+      {#if talkRequiredTypes.includes(sessionType)}
+        <div class="space-y-2">
+          <Label for="session-talk">Talk</Label>
+          <select
+            id="session-talk"
+            name="talkId"
+            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            bind:value={selectedTalkId}
+            onchange={(e) => handleTalkSelection(e.currentTarget.value)}
+          >
+            <option value="">Select a talk (optional)</option>
+            {#each availableTalks() as talk}
+              <option value={talk.id}>
+                {talk.title}
+                {#if talk.speakers && talk.speakers.length > 0}
+                  - {talk.speakers.map((s) => s.firstName).join(', ')}
+                {/if}
+              </option>
+            {/each}
+            {#if editingSession?.talkId}
+              {@const currentTalk = data.acceptedTalks.find((t) => t.id === editingSession.talkId)}
+              {#if currentTalk && !availableTalks().find((t) => t.id === currentTalk.id)}
+                <option value={currentTalk.id}>
+                  {currentTalk.title} (current)
+                </option>
+              {/if}
+            {/if}
+          </select>
+          <p class="text-xs text-muted-foreground">
+            {availableTalks().length} accepted talk{availableTalks().length !== 1 ? 's' : ''} available
+          </p>
+        </div>
+      {/if}
+
+      <div class="space-y-2">
+        <Label for="session-title">Title *</Label>
+        <Input
+          id="session-title"
+          name="title"
+          required
+          placeholder={talkRequiredTypes.includes(sessionType) ? 'Auto-filled from talk or enter custom title' : 'Enter session title'}
+          bind:value={sessionTitle}
+        />
+      </div>
+
+      <Dialog.Footer>
+        <Button type="button" variant="outline" onclick={cancelSessionForm}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {#if isSubmitting}
+            <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+          {/if}
+          {editingSession ? 'Update Session' : 'Create Session'}
+        </Button>
+      </Dialog.Footer>
+    </form>
+  </Dialog.Content>
+</Dialog.Root>
 
 {#if form?.error && form?.action?.startsWith('delete')}
   <div class="fixed bottom-4 right-4 rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive shadow-lg">
