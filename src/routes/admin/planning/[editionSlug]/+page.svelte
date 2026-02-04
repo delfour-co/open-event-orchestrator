@@ -1644,7 +1644,7 @@ const roomsWithoutAssignments = $derived(() => {
               </option>
             {/each}
             {#if editingSession?.talkId}
-              {@const currentTalk = data.acceptedTalks.find((t) => t.id === editingSession.talkId)}
+              {@const currentTalk = data.acceptedTalks.find((t) => t.id === editingSession?.talkId)}
               {#if currentTalk && !availableTalks().find((t) => t.id === currentTalk.id)}
                 <option value={currentTalk.id}>
                   {currentTalk.title} (current)

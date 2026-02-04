@@ -150,7 +150,8 @@ async function loadTalks(
   })
 
   return talkRecords.map((t) => {
-    const expandedSpeakers = t.expand?.speakerIds as Array<Record<string, unknown>> | undefined
+    const expand = t.expand as { speakerIds?: Array<Record<string, unknown>> } | undefined
+    const expandedSpeakers = expand?.speakerIds
     return {
       id: t.id as string,
       title: t.title as string,
