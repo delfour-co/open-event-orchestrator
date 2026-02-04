@@ -6,6 +6,7 @@ import {
   createTalkRepository
 } from '$lib/features/cfp/infra'
 import { sendCfpNotification } from '$lib/server/cfp-notifications'
+import { canChangeTalkStatus, canDeleteTalks } from '$lib/server/permissions'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -53,6 +54,8 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
   )
   const userMap = new Map(users.map((u) => [u.id, u]))
 
+  const userRole = locals.user?.role as string | undefined
+
   return {
     edition,
     categories,
@@ -75,12 +78,22 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
       ...c,
       user: userMap.get(c.userId)
     })),
-    currentUserId: userId
+    currentUserId: userId,
+    permissions: {
+      canChangeStatus: canChangeTalkStatus(userRole),
+      canDelete: canDeleteTalks(userRole)
+    }
   }
 }
 
 export const actions: Actions = {
   updateStatus: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canChangeTalkStatus(userRole)) {
+      return fail(403, { error: 'You do not have permission to change talk status' })
+    }
+
     const formData = await request.formData()
     const newStatus = formData.get('status') as TalkStatus
 
@@ -228,6 +241,12 @@ export const actions: Actions = {
   },
 
   delete: async ({ locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canDeleteTalks(userRole)) {
+      return fail(403, { error: 'You do not have permission to delete talks' })
+    }
+
     const talkRepo = createTalkRepository(locals.pb)
 
     try {

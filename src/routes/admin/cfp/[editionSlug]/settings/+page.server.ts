@@ -1,4 +1,5 @@
-import { fail } from '@sveltejs/kit'
+import { canManageCfpSettings } from '$lib/server/permissions'
+import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 const DEFAULT_SETTINGS = {
@@ -14,6 +15,12 @@ const DEFAULT_SETTINGS = {
 }
 
 export const load: PageServerLoad = async ({ parent, locals }) => {
+  // Check permission - reviewers cannot access CFP settings
+  const userRole = locals.user?.role as string | undefined
+  if (!canManageCfpSettings(userRole)) {
+    throw error(403, 'You do not have permission to access CFP settings')
+  }
+
   const { edition } = await parent()
 
   // Try to get existing CFP settings for this edition

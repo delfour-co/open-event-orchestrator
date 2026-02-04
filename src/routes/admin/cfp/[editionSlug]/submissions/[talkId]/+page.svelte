@@ -111,10 +111,12 @@ $effect(() => {
       </div>
     </div>
 
-    <Button variant="destructive" size="sm" onclick={() => (showDeleteConfirm = true)}>
-      <Trash2 class="mr-2 h-4 w-4" />
-      Delete
-    </Button>
+    {#if data.permissions.canDelete}
+      <Button variant="destructive" size="sm" onclick={() => (showDeleteConfirm = true)}>
+        <Trash2 class="mr-2 h-4 w-4" />
+        Delete
+      </Button>
+    {/if}
   </div>
 
   {#if form?.error}
@@ -493,59 +495,61 @@ $effect(() => {
             <StatusBadge status={data.talk.status} />
           </div>
 
-          <form method="POST" action="?/updateStatus" use:enhance class="space-y-2">
-            <p class="text-sm font-medium">Quick Actions</p>
-            <div class="flex flex-wrap gap-2">
-              {#if data.talk.status === 'submitted'}
-                <Button type="submit" name="status" value="under_review" variant="outline" size="sm">
-                  Start Review
-                </Button>
-              {/if}
-              {#if ['submitted', 'under_review'].includes(data.talk.status)}
-                <Button
-                  type="submit"
-                  name="status"
-                  value="accepted"
-                  variant="outline"
-                  size="sm"
-                  class="text-green-600"
-                >
-                  <Check class="mr-1 h-3 w-3" />
-                  Accept
-                </Button>
-                <Button
-                  type="submit"
-                  name="status"
-                  value="rejected"
-                  variant="outline"
-                  size="sm"
-                  class="text-red-600"
-                >
-                  <X class="mr-1 h-3 w-3" />
-                  Reject
-                </Button>
-              {/if}
-            </div>
-
-            <div class="pt-2">
-              <p class="mb-2 text-sm font-medium">Change Status</p>
-              <div class="flex flex-wrap gap-1">
-                {#each allStatuses as status}
+          {#if data.permissions.canChangeStatus}
+            <form method="POST" action="?/updateStatus" use:enhance class="space-y-2">
+              <p class="text-sm font-medium">Quick Actions</p>
+              <div class="flex flex-wrap gap-2">
+                {#if data.talk.status === 'submitted'}
+                  <Button type="submit" name="status" value="under_review" variant="outline" size="sm">
+                    Start Review
+                  </Button>
+                {/if}
+                {#if ['submitted', 'under_review'].includes(data.talk.status)}
                   <Button
                     type="submit"
                     name="status"
-                    value={status}
-                    variant={data.talk.status === status ? 'secondary' : 'ghost'}
+                    value="accepted"
+                    variant="outline"
                     size="sm"
-                    class="text-xs"
-                    disabled={data.talk.status === status}
+                    class="text-green-600"
                   >
-                    {status}
+                    <Check class="mr-1 h-3 w-3" />
+                    Accept
                   </Button>
-                {/each}
+                  <Button
+                    type="submit"
+                    name="status"
+                    value="rejected"
+                    variant="outline"
+                    size="sm"
+                    class="text-red-600"
+                  >
+                    <X class="mr-1 h-3 w-3" />
+                    Reject
+                  </Button>
+                {/if}
               </div>
-            </div>
-          </form>
+
+              <div class="pt-2">
+                <p class="mb-2 text-sm font-medium">Change Status</p>
+                <div class="flex flex-wrap gap-1">
+                  {#each allStatuses as status}
+                    <Button
+                      type="submit"
+                      name="status"
+                      value={status}
+                      variant={data.talk.status === status ? 'secondary' : 'ghost'}
+                      size="sm"
+                      class="text-xs"
+                      disabled={data.talk.status === status}
+                    >
+                      {status}
+                    </Button>
+                  {/each}
+                </div>
+              </div>
+            </form>
+          {/if}
         </Card.Content>
       </Card.Root>
 

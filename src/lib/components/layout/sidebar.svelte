@@ -17,27 +17,39 @@ type Props = {
   collapsed?: boolean
   onToggle?: () => void
   children?: Snippet
+  isReviewerOnly?: boolean
 }
 
-const { collapsed = false, onToggle }: Props = $props()
+const { collapsed = false, onToggle, isReviewerOnly = false }: Props = $props()
 
 type NavItem = {
   href: string
   icon: typeof Home
   label: string
   badge?: number
+  requiresOrganizerAccess?: boolean
 }
 
-const navItems: NavItem[] = [
+const allNavItems: NavItem[] = [
   { href: '/admin', icon: Home, label: 'Dashboard' },
-  { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
-  { href: '/admin/events', icon: CalendarDays, label: 'Events' },
+  {
+    href: '/admin/organizations',
+    icon: Building2,
+    label: 'Organizations',
+    requiresOrganizerAccess: true
+  },
+  { href: '/admin/events', icon: CalendarDays, label: 'Events', requiresOrganizerAccess: true },
   { href: '/admin/cfp', icon: Calendar, label: 'CFP' },
-  { href: '/admin/planning', icon: Calendar, label: 'Planning' },
-  { href: '/admin/tickets', icon: Ticket, label: 'Billetterie' },
-  { href: '/admin/crm', icon: Users, label: 'CRM' },
-  { href: '/admin/emails', icon: Mail, label: 'Emails' }
+  { href: '/admin/planning', icon: Calendar, label: 'Planning', requiresOrganizerAccess: true },
+  { href: '/admin/tickets', icon: Ticket, label: 'Billetterie', requiresOrganizerAccess: true },
+  { href: '/admin/crm', icon: Users, label: 'CRM', requiresOrganizerAccess: true },
+  { href: '/admin/emails', icon: Mail, label: 'Emails', requiresOrganizerAccess: true }
 ]
+
+// Filter nav items based on role
+const navItems = $derived(
+  isReviewerOnly ? allNavItems.filter((item) => !item.requiresOrganizerAccess) : allNavItems
+)
 </script>
 
 <aside
@@ -85,19 +97,21 @@ const navItems: NavItem[] = [
     {/each}
   </nav>
 
-  <!-- Footer -->
-  <div class="border-t p-2">
-    <a
-      href="/admin/settings"
-      class={cn(
-        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        collapsed && 'justify-center'
-      )}
-    >
-      <Settings class="h-5 w-5 shrink-0" />
-      {#if !collapsed}
-        <span>Settings</span>
-      {/if}
-    </a>
-  </div>
+  <!-- Footer - Settings only visible for organizers/admins -->
+  {#if !isReviewerOnly}
+    <div class="border-t p-2">
+      <a
+        href="/admin/settings"
+        class={cn(
+          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+          collapsed && 'justify-center'
+        )}
+      >
+        <Settings class="h-5 w-5 shrink-0" />
+        {#if !collapsed}
+          <span>Settings</span>
+        {/if}
+      </a>
+    </div>
+  {/if}
 </aside>

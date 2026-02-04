@@ -12,6 +12,7 @@ type Props = {
       role: string
       avatar?: string
     }
+    isReviewerOnly: boolean
   }
 }
 
@@ -25,7 +26,7 @@ function toggleSidebar() {
 </script>
 
 <div class="flex h-screen overflow-hidden">
-  <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+  <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} isReviewerOnly={data.isReviewerOnly} />
 
   <div class="flex flex-1 flex-col overflow-hidden">
     <Header onMenuClick={toggleSidebar} userName={data.user.name} />

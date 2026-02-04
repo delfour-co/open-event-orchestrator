@@ -1,5 +1,6 @@
 import type { TalkStatus } from '$lib/features/cfp/domain'
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
+import { canChangeTalkStatus, canExportData } from '$lib/server/permissions'
 import { fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -75,6 +76,8 @@ export const load: PageServerLoad = async ({ parent, url, locals }) => {
     format: formats.find((f) => f.id === talk.formatId)
   }))
 
+  const userRole = locals.user?.role as string | undefined
+
   return {
     edition,
     categories,
@@ -91,12 +94,22 @@ export const load: PageServerLoad = async ({ parent, url, locals }) => {
       page,
       perPage,
       total: filteredTalks.length
+    },
+    permissions: {
+      canChangeStatus: canChangeTalkStatus(userRole),
+      canExport: canExportData(userRole)
     }
   }
 }
 
 export const actions: Actions = {
   updateStatus: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canChangeTalkStatus(userRole)) {
+      return fail(403, { error: 'You do not have permission to change talk status' })
+    }
+
     const formData = await request.formData()
     const talkIds = formData.getAll('talkIds') as string[]
     const newStatus = formData.get('status') as TalkStatus
@@ -117,6 +130,12 @@ export const actions: Actions = {
   },
 
   export: async ({ locals, url }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canExportData(userRole)) {
+      return fail(403, { error: 'You do not have permission to export data' })
+    }
+
     const editionSlug = url.pathname.split('/')[3]
 
     // Find edition

@@ -1,7 +1,13 @@
-import { fail } from '@sveltejs/kit'
+import { canManageOrganizations } from '$lib/server/permissions'
+import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
+  // Check permission - reviewers cannot access organizations management
+  const userRole = locals.user?.role as string | undefined
+  if (!canManageOrganizations(userRole)) {
+    throw error(403, 'You do not have permission to manage organizations')
+  }
   const organizations = await locals.pb.collection('organizations').getFullList({
     sort: 'name'
   })

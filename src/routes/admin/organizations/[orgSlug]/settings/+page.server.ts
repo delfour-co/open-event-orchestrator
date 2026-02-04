@@ -1,7 +1,13 @@
-import { fail, isRedirect, redirect } from '@sveltejs/kit'
+import { canAccessSettings } from '$lib/server/permissions'
+import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals, params }) => {
+  // Check permission - reviewers cannot access organization settings
+  const userRole = locals.user?.role as string | undefined
+  if (!canAccessSettings(userRole)) {
+    throw error(403, 'You do not have permission to access organization settings')
+  }
   try {
     const organization = await locals.pb
       .collection('organizations')

@@ -1,7 +1,13 @@
-import { fail, isRedirect, redirect } from '@sveltejs/kit'
+import { canAccessSettings } from '$lib/server/permissions'
+import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals, params }) => {
+  // Check permission - reviewers cannot access event settings
+  const userRole = locals.user?.role as string | undefined
+  if (!canAccessSettings(userRole)) {
+    throw error(403, 'You do not have permission to access event settings')
+  }
   try {
     const event = await locals.pb
       .collection('events')

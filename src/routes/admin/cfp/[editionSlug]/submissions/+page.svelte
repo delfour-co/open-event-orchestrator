@@ -123,18 +123,20 @@ $effect(() => {
         <p class="text-muted-foreground">{data.edition.name}</p>
       </div>
     </div>
-    <form method="POST" action="?/export" use:enhance={() => {
-      isExporting = true
-      return async ({ update }) => {
-        isExporting = false
-        await update()
-      }
-    }}>
-      <Button variant="outline" type="submit" disabled={isExporting}>
-        <Download class="mr-2 h-4 w-4" />
-        Export CSV
-      </Button>
-    </form>
+    {#if data.permissions.canExport}
+      <form method="POST" action="?/export" use:enhance={() => {
+        isExporting = true
+        return async ({ update }) => {
+          isExporting = false
+          await update()
+        }
+      }}>
+        <Button variant="outline" type="submit" disabled={isExporting}>
+          <Download class="mr-2 h-4 w-4" />
+          Export CSV
+        </Button>
+      </form>
+    {/if}
   </div>
 
   {#if form?.error}
@@ -286,8 +288,8 @@ $effect(() => {
     </Card.Content>
   </Card.Root>
 
-  <!-- Bulk Actions -->
-  {#if selectedIds.size > 0}
+  <!-- Bulk Actions (only for organizers/admins) -->
+  {#if selectedIds.size > 0 && data.permissions.canChangeStatus}
     <Card.Root class="border-primary bg-primary/5">
       <Card.Content class="flex items-center justify-between py-3">
         <span class="text-sm font-medium">{selectedIds.size} talk(s) selected</span>
@@ -323,12 +325,14 @@ $effect(() => {
     <Table.Root>
       <Table.Header>
         <Table.Row>
-          <Table.Head class="w-12">
-            <Checkbox
-              checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-              onCheckedChange={toggleAll}
-            />
-          </Table.Head>
+          {#if data.permissions.canChangeStatus}
+            <Table.Head class="w-12">
+              <Checkbox
+                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                onCheckedChange={toggleAll}
+              />
+            </Table.Head>
+          {/if}
           <Table.Head>Title</Table.Head>
           <Table.Head>Speaker(s)</Table.Head>
           <Table.Head>Category</Table.Head>
@@ -340,7 +344,7 @@ $effect(() => {
       <Table.Body>
         {#if data.talks.length === 0}
           <Table.Row>
-            <Table.Cell colspan={7}>
+            <Table.Cell colspan={data.permissions.canChangeStatus ? 7 : 6}>
               <div class="flex flex-col items-center justify-center py-12">
                 <FileText class="mb-4 h-12 w-12 text-muted-foreground" />
                 <h3 class="text-lg font-semibold">No submissions found</h3>
@@ -355,12 +359,14 @@ $effect(() => {
         {:else}
           {#each data.talks as talk}
             <Table.Row data-state={selectedIds.has(talk.id) ? 'selected' : ''}>
-              <Table.Cell>
-                <Checkbox
-                  checked={selectedIds.has(talk.id)}
-                  onCheckedChange={() => toggleOne(talk.id)}
-                />
-              </Table.Cell>
+              {#if data.permissions.canChangeStatus}
+                <Table.Cell>
+                  <Checkbox
+                    checked={selectedIds.has(talk.id)}
+                    onCheckedChange={() => toggleOne(talk.id)}
+                  />
+                </Table.Cell>
+              {/if}
               <Table.Cell>
                 <a
                   href="/admin/cfp/{data.edition.slug}/submissions/{talk.id}"

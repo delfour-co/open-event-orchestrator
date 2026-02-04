@@ -1,7 +1,13 @@
-import { fail } from '@sveltejs/kit'
+import { canManageEvents } from '$lib/server/permissions'
+import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
+  // Check permission - reviewers cannot access events management
+  const userRole = locals.user?.role as string | undefined
+  if (!canManageEvents(userRole)) {
+    throw error(403, 'You do not have permission to manage events')
+  }
   // Get all organizations
   const organizations = await locals.pb.collection('organizations').getFullList({
     sort: 'name'
