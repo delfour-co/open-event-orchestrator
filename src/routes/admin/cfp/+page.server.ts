@@ -1,6 +1,8 @@
+import { canManageCfpSettings } from '$lib/server/permissions'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
+  const userRole = locals.user?.role as string | undefined
   // Get all editions (draft, published, archived)
   // In the future, this should be filtered by user's organizations
   const editions = await locals.pb.collection('editions').getFullList({
@@ -16,6 +18,9 @@ export const load: PageServerLoad = async ({ locals }) => {
       startDate: new Date(e.startDate as string),
       endDate: new Date(e.endDate as string),
       status: e.status as string
-    }))
+    })),
+    permissions: {
+      canManageSettings: canManageCfpSettings(userRole)
+    }
   }
 }

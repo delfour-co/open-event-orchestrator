@@ -68,11 +68,13 @@ const getStatusColor = (status: string) => {
                 >
                   {edition.status}
                 </span>
-                <a href="/admin/cfp/{edition.slug}/settings" title="CFP Settings">
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <Settings class="h-4 w-4" />
-                  </Button>
-                </a>
+                {#if data.permissions.canManageSettings}
+                  <a href="/admin/cfp/{edition.slug}/settings" title="CFP Settings">
+                    <Button variant="ghost" size="icon" class="h-8 w-8">
+                      <Settings class="h-4 w-4" />
+                    </Button>
+                  </a>
+                {/if}
               </div>
             </div>
             <Card.Description>
