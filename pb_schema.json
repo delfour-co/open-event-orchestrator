@@ -33,6 +33,10 @@
       { "name": "name", "type": "text", "required": true },
       { "name": "slug", "type": "text", "required": true },
       { "name": "description", "type": "text" },
+      { "name": "website", "type": "url" },
+      { "name": "defaultVenue", "type": "text" },
+      { "name": "defaultCity", "type": "text" },
+      { "name": "defaultCountry", "type": "text" },
       {
         "name": "organizationId",
         "type": "relation",

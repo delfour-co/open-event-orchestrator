@@ -275,13 +275,18 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                   <Plus class="mr-2 h-4 w-4" />
                   Add Edition
                 </Button>
+                <a href="/admin/events/{event.slug}/settings" title="Event Settings">
+                  <Button variant="ghost" size="icon" class="h-8 w-8">
+                    <Settings class="h-4 w-4" />
+                  </Button>
+                </a>
                 <form method="POST" action="?/deleteEvent" use:enhance>
                   <input type="hidden" name="eventId" value={event.id} />
                   <Button
                     type="submit"
                     variant="ghost"
-                    size="sm"
-                    class="text-destructive hover:text-destructive"
+                    size="icon"
+                    class="h-8 w-8 text-destructive hover:text-destructive"
                     onclick={(e) => {
                       if (!confirm('Delete this event and all its editions?')) {
                         e.preventDefault()
