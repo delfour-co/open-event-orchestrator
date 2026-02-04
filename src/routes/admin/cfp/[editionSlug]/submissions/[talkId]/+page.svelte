@@ -182,90 +182,110 @@ $effect(() => {
       <!-- Speaker(s) -->
       <Card.Root>
         <Card.Header>
-          <Card.Title>Speaker{data.speakers.length > 1 ? 's' : ''}</Card.Title>
+          <div class="flex items-center justify-between">
+            <Card.Title>Speaker{data.speakers.length > 1 ? 's' : ''}</Card.Title>
+            {#if data.cfpSettings?.anonymousReview && !data.canSeeSpeakerInfo}
+              <span
+                class="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+              >
+                Anonymous Review Mode
+              </span>
+            {/if}
+          </div>
         </Card.Header>
         <Card.Content>
-          <div class="space-y-6">
-            {#each data.speakers as speaker}
-              <div class="flex gap-4">
-                <div
-                  class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted text-2xl font-semibold"
-                >
-                  {speaker.firstName[0]}{speaker.lastName[0]}
-                </div>
-                <div class="flex-1 space-y-2">
-                  <div>
-                    <h4 class="font-semibold">{speaker.firstName} {speaker.lastName}</h4>
-                    {#if speaker.jobTitle || speaker.company}
-                      <p class="text-sm text-muted-foreground">
-                        {#if speaker.jobTitle}{speaker.jobTitle}{/if}
-                        {#if speaker.jobTitle && speaker.company} at {/if}
-                        {#if speaker.company}{speaker.company}{/if}
-                      </p>
-                    {/if}
+          {#if data.cfpSettings?.anonymousReview && !data.canSeeSpeakerInfo}
+            <div class="rounded-lg bg-muted p-6 text-center">
+              <p class="text-sm text-muted-foreground">
+                Speaker information is hidden during anonymous review.
+              </p>
+              <p class="mt-1 text-xs text-muted-foreground">
+                Only admins and owners can see speaker details.
+              </p>
+            </div>
+          {:else}
+            <div class="space-y-6">
+              {#each data.speakers as speaker}
+                <div class="flex gap-4">
+                  <div
+                    class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted text-2xl font-semibold"
+                  >
+                    {speaker.firstName[0]}{speaker.lastName[0]}
                   </div>
-
-                  <div class="flex flex-wrap gap-4 text-sm">
-                    <a
-                      href="mailto:{speaker.email}"
-                      class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                    >
-                      <Mail class="h-4 w-4" />
-                      {speaker.email}
-                    </a>
-
-                    {#if speaker.city || speaker.country}
-                      <span class="flex items-center gap-1 text-muted-foreground">
-                        <MapPin class="h-4 w-4" />
-                        {[speaker.city, speaker.country].filter(Boolean).join(', ')}
-                      </span>
-                    {/if}
-                  </div>
-
-                  {#if speaker.twitter || speaker.github || speaker.linkedin}
-                    <div class="flex gap-3">
-                      {#if speaker.twitter}
-                        <a
-                          href="https://twitter.com/{speaker.twitter}"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="text-sm text-muted-foreground hover:text-foreground"
-                        >
-                          @{speaker.twitter}
-                        </a>
-                      {/if}
-                      {#if speaker.github}
-                        <a
-                          href="https://github.com/{speaker.github}"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                        >
-                          <ExternalLink class="h-3 w-3" />
-                          GitHub
-                        </a>
-                      {/if}
-                      {#if speaker.linkedin}
-                        <a
-                          href="https://linkedin.com/in/{speaker.linkedin}"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                        >
-                          <ExternalLink class="h-3 w-3" />
-                          LinkedIn
-                        </a>
+                  <div class="flex-1 space-y-2">
+                    <div>
+                      <h4 class="font-semibold">{speaker.firstName} {speaker.lastName}</h4>
+                      {#if speaker.jobTitle || speaker.company}
+                        <p class="text-sm text-muted-foreground">
+                          {#if speaker.jobTitle}{speaker.jobTitle}{/if}
+                          {#if speaker.jobTitle && speaker.company} at {/if}
+                          {#if speaker.company}{speaker.company}{/if}
+                        </p>
                       {/if}
                     </div>
-                  {/if}
 
-                  {#if speaker.bio}
-                    <p class="text-sm text-muted-foreground">{speaker.bio}</p>
-                  {/if}
+                    <div class="flex flex-wrap gap-4 text-sm">
+                      <a
+                        href="mailto:{speaker.email}"
+                        class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                      >
+                        <Mail class="h-4 w-4" />
+                        {speaker.email}
+                      </a>
+
+                      {#if speaker.city || speaker.country}
+                        <span class="flex items-center gap-1 text-muted-foreground">
+                          <MapPin class="h-4 w-4" />
+                          {[speaker.city, speaker.country].filter(Boolean).join(', ')}
+                        </span>
+                      {/if}
+                    </div>
+
+                    {#if speaker.twitter || speaker.github || speaker.linkedin}
+                      <div class="flex gap-3">
+                        {#if speaker.twitter}
+                          <a
+                            href="https://twitter.com/{speaker.twitter}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-sm text-muted-foreground hover:text-foreground"
+                          >
+                            @{speaker.twitter}
+                          </a>
+                        {/if}
+                        {#if speaker.github}
+                          <a
+                            href="https://github.com/{speaker.github}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLink class="h-3 w-3" />
+                            GitHub
+                          </a>
+                        {/if}
+                        {#if speaker.linkedin}
+                          <a
+                            href="https://linkedin.com/in/{speaker.linkedin}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                          >
+                            <ExternalLink class="h-3 w-3" />
+                            LinkedIn
+                          </a>
+                        {/if}
+                      </div>
+                    {/if}
+
+                    {#if speaker.bio}
+                      <p class="text-sm text-muted-foreground">{speaker.bio}</p>
+                    {/if}
+                  </div>
                 </div>
-              </div>
-            {/each}
-          </div>
+              {/each}
+            </div>
+          {/if}
         </Card.Content>
       </Card.Root>
 

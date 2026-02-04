@@ -1,16 +1,66 @@
 import { createSpeakerSchema, createTalkSchema } from '$lib/features/cfp/domain'
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
 import { createSubmitTalkUseCase } from '$lib/features/cfp/usecases'
-import { fail, redirect } from '@sveltejs/kit'
+import { sendCfpNotification } from '$lib/server/cfp-notifications'
+import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent }) => {
-  const { edition, categories, formats } = await parent()
-  return { edition, categories, formats }
+  const { edition, categories, formats, cfpStatus, cfpOpenDate, cfpCloseDate, allowCoSpeakers } =
+    await parent()
+
+  // Block access if CFP is not open
+  if (cfpStatus !== 'open') {
+    throw error(
+      403,
+      cfpStatus === 'not_open_yet'
+        ? 'The Call for Papers has not opened yet. Please check back later.'
+        : 'The Call for Papers is now closed. Thank you for your interest!'
+    )
+  }
+
+  return { edition, categories, formats, allowCoSpeakers }
 }
 
 export const actions: Actions = {
   submit: async ({ request, locals, params }) => {
+    // First, verify CFP is still open
+    const editions = await locals.pb.collection('editions').getList(1, 1, {
+      filter: `slug = "${params.editionSlug}"`
+    })
+
+    if (editions.items.length === 0) {
+      return fail(404, { error: 'Edition not found' })
+    }
+
+    const editionId = editions.items[0].id as string
+
+    // Check CFP settings
+    let cfpSettings = null
+    try {
+      cfpSettings = await locals.pb
+        .collection('cfp_settings')
+        .getFirstListItem(`editionId="${editionId}"`)
+    } catch {
+      // No settings
+    }
+
+    const now = new Date()
+    const cfpOpenDate = cfpSettings?.cfpOpenDate
+      ? new Date(cfpSettings.cfpOpenDate as string)
+      : null
+    const cfpCloseDate = cfpSettings?.cfpCloseDate
+      ? new Date(cfpSettings.cfpCloseDate as string)
+      : null
+
+    if (cfpOpenDate && now < cfpOpenDate) {
+      return fail(403, { error: 'The Call for Papers has not opened yet.' })
+    }
+
+    if (cfpCloseDate && now > cfpCloseDate) {
+      return fail(403, { error: 'The Call for Papers is now closed.' })
+    }
+
     const formData = await request.formData()
 
     // Parse speaker data
@@ -70,17 +120,6 @@ export const actions: Actions = {
       })
     }
 
-    // Get edition ID from the parent layout
-    const editions = await locals.pb.collection('editions').getList(1, 1, {
-      filter: `slug = "${params.editionSlug}"`
-    })
-
-    if (editions.items.length === 0) {
-      return fail(404, { error: 'Edition not found' })
-    }
-
-    const editionId = editions.items[0].id as string
-
     // Submit the talk
     const talkRepository = createTalkRepository(locals.pb)
     const speakerRepository = createSpeakerRepository(locals.pb)
@@ -91,6 +130,31 @@ export const actions: Actions = {
         editionId,
         speaker: speakerResult.data,
         talk: talkValidation.data
+      })
+
+      // Get edition and event info for email
+      const edition = editions.items[0]
+      let eventName = edition.name as string
+      try {
+        const event = await locals.pb.collection('events').getOne(edition.eventId as string)
+        eventName = event.name as string
+      } catch {
+        // Use edition name as fallback
+      }
+
+      // Send confirmation email (don't await - fire and forget)
+      sendCfpNotification({
+        pb: locals.pb,
+        type: 'submission_confirmed',
+        talkId: result.talk.id,
+        speakerId: result.speaker.id,
+        editionId,
+        editionSlug: params.editionSlug,
+        editionName: edition.name as string,
+        eventName,
+        baseUrl: request.url.split('/cfp')[0]
+      }).catch((err) => {
+        console.error('Failed to send submission confirmation email:', err)
       })
 
       // Redirect to success page or submissions list

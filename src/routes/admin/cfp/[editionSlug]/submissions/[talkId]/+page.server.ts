@@ -5,11 +5,12 @@ import {
   createSpeakerRepository,
   createTalkRepository
 } from '$lib/features/cfp/infra'
+import { sendCfpNotification } from '$lib/server/cfp-notifications'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent, params, locals }) => {
-  const { edition, categories, formats } = await parent()
+  const { edition, categories, formats, cfpSettings, canSeeSpeakerInfo } = await parent()
 
   const talkRepo = createTalkRepository(locals.pb)
   const speakerRepo = createSpeakerRepository(locals.pb)
@@ -56,6 +57,8 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
     edition,
     categories,
     formats,
+    cfpSettings,
+    canSeeSpeakerInfo,
     talk: {
       ...talk,
       category: categories.find((c) => c.id === talk.categoryId),
@@ -86,9 +89,53 @@ export const actions: Actions = {
     }
 
     const talkRepo = createTalkRepository(locals.pb)
+    const speakerRepo = createSpeakerRepository(locals.pb)
 
     try {
+      // Get talk before update to get speaker info
+      const talk = await talkRepo.findById(params.talkId)
+      if (!talk) {
+        return fail(404, { error: 'Talk not found' })
+      }
+
+      const previousStatus = talk.status
       await talkRepo.updateStatus(params.talkId, newStatus)
+
+      // Send email notification for status changes to accepted or rejected
+      const shouldNotify =
+        (newStatus === 'accepted' || newStatus === 'rejected') && previousStatus !== newStatus
+
+      if (shouldNotify && talk.speakerIds.length > 0) {
+        // Get edition and event info
+        const edition = await locals.pb
+          .collection('editions')
+          .getFirstListItem(`slug="${params.editionSlug}"`)
+        let eventName = edition.name as string
+        try {
+          const event = await locals.pb.collection('events').getOne(edition.eventId as string)
+          eventName = event.name as string
+        } catch {
+          // Use edition name as fallback
+        }
+
+        // Send notification to all speakers
+        for (const speakerId of talk.speakerIds) {
+          sendCfpNotification({
+            pb: locals.pb,
+            type: newStatus === 'accepted' ? 'talk_accepted' : 'talk_rejected',
+            talkId: params.talkId,
+            speakerId,
+            editionId: edition.id,
+            editionSlug: params.editionSlug,
+            editionName: edition.name as string,
+            eventName,
+            baseUrl: request.url.split('/admin')[0]
+          }).catch((err) => {
+            console.error(`Failed to send ${newStatus} email to speaker ${speakerId}:`, err)
+          })
+        }
+      }
+
       return { success: true, message: `Status updated to ${newStatus}` }
     } catch (err) {
       console.error('Failed to update talk status:', err)

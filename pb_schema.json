@@ -317,7 +317,8 @@
             "talk_accepted",
             "talk_rejected",
             "confirmation_reminder",
-            "cfp_closing_reminder"
+            "cfp_closing_reminder",
+            "cospeaker_invitation"
           ]
         }
       },
@@ -330,6 +331,31 @@
         "options": { "values": ["sent", "failed", "pending"] }
       },
       { "name": "error", "type": "text" }
+    ]
+  },
+  {
+    "name": "cospeaker_invitations",
+    "type": "base",
+    "schema": [
+      {
+        "name": "talkId",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "talks", "maxSelect": 1 }
+      },
+      { "name": "email", "type": "email", "required": true },
+      {
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": { "values": ["pending", "accepted", "declined", "expired", "cancelled"] }
+      },
+      {
+        "name": "invitedBy",
+        "type": "relation",
+        "options": { "collectionId": "speakers", "maxSelect": 1 }
+      },
+      { "name": "expiresAt", "type": "date" }
     ]
   }
 ]

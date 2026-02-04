@@ -2,6 +2,8 @@ import { createCategoryRepository, createFormatRepository } from '$lib/features/
 import { error } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
 
+export type CfpStatus = 'not_open_yet' | 'open' | 'closed'
+
 export const load: LayoutServerLoad = async ({ params, locals }) => {
   const categoryRepo = createCategoryRepository(locals.pb)
   const formatRepo = createFormatRepository(locals.pb)
@@ -39,9 +41,39 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
   const categories = await categoryRepo.findByEdition(edition.id)
   const formats = await formatRepo.findByEdition(edition.id)
 
+  // Load CFP settings for timeline
+  let cfpSettings = null
+  try {
+    cfpSettings = await locals.pb
+      .collection('cfp_settings')
+      .getFirstListItem(`editionId="${edition.id}"`)
+  } catch {
+    // No settings exist yet
+  }
+
+  const now = new Date()
+  const cfpOpenDate = cfpSettings?.cfpOpenDate ? new Date(cfpSettings.cfpOpenDate as string) : null
+  const cfpCloseDate = cfpSettings?.cfpCloseDate
+    ? new Date(cfpSettings.cfpCloseDate as string)
+    : null
+
+  // Determine CFP status
+  let cfpStatus: CfpStatus = 'open'
+  if (cfpOpenDate && now < cfpOpenDate) {
+    cfpStatus = 'not_open_yet'
+  } else if (cfpCloseDate && now > cfpCloseDate) {
+    cfpStatus = 'closed'
+  }
+
   return {
     edition,
     categories,
-    formats
+    formats,
+    cfpOpenDate,
+    cfpCloseDate,
+    cfpStatus,
+    introText: (cfpSettings?.introText as string) || null,
+    allowCoSpeakers: cfpSettings?.allowCoSpeakers !== false,
+    maxSubmissionsPerSpeaker: (cfpSettings?.maxSubmissionsPerSpeaker as number) || 3
   }
 }

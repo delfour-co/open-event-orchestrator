@@ -20,9 +20,10 @@ interface SpeakerFormData {
 interface Props {
   speaker: SpeakerFormData
   errors?: Record<string, string>
+  emailReadonly?: boolean
 }
 
-let { speaker = $bindable({}), errors = {} }: Props = $props()
+let { speaker = $bindable({}), errors = {}, emailReadonly = false }: Props = $props()
 </script>
 
 <div class="space-y-6">
@@ -69,8 +70,13 @@ let { speaker = $bindable({}), errors = {} }: Props = $props()
       bind:value={speaker.email}
       placeholder="john@example.com"
       required
-      class={errors.email ? 'border-destructive' : ''}
+      readonly={emailReadonly}
+      disabled={emailReadonly}
+      class={errors.email ? 'border-destructive' : emailReadonly ? 'bg-muted' : ''}
     />
+    {#if emailReadonly}
+      <p class="text-sm text-muted-foreground">Email cannot be changed after submission.</p>
+    {/if}
     {#if errors.email}
       <p class="text-sm text-destructive">{errors.email}</p>
     {/if}

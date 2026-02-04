@@ -34,9 +34,60 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
   const categories = await categoryRepo.findByEdition(edition.id)
   const formats = await formatRepo.findByEdition(edition.id)
 
+  // Load CFP settings
+  let cfpSettings = null
+  try {
+    cfpSettings = await locals.pb
+      .collection('cfp_settings')
+      .getFirstListItem(`editionId="${edition.id}"`)
+  } catch {
+    // No settings exist yet
+  }
+
+  // Get user's role in the organization to determine if they can see speaker info in anonymous mode
+  let userRole: string | null = null
+  if (locals.user) {
+    try {
+      // Get organization from event
+      const event = await locals.pb.collection('events').getOne(edition.eventId)
+      const orgId = event.organizationId as string
+
+      // Check if user is owner
+      const org = await locals.pb.collection('organizations').getOne(orgId)
+      if (org.ownerId === locals.user.id) {
+        userRole = 'owner'
+      } else {
+        // Check membership
+        const membership = await locals.pb
+          .collection('organization_members')
+          .getFirstListItem(`organizationId="${orgId}" && userId="${locals.user.id}"`)
+        userRole = membership.role as string
+      }
+    } catch {
+      // User is not a member
+    }
+  }
+
   return {
     edition,
     categories,
-    formats
+    formats,
+    cfpSettings: cfpSettings
+      ? {
+          anonymousReview: cfpSettings.anonymousReview as boolean,
+          allowCoSpeakers: cfpSettings.allowCoSpeakers as boolean,
+          cfpOpenDate: cfpSettings.cfpOpenDate ? new Date(cfpSettings.cfpOpenDate as string) : null,
+          cfpCloseDate: cfpSettings.cfpCloseDate
+            ? new Date(cfpSettings.cfpCloseDate as string)
+            : null
+        }
+      : {
+          anonymousReview: false,
+          allowCoSpeakers: true,
+          cfpOpenDate: null,
+          cfpCloseDate: null
+        },
+    userRole,
+    canSeeSpeakerInfo: !cfpSettings?.anonymousReview || userRole === 'owner' || userRole === 'admin'
   }
 }
