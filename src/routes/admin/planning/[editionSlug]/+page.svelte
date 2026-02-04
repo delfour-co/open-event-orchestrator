@@ -1,16 +1,25 @@
 <script lang="ts">
+import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
-import { ArrowLeft, Calendar, Clock, DoorOpen, Layers, Plus } from 'lucide-svelte'
-import type { PageData } from './$types'
+import { Input } from '$lib/components/ui/input'
+import { Label } from '$lib/components/ui/label'
+import { ArrowLeft, Calendar, Clock, DoorOpen, Layers, Loader2, Plus, X } from 'lucide-svelte'
+import type { ActionData, PageData } from './$types'
 
 interface Props {
   data: PageData
+  form: ActionData
 }
 
-const { data }: Props = $props()
+const { data, form }: Props = $props()
 
 let activeTab = $state<'schedule' | 'rooms' | 'tracks' | 'slots'>('schedule')
+let showRoomForm = $state(false)
+let showTrackForm = $state(false)
+let showSlotForm = $state(false)
+let isSubmitting = $state(false)
+let selectedRoomId = $state('')
 
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -54,6 +63,15 @@ const getTrackColor = (trackId: string | undefined) => {
   const track = data.tracks.find((t) => t.id === trackId)
   return track?.color || '#6b7280'
 }
+
+// Close forms on successful submission
+$effect(() => {
+  if (form?.success) {
+    if (form.action === 'createRoom') showRoomForm = false
+    if (form.action === 'createTrack') showTrackForm = false
+    if (form.action === 'createSlot') showSlotForm = false
+  }
+})
 </script>
 
 <svelte:head>
@@ -193,13 +211,75 @@ const getTrackColor = (trackId: string | undefined) => {
   {#if activeTab === 'rooms'}
     <div class="space-y-4">
       <div class="flex justify-end">
-        <Button>
-          <Plus class="mr-2 h-4 w-4" />
-          Add Room
-        </Button>
+        {#if !showRoomForm}
+          <Button onclick={() => (showRoomForm = true)}>
+            <Plus class="mr-2 h-4 w-4" />
+            Add Room
+          </Button>
+        {/if}
       </div>
 
-      {#if data.rooms.length === 0}
+      <!-- Room Form -->
+      {#if showRoomForm}
+        <Card.Root>
+          <Card.Header>
+            <div class="flex items-center justify-between">
+              <Card.Title>Add Room</Card.Title>
+              <Button variant="ghost" size="icon" onclick={() => (showRoomForm = false)}>
+                <X class="h-4 w-4" />
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Content>
+            {#if form?.error && form?.action === 'createRoom'}
+              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+                {form.error}
+              </div>
+            {/if}
+            <form
+              method="POST"
+              action="?/createRoom"
+              use:enhance={() => {
+                isSubmitting = true
+                return async ({ update }) => {
+                  isSubmitting = false
+                  await update()
+                }
+              }}
+              class="space-y-4"
+            >
+              <input type="hidden" name="editionId" value={data.edition.id} />
+              <div class="grid gap-4 md:grid-cols-3">
+                <div class="space-y-2">
+                  <Label for="room-name">Name *</Label>
+                  <Input id="room-name" name="name" placeholder="Main Hall" required />
+                </div>
+                <div class="space-y-2">
+                  <Label for="room-capacity">Capacity</Label>
+                  <Input id="room-capacity" name="capacity" type="number" min="1" placeholder="200" />
+                </div>
+                <div class="space-y-2">
+                  <Label for="room-floor">Floor</Label>
+                  <Input id="room-floor" name="floor" placeholder="Ground floor" />
+                </div>
+              </div>
+              <div class="flex justify-end gap-2">
+                <Button type="button" variant="outline" onclick={() => (showRoomForm = false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {#if isSubmitting}
+                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+                  {/if}
+                  Create Room
+                </Button>
+              </div>
+            </form>
+          </Card.Content>
+        </Card.Root>
+      {/if}
+
+      {#if data.rooms.length === 0 && !showRoomForm}
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
@@ -207,7 +287,7 @@ const getTrackColor = (trackId: string | undefined) => {
             <p class="text-sm text-muted-foreground">Add your first room to get started.</p>
           </Card.Content>
         </Card.Root>
-      {:else}
+      {:else if data.rooms.length > 0}
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {#each data.rooms as room}
             <Card.Root>
@@ -233,13 +313,74 @@ const getTrackColor = (trackId: string | undefined) => {
   {#if activeTab === 'tracks'}
     <div class="space-y-4">
       <div class="flex justify-end">
-        <Button>
-          <Plus class="mr-2 h-4 w-4" />
-          Add Track
-        </Button>
+        {#if !showTrackForm}
+          <Button onclick={() => (showTrackForm = true)}>
+            <Plus class="mr-2 h-4 w-4" />
+            Add Track
+          </Button>
+        {/if}
       </div>
 
-      {#if data.tracks.length === 0}
+      <!-- Track Form -->
+      {#if showTrackForm}
+        <Card.Root>
+          <Card.Header>
+            <div class="flex items-center justify-between">
+              <Card.Title>Add Track</Card.Title>
+              <Button variant="ghost" size="icon" onclick={() => (showTrackForm = false)}>
+                <X class="h-4 w-4" />
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Content>
+            {#if form?.error && form?.action === 'createTrack'}
+              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+                {form.error}
+              </div>
+            {/if}
+            <form
+              method="POST"
+              action="?/createTrack"
+              use:enhance={() => {
+                isSubmitting = true
+                return async ({ update }) => {
+                  isSubmitting = false
+                  await update()
+                }
+              }}
+              class="space-y-4"
+            >
+              <input type="hidden" name="editionId" value={data.edition.id} />
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="space-y-2">
+                  <Label for="track-name">Name *</Label>
+                  <Input id="track-name" name="name" placeholder="Web Development" required />
+                </div>
+                <div class="space-y-2">
+                  <Label for="track-color">Color</Label>
+                  <div class="flex gap-2">
+                    <Input id="track-color" name="color" type="color" value="#6b7280" class="h-10 w-16 p-1" />
+                    <Input name="color" value="#6b7280" class="flex-1" placeholder="#6b7280" />
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-end gap-2">
+                <Button type="button" variant="outline" onclick={() => (showTrackForm = false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {#if isSubmitting}
+                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+                  {/if}
+                  Create Track
+                </Button>
+              </div>
+            </form>
+          </Card.Content>
+        </Card.Root>
+      {/if}
+
+      {#if data.tracks.length === 0 && !showTrackForm}
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <Layers class="mb-4 h-12 w-12 text-muted-foreground" />
@@ -249,7 +390,7 @@ const getTrackColor = (trackId: string | undefined) => {
             </p>
           </Card.Content>
         </Card.Root>
-      {:else}
+      {:else if data.tracks.length > 0}
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {#each data.tracks as track}
             <Card.Root>
@@ -270,13 +411,100 @@ const getTrackColor = (trackId: string | undefined) => {
   {#if activeTab === 'slots'}
     <div class="space-y-4">
       <div class="flex justify-end">
-        <Button>
-          <Plus class="mr-2 h-4 w-4" />
-          Add Slot
-        </Button>
+        {#if !showSlotForm}
+          <Button onclick={() => (showSlotForm = true)} disabled={data.rooms.length === 0}>
+            <Plus class="mr-2 h-4 w-4" />
+            Add Slot
+          </Button>
+        {/if}
       </div>
 
-      {#if data.slots.length === 0}
+      <!-- Slot Form -->
+      {#if showSlotForm}
+        <Card.Root>
+          <Card.Header>
+            <div class="flex items-center justify-between">
+              <Card.Title>Add Slot</Card.Title>
+              <Button variant="ghost" size="icon" onclick={() => (showSlotForm = false)}>
+                <X class="h-4 w-4" />
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Content>
+            {#if form?.error && form?.action === 'createSlot'}
+              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+                {form.error}
+              </div>
+            {/if}
+            <form
+              method="POST"
+              action="?/createSlot"
+              use:enhance={() => {
+                isSubmitting = true
+                return async ({ update }) => {
+                  isSubmitting = false
+                  await update()
+                }
+              }}
+              class="space-y-4"
+            >
+              <input type="hidden" name="editionId" value={data.edition.id} />
+              <div class="grid gap-4 md:grid-cols-4">
+                <div class="space-y-2">
+                  <Label for="slot-room">Room *</Label>
+                  <select
+                    id="slot-room"
+                    name="roomId"
+                    required
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    bind:value={selectedRoomId}
+                  >
+                    <option value="">Select a room</option>
+                    {#each data.rooms as room}
+                      <option value={room.id}>{room.name}</option>
+                    {/each}
+                  </select>
+                </div>
+                <div class="space-y-2">
+                  <Label for="slot-date">Date *</Label>
+                  <Input id="slot-date" name="date" type="date" required />
+                </div>
+                <div class="space-y-2">
+                  <Label for="slot-start">Start Time *</Label>
+                  <Input id="slot-start" name="startTime" type="time" required />
+                </div>
+                <div class="space-y-2">
+                  <Label for="slot-end">End Time *</Label>
+                  <Input id="slot-end" name="endTime" type="time" required />
+                </div>
+              </div>
+              <div class="flex justify-end gap-2">
+                <Button type="button" variant="outline" onclick={() => (showSlotForm = false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {#if isSubmitting}
+                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+                  {/if}
+                  Create Slot
+                </Button>
+              </div>
+            </form>
+          </Card.Content>
+        </Card.Root>
+      {/if}
+
+      {#if data.rooms.length === 0}
+        <Card.Root>
+          <Card.Content class="flex flex-col items-center justify-center py-12">
+            <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
+            <h3 class="text-lg font-semibold">Add rooms first</h3>
+            <p class="text-sm text-muted-foreground">
+              You need to create rooms before adding time slots.
+            </p>
+          </Card.Content>
+        </Card.Root>
+      {:else if data.slots.length === 0 && !showSlotForm}
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <Clock class="mb-4 h-12 w-12 text-muted-foreground" />
@@ -286,7 +514,7 @@ const getTrackColor = (trackId: string | undefined) => {
             </p>
           </Card.Content>
         </Card.Root>
-      {:else}
+      {:else if data.slots.length > 0}
         <div class="space-y-2">
           {#each data.slots as slot}
             {@const room = data.rooms.find((r) => r.id === slot.roomId)}
