@@ -16,8 +16,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const edition = editions.items[0]
   const editionId = edition.id as string
 
-  // Load rooms, tracks, slots, and sessions in parallel
-  const [rooms, tracks, slots, sessions] = await Promise.all([
+  // Load rooms, tracks, slots, sessions, and accepted talks in parallel
+  const [rooms, tracks, slots, sessions, acceptedTalks, formats] = await Promise.all([
     locals.pb.collection('rooms').getFullList({
       filter: `editionId = "${editionId}"`,
       sort: 'order,name'
@@ -32,8 +32,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     }),
     locals.pb.collection('sessions').getFullList({
       filter: `editionId = "${editionId}"`
-    })
+    }),
+    // Load accepted talks with speaker information expanded
+    locals.pb
+      .collection('talks')
+      .getFullList({
+        filter: `editionId = "${editionId}" && (status = "accepted" || status = "confirmed")`,
+        expand: 'speakerIds',
+        sort: 'title'
+      }),
+    // Load formats for duration information
+    locals.pb
+      .collection('formats')
+      .getFullList({
+        filter: `editionId = "${editionId}"`,
+        sort: 'order,name'
+      })
   ])
+
+  // Create a map of formats by ID for easy lookup
+  const formatsMap = new Map(formats.map((f) => [f.id, f]))
 
   return {
     edition: {
@@ -72,6 +90,32 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       trackId: s.trackId as string | undefined,
       title: s.title as string,
       type: (s.type as string) || 'talk'
+    })),
+    // Accepted talks available for scheduling
+    acceptedTalks: acceptedTalks.map((t) => {
+      const format = t.formatId ? formatsMap.get(t.formatId as string) : null
+      const expandedSpeakers = t.expand?.speakerIds as Array<Record<string, unknown>> | undefined
+      return {
+        id: t.id as string,
+        title: t.title as string,
+        abstract: t.abstract as string,
+        status: t.status as string,
+        formatId: t.formatId as string | undefined,
+        duration: format ? (format.duration as number) : undefined,
+        speakers: expandedSpeakers
+          ? expandedSpeakers.map((s) => ({
+              id: s.id as string,
+              firstName: s.firstName as string,
+              lastName: s.lastName as string,
+              company: s.company as string | undefined
+            }))
+          : []
+      }
+    }),
+    formats: formats.map((f) => ({
+      id: f.id as string,
+      name: f.name as string,
+      duration: f.duration as number
     }))
   }
 }
@@ -392,6 +436,179 @@ export const actions: Actions = {
     } catch (err) {
       console.error('Failed to delete slot:', err)
       return fail(500, { error: 'Failed to delete slot', action: 'deleteSlot' })
+    }
+  },
+
+  // ============ SESSIONS ============
+  createSession: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const editionId = formData.get('editionId') as string
+    const slotId = formData.get('slotId') as string
+    const title = formData.get('title') as string
+    const type = formData.get('type') as string
+    const talkId = formData.get('talkId') as string | null
+    const trackId = formData.get('trackId') as string | null
+    const description = formData.get('description') as string | null
+
+    // Validate required fields
+    if (!editionId) {
+      return fail(400, { error: 'Edition ID is required', action: 'createSession' })
+    }
+    if (!slotId) {
+      return fail(400, { error: 'Slot is required', action: 'createSession' })
+    }
+    if (!title || title.trim().length === 0) {
+      return fail(400, { error: 'Session title is required', action: 'createSession' })
+    }
+    if (!type) {
+      return fail(400, { error: 'Session type is required', action: 'createSession' })
+    }
+
+    // Validate session type
+    const validTypes = [
+      'talk',
+      'workshop',
+      'keynote',
+      'panel',
+      'break',
+      'lunch',
+      'networking',
+      'registration',
+      'other'
+    ]
+    if (!validTypes.includes(type)) {
+      return fail(400, { error: 'Invalid session type', action: 'createSession' })
+    }
+
+    try {
+      // Check if slot already has a session
+      const existingSessions = await locals.pb.collection('sessions').getList(1, 1, {
+        filter: `slotId = "${slotId}"`
+      })
+
+      if (existingSessions.items.length > 0) {
+        return fail(400, {
+          error: 'This slot already has a session assigned. Delete the existing session first.',
+          action: 'createSession'
+        })
+      }
+
+      // If a talk is being assigned, check if it's already scheduled elsewhere
+      if (talkId) {
+        const talkSessions = await locals.pb.collection('sessions').getList(1, 1, {
+          filter: `talkId = "${talkId}"`
+        })
+
+        if (talkSessions.items.length > 0) {
+          return fail(400, {
+            error: 'This talk is already scheduled in another session.',
+            action: 'createSession'
+          })
+        }
+      }
+
+      // Create the session
+      await locals.pb.collection('sessions').create({
+        editionId,
+        slotId,
+        title: title.trim(),
+        type,
+        talkId: talkId || null,
+        trackId: trackId || null,
+        description: description?.trim() || null
+      })
+
+      return { success: true, action: 'createSession' }
+    } catch (err) {
+      console.error('Failed to create session:', err)
+      return fail(500, { error: 'Failed to create session', action: 'createSession' })
+    }
+  },
+
+  updateSession: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+    const title = formData.get('title') as string
+    const type = formData.get('type') as string
+    const talkId = formData.get('talkId') as string | null
+    const trackId = formData.get('trackId') as string | null
+    const description = formData.get('description') as string | null
+
+    // Validate required fields
+    if (!id) {
+      return fail(400, { error: 'Session ID is required', action: 'updateSession' })
+    }
+    if (!title || title.trim().length === 0) {
+      return fail(400, { error: 'Session title is required', action: 'updateSession' })
+    }
+    if (!type) {
+      return fail(400, { error: 'Session type is required', action: 'updateSession' })
+    }
+
+    // Validate session type
+    const validTypes = [
+      'talk',
+      'workshop',
+      'keynote',
+      'panel',
+      'break',
+      'lunch',
+      'networking',
+      'registration',
+      'other'
+    ]
+    if (!validTypes.includes(type)) {
+      return fail(400, { error: 'Invalid session type', action: 'updateSession' })
+    }
+
+    try {
+      // Get the current session to check for existing talk assignment
+      const currentSession = await locals.pb.collection('sessions').getOne(id)
+
+      // If assigning a new talk, check if it's already scheduled elsewhere
+      if (talkId && talkId !== currentSession.talkId) {
+        const talkSessions = await locals.pb.collection('sessions').getList(1, 1, {
+          filter: `talkId = "${talkId}" && id != "${id}"`
+        })
+
+        if (talkSessions.items.length > 0) {
+          return fail(400, {
+            error: 'This talk is already scheduled in another session.',
+            action: 'updateSession'
+          })
+        }
+      }
+
+      // Update the session
+      await locals.pb.collection('sessions').update(id, {
+        title: title.trim(),
+        type,
+        talkId: talkId || null,
+        trackId: trackId || null,
+        description: description?.trim() || null
+      })
+
+      return { success: true, action: 'updateSession' }
+    } catch (err) {
+      console.error('Failed to update session:', err)
+      return fail(500, { error: 'Failed to update session', action: 'updateSession' })
+    }
+  },
+
+  deleteSession: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+
+    if (!id) {
+      return fail(400, { error: 'Session ID is required', action: 'deleteSession' })
+    }
+
+    try {
+      await locals.pb.collection('sessions').delete(id)
+      return { success: true, action: 'deleteSession' }
+    } catch (err) {
+      console.error('Failed to delete session:', err)
+      return fail(500, { error: 'Failed to delete session', action: 'deleteSession' })
     }
   }
 }

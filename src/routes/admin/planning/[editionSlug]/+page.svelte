@@ -8,10 +8,12 @@ import { Textarea } from '$lib/components/ui/textarea'
 import {
   ArrowLeft,
   Calendar,
+  Check,
   Clock,
   DoorOpen,
   Layers,
   Loader2,
+  Mic,
   Pencil,
   Plus,
   Trash2,
@@ -26,7 +28,7 @@ interface Props {
 
 const { data, form }: Props = $props()
 
-let activeTab = $state<'schedule' | 'rooms' | 'tracks' | 'slots'>('schedule')
+let activeTab = $state<'schedule' | 'sessions' | 'rooms' | 'tracks' | 'slots'>('schedule')
 let showRoomForm = $state(false)
 let showTrackForm = $state(false)
 let showSlotForm = $state(false)
@@ -37,6 +39,41 @@ let selectedRoomId = $state('')
 let editingRoom = $state<(typeof data.rooms)[0] | null>(null)
 let editingTrack = $state<(typeof data.tracks)[0] | null>(null)
 let editingSlot = $state<(typeof data.slots)[0] | null>(null)
+
+// Session form states
+let showSessionForm = $state(false)
+let editingSession = $state<(typeof data.sessions)[0] | null>(null)
+let selectedSlotId = $state<string>('')
+let sessionType = $state<string>('talk')
+let sessionTitle = $state<string>('')
+let selectedTalkId = $state<string>('')
+let selectedTrackId = $state<string>('')
+
+// Session type options
+const sessionTypeOptions = [
+  { value: 'talk', label: 'Talk' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'keynote', label: 'Keynote' },
+  { value: 'panel', label: 'Panel' },
+  { value: 'break', label: 'Break' },
+  { value: 'lunch', label: 'Lunch' },
+  { value: 'networking', label: 'Networking' },
+  { value: 'registration', label: 'Registration' },
+  { value: 'other', label: 'Other' }
+]
+
+// Types that require a talk
+const talkRequiredTypes = ['talk', 'workshop', 'keynote', 'panel']
+
+// Computed: available talks (accepted/confirmed but not yet scheduled)
+const availableTalks = $derived(() => {
+  const scheduledTalkIds = new Set(data.sessions.filter((s) => s.talkId).map((s) => s.talkId))
+  // When editing, include the currently assigned talk as available
+  if (editingSession?.talkId) {
+    scheduledTalkIds.delete(editingSession.talkId)
+  }
+  return data.acceptedTalks.filter((t) => !scheduledTalkIds.has(t.id))
+})
 
 // Equipment options
 const equipmentOptions = [
@@ -165,6 +202,82 @@ function toggleEquipment(value: string) {
     selectedEquipment = [...selectedEquipment, value]
   }
 }
+
+// Session form functions
+function openSessionFormForSlot(slotId: string) {
+  const existingSession = getSessionForSlot(slotId)
+  if (existingSession) {
+    startEditSession(existingSession)
+  } else {
+    selectedSlotId = slotId
+    editingSession = null
+    sessionType = 'talk'
+    sessionTitle = ''
+    selectedTalkId = ''
+    selectedTrackId = ''
+    showSessionForm = true
+  }
+}
+
+function startEditSession(session: (typeof data.sessions)[0]) {
+  editingSession = session
+  selectedSlotId = session.slotId
+  sessionType = session.type
+  sessionTitle = session.title
+  selectedTalkId = session.talkId || ''
+  selectedTrackId = session.trackId || ''
+  showSessionForm = true
+}
+
+function cancelSessionForm() {
+  showSessionForm = false
+  editingSession = null
+  selectedSlotId = ''
+  sessionType = 'talk'
+  sessionTitle = ''
+  selectedTalkId = ''
+  selectedTrackId = ''
+}
+
+// Auto-fill title when selecting a talk
+function handleTalkSelection(talkId: string) {
+  selectedTalkId = talkId
+  if (talkId) {
+    const talk = data.acceptedTalks.find((t) => t.id === talkId)
+    if (talk) {
+      sessionTitle = talk.title
+    }
+  }
+}
+
+// Get slot info for display
+function getSlotInfo(slotId: string) {
+  const slot = data.slots.find((s) => s.id === slotId)
+  if (!slot) return null
+  const room = data.rooms.find((r) => r.id === slot.roomId)
+  return {
+    ...slot,
+    roomName: room?.name || 'Unknown room'
+  }
+}
+
+// Get session type label
+function getSessionTypeLabel(type: string): string {
+  return sessionTypeOptions.find((o) => o.value === type)?.label || type
+}
+
+// Close session form on successful submission
+$effect(() => {
+  if (form?.success) {
+    if (
+      form.action === 'createSession' ||
+      form.action === 'updateSession' ||
+      form.action === 'deleteSession'
+    ) {
+      cancelSessionForm()
+    }
+  }
+})
 </script>
 
 <svelte:head>
@@ -195,6 +308,14 @@ function toggleEquipment(value: string) {
     >
       <Calendar class="h-4 w-4" />
       Schedule
+    </Button>
+    <Button
+      variant={activeTab === 'sessions' ? 'default' : 'ghost'}
+      onclick={() => (activeTab = 'sessions')}
+      class="flex items-center gap-2"
+    >
+      <Mic class="h-4 w-4" />
+      Sessions ({data.sessions.length})
     </Button>
     <Button
       variant={activeTab === 'rooms' ? 'default' : 'ghost'}
@@ -245,6 +366,149 @@ function toggleEquipment(value: string) {
         </Card.Content>
       </Card.Root>
     {:else}
+      <!-- Session Form Modal -->
+      {#if showSessionForm}
+        <Card.Root class="mb-4">
+          <Card.Header>
+            <div class="flex items-center justify-between">
+              <Card.Title>{editingSession ? 'Edit Session' : 'Create Session'}</Card.Title>
+              <Button variant="ghost" size="icon" onclick={cancelSessionForm}>
+                <X class="h-4 w-4" />
+              </Button>
+            </div>
+            {#if selectedSlotId}
+              {@const slotInfo = getSlotInfo(selectedSlotId)}
+              {#if slotInfo}
+                <Card.Description>
+                  {slotInfo.roomName} - {formatDate(slotInfo.date)} - {slotInfo.startTime} to {slotInfo.endTime}
+                </Card.Description>
+              {/if}
+            {/if}
+          </Card.Header>
+          <Card.Content>
+            {#if form?.error && (form?.action === 'createSession' || form?.action === 'updateSession')}
+              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+                {form.error}
+              </div>
+            {/if}
+            <form
+              method="POST"
+              action={editingSession ? '?/updateSession' : '?/createSession'}
+              use:enhance={() => {
+                isSubmitting = true
+                return async ({ update }) => {
+                  isSubmitting = false
+                  await update()
+                }
+              }}
+              class="space-y-4"
+            >
+              <input type="hidden" name="editionId" value={data.edition.id} />
+              <input type="hidden" name="slotId" value={selectedSlotId} />
+              {#if editingSession}
+                <input type="hidden" name="id" value={editingSession.id} />
+              {/if}
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="space-y-2">
+                  <Label for="session-type">Session Type *</Label>
+                  <select
+                    id="session-type"
+                    name="type"
+                    required
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    bind:value={sessionType}
+                  >
+                    {#each sessionTypeOptions as option}
+                      <option value={option.value}>{option.label}</option>
+                    {/each}
+                  </select>
+                </div>
+
+                <div class="space-y-2">
+                  <Label for="session-track">Track (optional)</Label>
+                  <select
+                    id="session-track"
+                    name="trackId"
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    bind:value={selectedTrackId}
+                  >
+                    <option value="">No track</option>
+                    {#each data.tracks as track}
+                      <option value={track.id}>{track.name}</option>
+                    {/each}
+                  </select>
+                </div>
+              </div>
+
+              {#if talkRequiredTypes.includes(sessionType)}
+                <div class="space-y-2">
+                  <Label for="session-talk">Select Talk (optional)</Label>
+                  <select
+                    id="session-talk"
+                    name="talkId"
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    bind:value={selectedTalkId}
+                    onchange={(e) => handleTalkSelection(e.currentTarget.value)}
+                  >
+                    <option value="">-- Select a talk or enter custom title --</option>
+                    {#each availableTalks() as talk}
+                      <option value={talk.id}>{talk.title}</option>
+                    {/each}
+                    {#if editingSession && editingSession.talkId}
+                      {@const currentTalkId = editingSession.talkId}
+                      {@const currentTalk = data.acceptedTalks.find((t) => t.id === currentTalkId)}
+                      {#if currentTalk && !availableTalks().find((t) => t.id === currentTalk.id)}
+                        <option value={currentTalk.id}>{currentTalk.title} (current)</option>
+                      {/if}
+                    {/if}
+                  </select>
+                  {#if availableTalks().length === 0 && !editingSession?.talkId}
+                    <p class="text-xs text-muted-foreground">
+                      No accepted talks available. All talks are already scheduled or none have been accepted yet.
+                    </p>
+                  {/if}
+                </div>
+              {/if}
+
+              <div class="space-y-2">
+                <Label for="session-title">Title *</Label>
+                <Input
+                  id="session-title"
+                  name="title"
+                  placeholder={talkRequiredTypes.includes(sessionType) ? 'Talk title (auto-filled if talk selected)' : 'e.g., Lunch Break, Coffee & Networking'}
+                  required
+                  bind:value={sessionTitle}
+                />
+              </div>
+
+              <div class="flex justify-end gap-2">
+                <Button type="button" variant="outline" onclick={cancelSessionForm}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {#if isSubmitting}
+                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+                  {/if}
+                  {editingSession ? 'Update Session' : 'Create Session'}
+                </Button>
+              </div>
+            </form>
+            {#if editingSession}
+              <div class="mt-4 border-t pt-4">
+                <form method="POST" action="?/deleteSession" use:enhance>
+                  <input type="hidden" name="id" value={editingSession.id} />
+                  <Button type="submit" variant="destructive" size="sm">
+                    <Trash2 class="mr-2 h-4 w-4" />
+                    Delete Session
+                  </Button>
+                </form>
+              </div>
+            {/if}
+          </Card.Content>
+        </Card.Root>
+      {/if}
+
       <div class="overflow-x-auto">
         <table class="w-full border-collapse">
           <thead>
@@ -271,8 +535,10 @@ function toggleEquipment(value: string) {
                     <div class="flex flex-col gap-1">
                       {#each slotsByRoomAndDate()[room.id][dateStr] || [] as slot}
                         {@const session = getSessionForSlot(slot.id)}
-                        <div
-                          class="rounded p-1 text-xs"
+                        <button
+                          type="button"
+                          onclick={() => openSessionFormForSlot(slot.id)}
+                          class="w-full cursor-pointer rounded p-1 text-left text-xs transition-all hover:ring-2 hover:ring-primary hover:ring-offset-1"
                           style="background-color: {session
                             ? getTrackColor(session.trackId)
                             : '#f3f4f6'}20; border-left: 3px solid {session
@@ -284,10 +550,14 @@ function toggleEquipment(value: string) {
                           </div>
                           {#if session}
                             <div class="truncate">{session.title}</div>
+                            <div class="text-muted-foreground">{getSessionTypeLabel(session.type)}</div>
                           {:else}
-                            <div class="italic text-muted-foreground">Empty</div>
+                            <div class="flex items-center gap-1 italic text-muted-foreground">
+                              <Plus class="h-3 w-3" />
+                              Click to add session
+                            </div>
                           {/if}
-                        </div>
+                        </button>
                       {/each}
                     </div>
                   </td>
@@ -298,6 +568,118 @@ function toggleEquipment(value: string) {
         </table>
       </div>
     {/if}
+  {/if}
+
+  <!-- Sessions Tab -->
+  {#if activeTab === 'sessions'}
+    <div class="space-y-6">
+      <!-- Available Talks Section -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="flex items-center gap-2">
+            <Mic class="h-5 w-5" />
+            Available Talks ({availableTalks().length})
+          </Card.Title>
+          <Card.Description>
+            Accepted talks that have not yet been scheduled
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          {#if availableTalks().length === 0}
+            <div class="py-8 text-center text-muted-foreground">
+              {#if data.acceptedTalks.length === 0}
+                <p>No accepted talks yet. Accept talks from the CFP to schedule them.</p>
+              {:else}
+                <div class="flex items-center justify-center gap-2">
+                  <Check class="h-5 w-5 text-green-500" />
+                  <p>All accepted talks have been scheduled.</p>
+                </div>
+              {/if}
+            </div>
+          {:else}
+            <div class="space-y-2">
+              {#each availableTalks() as talk}
+                <div class="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <div class="font-medium">{talk.title}</div>
+                    {#if talk.speakers && talk.speakers.length > 0}
+                      <div class="text-sm text-muted-foreground">
+                        {talk.speakers.map((s) => `${s.firstName} ${s.lastName}`).join(', ')}
+                      </div>
+                    {/if}
+                    {#if talk.duration}
+                      <div class="text-xs text-muted-foreground">{talk.duration} min</div>
+                    {/if}
+                  </div>
+                  <span class="rounded bg-green-100 px-2 py-1 text-xs text-green-800">
+                    {talk.status}
+                  </span>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </Card.Content>
+      </Card.Root>
+
+      <!-- Scheduled Sessions Section -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="flex items-center gap-2">
+            <Calendar class="h-5 w-5" />
+            Scheduled Sessions ({data.sessions.length})
+          </Card.Title>
+          <Card.Description>
+            All sessions currently in the schedule
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          {#if data.sessions.length === 0}
+            <div class="py-8 text-center text-muted-foreground">
+              <p>No sessions scheduled yet. Click on empty slots in the Schedule tab to add sessions.</p>
+            </div>
+          {:else}
+            <div class="space-y-2">
+              {#each data.sessions as session}
+                {@const slotInfo = getSlotInfo(session.slotId)}
+                {@const track = session.trackId ? data.tracks.find((t) => t.id === session.trackId) : null}
+                <div class="flex items-center justify-between rounded-lg border p-3">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <div class="font-medium">{session.title}</div>
+                      <span class="rounded bg-muted px-2 py-0.5 text-xs">
+                        {getSessionTypeLabel(session.type)}
+                      </span>
+                    </div>
+                    {#if slotInfo}
+                      <div class="text-sm text-muted-foreground">
+                        {slotInfo.roomName} - {formatDate(slotInfo.date)} - {slotInfo.startTime} to {slotInfo.endTime}
+                      </div>
+                    {/if}
+                    {#if track}
+                      <div class="mt-1 flex items-center gap-1">
+                        <div class="h-3 w-3 rounded-full" style="background-color: {track.color}"></div>
+                        <span class="text-xs text-muted-foreground">{track.name}</span>
+                      </div>
+                    {/if}
+                  </div>
+                  <div class="flex gap-1">
+                    <Button variant="ghost" size="icon" onclick={() => { startEditSession(session); activeTab = 'schedule' }}>
+                      <Pencil class="h-4 w-4" />
+                    </Button>
+                    <form method="POST" action="?/deleteSession" use:enhance>
+                      <input type="hidden" name="id" value={session.id} />
+                      <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                        <Trash2 class="h-4 w-4" />
+                      </Button>
+                    </form>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </Card.Content>
+      </Card.Root>
+    </div>
   {/if}
 
   <!-- Rooms Tab -->
