@@ -258,6 +258,37 @@
     ]
   },
   {
+    "name": "organization_invitations",
+    "type": "base",
+    "schema": [
+      {
+        "name": "organizationId",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "organizations", "maxSelect": 1 }
+      },
+      { "name": "email", "type": "email", "required": true },
+      {
+        "name": "role",
+        "type": "select",
+        "required": true,
+        "options": { "values": ["admin", "organizer", "reviewer"] }
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": { "values": ["pending", "accepted", "expired", "cancelled"] }
+      },
+      {
+        "name": "invitedBy",
+        "type": "relation",
+        "options": { "collectionId": "users", "maxSelect": 1 }
+      },
+      { "name": "expiresAt", "type": "date" }
+    ]
+  },
+  {
     "name": "email_logs",
     "type": "base",
     "schema": [

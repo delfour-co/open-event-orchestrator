@@ -39,6 +39,29 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       // Collection might not exist yet or no members
     }
 
+    // Get pending invitations
+    let invitations: Array<{
+      id: string
+      email: string
+      role: string
+      createdAt: string
+    }> = []
+
+    try {
+      const invitationRecords = await locals.pb.collection('organization_invitations').getFullList({
+        filter: `organizationId="${organization.id}" && status="pending"`
+      })
+
+      invitations = invitationRecords.map((inv) => ({
+        id: inv.id as string,
+        email: inv.email as string,
+        role: inv.role as string,
+        createdAt: inv.created as string
+      }))
+    } catch {
+      // Collection might not exist yet
+    }
+
     // Count events for this organization
     const events = await locals.pb.collection('events').getFullList({
       filter: `organizationId="${organization.id}"`
@@ -58,6 +81,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
           : null
       },
       members,
+      invitations,
       eventsCount: events.length
     }
   } catch {
@@ -137,15 +161,40 @@ export const actions: Actions = {
         .collection('organizations')
         .getFirstListItem(`slug="${params.orgSlug}"`)
 
-      // Find user by email
-      let user: { id: string; name: string } | undefined
+      // Check if there's already a pending invitation for this email
+      try {
+        await locals.pb
+          .collection('organization_invitations')
+          .getFirstListItem(
+            `organizationId="${organization.id}" && email="${email}" && status="pending"`
+          )
+        return fail(400, { error: 'An invitation is already pending for this email' })
+      } catch {
+        // No pending invitation, continue
+      }
+
+      // Try to find user by email
+      let user: { id: string; name: string }
       try {
         user = await locals.pb.collection('users').getFirstListItem(`email="${email}"`)
       } catch {
-        return fail(400, { error: 'No user found with this email address' })
+        // User doesn't exist - create an invitation
+        const expiresAt = new Date()
+        expiresAt.setDate(expiresAt.getDate() + 30) // Expires in 30 days
+
+        await locals.pb.collection('organization_invitations').create({
+          organizationId: organization.id,
+          email,
+          role,
+          status: 'pending',
+          invitedBy: locals.pb.authStore.record?.id || null,
+          expiresAt: expiresAt.toISOString()
+        })
+
+        return { success: true, message: `Invitation sent to ${email}` }
       }
 
-      // Check if user is already a member
+      // User exists - check if already a member
       try {
         await locals.pb
           .collection('organization_members')
@@ -155,6 +204,7 @@ export const actions: Actions = {
         // User is not a member, proceed
       }
 
+      // Add user directly as member
       await locals.pb.collection('organization_members').create({
         organizationId: organization.id,
         userId: user.id,
@@ -165,6 +215,25 @@ export const actions: Actions = {
     } catch (e) {
       console.error('Failed to add member:', e)
       return fail(500, { error: 'Failed to add member' })
+    }
+  },
+
+  cancelInvitation: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const invitationId = formData.get('invitationId') as string
+
+    if (!invitationId) {
+      return fail(400, { error: 'Invitation ID is required' })
+    }
+
+    try {
+      await locals.pb.collection('organization_invitations').update(invitationId, {
+        status: 'cancelled'
+      })
+      return { success: true, message: 'Invitation cancelled' }
+    } catch (e) {
+      console.error('Failed to cancel invitation:', e)
+      return fail(500, { error: 'Failed to cancel invitation' })
     }
   },
 

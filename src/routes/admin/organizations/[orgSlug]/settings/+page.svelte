@@ -6,7 +6,18 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
-import { AlertTriangle, ArrowLeft, Loader2, Plus, Trash2, UserPlus, Users } from 'lucide-svelte'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Clock,
+  Loader2,
+  Mail,
+  Plus,
+  Trash2,
+  UserPlus,
+  Users,
+  X
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -214,7 +225,7 @@ const getRoleBadgeColor = (role: string) => {
                 placeholder="user@example.com"
                 required
               />
-              <p class="text-xs text-muted-foreground">User must have an existing account</p>
+              <p class="text-xs text-muted-foreground">An invitation will be sent if the user doesn't have an account</p>
             </div>
             <div class="space-y-2">
               <Label for="member-role">Role</Label>
@@ -259,7 +270,7 @@ const getRoleBadgeColor = (role: string) => {
         </div>
       {/if}
 
-      {#if data.members.length === 0}
+      {#if data.members.length === 0 && data.invitations.length === 0}
         <p class="text-sm text-muted-foreground">
           No team members yet. Add members to collaborate on events.
         </p>
@@ -308,6 +319,55 @@ const getRoleBadgeColor = (role: string) => {
               </div>
             </div>
           {/each}
+        </div>
+      {/if}
+
+      <!-- Pending Invitations -->
+      {#if data.invitations.length > 0}
+        <div class="mt-6">
+          <h4 class="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Clock class="h-4 w-4" />
+            Pending Invitations
+          </h4>
+          <div class="space-y-2">
+            {#each data.invitations as invitation}
+              <div class="flex items-center justify-between rounded-md border border-dashed bg-muted/30 p-3">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm">
+                    <Mail class="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p class="font-medium">{invitation.email}</p>
+                    <p class="text-sm text-muted-foreground">
+                      Invited as {invitation.role}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                    pending
+                  </span>
+                  <form method="POST" action="?/cancelInvitation" use:enhance={() => {
+                    return async ({ update }) => {
+                      await update()
+                      await invalidateAll()
+                    }
+                  }}>
+                    <input type="hidden" name="invitationId" value={invitation.id} />
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      title="Cancel invitation"
+                    >
+                      <X class="h-4 w-4" />
+                    </Button>
+                  </form>
+                </div>
+              </div>
+            {/each}
+          </div>
         </div>
       {/if}
     </Card.Content>
