@@ -5,7 +5,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
-import { Building2, CalendarDays, Edit2, Plus, Trash2 } from 'lucide-svelte'
+import { Building2, CalendarDays, Edit2, Plus, Settings, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -204,6 +204,11 @@ const generateSlug = (name: string) => {
                     <Button variant="outline" size="sm">
                       <CalendarDays class="mr-2 h-4 w-4" />
                       View Events
+                    </Button>
+                  </a>
+                  <a href="/admin/organizations/{org.slug}/settings" title="Organization Settings">
+                    <Button variant="ghost" size="icon" class="h-8 w-8">
+                      <Settings class="h-4 w-4" />
                     </Button>
                   </a>
                   <Button

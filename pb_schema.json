@@ -23,7 +23,38 @@
     "schema": [
       { "name": "name", "type": "text", "required": true },
       { "name": "slug", "type": "text", "required": true },
-      { "name": "description", "type": "text" }
+      { "name": "description", "type": "text" },
+      { "name": "website", "type": "url" },
+      { "name": "contactEmail", "type": "email" },
+      {
+        "name": "ownerId",
+        "type": "relation",
+        "options": { "collectionId": "users", "maxSelect": 1 }
+      }
+    ]
+  },
+  {
+    "name": "organization_members",
+    "type": "base",
+    "schema": [
+      {
+        "name": "organizationId",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "organizations", "maxSelect": 1 }
+      },
+      {
+        "name": "userId",
+        "type": "relation",
+        "required": true,
+        "options": { "collectionId": "users", "maxSelect": 1 }
+      },
+      {
+        "name": "role",
+        "type": "select",
+        "required": true,
+        "options": { "values": ["owner", "admin", "organizer", "reviewer"] }
+      }
     ]
   },
   {

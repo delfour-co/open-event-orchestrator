@@ -1,0 +1,244 @@
+import { fail, redirect } from '@sveltejs/kit'
+import type { Actions, PageServerLoad } from './$types'
+
+export const load: PageServerLoad = async ({ locals, params }) => {
+  try {
+    const organization = await locals.pb
+      .collection('organizations')
+      .getFirstListItem(`slug="${params.orgSlug}"`, {
+        expand: 'ownerId'
+      })
+
+    // Get organization members
+    let members: Array<{
+      id: string
+      userId: string
+      name: string
+      email: string
+      role: string
+    }> = []
+
+    try {
+      const memberRecords = await locals.pb.collection('organization_members').getFullList({
+        filter: `organizationId="${organization.id}"`,
+        expand: 'userId'
+      })
+
+      members = memberRecords.map((m) => ({
+        id: m.id as string,
+        userId: m.userId as string,
+        name: m.expand?.userId
+          ? ((m.expand.userId as Record<string, unknown>).name as string)
+          : 'Unknown',
+        email: m.expand?.userId
+          ? ((m.expand.userId as Record<string, unknown>).email as string)
+          : '',
+        role: m.role as string
+      }))
+    } catch {
+      // Collection might not exist yet or no members
+    }
+
+    // Count events for this organization
+    const events = await locals.pb.collection('events').getFullList({
+      filter: `organizationId="${organization.id}"`
+    })
+
+    return {
+      organization: {
+        id: organization.id as string,
+        name: organization.name as string,
+        slug: organization.slug as string,
+        description: (organization.description as string) || '',
+        website: (organization.website as string) || '',
+        contactEmail: (organization.contactEmail as string) || '',
+        ownerId: (organization.ownerId as string) || null,
+        ownerName: organization.expand?.ownerId
+          ? ((organization.expand.ownerId as Record<string, unknown>).name as string)
+          : null
+      },
+      members,
+      eventsCount: events.length
+    }
+  } catch {
+    throw redirect(303, '/admin/organizations')
+  }
+}
+
+export const actions: Actions = {
+  updateOrganization: async ({ request, locals, params }) => {
+    const formData = await request.formData()
+    const name = formData.get('name') as string
+    const slug = formData.get('slug') as string
+    const description = formData.get('description') as string
+    const website = formData.get('website') as string
+    const contactEmail = formData.get('contactEmail') as string
+
+    if (!name || !slug) {
+      return fail(400, { error: 'Name and slug are required' })
+    }
+
+    // Validate slug format
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      return fail(400, { error: 'Slug must only contain lowercase letters, numbers, and hyphens' })
+    }
+
+    try {
+      const organization = await locals.pb
+        .collection('organizations')
+        .getFirstListItem(`slug="${params.orgSlug}"`)
+
+      // Check if slug is being changed and if new slug already exists
+      if (slug !== params.orgSlug) {
+        try {
+          await locals.pb.collection('organizations').getFirstListItem(`slug="${slug}"`)
+          return fail(400, { error: 'An organization with this slug already exists' })
+        } catch {
+          // Slug is available
+        }
+      }
+
+      await locals.pb.collection('organizations').update(organization.id, {
+        name,
+        slug,
+        description: description || null,
+        website: website || null,
+        contactEmail: contactEmail || null
+      })
+
+      // If slug changed, redirect to new URL
+      if (slug !== params.orgSlug) {
+        throw redirect(303, `/admin/organizations/${slug}/settings`)
+      }
+
+      return { success: true, message: 'Organization updated successfully' }
+    } catch (e) {
+      if (e instanceof Response) throw e
+      console.error('Failed to update organization:', e)
+      return fail(500, { error: 'Failed to update organization' })
+    }
+  },
+
+  addMember: async ({ request, locals, params }) => {
+    const formData = await request.formData()
+    const email = formData.get('email') as string
+    const role = formData.get('role') as string
+
+    if (!email || !role) {
+      return fail(400, { error: 'Email and role are required' })
+    }
+
+    if (!['admin', 'organizer', 'reviewer'].includes(role)) {
+      return fail(400, { error: 'Invalid role' })
+    }
+
+    try {
+      const organization = await locals.pb
+        .collection('organizations')
+        .getFirstListItem(`slug="${params.orgSlug}"`)
+
+      // Find user by email
+      let user: { id: string; name: string } | undefined
+      try {
+        user = await locals.pb.collection('users').getFirstListItem(`email="${email}"`)
+      } catch {
+        return fail(400, { error: 'No user found with this email address' })
+      }
+
+      // Check if user is already a member
+      try {
+        await locals.pb
+          .collection('organization_members')
+          .getFirstListItem(`organizationId="${organization.id}" && userId="${user.id}"`)
+        return fail(400, { error: 'User is already a member of this organization' })
+      } catch {
+        // User is not a member, proceed
+      }
+
+      await locals.pb.collection('organization_members').create({
+        organizationId: organization.id,
+        userId: user.id,
+        role
+      })
+
+      return { success: true, message: `${user.name} added as ${role}` }
+    } catch (e) {
+      console.error('Failed to add member:', e)
+      return fail(500, { error: 'Failed to add member' })
+    }
+  },
+
+  updateMemberRole: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const memberId = formData.get('memberId') as string
+    const role = formData.get('role') as string
+
+    if (!memberId || !role) {
+      return fail(400, { error: 'Member ID and role are required' })
+    }
+
+    if (!['admin', 'organizer', 'reviewer'].includes(role)) {
+      return fail(400, { error: 'Invalid role' })
+    }
+
+    try {
+      await locals.pb.collection('organization_members').update(memberId, { role })
+      return { success: true, message: 'Member role updated' }
+    } catch (e) {
+      console.error('Failed to update member role:', e)
+      return fail(500, { error: 'Failed to update member role' })
+    }
+  },
+
+  removeMember: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const memberId = formData.get('memberId') as string
+
+    if (!memberId) {
+      return fail(400, { error: 'Member ID is required' })
+    }
+
+    try {
+      await locals.pb.collection('organization_members').delete(memberId)
+      return { success: true, message: 'Member removed' }
+    } catch (e) {
+      console.error('Failed to remove member:', e)
+      return fail(500, { error: 'Failed to remove member' })
+    }
+  },
+
+  deleteOrganization: async ({ locals, params }) => {
+    try {
+      const organization = await locals.pb
+        .collection('organizations')
+        .getFirstListItem(`slug="${params.orgSlug}"`)
+
+      // Check if organization has events
+      const events = await locals.pb.collection('events').getFullList({
+        filter: `organizationId="${organization.id}"`
+      })
+
+      if (events.length > 0) {
+        return fail(400, {
+          error: `Cannot delete organization with ${events.length} event(s). Delete events first.`
+        })
+      }
+
+      // Delete all members first
+      const members = await locals.pb.collection('organization_members').getFullList({
+        filter: `organizationId="${organization.id}"`
+      })
+
+      for (const member of members) {
+        await locals.pb.collection('organization_members').delete(member.id)
+      }
+
+      await locals.pb.collection('organizations').delete(organization.id)
+      throw redirect(303, '/admin/organizations')
+    } catch (e) {
+      if (e instanceof Response) throw e
+      console.error('Failed to delete organization:', e)
+      return fail(500, { error: 'Failed to delete organization' })
+    }
+  }
+}
