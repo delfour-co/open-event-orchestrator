@@ -125,11 +125,11 @@ const getStatusColor = (status: string) => {
     </Card.Content>
   </Card.Root>
 
-  <!-- CFP Dates & General Settings Card -->
+  <!-- Submission Settings Card -->
   <Card.Root>
     <Card.Header>
-      <Card.Title>General Settings</Card.Title>
-      <Card.Description>Configure submission dates and form options</Card.Description>
+      <Card.Title>Submission Settings</Card.Title>
+      <Card.Description>Configure submission dates, limits, and form requirements</Card.Description>
     </Card.Header>
     <Card.Content>
       <form
