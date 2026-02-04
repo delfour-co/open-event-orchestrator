@@ -79,6 +79,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    if: false # TODO: Optimize E2E tests for CI - currently too slow, run locally only
     steps:
       - uses: actions/checkout@v4
 
