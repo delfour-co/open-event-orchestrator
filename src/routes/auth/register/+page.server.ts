@@ -1,4 +1,5 @@
 import { registerSchema } from '$lib/features/auth/domain'
+import { processPendingInvitations } from '$lib/server/invitations'
 import { fail, redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
 
@@ -31,7 +32,12 @@ export const actions: Actions = {
       })
 
       // Auto login after registration
-      await locals.pb.collection('users').authWithPassword(data.email, data.password)
+      const authData = await locals.pb
+        .collection('users')
+        .authWithPassword(data.email, data.password)
+
+      // Process any pending organization invitations
+      await processPendingInvitations(locals.pb, authData.record.id, data.email)
     } catch (err) {
       const error = err as { response?: { data?: Record<string, { message: string }> } }
       if (error.response?.data?.email) {

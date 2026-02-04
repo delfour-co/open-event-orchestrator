@@ -1,3 +1,4 @@
+import { processPendingInvitations } from '$lib/server/invitations'
 import { fail, redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
 
@@ -12,7 +13,10 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('users').authWithPassword(email, password)
+      const authData = await locals.pb.collection('users').authWithPassword(email, password)
+
+      // Process any pending organization invitations
+      await processPendingInvitations(locals.pb, authData.record.id, email)
     } catch {
       return fail(401, { error: 'Invalid email or password' })
     }
