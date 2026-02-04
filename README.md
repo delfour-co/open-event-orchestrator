@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-365%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-392%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 [![Coverage](https://img.shields.io/badge/coverage-96.9%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 Open Event Orchestrator is an **all-in-one open-source platform** for managing conferences, meetups, and community events. CFP, scheduling, ticketing, and CRM — unified in one place.
@@ -144,9 +144,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 141 | 96.9% statements |
+| Unit tests | 236 | 96.9% statements |
 | E2E tests | 156 | - |
-| **Total** | **297** | **96.9%** |
+| **Total** | **392** | **96.9%** |
 
 ```bash
 pnpm test              # Run unit tests
@@ -193,12 +193,16 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 - [ ] Event settings page (#46)
 - [ ] UX cleanup: categories/formats placement (#47)
 
-### Phase 2 — Planning (Schedule management)
+### Phase 2 — Planning (Schedule management) 🚧
 
-- [ ] Data model: Session, Room, Slot, Track
-- [ ] Drag & drop scheduler
-- [ ] Public schedule view
-- [ ] Export: iCal, JSON, PDF
+- [x] Data model: Session, Room, Slot, Track (#15)
+- [x] CRUD Rooms, Tracks, Slots with equipment management (#56, #57)
+- [x] Session management: assign talks to slots (#58)
+- [x] Staff assignments: assign team members to rooms (#56)
+- [ ] Drag & drop scheduler (#16)
+- [ ] Public schedule view (#18)
+- [ ] Export: iCal, JSON, PDF (#19)
+- [ ] E2E tests (#59)
 
 ### Phase 3 — Ticketing
 
@@ -217,6 +221,21 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 - [ ] REST API with authentication
 - [ ] Webhooks
 - [ ] Embeddable widgets
+
+### Phase 6 — Budget & Finance
+
+- [ ] Budget model: categories, transactions (#60)
+- [ ] Budget dashboard with visualization (#61)
+- [ ] Quotes and invoices management (#62)
+- [ ] Speaker reimbursements (#63)
+
+### Phase 7 — Sponsoring
+
+- [ ] Sponsor model: sponsors, packages, benefits (#64)
+- [ ] Sponsor dashboard with pipeline (#65)
+- [ ] Sponsoring packages configuration (#66)
+- [ ] Public sponsors page (#67)
+- [ ] Sponsor portal (#68)
 
 See the [GitHub Milestones](https://github.com/delfour-co/open-event-orchestrator/milestones) for detailed progress.
 
