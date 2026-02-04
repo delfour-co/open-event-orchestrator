@@ -282,7 +282,7 @@ const statusColors: Record<string, string> = {
                                 Pending
                               </span>
                             </div>
-                            <form method="POST" action="?/cancelCospeakerInvitation" use:enhance>
+                            <form method="POST" action="?/cancelCospeakerInvitation&token={data.token}" use:enhance>
                               <input type="hidden" name="invitationId" value={invitation.id} />
                               <Button
                                 type="submit"
@@ -303,7 +303,7 @@ const statusColors: Record<string, string> = {
                     {#if showInviteForm === talk.id}
                       <form
                         method="POST"
-                        action="?/inviteCospeaker"
+                        action="?/inviteCospeaker&token={data.token}"
                         use:enhance={() => {
                           return async ({ update }) => {
                             await update()
@@ -357,7 +357,7 @@ const statusColors: Record<string, string> = {
                       Congratulations! Your talk has been accepted. Please confirm your participation.
                     </p>
                     <div class="flex flex-wrap gap-2">
-                      <form method="POST" action="?/confirm" use:enhance>
+                      <form method="POST" action="?/confirm&token={data.token}" use:enhance>
                         <input type="hidden" name="talkId" value={talk.id} />
                         <Button type="submit" size="sm" class="gap-2 bg-green-600 hover:bg-green-700">
                           <ThumbsUp class="h-4 w-4" />
@@ -367,7 +367,7 @@ const statusColors: Record<string, string> = {
                       {#if showDeclineConfirm === talk.id}
                         <div class="flex items-center gap-2">
                           <span class="text-sm text-muted-foreground">Are you sure?</span>
-                          <form method="POST" action="?/decline" use:enhance>
+                          <form method="POST" action="?/decline&token={data.token}" use:enhance>
                             <input type="hidden" name="talkId" value={talk.id} />
                             <Button type="submit" variant="destructive" size="sm">Yes, Decline</Button>
                           </form>
@@ -410,7 +410,7 @@ const statusColors: Record<string, string> = {
                       {#if showWithdrawConfirm === talk.id}
                         <div class="flex items-center gap-2">
                           <span class="text-sm text-muted-foreground">Withdraw this talk?</span>
-                          <form method="POST" action="?/withdraw" use:enhance>
+                          <form method="POST" action="?/withdraw&token={data.token}" use:enhance>
                             <input type="hidden" name="talkId" value={talk.id} />
                             <Button type="submit" variant="destructive" size="sm">
                               Yes, Withdraw
