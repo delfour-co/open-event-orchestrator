@@ -30,6 +30,7 @@ interface Props {
 const { data, form }: Props = $props()
 
 let activeTab = $state<'schedule' | 'sessions' | 'rooms' | 'tracks' | 'slots' | 'staff'>('schedule')
+let scheduleView = $state<'by-room' | 'by-track'>('by-room')
 let showRoomForm = $state(false)
 let showTrackForm = $state(false)
 let showSlotForm = $state(false)
@@ -134,6 +135,58 @@ const slotsByRoomAndDate = $derived(() => {
       )
     }
   }
+  return grouped
+})
+
+// Group sessions by track and date for track view
+const sessionsByTrackAndDate = $derived(() => {
+  const grouped: Record<
+    string,
+    Record<
+      string,
+      Array<{
+        session: (typeof data.sessions)[0]
+        slot: (typeof data.slots)[0]
+        room: (typeof data.rooms)[0] | undefined
+      }>
+    >
+  > = {}
+
+  // Initialize with "No Track" group
+  grouped['no-track'] = {}
+  for (const dateStr of uniqueDates()) {
+    grouped['no-track'][dateStr] = []
+  }
+
+  // Initialize track groups
+  for (const track of data.tracks) {
+    grouped[track.id] = {}
+    for (const dateStr of uniqueDates()) {
+      grouped[track.id][dateStr] = []
+    }
+  }
+
+  // Populate with sessions
+  for (const session of data.sessions) {
+    const slot = data.slots.find((s) => s.id === session.slotId)
+    if (!slot) continue
+
+    const dateStr = slot.date.toISOString().split('T')[0]
+    const room = data.rooms.find((r) => r.id === slot.roomId)
+    const trackId = session.trackId || 'no-track'
+
+    if (grouped[trackId]?.[dateStr]) {
+      grouped[trackId][dateStr].push({ session, slot, room })
+    }
+  }
+
+  // Sort each day's sessions by start time
+  for (const trackId of Object.keys(grouped)) {
+    for (const dateStr of Object.keys(grouped[trackId])) {
+      grouped[trackId][dateStr].sort((a, b) => a.slot.startTime.localeCompare(b.slot.startTime))
+    }
+  }
+
   return grouped
 })
 
@@ -575,17 +628,42 @@ const roomsWithoutAssignments = $derived(() => {
         </Card.Root>
       {/if}
 
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse">
-          <thead>
-            <tr>
-              <th class="border bg-muted p-2 text-left font-medium">Room</th>
-              {#each uniqueDates() as dateStr}
-                <th class="border bg-muted p-2 text-center font-medium">
-                  {formatDate(new Date(dateStr))}
-                </th>
-              {/each}
-            </tr>
+      <!-- View Switcher -->
+      <div class="mb-4 flex items-center gap-2">
+        <span class="text-sm text-muted-foreground">View:</span>
+        <div class="flex rounded-md border">
+          <button
+            type="button"
+            class="px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-room' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
+            onclick={() => (scheduleView = 'by-room')}
+          >
+            <DoorOpen class="mr-1 inline h-4 w-4" />
+            By Room
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-track' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
+            onclick={() => (scheduleView = 'by-track')}
+          >
+            <Layers class="mr-1 inline h-4 w-4" />
+            By Track
+          </button>
+        </div>
+      </div>
+
+      <!-- By Room View -->
+      {#if scheduleView === 'by-room'}
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr>
+                <th class="border bg-muted p-2 text-left font-medium">Room</th>
+                {#each uniqueDates() as dateStr}
+                  <th class="border bg-muted p-2 text-center font-medium">
+                    {formatDate(new Date(dateStr))}
+                  </th>
+                {/each}
+              </tr>
           </thead>
           <tbody>
             {#each data.rooms as room}
@@ -631,8 +709,101 @@ const roomsWithoutAssignments = $derived(() => {
               </tr>
             {/each}
           </tbody>
-        </table>
-      </div>
+          </table>
+        </div>
+      {/if}
+
+      <!-- By Track View -->
+      {#if scheduleView === 'by-track'}
+        <div class="space-y-6">
+          {#each uniqueDates() as dateStr}
+            <div>
+              <h3 class="mb-3 text-lg font-semibold">{formatDate(new Date(dateStr))}</h3>
+              <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {#each data.tracks as track}
+                  {@const trackSessions = sessionsByTrackAndDate()[track.id]?.[dateStr] || []}
+                  <Card.Root>
+                    <Card.Header class="pb-2">
+                      <div class="flex items-center gap-2">
+                        <div
+                          class="h-3 w-3 rounded-full"
+                          style="background-color: {track.color}"
+                        ></div>
+                        <Card.Title class="text-base">{track.name}</Card.Title>
+                      </div>
+                    </Card.Header>
+                    <Card.Content>
+                      {#if trackSessions.length === 0}
+                        <p class="text-sm text-muted-foreground italic">No sessions</p>
+                      {:else}
+                        <div class="space-y-2">
+                          {#each trackSessions as { session, slot, room }}
+                            <button
+                              type="button"
+                              class="w-full rounded-md border p-2 text-left transition-colors hover:bg-muted"
+                              onclick={() => openSessionFormForSlot(slot.id)}
+                            >
+                              <div class="flex items-center justify-between">
+                                <span class="font-mono text-xs text-muted-foreground">
+                                  {slot.startTime} - {slot.endTime}
+                                </span>
+                                <span class="text-xs text-muted-foreground">
+                                  {room?.name || 'Unknown'}
+                                </span>
+                              </div>
+                              <div class="mt-1 font-medium">{session.title}</div>
+                              <div class="text-xs text-muted-foreground">
+                                {getSessionTypeLabel(session.type)}
+                              </div>
+                            </button>
+                          {/each}
+                        </div>
+                      {/if}
+                    </Card.Content>
+                  </Card.Root>
+                {/each}
+
+                <!-- No Track sessions -->
+                {#if (sessionsByTrackAndDate()['no-track']?.[dateStr] || []).length > 0}
+                  {@const noTrackSessions = sessionsByTrackAndDate()['no-track'][dateStr]}
+                  <Card.Root>
+                    <Card.Header class="pb-2">
+                      <div class="flex items-center gap-2">
+                        <div class="h-3 w-3 rounded-full bg-gray-400"></div>
+                        <Card.Title class="text-base">No Track</Card.Title>
+                      </div>
+                    </Card.Header>
+                    <Card.Content>
+                      <div class="space-y-2">
+                        {#each noTrackSessions as { session, slot, room }}
+                          <button
+                            type="button"
+                            class="w-full rounded-md border p-2 text-left transition-colors hover:bg-muted"
+                            onclick={() => openSessionFormForSlot(slot.id)}
+                          >
+                            <div class="flex items-center justify-between">
+                              <span class="font-mono text-xs text-muted-foreground">
+                                {slot.startTime} - {slot.endTime}
+                              </span>
+                              <span class="text-xs text-muted-foreground">
+                                {room?.name || 'Unknown'}
+                              </span>
+                            </div>
+                            <div class="mt-1 font-medium">{session.title}</div>
+                            <div class="text-xs text-muted-foreground">
+                              {getSessionTypeLabel(session.type)}
+                            </div>
+                          </button>
+                        {/each}
+                      </div>
+                    </Card.Content>
+                  </Card.Root>
+                {/if}
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
     {/if}
   {/if}
 
