@@ -118,11 +118,9 @@ const getTrackColor = (trackId: string | undefined) => {
         <Card.Content class="flex flex-col items-center justify-center py-12">
           <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
           <h3 class="text-lg font-semibold">No rooms configured</h3>
-          <p class="mb-4 text-sm text-muted-foreground">Add rooms before creating your schedule.</p>
-          <Button onclick={() => (activeTab = 'rooms')}>
-            <Plus class="mr-2 h-4 w-4" />
-            Add Room
-          </Button>
+          <p class="text-sm text-muted-foreground">
+            Go to the Rooms tab to add rooms before creating your schedule.
+          </p>
         </Card.Content>
       </Card.Root>
     {:else if data.slots.length === 0}
@@ -130,13 +128,9 @@ const getTrackColor = (trackId: string | undefined) => {
         <Card.Content class="flex flex-col items-center justify-center py-12">
           <Clock class="mb-4 h-12 w-12 text-muted-foreground" />
           <h3 class="text-lg font-semibold">No time slots configured</h3>
-          <p class="mb-4 text-sm text-muted-foreground">
-            Add time slots to start building your schedule.
+          <p class="text-sm text-muted-foreground">
+            Go to the Slots tab to add time slots and start building your schedule.
           </p>
-          <Button onclick={() => (activeTab = 'slots')}>
-            <Plus class="mr-2 h-4 w-4" />
-            Add Slot
-          </Button>
         </Card.Content>
       </Card.Root>
     {:else}
