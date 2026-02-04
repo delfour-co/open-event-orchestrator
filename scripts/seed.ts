@@ -622,6 +622,84 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  // Planning collections
+  {
+    name: 'rooms',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('name', true),
+      numberField('capacity'),
+      textField('floor'),
+      textField('description'),
+      numberField('order'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'tracks',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('name', true),
+      textField('color'),
+      textField('description'),
+      numberField('order'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'slots',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      dateField('date', true),
+      textField('startTime', true),
+      textField('endTime', true),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'sessions',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('title', true),
+      textField('description'),
+      selectField('type', [
+        'talk',
+        'workshop',
+        'keynote',
+        'panel',
+        'break',
+        'lunch',
+        'networking',
+        'registration',
+        'other'
+      ]),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -658,7 +736,16 @@ const relationDefinitions = [
   },
   { collection: 'organization_invitations', field: 'invitedBy', target: 'users', maxSelect: 1 },
   { collection: 'speaker_tokens', field: 'speakerId', target: 'speakers', maxSelect: 1 },
-  { collection: 'speaker_tokens', field: 'editionId', target: 'editions', maxSelect: 1 }
+  { collection: 'speaker_tokens', field: 'editionId', target: 'editions', maxSelect: 1 },
+  // Planning relations
+  { collection: 'rooms', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'tracks', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'slots', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'slots', field: 'roomId', target: 'rooms', maxSelect: 1 },
+  { collection: 'sessions', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'sessions', field: 'slotId', target: 'slots', maxSelect: 1 },
+  { collection: 'sessions', field: 'talkId', target: 'talks', maxSelect: 1 },
+  { collection: 'sessions', field: 'trackId', target: 'tracks', maxSelect: 1 }
 ]
 
 // ============================================================================
