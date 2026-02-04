@@ -58,6 +58,28 @@ const users = [
     passwordConfirm: 'reviewer123',
     name: 'Bob Reviewer',
     role: 'reviewer'
+  },
+  // Additional team members for room assignments
+  {
+    email: 'marie@example.com',
+    password: 'volunteer123',
+    passwordConfirm: 'volunteer123',
+    name: 'Marie Dupont',
+    role: 'organizer'
+  },
+  {
+    email: 'pierre@example.com',
+    password: 'volunteer123',
+    passwordConfirm: 'volunteer123',
+    name: 'Pierre Martin',
+    role: 'organizer'
+  },
+  {
+    email: 'sophie@example.com',
+    password: 'volunteer123',
+    passwordConfirm: 'volunteer123',
+    name: 'Sophie Bernard',
+    role: 'organizer'
   }
 ]
 
@@ -131,6 +153,7 @@ const formats = [
 ]
 
 const talks = [
+  // Accepted talks - will be scheduled
   {
     title: 'Building Scalable Web Apps with SvelteKit',
     abstract:
@@ -139,7 +162,7 @@ const talks = [
       'In this talk, we will explore the key features of SvelteKit that make it ideal for building production-ready applications. We will cover routing, server-side rendering, API endpoints, and deployment strategies.',
     level: 'intermediate',
     language: 'en',
-    status: 'submitted',
+    status: 'accepted',
     categoryIndex: 0,
     formatIndex: 1,
     speakerIndex: 0
@@ -164,11 +187,97 @@ const talks = [
       'We will explore the fundamentals of large language models, from transformers to prompt engineering. You will learn how to effectively use APIs like OpenAI and build AI-powered features.',
     level: 'beginner',
     language: 'en',
-    status: 'under_review',
+    status: 'accepted',
     categoryIndex: 3,
     formatIndex: 2,
     speakerIndex: 0
   },
+  {
+    title: 'TypeScript Advanced Patterns',
+    abstract:
+      'Master advanced TypeScript patterns for better type safety and code maintainability.',
+    description:
+      'Explore conditional types, template literal types, mapped types and other advanced TypeScript features to write more robust applications.',
+    level: 'advanced',
+    language: 'en',
+    status: 'accepted',
+    categoryIndex: 0,
+    formatIndex: 1,
+    speakerIndex: 1
+  },
+  {
+    title: 'GraphQL in Production: Lessons Learned',
+    abstract: 'Real-world experiences running GraphQL APIs at scale.',
+    description:
+      'After 3 years of running GraphQL in production, we share our lessons on schema design, performance optimization, caching strategies, and monitoring.',
+    level: 'intermediate',
+    language: 'en',
+    status: 'accepted',
+    categoryIndex: 0,
+    formatIndex: 1,
+    speakerIndex: 0
+  },
+  {
+    title: 'From Monolith to Microservices',
+    abstract: 'A practical guide to migrating your monolithic application to microservices.',
+    description:
+      'Learn the patterns, pitfalls, and best practices for breaking down a monolith. We cover strangler fig pattern, data migration, and service boundaries.',
+    level: 'intermediate',
+    language: 'en',
+    status: 'accepted',
+    categoryIndex: 2,
+    formatIndex: 2,
+    speakerIndex: 1
+  },
+  {
+    title: 'Building AI-Powered Code Assistants',
+    abstract: 'How to build your own AI coding assistant using modern LLMs.',
+    description:
+      'We dive into RAG, embeddings, and prompt engineering to build effective code completion and refactoring tools.',
+    level: 'advanced',
+    language: 'en',
+    status: 'accepted',
+    categoryIndex: 3,
+    formatIndex: 1,
+    speakerIndex: 0
+  },
+  {
+    title: 'PWA in 2025: The State of Progressive Web Apps',
+    abstract: "What's new in PWAs and why they matter more than ever.",
+    description:
+      'Progressive Web Apps have evolved significantly. Learn about new capabilities, improved APIs, and success stories from major companies.',
+    level: 'beginner',
+    language: 'en',
+    status: 'accepted',
+    categoryIndex: 0,
+    formatIndex: 0,
+    speakerIndex: 1
+  },
+  {
+    title: 'Terraform Best Practices',
+    abstract: 'Infrastructure as Code done right with Terraform.',
+    description:
+      'Learn module design, state management, testing strategies, and CI/CD integration for Terraform projects.',
+    level: 'intermediate',
+    language: 'en',
+    status: 'accepted',
+    categoryIndex: 2,
+    formatIndex: 1,
+    speakerIndex: 0
+  },
+  {
+    title: 'React Server Components Deep Dive',
+    abstract: 'Understanding React Server Components and their impact on web development.',
+    description:
+      'A comprehensive look at RSC architecture, streaming, and how to build hybrid applications with server and client components.',
+    level: 'advanced',
+    language: 'en',
+    status: 'accepted',
+    categoryIndex: 0,
+    formatIndex: 2,
+    speakerIndex: 1
+  },
+  // Non-accepted talks
   {
     title: 'Securing Your Node.js Applications',
     abstract:
@@ -193,6 +302,18 @@ const talks = [
     categoryIndex: 1,
     formatIndex: 0,
     speakerIndex: 0
+  },
+  {
+    title: 'Mobile Performance Optimization',
+    abstract: 'Tips and tricks to make your mobile apps blazing fast.',
+    description:
+      'Learn profiling techniques, memory management, and rendering optimizations for mobile applications.',
+    level: 'intermediate',
+    language: 'en',
+    status: 'under_review',
+    categoryIndex: 1,
+    formatIndex: 1,
+    speakerIndex: 1
   }
 ]
 
@@ -319,31 +440,139 @@ const slotDefinitions = [
   { date: '2025-10-16', startTime: '15:00', endTime: '15:45' }
 ]
 
+// Organization members - link users to the organization with roles
+// userIndex corresponds to the users array
+const organizationMemberDefinitions = [
+  { userIndex: 0, role: 'owner' }, // Admin User - owner
+  { userIndex: 3, role: 'reviewer' }, // Bob Reviewer
+  { userIndex: 4, role: 'organizer' }, // Marie Dupont
+  { userIndex: 5, role: 'organizer' }, // Pierre Martin
+  { userIndex: 6, role: 'organizer' } // Sophie Bernard
+]
+
+// Room assignments - assign organization members to rooms
+// memberIndex corresponds to organizationMemberDefinitions array
+const roomAssignmentDefinitions = [
+  // Grand Amphithéâtre - Marie on Day 1, Pierre on Day 2
+  { roomIndex: 0, memberIndex: 2, date: '2025-10-15', notes: 'Responsable accueil speakers' },
+  { roomIndex: 0, memberIndex: 3, date: '2025-10-16', notes: 'Responsable accueil speakers' },
+  // Salle Turing - Sophie both days
+  { roomIndex: 1, memberIndex: 4, date: null, notes: 'Responsable salle pour toute la conférence' },
+  // Salle Lovelace - Marie on Day 2 (after her shift at Grand Amphi)
+  { roomIndex: 2, memberIndex: 2, date: '2025-10-16', notes: 'Aide pour les workshops' }
+]
+
 // Session definitions - will be populated with actual IDs during seeding
 // Sessions reference slots, talks, and tracks by index
+// talkIndex corresponds to the accepted talks in the talks array
 const sessionDefinitions = [
-  // Kubernetes talk assigned to Day 1, 10:00 slot in Grand Amphithéâtre
+  // ============ DAY 1 - 2025-10-15 ============
+
+  // 09:00 - Keynote slot (Grand Amphithéâtre only)
+  {
+    title: 'Building Scalable Web Apps with SvelteKit',
+    type: 'keynote',
+    talkIndex: 0,
+    trackIndex: 0, // Web & Frontend
+    slotKey: '2025-10-15_09:00_0'
+  },
+
+  // 10:00 - All rooms
   {
     title: 'Kubernetes for Developers: A Practical Guide',
-    description: 'Demystifying Kubernetes for application developers',
     type: 'talk',
-    talkIndex: 1, // Index of the Kubernetes talk in talks array
-    trackIndex: 1, // Cloud & Backend track
-    slotKey: '2025-10-15_10:00_0' // date_startTime_roomIndex
+    talkIndex: 1,
+    trackIndex: 1, // Cloud & Backend
+    slotKey: '2025-10-15_10:00_0'
   },
-  // Break sessions
   {
-    title: 'Pause café',
+    title: 'TypeScript Advanced Patterns',
+    type: 'talk',
+    talkIndex: 3,
+    trackIndex: 0, // Web & Frontend
+    slotKey: '2025-10-15_10:00_1'
+  },
+  {
+    title: 'Introduction to Large Language Models',
+    type: 'workshop',
+    talkIndex: 2,
+    trackIndex: 2, // AI & Data
+    slotKey: '2025-10-15_10:00_2'
+  },
+
+  // 11:00 - All rooms
+  {
+    title: 'GraphQL in Production: Lessons Learned',
+    type: 'talk',
+    talkIndex: 4,
+    trackIndex: 0, // Web & Frontend
+    slotKey: '2025-10-15_11:00_0'
+  },
+  {
+    title: 'From Monolith to Microservices',
+    type: 'talk',
+    talkIndex: 5,
+    trackIndex: 1, // Cloud & Backend
+    slotKey: '2025-10-15_11:00_1'
+  },
+
+  // 14:00 - Afternoon sessions
+  {
+    title: 'Building AI-Powered Code Assistants',
+    type: 'talk',
+    talkIndex: 6,
+    trackIndex: 2, // AI & Data
+    slotKey: '2025-10-15_14:00_0'
+  },
+  {
+    title: 'PWA in 2025: The State of Progressive Web Apps',
+    type: 'talk',
+    talkIndex: 7,
+    trackIndex: 0, // Web & Frontend
+    slotKey: '2025-10-15_14:00_1'
+  },
+
+  // 15:00 - Afternoon sessions
+  {
+    title: 'Terraform Best Practices',
+    type: 'talk',
+    talkIndex: 8,
+    trackIndex: 1, // Cloud & Backend
+    slotKey: '2025-10-15_15:00_0'
+  },
+
+  // ============ DAY 2 - 2025-10-16 ============
+
+  // 09:00 - Opening Day 2
+  {
+    title: 'React Server Components Deep Dive',
+    type: 'keynote',
+    talkIndex: 9,
+    trackIndex: 0, // Web & Frontend
+    slotKey: '2025-10-16_09:00_0'
+  },
+
+  // Break and lunch sessions (not assigned to slots)
+  {
+    title: 'Pause café matin',
     description: 'Networking et rafraîchissements',
     type: 'break',
     talkIndex: null,
     trackIndex: null,
-    slotKey: null // Will create without slot assignment
+    slotKey: null
   },
   {
     title: 'Déjeuner',
     description: 'Repas et networking',
     type: 'lunch',
+    talkIndex: null,
+    trackIndex: null,
+    slotKey: null
+  },
+  {
+    title: 'Pause café après-midi',
+    description: 'Networking et rafraîchissements',
+    type: 'break',
     talkIndex: null,
     trackIndex: null,
     slotKey: null
@@ -940,6 +1169,9 @@ async function updateUsersCollection(): Promise<void> {
     const hasNameField = usersCollection.fields?.some((f: { name: string }) => f.name === 'name')
     const hasRoleField = usersCollection.fields?.some((f: { name: string }) => f.name === 'role')
 
+    const updateData: Record<string, unknown> = {}
+    let needsUpdate = false
+
     if (!hasNameField || !hasRoleField) {
       const newFields = [...(usersCollection.fields || [])]
 
@@ -950,10 +1182,26 @@ async function updateUsersCollection(): Promise<void> {
         newFields.push(selectField('role', ['speaker', 'organizer', 'reviewer', 'admin']))
       }
 
-      await pb.collections.update(usersCollection.id, { fields: newFields })
-      console.log('  Updated users collection with name and role fields')
+      updateData.fields = newFields
+      needsUpdate = true
+    }
+
+    // Update API rules to allow authenticated users to view all users
+    // This is needed for expanding relations to users (e.g., organization_members.userId)
+    if (
+      usersCollection.listRule !== '@request.auth.id != ""' ||
+      usersCollection.viewRule !== '@request.auth.id != ""'
+    ) {
+      updateData.listRule = '@request.auth.id != ""'
+      updateData.viewRule = '@request.auth.id != ""'
+      needsUpdate = true
+    }
+
+    if (needsUpdate) {
+      await pb.collections.update(usersCollection.id, updateData)
+      console.log('  Updated users collection with fields and API rules')
     } else {
-      console.log('  Users collection already has name and role fields')
+      console.log('  Users collection already has name, role fields and proper API rules')
     }
   } catch (err) {
     console.error('  Failed to update users collection:', err)
@@ -1184,6 +1432,8 @@ async function seed(): Promise<void> {
     tracks: string[]
     slots: Map<string, string> // key: date_startTime_roomIndex, value: slot ID
     sessions: string[]
+    organizationMembers: string[]
+    roomAssignments: string[]
   } = {
     users: [],
     organization: '',
@@ -1196,7 +1446,9 @@ async function seed(): Promise<void> {
     rooms: [],
     tracks: [],
     slots: new Map(),
-    sessions: []
+    sessions: [],
+    organizationMembers: [],
+    roomAssignments: []
   }
 
   try {
@@ -1244,6 +1496,40 @@ async function seed(): Promise<void> {
       }
     } catch (err) {
       console.error('  Failed to create organization:', err)
+    }
+    console.log('')
+
+    // ========================================================================
+    // 2b. Create Organization Members
+    // ========================================================================
+    console.log('👥 Creating organization members...')
+    for (const memberDef of organizationMemberDefinitions) {
+      try {
+        const userId = ids.users[memberDef.userIndex]
+        if (!userId) {
+          console.log(`  Skipping member (user index ${memberDef.userIndex} not found)`)
+          continue
+        }
+
+        const existing = await pb.collection('organization_members').getList(1, 1, {
+          filter: `organizationId = "${ids.organization}" && userId = "${userId}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Member for user ${memberDef.userIndex} already exists`)
+          ids.organizationMembers.push(existing.items[0].id)
+        } else {
+          const member = await pb.collection('organization_members').create({
+            organizationId: ids.organization,
+            userId,
+            role: memberDef.role
+          })
+          console.log(`  Created member: ${users[memberDef.userIndex].name} (${memberDef.role})`)
+          ids.organizationMembers.push(member.id)
+        }
+      } catch (err) {
+        console.error('  Failed to create organization member:', err)
+      }
     }
     console.log('')
 
@@ -1643,12 +1929,67 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 14. Create Room Assignments
+    // ========================================================================
+    console.log('🎫 Creating room assignments...')
+    for (const assignmentDef of roomAssignmentDefinitions) {
+      try {
+        const roomId = ids.rooms[assignmentDef.roomIndex]
+        const memberId = ids.organizationMembers[assignmentDef.memberIndex]
+
+        if (!roomId || !memberId) {
+          console.log(
+            `  Skipping assignment (room ${assignmentDef.roomIndex} or member ${assignmentDef.memberIndex} not found)`
+          )
+          continue
+        }
+
+        // Build filter based on date presence
+        let filter = `roomId = "${roomId}" && memberId = "${memberId}" && editionId = "${ids.edition}"`
+        if (assignmentDef.date) {
+          filter += ` && date = "${assignmentDef.date}"`
+        }
+
+        const existing = await pb.collection('room_assignments').getList(1, 1, { filter })
+
+        if (existing.items.length > 0) {
+          console.log(`  Room assignment already exists for room ${assignmentDef.roomIndex}`)
+          ids.roomAssignments.push(existing.items[0].id)
+        } else {
+          const assignmentData: Record<string, unknown> = {
+            roomId,
+            memberId,
+            editionId: ids.edition,
+            notes: assignmentDef.notes
+          }
+
+          if (assignmentDef.date) {
+            assignmentData.date = assignmentDef.date
+          }
+
+          const assignment = await pb.collection('room_assignments').create(assignmentData)
+          const memberUser =
+            users[organizationMemberDefinitions[assignmentDef.memberIndex].userIndex]
+          const dateStr = assignmentDef.date || 'all days'
+          console.log(
+            `  Created assignment: ${memberUser.name} -> ${rooms[assignmentDef.roomIndex].name} (${dateStr})`
+          )
+          ids.roomAssignments.push(assignment.id)
+        }
+      } catch (err) {
+        console.error('  Failed to create room assignment:', err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
     console.log('📊 Summary:')
     console.log(`   Users: ${ids.users.length}`)
     console.log(`   Organization: ${ids.organization ? 1 : 0}`)
+    console.log(`   Organization Members: ${ids.organizationMembers.length}`)
     console.log(`   Event: ${ids.event ? 1 : 0}`)
     console.log(`   Edition: ${ids.edition ? 1 : 0}`)
     console.log(`   Categories: ${ids.categories.length}`)
@@ -1659,12 +2000,16 @@ async function seed(): Promise<void> {
     console.log(`   Tracks: ${ids.tracks.length}`)
     console.log(`   Slots: ${ids.slots.size}`)
     console.log(`   Sessions: ${ids.sessions.length}`)
+    console.log(`   Room Assignments: ${ids.roomAssignments.length}`)
     console.log('')
     console.log('🔐 Test accounts:')
-    console.log('   admin@example.com / admin123 (organizer)')
+    console.log('   admin@example.com / admin123 (organizer, owner)')
     console.log('   speaker@example.com / speaker123 (speaker)')
     console.log('   speaker2@example.com / speaker123 (speaker)')
     console.log('   reviewer@example.com / reviewer123 (reviewer)')
+    console.log('   marie@example.com / volunteer123 (organizer, staff)')
+    console.log('   pierre@example.com / volunteer123 (organizer, staff)')
+    console.log('   sophie@example.com / volunteer123 (organizer, staff)')
     console.log('')
     console.log(`🌐 Edition URL: /cfp/${edition.slug}`)
     console.log(`🔧 Admin URL: /admin/cfp/${edition.slug}/submissions`)

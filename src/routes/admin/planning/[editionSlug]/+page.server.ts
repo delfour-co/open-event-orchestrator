@@ -64,8 +64,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       locals.pb
         .collection('room_assignments')
         .getFullList({
-          filter: `editionId = "${editionId}"`,
-          expand: 'memberId,memberId.userId'
+          filter: `editionId = "${editionId}"`
         })
     ])
 
@@ -147,17 +146,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         userEmail: user ? (user.email as string) : ''
       }
     }),
-    // Room assignments
+    // Room assignments - use orgMembers to get member names
     roomAssignments: roomAssignments.map((a) => {
-      const member = a.expand?.memberId as
-        | (Record<string, unknown> & { expand?: Record<string, unknown> })
-        | undefined
+      // Find the organization member and their user name
+      const member = orgMembers.find((m) => m.id === a.memberId)
       const user = member?.expand?.userId as Record<string, unknown> | undefined
+      const memberName = user ? (user.name as string) : 'Unknown'
       return {
         id: a.id as string,
         roomId: a.roomId as string,
         memberId: a.memberId as string,
-        memberName: user ? (user.name as string) : 'Unknown',
+        memberName,
         date: a.date ? new Date(a.date as string) : undefined,
         startTime: a.startTime as string | undefined,
         endTime: a.endTime as string | undefined,

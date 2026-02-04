@@ -10,7 +10,7 @@ import { Select } from '$lib/components/ui/select'
 import * as Table from '$lib/components/ui/table'
 import { talkStatusSchema } from '$lib/features/cfp/domain'
 import { StatusBadge } from '$lib/features/cfp/ui'
-import { ArrowLeft, Check, Download, FileText, Search, X } from 'lucide-svelte'
+import { ArrowLeft, Check, Copy, Download, ExternalLink, FileText, Search, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -23,6 +23,34 @@ const { data, form }: Props = $props()
 let selectedIds = $state<Set<string>>(new Set())
 let search = $state('')
 let isExporting = $state(false)
+let copiedUrl = $state(false)
+
+// Get public CFP URL
+const publicCfpUrl = $derived(
+  `${typeof window !== 'undefined' ? window.location.origin : ''}/cfp/${data.edition.slug}`
+)
+
+async function copyCfpUrl() {
+  try {
+    await navigator.clipboard.writeText(publicCfpUrl)
+    copiedUrl = true
+    setTimeout(() => {
+      copiedUrl = false
+    }, 2000)
+  } catch {
+    // Fallback for older browsers
+    const input = document.createElement('input')
+    input.value = publicCfpUrl
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    copiedUrl = true
+    setTimeout(() => {
+      copiedUrl = false
+    }, 2000)
+  }
+}
 
 $effect(() => {
   search = data.filters.search
@@ -123,6 +151,29 @@ $effect(() => {
         <p class="text-muted-foreground">{data.edition.name}</p>
       </div>
     </div>
+    <div class="flex items-center gap-4">
+      <!-- Public CFP URL -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
+          <span class="text-sm text-muted-foreground">Public URL:</span>
+          <code class="text-sm">/cfp/{data.edition.slug}</code>
+        </div>
+        <Button variant="outline" size="sm" onclick={copyCfpUrl} class="gap-2">
+          {#if copiedUrl}
+            <Check class="h-4 w-4 text-green-500" />
+            Copied
+          {:else}
+            <Copy class="h-4 w-4" />
+            Copy
+          {/if}
+        </Button>
+        <a href="/cfp/{data.edition.slug}" target="_blank">
+          <Button variant="outline" size="sm" class="gap-2">
+            <ExternalLink class="h-4 w-4" />
+            Open
+          </Button>
+        </a>
+      </div>
     {#if data.permissions.canExport}
       <form method="POST" action="?/export" use:enhance={() => {
         isExporting = true
@@ -137,6 +188,7 @@ $effect(() => {
         </Button>
       </form>
     {/if}
+    </div>
   </div>
 
   {#if form?.error}

@@ -4,8 +4,8 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-392%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
-[![Coverage](https://img.shields.io/badge/coverage-96.9%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-504%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Coverage](https://img.shields.io/badge/coverage-97.3%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 Open Event Orchestrator is an **all-in-one open-source platform** for managing conferences, meetups, and community events. CFP, scheduling, ticketing, and CRM — unified in one place.
 
@@ -51,9 +51,12 @@ After running `pnpm db:init`, these test accounts are available:
 
 | Email | Password | Role |
 |-------|----------|------|
-| `admin@example.com` | `admin123` | Organizer |
+| `admin@example.com` | `admin123` | Organizer (Owner) |
 | `speaker@example.com` | `speaker123` | Speaker |
 | `reviewer@example.com` | `reviewer123` | Reviewer |
+| `marie@example.com` | `volunteer123` | Organizer (Staff) |
+| `pierre@example.com` | `volunteer123` | Organizer (Staff) |
+| `sophie@example.com` | `volunteer123` | Organizer (Staff) |
 
 See [Database Seeding](docs/development/database-seeding.md) for more details.
 
@@ -144,9 +147,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 236 | 96.9% statements |
-| E2E tests | 156 | - |
-| **Total** | **392** | **96.9%** |
+| Unit tests | 236 | 97.3% statements |
+| E2E tests | 268 | - |
+| **Total** | **504** | **97.3%** |
 
 ```bash
 pnpm test              # Run unit tests
@@ -199,10 +202,11 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 - [x] CRUD Rooms, Tracks, Slots with equipment management (#56, #57)
 - [x] Session management: assign talks to slots (#58)
 - [x] Staff assignments: assign team members to rooms (#56)
-- [ ] Drag & drop scheduler (#16)
-- [ ] Public schedule view (#18)
-- [ ] Export: iCal, JSON, PDF (#19)
-- [ ] E2E tests (#59)
+- [x] Schedule view switcher (by room / by track)
+- [x] Public schedule view (#18)
+- [x] Export: iCal, JSON, PDF (#19)
+- [x] E2E tests (#59)
+- [ ] Drag & drop scheduler (#16) - deferred to post-v1
 
 ### Phase 3 — Ticketing
 

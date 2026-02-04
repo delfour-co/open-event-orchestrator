@@ -10,7 +10,9 @@ import {
   Calendar,
   Check,
   Clock,
+  Copy,
   DoorOpen,
+  ExternalLink,
   Layers,
   Loader2,
   Mic,
@@ -31,6 +33,7 @@ const { data, form }: Props = $props()
 
 let activeTab = $state<'schedule' | 'sessions' | 'rooms' | 'tracks' | 'slots' | 'staff'>('schedule')
 let scheduleView = $state<'by-room' | 'by-track'>('by-room')
+let copiedUrl = $state(false)
 let showRoomForm = $state(false)
 let showTrackForm = $state(false)
 let showSlotForm = $state(false)
@@ -226,6 +229,33 @@ $effect(() => {
   }
 })
 
+// Get public schedule URL
+const publicScheduleUrl = $derived(
+  `${typeof window !== 'undefined' ? window.location.origin : ''}/schedule/${data.edition.slug}`
+)
+
+async function copyScheduleUrl() {
+  try {
+    await navigator.clipboard.writeText(publicScheduleUrl)
+    copiedUrl = true
+    setTimeout(() => {
+      copiedUrl = false
+    }, 2000)
+  } catch {
+    // Fallback for older browsers
+    const input = document.createElement('input')
+    input.value = publicScheduleUrl
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    copiedUrl = true
+    setTimeout(() => {
+      copiedUrl = false
+    }, 2000)
+  }
+}
+
 function startEditRoom(room: (typeof data.rooms)[0]) {
   editingRoom = room
   selectedEquipment = [...room.equipment]
@@ -396,17 +426,41 @@ const roomsWithoutAssignments = $derived(() => {
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex items-center gap-4">
-    <a href="/admin/planning">
-      <Button variant="ghost" size="icon">
-        <ArrowLeft class="h-5 w-5" />
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a href="/admin/planning">
+        <Button variant="ghost" size="icon">
+          <ArrowLeft class="h-5 w-5" />
+        </Button>
+      </a>
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
+        <p class="text-muted-foreground">
+          {formatDate(data.edition.startDate)} - {formatDate(data.edition.endDate)}
+        </p>
+      </div>
+    </div>
+    <!-- Public Schedule URL -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
+        <span class="text-sm text-muted-foreground">Public URL:</span>
+        <code class="text-sm">/schedule/{data.edition.slug}</code>
+      </div>
+      <Button variant="outline" size="sm" onclick={copyScheduleUrl} class="gap-2">
+        {#if copiedUrl}
+          <Check class="h-4 w-4 text-green-500" />
+          Copied
+        {:else}
+          <Copy class="h-4 w-4" />
+          Copy
+        {/if}
       </Button>
-    </a>
-    <div>
-      <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-      <p class="text-muted-foreground">
-        {formatDate(data.edition.startDate)} - {formatDate(data.edition.endDate)}
-      </p>
+      <a href="/schedule/{data.edition.slug}" target="_blank">
+        <Button variant="outline" size="sm" class="gap-2">
+          <ExternalLink class="h-4 w-4" />
+          Open
+        </Button>
+      </a>
     </div>
   </div>
 
