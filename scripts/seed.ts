@@ -570,6 +570,37 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  {
+    name: 'organization_members',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      selectField('role', ['owner', 'admin', 'organizer', 'reviewer'], true),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'organization_invitations',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      emailField('email', true),
+      selectField('role', ['admin', 'organizer', 'reviewer'], true),
+      selectField('status', ['pending', 'accepted', 'expired', 'cancelled'], true),
+      dateField('expiresAt'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -590,7 +621,21 @@ const relationDefinitions = [
   { collection: 'comments', field: 'userId', target: 'users', maxSelect: 1 },
   { collection: 'email_logs', field: 'talkId', target: 'talks', maxSelect: 1 },
   { collection: 'email_logs', field: 'speakerId', target: 'speakers', maxSelect: 1 },
-  { collection: 'email_logs', field: 'editionId', target: 'editions', maxSelect: 1 }
+  { collection: 'email_logs', field: 'editionId', target: 'editions', maxSelect: 1 },
+  {
+    collection: 'organization_members',
+    field: 'organizationId',
+    target: 'organizations',
+    maxSelect: 1
+  },
+  { collection: 'organization_members', field: 'userId', target: 'users', maxSelect: 1 },
+  {
+    collection: 'organization_invitations',
+    field: 'organizationId',
+    target: 'organizations',
+    maxSelect: 1
+  },
+  { collection: 'organization_invitations', field: 'invitedBy', target: 'users', maxSelect: 1 }
 ]
 
 // ============================================================================
