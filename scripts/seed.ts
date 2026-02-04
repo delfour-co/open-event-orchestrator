@@ -352,6 +352,18 @@ function autodateField(
   }
 }
 
+function jsonField(name: string, required = false): Record<string, unknown> {
+  return {
+    id: name,
+    name,
+    type: 'json',
+    required,
+    hidden: false,
+    presentable: false,
+    maxSize: 2000000
+  }
+}
+
 // Collection schemas WITHOUT relation fields (relations are added later)
 // Test tokens for E2E tests (64 hex chars = 32 bytes)
 const TEST_SPEAKER_TOKENS = {
@@ -637,6 +649,8 @@ const collectionSchemas: Array<{
       numberField('capacity'),
       textField('floor'),
       textField('description'),
+      jsonField('equipment'),
+      textField('equipmentNotes'),
       numberField('order'),
       autodateField('created', true, false),
       autodateField('updated', true, true)

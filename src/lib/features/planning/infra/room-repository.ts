@@ -17,6 +17,8 @@ function mapRecordToRoom(record: Record<string, unknown>): Room {
     capacity: record.capacity as number | undefined,
     floor: record.floor as string | undefined,
     description: record.description as string | undefined,
+    equipment: (record.equipment as string[]) || [],
+    equipmentNotes: record.equipmentNotes as string | undefined,
     order: (record.order as number) || 0,
     createdAt: new Date(record.created as string),
     updatedAt: new Date(record.updated as string)
@@ -49,6 +51,8 @@ export function createRoomRepository(pb: PocketBase): RoomRepository {
         capacity: data.capacity,
         floor: data.floor,
         description: data.description,
+        equipment: data.equipment ?? [],
+        equipmentNotes: data.equipmentNotes,
         order: data.order ?? 0
       })
       return mapRecordToRoom(record)
@@ -60,6 +64,8 @@ export function createRoomRepository(pb: PocketBase): RoomRepository {
       if (data.capacity !== undefined) updateData.capacity = data.capacity
       if (data.floor !== undefined) updateData.floor = data.floor
       if (data.description !== undefined) updateData.description = data.description
+      if (data.equipment !== undefined) updateData.equipment = data.equipment
+      if (data.equipmentNotes !== undefined) updateData.equipmentNotes = data.equipmentNotes
       if (data.order !== undefined) updateData.order = data.order
 
       const record = await pb.collection('rooms').update(data.id, updateData)

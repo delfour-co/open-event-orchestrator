@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createRoom, roomSchema, validateRoom } from './room'
+import { ROOM_EQUIPMENT_OPTIONS, createRoom, roomSchema, validateRoom } from './room'
 
 describe('Room Domain', () => {
   const validRoom = {
@@ -9,6 +9,8 @@ describe('Room Domain', () => {
     capacity: 500,
     floor: 'Ground Floor',
     description: 'The main conference hall',
+    equipment: ['projector', 'microphone', 'wifi'],
+    equipmentNotes: 'Projector supports 4K',
     order: 0,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -62,6 +64,37 @@ describe('Room Domain', () => {
       const { order, ...roomWithoutOrder } = validRoom
       const result = roomSchema.parse(roomWithoutOrder)
       expect(result.order).toBe(0)
+    })
+
+    it('should accept equipment array', () => {
+      const result = roomSchema.safeParse(validRoom)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.equipment).toEqual(['projector', 'microphone', 'wifi'])
+      }
+    })
+
+    it('should default equipment to empty array', () => {
+      const { equipment, equipmentNotes, ...roomWithoutEquipment } = validRoom
+      const result = roomSchema.parse(roomWithoutEquipment)
+      expect(result.equipment).toEqual([])
+    })
+
+    it('should accept equipmentNotes', () => {
+      const result = roomSchema.safeParse(validRoom)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.equipmentNotes).toBe('Projector supports 4K')
+      }
+    })
+  })
+
+  describe('ROOM_EQUIPMENT_OPTIONS', () => {
+    it('should contain standard equipment options', () => {
+      expect(ROOM_EQUIPMENT_OPTIONS).toContain('projector')
+      expect(ROOM_EQUIPMENT_OPTIONS).toContain('microphone')
+      expect(ROOM_EQUIPMENT_OPTIONS).toContain('wifi')
+      expect(ROOM_EQUIPMENT_OPTIONS).toContain('wheelchair_accessible')
     })
   })
 

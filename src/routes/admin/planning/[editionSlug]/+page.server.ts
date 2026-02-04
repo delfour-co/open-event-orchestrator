@@ -48,6 +48,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       name: r.name as string,
       capacity: r.capacity as number | undefined,
       floor: r.floor as string | undefined,
+      equipment: (r.equipment as string[]) || [],
+      equipmentNotes: r.equipmentNotes as string | undefined,
       order: (r.order as number) || 0
     })),
     tracks: tracks.map((t) => ({
@@ -75,11 +77,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 }
 
 export const actions: Actions = {
+  // ============ ROOMS ============
   createRoom: async ({ request, locals }) => {
     const formData = await request.formData()
     const name = formData.get('name') as string
     const capacity = formData.get('capacity') as string
     const floor = formData.get('floor') as string
+    const equipment = formData.getAll('equipment') as string[]
+    const equipmentNotes = formData.get('equipmentNotes') as string
     const editionId = formData.get('editionId') as string
 
     if (!name || name.trim().length === 0) {
@@ -92,6 +97,8 @@ export const actions: Actions = {
         name: name.trim(),
         capacity: capacity ? Number.parseInt(capacity, 10) : null,
         floor: floor?.trim() || null,
+        equipment: equipment.filter((e) => e),
+        equipmentNotes: equipmentNotes?.trim() || null,
         order: 0
       })
 
@@ -102,6 +109,68 @@ export const actions: Actions = {
     }
   },
 
+  updateRoom: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+    const name = formData.get('name') as string
+    const capacity = formData.get('capacity') as string
+    const floor = formData.get('floor') as string
+    const equipment = formData.getAll('equipment') as string[]
+    const equipmentNotes = formData.get('equipmentNotes') as string
+
+    if (!id) {
+      return fail(400, { error: 'Room ID is required', action: 'updateRoom' })
+    }
+    if (!name || name.trim().length === 0) {
+      return fail(400, { error: 'Room name is required', action: 'updateRoom' })
+    }
+
+    try {
+      await locals.pb.collection('rooms').update(id, {
+        name: name.trim(),
+        capacity: capacity ? Number.parseInt(capacity, 10) : null,
+        floor: floor?.trim() || null,
+        equipment: equipment.filter((e) => e),
+        equipmentNotes: equipmentNotes?.trim() || null
+      })
+
+      return { success: true, action: 'updateRoom' }
+    } catch (err) {
+      console.error('Failed to update room:', err)
+      return fail(500, { error: 'Failed to update room', action: 'updateRoom' })
+    }
+  },
+
+  deleteRoom: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+
+    if (!id) {
+      return fail(400, { error: 'Room ID is required', action: 'deleteRoom' })
+    }
+
+    try {
+      // Check if room has slots
+      const slots = await locals.pb.collection('slots').getList(1, 1, {
+        filter: `roomId = "${id}"`
+      })
+
+      if (slots.items.length > 0) {
+        return fail(400, {
+          error: 'Cannot delete room with existing slots. Delete slots first.',
+          action: 'deleteRoom'
+        })
+      }
+
+      await locals.pb.collection('rooms').delete(id)
+      return { success: true, action: 'deleteRoom' }
+    } catch (err) {
+      console.error('Failed to delete room:', err)
+      return fail(500, { error: 'Failed to delete room', action: 'deleteRoom' })
+    }
+  },
+
+  // ============ TRACKS ============
   createTrack: async ({ request, locals }) => {
     const formData = await request.formData()
     const name = formData.get('name') as string
@@ -127,6 +196,62 @@ export const actions: Actions = {
     }
   },
 
+  updateTrack: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+    const name = formData.get('name') as string
+    const color = formData.get('color') as string
+
+    if (!id) {
+      return fail(400, { error: 'Track ID is required', action: 'updateTrack' })
+    }
+    if (!name || name.trim().length === 0) {
+      return fail(400, { error: 'Track name is required', action: 'updateTrack' })
+    }
+
+    try {
+      await locals.pb.collection('tracks').update(id, {
+        name: name.trim(),
+        color: color || '#6b7280'
+      })
+
+      return { success: true, action: 'updateTrack' }
+    } catch (err) {
+      console.error('Failed to update track:', err)
+      return fail(500, { error: 'Failed to update track', action: 'updateTrack' })
+    }
+  },
+
+  deleteTrack: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+
+    if (!id) {
+      return fail(400, { error: 'Track ID is required', action: 'deleteTrack' })
+    }
+
+    try {
+      // Check if track has sessions
+      const sessions = await locals.pb.collection('sessions').getList(1, 1, {
+        filter: `trackId = "${id}"`
+      })
+
+      if (sessions.items.length > 0) {
+        return fail(400, {
+          error: 'Cannot delete track with existing sessions. Remove track from sessions first.',
+          action: 'deleteTrack'
+        })
+      }
+
+      await locals.pb.collection('tracks').delete(id)
+      return { success: true, action: 'deleteTrack' }
+    } catch (err) {
+      console.error('Failed to delete track:', err)
+      return fail(500, { error: 'Failed to delete track', action: 'deleteTrack' })
+    }
+  },
+
+  // ============ SLOTS ============
   createSlot: async ({ request, locals }) => {
     const formData = await request.formData()
     const roomId = formData.get('roomId') as string
@@ -147,8 +272,6 @@ export const actions: Actions = {
     if (!endTime) {
       return fail(400, { error: 'End time is required', action: 'createSlot' })
     }
-
-    // Validate time format and order
     if (startTime >= endTime) {
       return fail(400, { error: 'End time must be after start time', action: 'createSlot' })
     }
@@ -162,8 +285,6 @@ export const actions: Actions = {
       for (const existing of existingSlots) {
         const existingStart = existing.startTime as string
         const existingEnd = existing.endTime as string
-
-        // Check overlap: new slot starts before existing ends AND new slot ends after existing starts
         if (startTime < existingEnd && endTime > existingStart) {
           return fail(400, {
             error: `Slot overlaps with existing slot (${existingStart} - ${existingEnd})`,
@@ -184,6 +305,93 @@ export const actions: Actions = {
     } catch (err) {
       console.error('Failed to create slot:', err)
       return fail(500, { error: 'Failed to create slot', action: 'createSlot' })
+    }
+  },
+
+  updateSlot: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+    const roomId = formData.get('roomId') as string
+    const date = formData.get('date') as string
+    const startTime = formData.get('startTime') as string
+    const endTime = formData.get('endTime') as string
+
+    if (!id) {
+      return fail(400, { error: 'Slot ID is required', action: 'updateSlot' })
+    }
+    if (!roomId) {
+      return fail(400, { error: 'Room is required', action: 'updateSlot' })
+    }
+    if (!date) {
+      return fail(400, { error: 'Date is required', action: 'updateSlot' })
+    }
+    if (!startTime) {
+      return fail(400, { error: 'Start time is required', action: 'updateSlot' })
+    }
+    if (!endTime) {
+      return fail(400, { error: 'End time is required', action: 'updateSlot' })
+    }
+    if (startTime >= endTime) {
+      return fail(400, { error: 'End time must be after start time', action: 'updateSlot' })
+    }
+
+    try {
+      // Check for overlapping slots (excluding self)
+      const existingSlots = await locals.pb.collection('slots').getFullList({
+        filter: `roomId = "${roomId}" && date ~ "${date}" && id != "${id}"`
+      })
+
+      for (const existing of existingSlots) {
+        const existingStart = existing.startTime as string
+        const existingEnd = existing.endTime as string
+        if (startTime < existingEnd && endTime > existingStart) {
+          return fail(400, {
+            error: `Slot overlaps with existing slot (${existingStart} - ${existingEnd})`,
+            action: 'updateSlot'
+          })
+        }
+      }
+
+      await locals.pb.collection('slots').update(id, {
+        roomId,
+        date: new Date(date).toISOString(),
+        startTime,
+        endTime
+      })
+
+      return { success: true, action: 'updateSlot' }
+    } catch (err) {
+      console.error('Failed to update slot:', err)
+      return fail(500, { error: 'Failed to update slot', action: 'updateSlot' })
+    }
+  },
+
+  deleteSlot: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+
+    if (!id) {
+      return fail(400, { error: 'Slot ID is required', action: 'deleteSlot' })
+    }
+
+    try {
+      // Check if slot has sessions
+      const sessions = await locals.pb.collection('sessions').getList(1, 1, {
+        filter: `slotId = "${id}"`
+      })
+
+      if (sessions.items.length > 0) {
+        return fail(400, {
+          error: 'Cannot delete slot with existing session. Remove session first.',
+          action: 'deleteSlot'
+        })
+      }
+
+      await locals.pb.collection('slots').delete(id)
+      return { success: true, action: 'deleteSlot' }
+    } catch (err) {
+      console.error('Failed to delete slot:', err)
+      return fail(500, { error: 'Failed to delete slot', action: 'deleteSlot' })
     }
   }
 }

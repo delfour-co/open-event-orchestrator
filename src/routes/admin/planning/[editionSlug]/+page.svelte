@@ -4,7 +4,19 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { ArrowLeft, Calendar, Clock, DoorOpen, Layers, Loader2, Plus, X } from 'lucide-svelte'
+import { Textarea } from '$lib/components/ui/textarea'
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  DoorOpen,
+  Layers,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+  X
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -21,12 +33,37 @@ let showSlotForm = $state(false)
 let isSubmitting = $state(false)
 let selectedRoomId = $state('')
 
+// Edit states
+let editingRoom = $state<(typeof data.rooms)[0] | null>(null)
+let editingTrack = $state<(typeof data.tracks)[0] | null>(null)
+let editingSlot = $state<(typeof data.slots)[0] | null>(null)
+
+// Equipment options
+const equipmentOptions = [
+  { value: 'projector', label: 'Projector' },
+  { value: 'screen', label: 'Screen' },
+  { value: 'microphone', label: 'Microphone' },
+  { value: 'whiteboard', label: 'Whiteboard' },
+  { value: 'video_recording', label: 'Video Recording' },
+  { value: 'live_streaming', label: 'Live Streaming' },
+  { value: 'power_outlets', label: 'Power Outlets' },
+  { value: 'wifi', label: 'WiFi' },
+  { value: 'air_conditioning', label: 'Air Conditioning' },
+  { value: 'wheelchair_accessible', label: 'Wheelchair Accessible' }
+]
+
+let selectedEquipment = $state<string[]>([])
+
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
   }).format(date)
+}
+
+const formatDateInput = (date: Date) => {
+  return date.toISOString().split('T')[0]
 }
 
 // Get unique dates from slots
@@ -52,12 +89,10 @@ const slotsByRoomAndDate = $derived(() => {
   return grouped
 })
 
-// Get session for a slot
 const getSessionForSlot = (slotId: string) => {
   return data.sessions.find((s) => s.slotId === slotId)
 }
 
-// Get track color for a session
 const getTrackColor = (trackId: string | undefined) => {
   if (!trackId) return '#6b7280'
   const track = data.tracks.find((t) => t.id === trackId)
@@ -67,11 +102,69 @@ const getTrackColor = (trackId: string | undefined) => {
 // Close forms on successful submission
 $effect(() => {
   if (form?.success) {
-    if (form.action === 'createRoom') showRoomForm = false
-    if (form.action === 'createTrack') showTrackForm = false
-    if (form.action === 'createSlot') showSlotForm = false
+    if (form.action === 'createRoom' || form.action === 'updateRoom') {
+      showRoomForm = false
+      editingRoom = null
+      selectedEquipment = []
+    }
+    if (form.action === 'createTrack' || form.action === 'updateTrack') {
+      showTrackForm = false
+      editingTrack = null
+    }
+    if (form.action === 'createSlot' || form.action === 'updateSlot') {
+      showSlotForm = false
+      editingSlot = null
+    }
+    if (
+      form.action === 'deleteRoom' ||
+      form.action === 'deleteTrack' ||
+      form.action === 'deleteSlot'
+    ) {
+      // Just close any open forms
+    }
   }
 })
+
+function startEditRoom(room: (typeof data.rooms)[0]) {
+  editingRoom = room
+  selectedEquipment = [...room.equipment]
+  showRoomForm = true
+}
+
+function startEditTrack(track: (typeof data.tracks)[0]) {
+  editingTrack = track
+  showTrackForm = true
+}
+
+function startEditSlot(slot: (typeof data.slots)[0]) {
+  editingSlot = slot
+  selectedRoomId = slot.roomId
+  showSlotForm = true
+}
+
+function cancelRoomForm() {
+  showRoomForm = false
+  editingRoom = null
+  selectedEquipment = []
+}
+
+function cancelTrackForm() {
+  showTrackForm = false
+  editingTrack = null
+}
+
+function cancelSlotForm() {
+  showSlotForm = false
+  editingSlot = null
+}
+
+function toggleEquipment(value: string) {
+  if (selectedEquipment.includes(value)) {
+    selectedEquipment = selectedEquipment.filter((e) => e !== value)
+  } else {
+    selectedEquipment = [...selectedEquipment, value]
+  }
+}
 </script>
 
 <svelte:head>
@@ -212,7 +305,7 @@ $effect(() => {
     <div class="space-y-4">
       <div class="flex justify-end">
         {#if !showRoomForm}
-          <Button onclick={() => (showRoomForm = true)}>
+          <Button onclick={() => { showRoomForm = true; editingRoom = null; selectedEquipment = [] }}>
             <Plus class="mr-2 h-4 w-4" />
             Add Room
           </Button>
@@ -224,21 +317,21 @@ $effect(() => {
         <Card.Root>
           <Card.Header>
             <div class="flex items-center justify-between">
-              <Card.Title>Add Room</Card.Title>
-              <Button variant="ghost" size="icon" onclick={() => (showRoomForm = false)}>
+              <Card.Title>{editingRoom ? 'Edit Room' : 'Add Room'}</Card.Title>
+              <Button variant="ghost" size="icon" onclick={cancelRoomForm}>
                 <X class="h-4 w-4" />
               </Button>
             </div>
           </Card.Header>
           <Card.Content>
-            {#if form?.error && form?.action === 'createRoom'}
+            {#if form?.error && (form?.action === 'createRoom' || form?.action === 'updateRoom')}
               <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
                 {form.error}
               </div>
             {/if}
             <form
               method="POST"
-              action="?/createRoom"
+              action={editingRoom ? '?/updateRoom' : '?/createRoom'}
               use:enhance={() => {
                 isSubmitting = true
                 return async ({ update }) => {
@@ -249,29 +342,81 @@ $effect(() => {
               class="space-y-4"
             >
               <input type="hidden" name="editionId" value={data.edition.id} />
+              {#if editingRoom}
+                <input type="hidden" name="id" value={editingRoom.id} />
+              {/if}
+
               <div class="grid gap-4 md:grid-cols-3">
                 <div class="space-y-2">
                   <Label for="room-name">Name *</Label>
-                  <Input id="room-name" name="name" placeholder="Main Hall" required />
+                  <Input
+                    id="room-name"
+                    name="name"
+                    placeholder="Main Hall"
+                    required
+                    value={editingRoom?.name || ''}
+                  />
                 </div>
                 <div class="space-y-2">
                   <Label for="room-capacity">Capacity</Label>
-                  <Input id="room-capacity" name="capacity" type="number" min="1" placeholder="200" />
+                  <Input
+                    id="room-capacity"
+                    name="capacity"
+                    type="number"
+                    min="1"
+                    placeholder="200"
+                    value={editingRoom?.capacity?.toString() || ''}
+                  />
                 </div>
                 <div class="space-y-2">
                   <Label for="room-floor">Floor</Label>
-                  <Input id="room-floor" name="floor" placeholder="Ground floor" />
+                  <Input
+                    id="room-floor"
+                    name="floor"
+                    placeholder="Ground floor"
+                    value={editingRoom?.floor || ''}
+                  />
                 </div>
               </div>
+
+              <div class="space-y-2">
+                <Label>Equipment</Label>
+                <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
+                  {#each equipmentOptions as option}
+                    <label class="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        name="equipment"
+                        value={option.value}
+                        checked={selectedEquipment.includes(option.value)}
+                        onchange={() => toggleEquipment(option.value)}
+                        class="h-4 w-4 rounded border-gray-300"
+                      />
+                      {option.label}
+                    </label>
+                  {/each}
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <Label for="room-notes">Equipment Notes</Label>
+                <Textarea
+                  id="room-notes"
+                  name="equipmentNotes"
+                  placeholder="Additional equipment details..."
+                  value={editingRoom?.equipmentNotes || ''}
+                />
+              </div>
+
               <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={() => (showRoomForm = false)}>
+                <Button type="button" variant="outline" onclick={cancelRoomForm}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {#if isSubmitting}
                     <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                   {/if}
-                  Create Room
+                  {editingRoom ? 'Update Room' : 'Create Room'}
                 </Button>
               </div>
             </form>
@@ -292,14 +437,38 @@ $effect(() => {
           {#each data.rooms as room}
             <Card.Root>
               <Card.Header>
-                <Card.Title>{room.name}</Card.Title>
-                {#if room.floor}
-                  <Card.Description>Floor: {room.floor}</Card.Description>
-                {/if}
+                <div class="flex items-start justify-between">
+                  <div>
+                    <Card.Title>{room.name}</Card.Title>
+                    {#if room.floor}
+                      <Card.Description>Floor: {room.floor}</Card.Description>
+                    {/if}
+                  </div>
+                  <div class="flex gap-1">
+                    <Button variant="ghost" size="icon" onclick={() => startEditRoom(room)}>
+                      <Pencil class="h-4 w-4" />
+                    </Button>
+                    <form method="POST" action="?/deleteRoom" use:enhance>
+                      <input type="hidden" name="id" value={room.id} />
+                      <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                        <Trash2 class="h-4 w-4" />
+                      </Button>
+                    </form>
+                  </div>
+                </div>
               </Card.Header>
               <Card.Content>
                 {#if room.capacity}
                   <p class="text-sm text-muted-foreground">Capacity: {room.capacity}</p>
+                {/if}
+                {#if room.equipment.length > 0}
+                  <div class="mt-2 flex flex-wrap gap-1">
+                    {#each room.equipment as eq}
+                      <span class="rounded bg-muted px-2 py-0.5 text-xs">
+                        {equipmentOptions.find((o) => o.value === eq)?.label || eq}
+                      </span>
+                    {/each}
+                  </div>
                 {/if}
               </Card.Content>
             </Card.Root>
@@ -314,7 +483,7 @@ $effect(() => {
     <div class="space-y-4">
       <div class="flex justify-end">
         {#if !showTrackForm}
-          <Button onclick={() => (showTrackForm = true)}>
+          <Button onclick={() => { showTrackForm = true; editingTrack = null }}>
             <Plus class="mr-2 h-4 w-4" />
             Add Track
           </Button>
@@ -326,21 +495,21 @@ $effect(() => {
         <Card.Root>
           <Card.Header>
             <div class="flex items-center justify-between">
-              <Card.Title>Add Track</Card.Title>
-              <Button variant="ghost" size="icon" onclick={() => (showTrackForm = false)}>
+              <Card.Title>{editingTrack ? 'Edit Track' : 'Add Track'}</Card.Title>
+              <Button variant="ghost" size="icon" onclick={cancelTrackForm}>
                 <X class="h-4 w-4" />
               </Button>
             </div>
           </Card.Header>
           <Card.Content>
-            {#if form?.error && form?.action === 'createTrack'}
+            {#if form?.error && (form?.action === 'createTrack' || form?.action === 'updateTrack')}
               <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
                 {form.error}
               </div>
             {/if}
             <form
               method="POST"
-              action="?/createTrack"
+              action={editingTrack ? '?/updateTrack' : '?/createTrack'}
               use:enhance={() => {
                 isSubmitting = true
                 return async ({ update }) => {
@@ -351,28 +520,43 @@ $effect(() => {
               class="space-y-4"
             >
               <input type="hidden" name="editionId" value={data.edition.id} />
+              {#if editingTrack}
+                <input type="hidden" name="id" value={editingTrack.id} />
+              {/if}
+
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="space-y-2">
                   <Label for="track-name">Name *</Label>
-                  <Input id="track-name" name="name" placeholder="Web Development" required />
+                  <Input
+                    id="track-name"
+                    name="name"
+                    placeholder="Web Development"
+                    required
+                    value={editingTrack?.name || ''}
+                  />
                 </div>
                 <div class="space-y-2">
                   <Label for="track-color">Color</Label>
                   <div class="flex gap-2">
-                    <Input id="track-color" name="color" type="color" value="#6b7280" class="h-10 w-16 p-1" />
-                    <Input name="color" value="#6b7280" class="flex-1" placeholder="#6b7280" />
+                    <Input
+                      id="track-color"
+                      name="color"
+                      type="color"
+                      value={editingTrack?.color || '#6b7280'}
+                      class="h-10 w-16 p-1"
+                    />
                   </div>
                 </div>
               </div>
               <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={() => (showTrackForm = false)}>
+                <Button type="button" variant="outline" onclick={cancelTrackForm}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {#if isSubmitting}
                     <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                   {/if}
-                  Create Track
+                  {editingTrack ? 'Update Track' : 'Create Track'}
                 </Button>
               </div>
             </form>
@@ -395,9 +579,22 @@ $effect(() => {
           {#each data.tracks as track}
             <Card.Root>
               <Card.Header>
-                <div class="flex items-center gap-3">
-                  <div class="h-4 w-4 rounded-full" style="background-color: {track.color}"></div>
-                  <Card.Title>{track.name}</Card.Title>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="h-4 w-4 rounded-full" style="background-color: {track.color}"></div>
+                    <Card.Title>{track.name}</Card.Title>
+                  </div>
+                  <div class="flex gap-1">
+                    <Button variant="ghost" size="icon" onclick={() => startEditTrack(track)}>
+                      <Pencil class="h-4 w-4" />
+                    </Button>
+                    <form method="POST" action="?/deleteTrack" use:enhance>
+                      <input type="hidden" name="id" value={track.id} />
+                      <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                        <Trash2 class="h-4 w-4" />
+                      </Button>
+                    </form>
+                  </div>
                 </div>
               </Card.Header>
             </Card.Root>
@@ -412,7 +609,7 @@ $effect(() => {
     <div class="space-y-4">
       <div class="flex justify-end">
         {#if !showSlotForm}
-          <Button onclick={() => (showSlotForm = true)} disabled={data.rooms.length === 0}>
+          <Button onclick={() => { showSlotForm = true; editingSlot = null; selectedRoomId = '' }} disabled={data.rooms.length === 0}>
             <Plus class="mr-2 h-4 w-4" />
             Add Slot
           </Button>
@@ -424,21 +621,21 @@ $effect(() => {
         <Card.Root>
           <Card.Header>
             <div class="flex items-center justify-between">
-              <Card.Title>Add Slot</Card.Title>
-              <Button variant="ghost" size="icon" onclick={() => (showSlotForm = false)}>
+              <Card.Title>{editingSlot ? 'Edit Slot' : 'Add Slot'}</Card.Title>
+              <Button variant="ghost" size="icon" onclick={cancelSlotForm}>
                 <X class="h-4 w-4" />
               </Button>
             </div>
           </Card.Header>
           <Card.Content>
-            {#if form?.error && form?.action === 'createSlot'}
+            {#if form?.error && (form?.action === 'createSlot' || form?.action === 'updateSlot')}
               <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
                 {form.error}
               </div>
             {/if}
             <form
               method="POST"
-              action="?/createSlot"
+              action={editingSlot ? '?/updateSlot' : '?/createSlot'}
               use:enhance={() => {
                 isSubmitting = true
                 return async ({ update }) => {
@@ -449,6 +646,10 @@ $effect(() => {
               class="space-y-4"
             >
               <input type="hidden" name="editionId" value={data.edition.id} />
+              {#if editingSlot}
+                <input type="hidden" name="id" value={editingSlot.id} />
+              {/if}
+
               <div class="grid gap-4 md:grid-cols-4">
                 <div class="space-y-2">
                   <Label for="slot-room">Room *</Label>
@@ -472,27 +673,39 @@ $effect(() => {
                     name="date"
                     type="date"
                     required
-                    value={data.edition.startDate.toISOString().split('T')[0]}
+                    value={editingSlot ? formatDateInput(editingSlot.date) : formatDateInput(data.edition.startDate)}
                   />
                 </div>
                 <div class="space-y-2">
                   <Label for="slot-start">Start Time *</Label>
-                  <Input id="slot-start" name="startTime" type="time" required />
+                  <Input
+                    id="slot-start"
+                    name="startTime"
+                    type="time"
+                    required
+                    value={editingSlot?.startTime || ''}
+                  />
                 </div>
                 <div class="space-y-2">
                   <Label for="slot-end">End Time *</Label>
-                  <Input id="slot-end" name="endTime" type="time" required />
+                  <Input
+                    id="slot-end"
+                    name="endTime"
+                    type="time"
+                    required
+                    value={editingSlot?.endTime || ''}
+                  />
                 </div>
               </div>
               <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={() => (showSlotForm = false)}>
+                <Button type="button" variant="outline" onclick={cancelSlotForm}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {#if isSubmitting}
                     <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                   {/if}
-                  Create Slot
+                  {editingSlot ? 'Update Slot' : 'Create Slot'}
                 </Button>
               </div>
             </form>
@@ -537,6 +750,17 @@ $effect(() => {
                     {room?.name || 'Unknown room'}
                   </div>
                 </div>
+                <div class="flex gap-1">
+                  <Button variant="ghost" size="icon" onclick={() => startEditSlot(slot)}>
+                    <Pencil class="h-4 w-4" />
+                  </Button>
+                  <form method="POST" action="?/deleteSlot" use:enhance>
+                    <input type="hidden" name="id" value={slot.id} />
+                    <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                      <Trash2 class="h-4 w-4" />
+                    </Button>
+                  </form>
+                </div>
               </Card.Content>
             </Card.Root>
           {/each}
@@ -545,3 +769,9 @@ $effect(() => {
     </div>
   {/if}
 </div>
+
+{#if form?.error && form?.action?.startsWith('delete')}
+  <div class="fixed bottom-4 right-4 rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive shadow-lg">
+    {form.error}
+  </div>
+{/if}
