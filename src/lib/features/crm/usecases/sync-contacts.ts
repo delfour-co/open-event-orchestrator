@@ -9,28 +9,20 @@ export interface SyncContactsResult {
 }
 
 export const createSyncContactsUseCase = (pb: PocketBase) => {
-  return async (organizationId: string): Promise<SyncContactsResult> => {
+  return async (eventId: string): Promise<SyncContactsResult> => {
     const result: SyncContactsResult = { created: 0, updated: 0, linked: 0, errors: [] }
 
-    // Get all editions for the organization's events
-    const events = await pb.collection('events').getFullList({
-      filter: `organizationId = "${organizationId}"`
-    })
-    const eventIds = events.map((e) => e.id)
-
-    if (eventIds.length === 0) return result
-
     const editions = await pb.collection('editions').getFullList({
-      filter: eventIds.map((id) => `eventId = "${id}"`).join(' || ')
+      filter: `eventId = "${eventId}"`
     })
     const editionIds = editions.map((e) => e.id)
 
     if (editionIds.length === 0) return result
 
-    // Sync speakers
+    // Sync speakers and attendees for each edition
     for (const editionId of editionIds) {
-      await syncSpeakers(pb, organizationId, editionId, result)
-      await syncAttendees(pb, organizationId, editionId, result)
+      await syncSpeakers(pb, eventId, editionId, result)
+      await syncAttendees(pb, eventId, editionId, result)
     }
 
     return result
@@ -40,14 +32,14 @@ export const createSyncContactsUseCase = (pb: PocketBase) => {
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: contact sync requires multiple conditional merge steps
 async function findOrCreateContact(
   pb: PocketBase,
-  organizationId: string,
+  eventId: string,
   email: string,
   data: Partial<CreateContact>,
   source: ContactSource,
   result: SyncContactsResult
 ): Promise<string> {
   const existing = await pb.collection('contacts').getList(1, 1, {
-    filter: `organizationId = "${organizationId}" && email = "${email}"`
+    filter: `eventId = "${eventId}" && email = "${email}"`
   })
 
   if (existing.items.length > 0) {
@@ -72,7 +64,7 @@ async function findOrCreateContact(
   }
 
   const contact = await pb.collection('contacts').create({
-    organizationId,
+    eventId,
     email,
     firstName: data.firstName || 'Unknown',
     lastName: data.lastName || 'Contact',
@@ -128,7 +120,7 @@ async function ensureEditionLink(
 
 async function syncSpeakers(
   pb: PocketBase,
-  organizationId: string,
+  eventId: string,
   editionId: string,
   result: SyncContactsResult
 ): Promise<void> {
@@ -152,10 +144,10 @@ async function syncSpeakers(
       const speaker = await pb.collection('speakers').getOne(speakerId)
       const contactId = await findOrCreateContact(
         pb,
-        organizationId,
+        eventId,
         speaker.email as string,
         {
-          organizationId,
+          eventId,
           email: speaker.email as string,
           firstName: speaker.firstName as string,
           lastName: speaker.lastName as string,
@@ -184,7 +176,7 @@ async function syncSpeakers(
 
 async function syncAttendees(
   pb: PocketBase,
-  organizationId: string,
+  eventId: string,
   editionId: string,
   result: SyncContactsResult
 ): Promise<void> {
@@ -201,10 +193,10 @@ async function syncAttendees(
     try {
       const contactId = await findOrCreateContact(
         pb,
-        organizationId,
+        eventId,
         email,
         {
-          organizationId,
+          eventId,
           email,
           firstName: ticket.attendeeFirstName as string,
           lastName: ticket.attendeeLastName as string,

@@ -21,11 +21,8 @@ export const createContactRepository = (pb: PocketBase) => ({
     }
   },
 
-  async findByOrganization(
-    organizationId: string,
-    options?: ContactListOptions
-  ): Promise<Contact[]> {
-    const filters: string[] = [`organizationId = "${organizationId}"`]
+  async findByEvent(eventId: string, options?: ContactListOptions): Promise<Contact[]> {
+    const filters: string[] = [`eventId = "${eventId}"`]
 
     if (options?.search) {
       const search = options.search.replace(/"/g, '\\"')
@@ -62,10 +59,10 @@ export const createContactRepository = (pb: PocketBase) => ({
     return records.map(mapRecordToContact)
   },
 
-  async findByEmail(email: string, organizationId: string): Promise<Contact | null> {
+  async findByEmail(email: string, eventId: string): Promise<Contact | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `email = "${email}" && organizationId = "${organizationId}"`
+        filter: `email = "${email}" && eventId = "${eventId}"`
       })
       if (records.items.length === 0) return null
       return mapRecordToContact(records.items[0])
@@ -95,9 +92,9 @@ export const createContactRepository = (pb: PocketBase) => ({
     await pb.collection(COLLECTION).delete(id)
   },
 
-  async countByOrganization(organizationId: string): Promise<number> {
+  async countByEvent(eventId: string): Promise<number> {
     const records = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `organizationId = "${organizationId}"`,
+      filter: `eventId = "${eventId}"`,
       fields: 'id'
     })
     return records.totalItems
@@ -129,7 +126,7 @@ const parseTags = (value: unknown): string[] => {
 
 const mapRecordToContact = (record: Record<string, unknown>): Contact => ({
   id: record.id as string,
-  organizationId: record.organizationId as string,
+  eventId: record.eventId as string,
   email: record.email as string,
   firstName: record.firstName as string,
   lastName: record.lastName as string,
@@ -147,6 +144,7 @@ const mapRecordToContact = (record: Record<string, unknown>): Contact => ({
   source: (record.source as ContactSource) || 'manual',
   tags: parseTags(record.tags),
   notes: record.notes as string | undefined,
+  unsubscribeToken: record.unsubscribeToken as string | undefined,
   createdAt: new Date(record.created as string),
   updatedAt: new Date(record.updated as string)
 })

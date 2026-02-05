@@ -209,17 +209,29 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 - [x] E2E tests (#59)
 - [ ] Drag & drop scheduler (#16) - deferred to post-v1
 
-### Phase 3 — Ticketing
+### Phase 3 — Ticketing ✅
 
-- [ ] Ticket types and pricing
-- [ ] Stripe integration
-- [ ] QR code tickets and check-in
+- [x] Ticket types and pricing
+- [x] Stripe integration
+- [x] QR code tickets and check-in
+- [x] Order management (create, complete, cancel, refund)
+- [x] Attendee email notifications
+- [x] Participant list and check-in dashboard
+- [x] E2E tests
 
-### Phase 4 — CRM
+### Phase 4 — CRM ✅
 
-- [ ] Unified contact model
-- [ ] GDPR compliance
-- [ ] Email campaigns
+- [x] Unified contact model scoped per event
+- [x] Contact sources: speaker, attendee, sponsor, manual, import
+- [x] Auto-sync from CFP speakers and Billing attendees
+- [x] CSV import with merge/skip/overwrite strategies
+- [x] CSV export with field selection
+- [x] Dynamic segments with rule-based evaluation
+- [x] Email campaigns (create, edit, send, test send, schedule, cancel)
+- [x] Email templates with variable interpolation
+- [x] GDPR consent management (marketing, data sharing, analytics)
+- [x] One-click unsubscribe mechanism
+- [x] Unit and E2E tests
 
 ### Phase 5 — API
 

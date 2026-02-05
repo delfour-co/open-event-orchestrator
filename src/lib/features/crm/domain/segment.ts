@@ -42,7 +42,8 @@ export type SegmentCriteria = z.infer<typeof segmentCriteriaSchema>
 
 export const segmentSchema = z.object({
   id: z.string(),
-  organizationId: z.string(),
+  eventId: z.string(),
+  editionId: z.string().optional(),
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   criteria: segmentCriteriaSchema,

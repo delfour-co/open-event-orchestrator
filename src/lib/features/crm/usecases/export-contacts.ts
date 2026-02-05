@@ -19,10 +19,10 @@ const DEFAULT_FIELDS = [
 ]
 
 export const createExportContactsUseCase = (pb: PocketBase) => {
-  return async (organizationId: string, options?: ExportOptions): Promise<string> => {
+  return async (eventId: string, options?: ExportOptions): Promise<string> => {
     const fields = options?.fields || DEFAULT_FIELDS
 
-    let filter = `organizationId = "${organizationId}"`
+    let filter = `eventId = "${eventId}"`
     if (options?.segmentFilter) {
       filter += ` && (${options.segmentFilter})`
     }

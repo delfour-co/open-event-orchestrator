@@ -13,9 +13,9 @@ export const createSegmentRepository = (pb: PocketBase) => ({
     }
   },
 
-  async findByOrganization(organizationId: string): Promise<Segment[]> {
+  async findByEvent(eventId: string): Promise<Segment[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `organizationId = "${organizationId}"`,
+      filter: `eventId = "${eventId}"`,
       sort: '-created'
     })
     return records.map(mapRecordToSegment)
@@ -62,7 +62,8 @@ const parseCriteria = (value: unknown): SegmentCriteria => {
 
 const mapRecordToSegment = (record: Record<string, unknown>): Segment => ({
   id: record.id as string,
-  organizationId: record.organizationId as string,
+  eventId: record.eventId as string,
+  editionId: record.editionId as string | undefined,
   name: record.name as string,
   description: record.description as string | undefined,
   criteria: parseCriteria(record.criteria),

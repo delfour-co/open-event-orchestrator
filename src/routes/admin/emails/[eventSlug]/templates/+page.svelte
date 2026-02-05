@@ -18,6 +18,8 @@ let showForm = $state(false)
 let editingTemplate = $state<(typeof data.templates)[0] | null>(null)
 let isSubmitting = $state(false)
 
+const basePath = `/admin/emails/${data.eventSlug}`
+
 const AVAILABLE_VARIABLES = [
   { key: '{{firstName}}', description: 'Contact first name' },
   { key: '{{lastName}}', description: 'Contact last name' },
@@ -53,7 +55,7 @@ $effect(() => {
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
-			<a href="/admin/emails">
+			<a href={basePath}>
 				<Button variant="ghost" size="sm">Back to Campaigns</Button>
 			</a>
 			<div>

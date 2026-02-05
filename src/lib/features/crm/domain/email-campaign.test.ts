@@ -14,7 +14,7 @@ describe('EmailCampaign', () => {
 
   const makeCampaign = (overrides: Partial<EmailCampaign> = {}): EmailCampaign => ({
     id: 'cmp-001',
-    organizationId: 'org-001',
+    eventId: 'evt-001',
     name: 'Newsletter Q1',
     subject: 'Our Q1 Newsletter',
     bodyHtml: '<p>Hello</p>',

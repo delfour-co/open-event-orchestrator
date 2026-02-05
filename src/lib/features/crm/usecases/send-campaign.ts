@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+import { env } from '$env/dynamic/public'
 import { getEmailService } from '$lib/server/app-settings'
 import type PocketBase from 'pocketbase'
 import { interpolateTemplate } from '../domain'
@@ -23,32 +25,18 @@ export const createSendCampaignUseCase = (pb: PocketBase) => {
     if (!campaign) throw new Error('Campaign not found')
     if (campaign.status !== 'draft') throw new Error('Campaign is not in draft status')
 
+    // Load event name for variable interpolation
+    const event = await pb.collection('events').getOne(campaign.eventId as string)
+    const eventName = (event?.name as string) || ''
+
     // Mark as sending
     await pb.collection('email_campaigns').update(campaignId, { status: 'sending' })
 
     try {
       // Get recipients
-      let contacts: Array<Record<string, unknown>>
-
-      if (campaign.segmentId) {
-        // Get contacts from segment
-        const segment = await pb.collection('segments').getOne(campaign.segmentId as string)
-        const criteria = segment.criteria as { rules: unknown[] }
-        if (criteria?.rules?.length > 0) {
-          contacts = await pb.collection('contacts').getFullList({
-            filter: `organizationId = "${campaign.organizationId}"`
-          })
-        } else {
-          contacts = await pb.collection('contacts').getFullList({
-            filter: `organizationId = "${campaign.organizationId}"`
-          })
-        }
-      } else {
-        // Send to all contacts in organization
-        contacts = await pb.collection('contacts').getFullList({
-          filter: `organizationId = "${campaign.organizationId}"`
-        })
-      }
+      const contacts = await pb.collection('contacts').getFullList({
+        filter: `eventId = "${campaign.eventId}"`
+      })
 
       // Filter contacts with marketing consent
       const contactsWithConsent: Array<Record<string, unknown>> = []
@@ -68,14 +56,30 @@ export const createSendCampaignUseCase = (pb: PocketBase) => {
       })
 
       const emailService = await getEmailService(pb)
+      const baseUrl =
+        env.PUBLIC_POCKETBASE_URL?.replace(':8090', ':5173') || 'http://localhost:5173'
 
       for (const contact of contactsWithConsent) {
         try {
+          // Ensure contact has an unsubscribe token
+          let token = contact.unsubscribeToken as string
+          if (!token) {
+            token = randomUUID()
+            await pb.collection('contacts').update(contact.id as string, {
+              unsubscribeToken: token
+            })
+          }
+
+          const unsubscribeUrl = `${baseUrl}/unsubscribe/${token}`
+
           const variables: Record<string, string> = {
             '{{firstName}}': contact.firstName as string,
             '{{lastName}}': contact.lastName as string,
             '{{email}}': contact.email as string,
-            '{{company}}': (contact.company as string) || ''
+            '{{company}}': (contact.company as string) || '',
+            '{{eventName}}': eventName,
+            '{{editionName}}': '',
+            '{{unsubscribeUrl}}': unsubscribeUrl
           }
 
           const html = interpolateTemplate(campaign.bodyHtml as string, variables)

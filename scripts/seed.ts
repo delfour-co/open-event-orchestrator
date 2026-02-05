@@ -1188,6 +1188,150 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  // CRM collections
+  {
+    name: 'contacts',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('eventId'),
+      emailField('email', true),
+      textField('firstName', true),
+      textField('lastName', true),
+      textField('company'),
+      textField('jobTitle'),
+      textField('phone'),
+      textField('address'),
+      textField('bio'),
+      textField('photoUrl'),
+      textField('twitter'),
+      textField('linkedin'),
+      textField('github'),
+      textField('city'),
+      textField('country'),
+      selectField('source', ['speaker', 'attendee', 'sponsor', 'manual', 'import']),
+      jsonField('tags'),
+      textField('notes'),
+      textField('unsubscribeToken'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'contact_edition_links',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('contactId'),
+      textField('editionId'),
+      jsonField('roles'),
+      textField('speakerId'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'consents',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('contactId'),
+      selectField('type', ['marketing_email', 'data_sharing', 'analytics']),
+      selectField('status', ['granted', 'denied', 'withdrawn']),
+      dateField('grantedAt'),
+      dateField('withdrawnAt'),
+      selectField('source', ['form', 'import', 'api', 'manual']),
+      textField('ipAddress'),
+      textField('userAgent'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'segments',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('eventId'),
+      textField('editionId'),
+      textField('name', true),
+      textField('description'),
+      jsonField('criteria'),
+      {
+        id: 'isStatic',
+        name: 'isStatic',
+        type: 'bool',
+        required: false,
+        hidden: false,
+        presentable: false
+      },
+      numberField('contactCount'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'email_templates',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('eventId'),
+      textField('name', true),
+      textField('subject', true),
+      textField('bodyHtml'),
+      textField('bodyText'),
+      jsonField('variables'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'email_campaigns',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('eventId'),
+      textField('editionId'),
+      textField('name', true),
+      textField('templateId'),
+      textField('segmentId'),
+      textField('subject', true),
+      textField('bodyHtml'),
+      textField('bodyText'),
+      selectField('status', ['draft', 'scheduled', 'sending', 'sent', 'cancelled']),
+      dateField('scheduledAt'),
+      dateField('sentAt'),
+      numberField('totalRecipients'),
+      numberField('totalSent'),
+      numberField('totalFailed'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -1562,6 +1706,10 @@ async function seed(): Promise<void> {
     sessions: string[]
     organizationMembers: string[]
     roomAssignments: string[]
+    contacts: string[]
+    segments: string[]
+    emailTemplates: string[]
+    emailCampaigns: string[]
   } = {
     users: [],
     organization: '',
@@ -1576,7 +1724,11 @@ async function seed(): Promise<void> {
     slots: new Map(),
     sessions: [],
     organizationMembers: [],
-    roomAssignments: []
+    roomAssignments: [],
+    contacts: [],
+    segments: [],
+    emailTemplates: [],
+    emailCampaigns: []
   }
 
   try {
@@ -2449,6 +2601,477 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 16. Create CRM Contacts
+    // ========================================================================
+    console.log('📇 Creating CRM contacts...')
+    const contactDefinitions = [
+      {
+        email: 'speaker@example.com',
+        firstName: 'Jane',
+        lastName: 'Speaker',
+        company: 'Tech Corp',
+        jobTitle: 'Senior Developer',
+        bio: 'Passionate developer and speaker.',
+        city: 'Paris',
+        country: 'France',
+        twitter: '@janespeaker',
+        linkedin: 'https://linkedin.com/in/janespeaker',
+        github: 'janespeaker',
+        source: 'speaker',
+        tags: ['speaker', 'web', 'sveltekit']
+      },
+      {
+        email: 'speaker2@example.com',
+        firstName: 'John',
+        lastName: 'Talker',
+        company: 'Tech Corp',
+        jobTitle: 'Senior Developer',
+        bio: 'Passionate developer and speaker.',
+        city: 'Lyon',
+        country: 'France',
+        twitter: '@johntalker',
+        linkedin: 'https://linkedin.com/in/johntalker',
+        github: 'johntalker',
+        source: 'speaker',
+        tags: ['speaker', 'cloud', 'kubernetes']
+      },
+      {
+        email: 'alice.martin@example.com',
+        firstName: 'Alice',
+        lastName: 'Martin',
+        company: 'Acme Inc',
+        jobTitle: 'Frontend Developer',
+        city: 'Paris',
+        country: 'France',
+        source: 'attendee',
+        tags: ['attendee', 'vip']
+      },
+      {
+        email: 'bob.dupont@example.com',
+        firstName: 'Bob',
+        lastName: 'Dupont',
+        company: 'StartupXYZ',
+        jobTitle: 'CTO',
+        city: 'Marseille',
+        country: 'France',
+        source: 'attendee',
+        tags: ['attendee']
+      },
+      {
+        email: 'claire.bernard@example.com',
+        firstName: 'Claire',
+        lastName: 'Bernard',
+        company: 'DataCorp',
+        jobTitle: 'Data Engineer',
+        city: 'Paris',
+        country: 'France',
+        source: 'attendee',
+        tags: ['attendee', 'vip']
+      },
+      {
+        email: 'david.leroy@example.com',
+        firstName: 'David',
+        lastName: 'Leroy',
+        city: 'Bordeaux',
+        country: 'France',
+        source: 'attendee',
+        tags: ['attendee', 'student']
+      },
+      {
+        email: 'emma.petit@example.com',
+        firstName: 'Emma',
+        lastName: 'Petit',
+        company: 'WebAgency',
+        jobTitle: 'UX Designer',
+        city: 'Nantes',
+        country: 'France',
+        source: 'attendee',
+        tags: ['attendee']
+      },
+      {
+        email: 'nathalie.dubois@example.com',
+        firstName: 'Nathalie',
+        lastName: 'Dubois',
+        company: 'BigCorp France',
+        jobTitle: 'VP Engineering',
+        city: 'Paris',
+        country: 'France',
+        source: 'manual',
+        tags: ['sponsor', 'vip']
+      },
+      {
+        email: 'thomas.laurent@example.com',
+        firstName: 'Thomas',
+        lastName: 'Laurent',
+        company: 'CloudOps',
+        jobTitle: 'DevOps Engineer',
+        city: 'Toulouse',
+        country: 'France',
+        source: 'import',
+        tags: ['prospect']
+      },
+      {
+        email: 'marie.garcia@example.com',
+        firstName: 'Marie',
+        lastName: 'Garcia',
+        company: 'AI Solutions',
+        jobTitle: 'ML Engineer',
+        city: 'Paris',
+        country: 'France',
+        source: 'manual',
+        tags: ['prospect', 'ai']
+      }
+    ]
+
+    for (const contact of contactDefinitions) {
+      try {
+        const existing = await pb.collection('contacts').getList(1, 1, {
+          filter: `eventId = "${ids.event}" && email = "${contact.email}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Contact '${contact.email}' already exists`)
+          ids.contacts.push(existing.items[0].id)
+        } else {
+          const c = await pb.collection('contacts').create({
+            eventId: ids.event,
+            email: contact.email,
+            firstName: contact.firstName,
+            lastName: contact.lastName,
+            company: contact.company || '',
+            jobTitle: contact.jobTitle || '',
+            bio: contact.bio || '',
+            photoUrl: '',
+            twitter: contact.twitter || '',
+            linkedin: contact.linkedin || '',
+            github: contact.github || '',
+            city: contact.city || '',
+            country: contact.country || '',
+            source: contact.source,
+            tags: JSON.stringify(contact.tags || []),
+            notes: ''
+          })
+          console.log(`  Created contact: ${contact.firstName} ${contact.lastName}`)
+          ids.contacts.push(c.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create contact ${contact.email}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 16b. Create Contact Edition Links
+    // ========================================================================
+    console.log('🔗 Creating contact edition links...')
+    const editionLinkDefinitions = [
+      { contactIndex: 0, role: 'speaker', speakerIndex: 0 },
+      { contactIndex: 1, role: 'speaker', speakerIndex: 1 },
+      { contactIndex: 2, role: 'attendee' },
+      { contactIndex: 3, role: 'attendee' },
+      { contactIndex: 4, role: 'attendee' },
+      { contactIndex: 5, role: 'attendee' },
+      { contactIndex: 6, role: 'attendee' }
+    ]
+
+    for (const linkDef of editionLinkDefinitions) {
+      try {
+        const contactId = ids.contacts[linkDef.contactIndex]
+        if (!contactId) {
+          console.log(`  Skipping link (contact index ${linkDef.contactIndex} not found)`)
+          continue
+        }
+
+        const existing = await pb.collection('contact_edition_links').getList(1, 1, {
+          filter: `contactId = "${contactId}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Link for contact ${linkDef.contactIndex} already exists`)
+        } else {
+          const speakerId =
+            linkDef.speakerIndex !== undefined ? ids.speakers[linkDef.speakerIndex] : ''
+          await pb.collection('contact_edition_links').create({
+            contactId,
+            editionId: ids.edition,
+            roles: JSON.stringify([linkDef.role]),
+            speakerId: speakerId || ''
+          })
+          console.log(
+            `  Created link: contact ${linkDef.contactIndex} -> edition (${linkDef.role})`
+          )
+        }
+      } catch (err) {
+        console.error('  Failed to create edition link:', err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 16c. Create Consents (GDPR)
+    // ========================================================================
+    console.log('🔒 Creating consents...')
+    const consentDefinitions = [
+      // Marketing email consents
+      { contactIndex: 0, type: 'marketing_email', status: 'granted' },
+      { contactIndex: 1, type: 'marketing_email', status: 'granted' },
+      { contactIndex: 2, type: 'marketing_email', status: 'granted' },
+      { contactIndex: 3, type: 'marketing_email', status: 'granted' },
+      { contactIndex: 4, type: 'marketing_email', status: 'granted' },
+      { contactIndex: 5, type: 'marketing_email', status: 'denied' },
+      { contactIndex: 6, type: 'marketing_email', status: 'granted' },
+      { contactIndex: 7, type: 'marketing_email', status: 'granted' },
+      { contactIndex: 8, type: 'marketing_email', status: 'denied' },
+      { contactIndex: 9, type: 'marketing_email', status: 'granted' },
+      // Data sharing consents
+      { contactIndex: 0, type: 'data_sharing', status: 'granted' },
+      { contactIndex: 2, type: 'data_sharing', status: 'granted' },
+      { contactIndex: 4, type: 'data_sharing', status: 'granted' },
+      { contactIndex: 7, type: 'data_sharing', status: 'granted' },
+      // Analytics consents
+      { contactIndex: 0, type: 'analytics', status: 'granted' },
+      { contactIndex: 1, type: 'analytics', status: 'granted' },
+      { contactIndex: 2, type: 'analytics', status: 'granted' },
+      { contactIndex: 3, type: 'analytics', status: 'granted' },
+      { contactIndex: 4, type: 'analytics', status: 'granted' },
+      { contactIndex: 6, type: 'analytics', status: 'granted' },
+      { contactIndex: 7, type: 'analytics', status: 'granted' },
+      { contactIndex: 9, type: 'analytics', status: 'granted' }
+    ]
+
+    let consentsCreated = 0
+    for (const consentDef of consentDefinitions) {
+      try {
+        const contactId = ids.contacts[consentDef.contactIndex]
+        if (!contactId) continue
+
+        const existing = await pb.collection('consents').getList(1, 1, {
+          filter: `contactId = "${contactId}" && type = "${consentDef.type}"`
+        })
+
+        if (existing.items.length > 0) continue
+
+        await pb.collection('consents').create({
+          contactId,
+          type: consentDef.type,
+          status: consentDef.status,
+          grantedAt: consentDef.status === 'granted' ? new Date().toISOString() : '',
+          source: 'manual'
+        })
+        consentsCreated++
+      } catch (err) {
+        console.error('  Failed to create consent:', err)
+      }
+    }
+    console.log(`  Created ${consentsCreated} consents`)
+    console.log('')
+
+    // ========================================================================
+    // 16d. Create Segments
+    // ========================================================================
+    console.log('📊 Creating segments...')
+    const segmentDefinitions = [
+      {
+        name: 'All Speakers',
+        description: 'All contacts who have been speakers',
+        criteria: {
+          match: 'all',
+          rules: [{ field: 'source', operator: 'equals', value: 'speaker' }]
+        },
+        isStatic: false
+      },
+      {
+        name: 'All Attendees',
+        description: 'All contacts who attended an event',
+        criteria: {
+          match: 'all',
+          rules: [{ field: 'source', operator: 'equals', value: 'attendee' }]
+        },
+        isStatic: false
+      },
+      {
+        name: 'VIP Contacts',
+        description: 'Contacts tagged as VIP',
+        criteria: {
+          match: 'all',
+          rules: [{ field: 'tags', operator: 'contains', value: 'vip' }]
+        },
+        isStatic: false
+      },
+      {
+        name: 'Paris Area',
+        description: 'Contacts based in Paris',
+        criteria: {
+          match: 'all',
+          rules: [{ field: 'city', operator: 'equals', value: 'Paris' }]
+        },
+        isStatic: false
+      }
+    ]
+
+    for (const segment of segmentDefinitions) {
+      try {
+        const existing = await pb.collection('segments').getList(1, 1, {
+          filter: `eventId = "${ids.event}" && name = "${segment.name}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Segment '${segment.name}' already exists`)
+          ids.segments.push(existing.items[0].id)
+        } else {
+          const s = await pb.collection('segments').create({
+            eventId: ids.event,
+            name: segment.name,
+            description: segment.description,
+            criteria: JSON.stringify(segment.criteria),
+            isStatic: segment.isStatic,
+            contactCount: 0
+          })
+          console.log(`  Created segment: ${segment.name}`)
+          ids.segments.push(s.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create segment ${segment.name}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 16e. Create Email Templates
+    // ========================================================================
+    console.log('📧 Creating email templates...')
+    const emailTemplateDefinitions = [
+      {
+        name: 'Event Invitation',
+        subject: "You're invited to {{eventName}}!",
+        bodyHtml:
+          "<h1>Hello {{firstName}},</h1><p>We'd like to invite you to <strong>{{eventName}}</strong>.</p><p>Join us for an amazing experience with top speakers and workshops.</p><p>Best regards,<br>The Organizing Team</p>",
+        bodyText:
+          "Hello {{firstName}},\n\nWe'd like to invite you to {{eventName}}.\n\nJoin us for an amazing experience with top speakers and workshops.\n\nBest regards,\nThe Organizing Team",
+        variables: ['{{firstName}}', '{{lastName}}', '{{eventName}}', '{{email}}']
+      },
+      {
+        name: 'Thank You Post-Event',
+        subject: 'Thank you for attending {{eventName}}!',
+        bodyHtml:
+          "<h1>Thank you, {{firstName}}!</h1><p>We hope you enjoyed <strong>{{eventName}}</strong>.</p><p>We'd love to hear your feedback. Please take a moment to fill out our survey.</p><p>See you next year!</p>",
+        bodyText:
+          "Thank you, {{firstName}}!\n\nWe hope you enjoyed {{eventName}}.\n\nWe'd love to hear your feedback. Please take a moment to fill out our survey.\n\nSee you next year!",
+        variables: ['{{firstName}}', '{{lastName}}', '{{eventName}}', '{{email}}']
+      },
+      {
+        name: 'Monthly Newsletter',
+        subject: 'News from {{company}} - Monthly Update',
+        bodyHtml:
+          '<h1>Hello {{firstName}},</h1><p>Here are the latest updates from our community.</p><p>Stay tuned for more exciting events and announcements!</p>',
+        bodyText:
+          'Hello {{firstName}},\n\nHere are the latest updates from our community.\n\nStay tuned for more exciting events and announcements!',
+        variables: ['{{firstName}}', '{{lastName}}', '{{company}}', '{{email}}']
+      }
+    ]
+
+    for (const template of emailTemplateDefinitions) {
+      try {
+        const existing = await pb.collection('email_templates').getList(1, 1, {
+          filter: `eventId = "${ids.event}" && name = "${template.name}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Template '${template.name}' already exists`)
+          ids.emailTemplates.push(existing.items[0].id)
+        } else {
+          const t = await pb.collection('email_templates').create({
+            eventId: ids.event,
+            name: template.name,
+            subject: template.subject,
+            bodyHtml: template.bodyHtml,
+            bodyText: template.bodyText,
+            variables: JSON.stringify(template.variables)
+          })
+          console.log(`  Created template: ${template.name}`)
+          ids.emailTemplates.push(t.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create template ${template.name}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 16f. Create Email Campaigns
+    // ========================================================================
+    console.log('📨 Creating email campaigns...')
+    const campaignDefinitions = [
+      {
+        name: 'DevFest 2025 Invitation',
+        templateIndex: 0,
+        segmentIndex: null as number | null,
+        subject: "You're invited to DevFest Paris 2025!",
+        bodyHtml:
+          '<h1>Hello {{firstName}},</h1><p>We are thrilled to invite you to <strong>DevFest Paris 2025</strong>!</p><p>Join us on October 15-16 at the Palais des Congres for two days of talks, workshops, and networking.</p><p>Get your tickets now!</p><p>Best regards,<br>The DevFest Team</p>',
+        bodyText:
+          'Hello {{firstName}},\n\nWe are thrilled to invite you to DevFest Paris 2025!\n\nJoin us on October 15-16 at the Palais des Congres for two days of talks, workshops, and networking.\n\nGet your tickets now!\n\nBest regards,\nThe DevFest Team',
+        status: 'sent',
+        sentAt: '2025-09-01T10:00:00Z',
+        totalRecipients: 8,
+        totalSent: 8,
+        totalFailed: 0
+      },
+      {
+        name: 'Post-Event Survey',
+        templateIndex: 1,
+        segmentIndex: 1 as number | null,
+        subject: 'Thank you for attending DevFest Paris 2025!',
+        bodyHtml:
+          '<h1>Thank you, {{firstName}}!</h1><p>We hope you had a great time at DevFest Paris 2025.</p><p>Please share your feedback to help us improve.</p>',
+        bodyText:
+          'Thank you, {{firstName}}!\n\nWe hope you had a great time at DevFest Paris 2025.\n\nPlease share your feedback to help us improve.',
+        status: 'draft',
+        sentAt: null as string | null,
+        totalRecipients: 0,
+        totalSent: 0,
+        totalFailed: 0
+      }
+    ]
+
+    for (const campaign of campaignDefinitions) {
+      try {
+        const existing = await pb.collection('email_campaigns').getList(1, 1, {
+          filter: `eventId = "${ids.event}" && name = "${campaign.name}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Campaign '${campaign.name}' already exists`)
+          ids.emailCampaigns.push(existing.items[0].id)
+        } else {
+          const c = await pb.collection('email_campaigns').create({
+            eventId: ids.event,
+            name: campaign.name,
+            templateId:
+              campaign.templateIndex !== null
+                ? ids.emailTemplates[campaign.templateIndex] || ''
+                : '',
+            segmentId:
+              campaign.segmentIndex !== null ? ids.segments[campaign.segmentIndex] || '' : '',
+            subject: campaign.subject,
+            bodyHtml: campaign.bodyHtml,
+            bodyText: campaign.bodyText,
+            status: campaign.status,
+            sentAt: campaign.sentAt || '',
+            totalRecipients: campaign.totalRecipients,
+            totalSent: campaign.totalSent,
+            totalFailed: campaign.totalFailed
+          })
+          console.log(`  Created campaign: ${campaign.name}`)
+          ids.emailCampaigns.push(c.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create campaign ${campaign.name}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -2470,6 +3093,11 @@ async function seed(): Promise<void> {
     console.log(`   Orders: ${ordersCreated}`)
     console.log(`   Order Items: ${orderItemsCreated}`)
     console.log(`   Tickets: ${ticketsCreated}`)
+    console.log(`   Contacts: ${ids.contacts.length}`)
+    console.log(`   Consents: ${consentsCreated}`)
+    console.log(`   Segments: ${ids.segments.length}`)
+    console.log(`   Email Templates: ${ids.emailTemplates.length}`)
+    console.log(`   Email Campaigns: ${ids.emailCampaigns.length}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')

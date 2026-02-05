@@ -20,9 +20,9 @@ export const createEmailCampaignRepository = (pb: PocketBase) => ({
     }
   },
 
-  async findByOrganization(organizationId: string): Promise<EmailCampaign[]> {
+  async findByEvent(eventId: string): Promise<EmailCampaign[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `organizationId = "${organizationId}"`,
+      filter: `eventId = "${eventId}"`,
       sort: '-created'
     })
     return records.map(mapRecordToEmailCampaign)
@@ -81,7 +81,8 @@ export const createEmailCampaignRepository = (pb: PocketBase) => ({
 
 const mapRecordToEmailCampaign = (record: Record<string, unknown>): EmailCampaign => ({
   id: record.id as string,
-  organizationId: record.organizationId as string,
+  eventId: record.eventId as string,
+  editionId: record.editionId as string | undefined,
   name: record.name as string,
   templateId: record.templateId as string | undefined,
   segmentId: record.segmentId as string | undefined,

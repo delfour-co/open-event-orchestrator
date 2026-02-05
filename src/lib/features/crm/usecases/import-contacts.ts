@@ -24,7 +24,7 @@ export type DuplicateStrategy = 'skip' | 'merge' | 'overwrite'
 
 export const createImportContactsUseCase = (pb: PocketBase) => {
   return async (
-    organizationId: string,
+    eventId: string,
     rows: ImportContactRow[],
     strategy: DuplicateStrategy = 'merge'
     // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: import logic with merge/overwrite strategies
@@ -50,7 +50,7 @@ export const createImportContactsUseCase = (pb: PocketBase) => {
 
       try {
         const existing = await pb.collection('contacts').getList(1, 1, {
-          filter: `organizationId = "${organizationId}" && email = "${row.email}"`
+          filter: `eventId = "${eventId}" && email = "${row.email}"`
         })
 
         if (existing.items.length > 0) {
@@ -107,7 +107,7 @@ export const createImportContactsUseCase = (pb: PocketBase) => {
             : []
 
           await pb.collection('contacts').create({
-            organizationId,
+            eventId,
             email: row.email,
             firstName: row.firstName,
             lastName: row.lastName,

@@ -12,12 +12,14 @@ interface Props {
   form: ActionData
 }
 
-const { form }: Props = $props()
+const { data, form }: Props = $props()
 
 let csvText = $state('')
 let strategy = $state('merge')
 let isImporting = $state(false)
 let isExporting = $state(false)
+
+const basePath = `/admin/crm/${data.eventSlug}`
 
 const EXPORT_FIELDS = [
   { key: 'email', label: 'Email', checked: true },
@@ -99,7 +101,7 @@ function downloadCsv() {
 
 <div class="space-y-6">
 	<div class="flex items-center gap-4">
-		<a href="/admin/crm">
+		<a href={basePath}>
 			<Button variant="ghost" size="sm">Back to Contacts</Button>
 		</a>
 		<div>

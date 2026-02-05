@@ -4,7 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { Filter, Plus, RefreshCw, Trash2 } from 'lucide-svelte'
+import { Edit, Filter, Plus, RefreshCw, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -14,13 +14,26 @@ interface Props {
 
 const { data, form }: Props = $props()
 
-let showCreateForm = $state(false)
+let showForm = $state(false)
+let editingSegment = $state<(typeof data.segments)[0] | null>(null)
 let isSubmitting = $state(false)
+
+const basePath = `/admin/crm/${data.eventSlug}`
+
+function startEdit(segment: (typeof data.segments)[0]) {
+  editingSegment = segment
+  showForm = true
+}
+
+function cancelForm() {
+  showForm = false
+  editingSegment = null
+}
 
 // Close form on success
 $effect(() => {
-  if (form?.success && form?.action === 'createSegment') {
-    showCreateForm = false
+  if (form?.success && (form?.action === 'createSegment' || form?.action === 'updateSegment')) {
+    cancelForm()
   }
 })
 </script>
@@ -32,7 +45,7 @@ $effect(() => {
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
-			<a href="/admin/crm">
+			<a href={basePath}>
 				<Button variant="ghost" size="sm">Back to Contacts</Button>
 			</a>
 			<div>
@@ -42,7 +55,7 @@ $effect(() => {
 				</p>
 			</div>
 		</div>
-		<Button onclick={() => (showCreateForm = !showCreateForm)} class="gap-2">
+		<Button onclick={() => { editingSegment = null; showForm = !showForm }} class="gap-2">
 			<Plus class="h-4 w-4" />
 			Create Segment
 		</Button>
@@ -52,6 +65,7 @@ $effect(() => {
 	{#if form?.success}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
 			{#if form.action === 'createSegment'}Segment created successfully.
+			{:else if form.action === 'updateSegment'}Segment updated.
 			{:else if form.action === 'deleteSegment'}Segment deleted.
 			{:else if form.action === 'refreshCount'}Contact count refreshed.
 			{:else}Action completed.{/if}
@@ -64,17 +78,19 @@ $effect(() => {
 		</div>
 	{/if}
 
-	<!-- Create Segment Form -->
-	{#if showCreateForm}
+	<!-- Segment Form (Create / Edit) -->
+	{#if showForm}
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>New Segment</Card.Title>
-				<Card.Description>Define a segment to group contacts by criteria.</Card.Description>
+				<Card.Title>{editingSegment ? 'Edit Segment' : 'New Segment'}</Card.Title>
+				<Card.Description>
+					{editingSegment ? 'Update the segment details and criteria.' : 'Define a segment to group contacts by criteria.'}
+				</Card.Description>
 			</Card.Header>
 			<Card.Content>
 				<form
 					method="POST"
-					action="?/createSegment"
+					action={editingSegment ? '?/updateSegment' : '?/createSegment'}
 					use:enhance={() => {
 						isSubmitting = true
 						return async ({ update }) => {
@@ -84,14 +100,18 @@ $effect(() => {
 					}}
 					class="space-y-4"
 				>
+					{#if editingSegment}
+						<input type="hidden" name="id" value={editingSegment.id} />
+					{/if}
+
 					<div class="grid gap-4 md:grid-cols-2">
 						<div class="space-y-2">
 							<Label for="seg-name">Name *</Label>
-							<Input id="seg-name" name="name" placeholder="e.g., Active Speakers" required />
+							<Input id="seg-name" name="name" placeholder="e.g., Active Speakers" required value={editingSegment?.name || ''} />
 						</div>
 						<div class="space-y-2">
 							<Label for="seg-description">Description</Label>
-							<Input id="seg-description" name="description" placeholder="Describe this segment..." />
+							<Input id="seg-description" name="description" placeholder="Describe this segment..." value={editingSegment?.description || ''} />
 						</div>
 					</div>
 
@@ -102,7 +122,7 @@ $effect(() => {
 							name="criteria"
 							class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							placeholder={'{"match": "all", "rules": [{"field": "source", "operator": "equals", "value": "speaker"}]}'}
-						></textarea>
+						>{editingSegment ? JSON.stringify(editingSegment.criteria, null, 2) : ''}</textarea>
 						<p class="text-xs text-muted-foreground">
 							Leave empty for an empty segment. Fields: source, tags, company, city, country. Operators: equals, not_equals, contains, not_contains, is_empty, is_not_empty, in, not_in.
 						</p>
@@ -114,16 +134,17 @@ $effect(() => {
 							id="seg-static"
 							name="isStatic"
 							class="h-4 w-4 rounded border-gray-300"
+							checked={editingSegment?.isStatic || false}
 						/>
 						<Label for="seg-static">Static segment (contacts are manually managed)</Label>
 					</div>
 
 					<div class="flex justify-end gap-2">
-						<Button type="button" variant="outline" onclick={() => (showCreateForm = false)}>
+						<Button type="button" variant="outline" onclick={cancelForm}>
 							Cancel
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{isSubmitting ? 'Creating...' : 'Create Segment'}
+							{isSubmitting ? 'Saving...' : editingSegment ? 'Update Segment' : 'Create Segment'}
 						</Button>
 					</div>
 				</form>
@@ -132,7 +153,7 @@ $effect(() => {
 	{/if}
 
 	<!-- Segment List -->
-	{#if data.segments.length === 0 && !showCreateForm}
+	{#if data.segments.length === 0 && !showForm}
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Filter class="mb-4 h-12 w-12 text-muted-foreground" />
@@ -180,6 +201,15 @@ $effect(() => {
 										Refresh
 									</Button>
 								</form>
+								<Button
+									variant="outline"
+									size="sm"
+									class="gap-1"
+									onclick={() => startEdit(segment)}
+								>
+									<Edit class="h-3 w-3" />
+									Edit
+								</Button>
 								<form method="POST" action="?/deleteSegment" use:enhance class="inline">
 									<input type="hidden" name="segmentId" value={segment.id} />
 									<Button

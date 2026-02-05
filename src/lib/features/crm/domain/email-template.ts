@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const emailTemplateSchema = z.object({
   id: z.string(),
-  organizationId: z.string(),
+  eventId: z.string(),
   name: z.string().min(1).max(100),
   subject: z.string().min(1).max(200),
   bodyHtml: z.string(),

@@ -12,7 +12,7 @@ describe('Contact', () => {
 
   const validContact = {
     id: 'ct-001',
-    organizationId: 'org-001',
+    eventId: 'evt-001',
     email: 'alice@example.com',
     firstName: 'Alice',
     lastName: 'Martin',
@@ -160,7 +160,7 @@ describe('Contact', () => {
     it('should validate with minimal required fields', () => {
       const minimal = {
         id: 'ct-002',
-        organizationId: 'org-001',
+        eventId: 'evt-001',
         email: 'bob@example.com',
         firstName: 'Bob',
         lastName: 'Doe',

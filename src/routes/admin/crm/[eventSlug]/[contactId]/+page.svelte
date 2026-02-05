@@ -19,6 +19,8 @@ let newTag = $state('')
 let isSubmitting = $state(false)
 let showDeleteConfirm = $state(false)
 
+const basePath = `/admin/crm/${data.eventSlug}`
+
 const CONSENT_TYPES = [
   { key: 'marketing_email', label: 'Marketing Emails' },
   { key: 'data_sharing', label: 'Data Sharing' },
@@ -73,7 +75,7 @@ const initials =
 <div class="space-y-6">
 	<!-- Header -->
 	<div class="flex items-center gap-4">
-		<a href="/admin/crm">
+		<a href={basePath}>
 			<Button variant="ghost" size="icon">
 				<ArrowLeft class="h-5 w-5" />
 			</Button>

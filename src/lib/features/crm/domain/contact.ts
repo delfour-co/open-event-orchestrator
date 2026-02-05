@@ -1,11 +1,11 @@
 import { z } from 'zod'
 
-export const contactSourceSchema = z.enum(['speaker', 'attendee', 'manual', 'import'])
+export const contactSourceSchema = z.enum(['speaker', 'attendee', 'sponsor', 'manual', 'import'])
 export type ContactSource = z.infer<typeof contactSourceSchema>
 
 export const contactSchema = z.object({
   id: z.string(),
-  organizationId: z.string(),
+  eventId: z.string(),
   email: z.string().email(),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
@@ -23,6 +23,7 @@ export const contactSchema = z.object({
   source: contactSourceSchema.default('manual'),
   tags: z.array(z.string()).default([]),
   notes: z.string().max(5000).optional(),
+  unsubscribeToken: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })

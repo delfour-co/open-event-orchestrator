@@ -5,7 +5,8 @@ export type CampaignStatus = z.infer<typeof campaignStatusSchema>
 
 export const emailCampaignSchema = z.object({
   id: z.string(),
-  organizationId: z.string(),
+  eventId: z.string(),
+  editionId: z.string().optional(),
   name: z.string().min(1).max(100),
   templateId: z.string().optional(),
   segmentId: z.string().optional(),

@@ -12,7 +12,7 @@ describe('Segment', () => {
 
   const makeSegment = (overrides: Partial<Segment> = {}): Segment => ({
     id: 'seg-001',
-    organizationId: 'org-001',
+    eventId: 'evt-001',
     name: 'VIP Speakers',
     criteria: { match: 'all', rules: [] },
     isStatic: false,

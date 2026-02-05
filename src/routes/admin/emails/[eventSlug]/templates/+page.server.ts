@@ -1,20 +1,21 @@
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ locals }) => {
-  const membership = await locals.pb.collection('organization_members').getList(1, 1, {
-    filter: `userId = "${locals.user?.id}"`
+export const load: PageServerLoad = async ({ locals, params }) => {
+  const events = await locals.pb.collection('events').getList(1, 1, {
+    filter: `slug = "${params.eventSlug}"`
   })
-  if (membership.items.length === 0) throw error(404, 'No organization found')
-  const organizationId = membership.items[0].organizationId as string
+  if (events.items.length === 0) throw error(404, 'Event not found')
+  const eventId = events.items[0].id as string
 
   const templates = await locals.pb.collection('email_templates').getFullList({
-    filter: `organizationId = "${organizationId}"`,
+    filter: `eventId = "${eventId}"`,
     sort: '-created'
   })
 
   return {
-    organizationId,
+    eventSlug: params.eventSlug,
+    eventId,
     templates: templates.map((t) => ({
       id: t.id as string,
       name: t.name as string,
@@ -28,7 +29,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 }
 
 export const actions: Actions = {
-  createTemplate: async ({ request, locals }) => {
+  createTemplate: async ({ request, locals, params }) => {
     const formData = await request.formData()
     const name = (formData.get('name') as string)?.trim()
     const subject = (formData.get('subject') as string)?.trim()
@@ -42,13 +43,13 @@ export const actions: Actions = {
       return fail(400, { error: 'Subject is required', action: 'createTemplate' })
     }
 
-    const membership = await locals.pb.collection('organization_members').getList(1, 1, {
-      filter: `userId = "${locals.user?.id}"`
+    const events = await locals.pb.collection('events').getList(1, 1, {
+      filter: `slug = "${params.eventSlug}"`
     })
-    if (membership.items.length === 0) {
-      return fail(404, { error: 'No organization found', action: 'createTemplate' })
+    if (events.items.length === 0) {
+      return fail(404, { error: 'Event not found', action: 'createTemplate' })
     }
-    const organizationId = membership.items[0].organizationId as string
+    const eventId = events.items[0].id as string
 
     // Extract variables from body
     const regex = /\{\{(\w+)\}\}/g
@@ -65,7 +66,7 @@ export const actions: Actions = {
 
     try {
       await locals.pb.collection('email_templates').create({
-        organizationId,
+        eventId,
         name,
         subject,
         bodyHtml,

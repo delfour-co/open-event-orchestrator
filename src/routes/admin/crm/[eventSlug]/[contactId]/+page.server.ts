@@ -1,8 +1,18 @@
+import {
+  createConsentRepository,
+  createContactEditionLinkRepository
+} from '$lib/features/crm/infra'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-  const { contactId } = params
+  const { contactId, eventSlug } = params
+
+  // Validate event
+  const events = await locals.pb.collection('events').getList(1, 1, {
+    filter: `slug = "${eventSlug}"`
+  })
+  if (events.items.length === 0) throw error(404, 'Event not found')
 
   let contact: Record<string, unknown>
   try {
@@ -11,19 +21,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     throw error(404, 'Contact not found')
   }
 
-  // Load edition links with expanded editions
+  const consentRepo = createConsentRepository(locals.pb)
+
+  // Load edition links (direct PB call for expand support)
   const editionLinks = await locals.pb.collection('contact_edition_links').getFullList({
     filter: `contactId = "${contactId}"`,
     expand: 'editionId'
   })
 
-  // Load consents
-  const consents = await locals.pb.collection('consents').getFullList({
-    filter: `contactId = "${contactId}"`,
-    sort: 'type'
-  })
+  const consents = await consentRepo.findByContact(contactId)
 
   return {
+    eventSlug,
     contact: {
       id: contact.id as string,
       firstName: contact.firstName as string,
@@ -56,11 +65,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       }
     }),
     consents: consents.map((c) => ({
-      id: c.id as string,
-      type: c.type as string,
-      status: c.status as string,
-      grantedAt: c.grantedAt ? new Date(c.grantedAt as string) : undefined,
-      withdrawnAt: c.withdrawnAt ? new Date(c.withdrawnAt as string) : undefined
+      id: c.id,
+      type: c.type,
+      status: c.status,
+      grantedAt: c.grantedAt,
+      withdrawnAt: c.withdrawnAt
     }))
   }
 }
@@ -104,23 +113,18 @@ export const actions: Actions = {
   },
 
   deleteContact: async ({ locals, params }) => {
-    const { contactId } = params
+    const { contactId, eventSlug } = params
 
     try {
-      // Delete related consents
-      const consents = await locals.pb.collection('consents').getFullList({
-        filter: `contactId = "${contactId}"`
-      })
-      for (const consent of consents) {
-        await locals.pb.collection('consents').delete(consent.id)
-      }
+      const consentRepo = createConsentRepository(locals.pb)
+      const linkRepo = createContactEditionLinkRepository(locals.pb)
 
-      // Delete related edition links
-      const links = await locals.pb.collection('contact_edition_links').getFullList({
-        filter: `contactId = "${contactId}"`
-      })
+      // Delete related consents and edition links via repositories
+      await consentRepo.deleteByContact(contactId)
+
+      const links = await linkRepo.findByContact(contactId)
       for (const link of links) {
-        await locals.pb.collection('contact_edition_links').delete(link.id)
+        await linkRepo.delete(link.id)
       }
 
       await locals.pb.collection('contacts').delete(contactId)
@@ -129,7 +133,7 @@ export const actions: Actions = {
       return fail(500, { error: 'Failed to delete contact' })
     }
 
-    throw redirect(303, '/admin/crm')
+    throw redirect(303, `/admin/crm/${eventSlug}`)
   },
 
   grantConsent: async ({ request, locals, params }) => {
@@ -142,27 +146,12 @@ export const actions: Actions = {
     }
 
     try {
-      // Check if consent already exists
-      const existing = await locals.pb.collection('consents').getList(1, 1, {
-        filter: `contactId = "${contactId}" && type = "${consentType}"`
-      })
-
-      if (existing.items.length > 0) {
-        await locals.pb.collection('consents').update(existing.items[0].id, {
-          status: 'granted',
-          grantedAt: new Date().toISOString(),
-          withdrawnAt: null,
-          source: 'manual'
-        })
-      } else {
-        await locals.pb.collection('consents').create({
-          contactId,
-          type: consentType,
-          status: 'granted',
-          grantedAt: new Date().toISOString(),
-          source: 'manual'
-        })
-      }
+      const consentRepo = createConsentRepository(locals.pb)
+      await consentRepo.grantConsent(
+        contactId,
+        consentType as 'marketing_email' | 'data_sharing' | 'analytics',
+        'manual'
+      )
 
       return { success: true, action: 'grantConsent' }
     } catch (err) {
@@ -181,22 +170,23 @@ export const actions: Actions = {
     }
 
     try {
-      const existing = await locals.pb.collection('consents').getList(1, 1, {
-        filter: `contactId = "${contactId}" && type = "${consentType}"`
-      })
+      const consentRepo = createConsentRepository(locals.pb)
+      const existing = await consentRepo.findByContactAndType(
+        contactId,
+        consentType as 'marketing_email' | 'data_sharing' | 'analytics'
+      )
 
-      if (existing.items.length > 0) {
-        await locals.pb.collection('consents').update(existing.items[0].id, {
-          status: 'withdrawn',
-          withdrawnAt: new Date().toISOString(),
-          source: 'manual'
-        })
-      } else {
-        await locals.pb.collection('consents').create({
+      if (existing) {
+        await consentRepo.withdrawConsent(
           contactId,
-          type: consentType,
+          consentType as 'marketing_email' | 'data_sharing' | 'analytics'
+        )
+      } else {
+        await consentRepo.create({
+          contactId,
+          type: consentType as 'marketing_email' | 'data_sharing' | 'analytics',
           status: 'withdrawn',
-          withdrawnAt: new Date().toISOString(),
+          withdrawnAt: new Date(),
           source: 'manual'
         })
       }

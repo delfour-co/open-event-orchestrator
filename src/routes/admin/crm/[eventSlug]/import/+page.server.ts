@@ -6,18 +6,18 @@ import {
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ locals }) => {
-  const membership = await locals.pb.collection('organization_members').getList(1, 1, {
-    filter: `userId = "${locals.user?.id}"`
+export const load: PageServerLoad = async ({ locals, params }) => {
+  const events = await locals.pb.collection('events').getList(1, 1, {
+    filter: `slug = "${params.eventSlug}"`
   })
-  if (membership.items.length === 0) throw error(404, 'No organization found')
-  const organizationId = membership.items[0].organizationId as string
+  if (events.items.length === 0) throw error(404, 'Event not found')
+  const eventId = events.items[0].id as string
 
-  return { organizationId }
+  return { eventSlug: params.eventSlug, eventId }
 }
 
 export const actions: Actions = {
-  importContacts: async ({ request, locals }) => {
+  importContacts: async ({ request, locals, params }) => {
     const formData = await request.formData()
     const csvText = formData.get('csvText') as string
     const strategy = (formData.get('strategy') as string) || 'merge'
@@ -26,13 +26,13 @@ export const actions: Actions = {
       return fail(400, { error: 'CSV data is required', action: 'importContacts' })
     }
 
-    const membership = await locals.pb.collection('organization_members').getList(1, 1, {
-      filter: `userId = "${locals.user?.id}"`
+    const events = await locals.pb.collection('events').getList(1, 1, {
+      filter: `slug = "${params.eventSlug}"`
     })
-    if (membership.items.length === 0) {
-      return fail(404, { error: 'No organization found', action: 'importContacts' })
+    if (events.items.length === 0) {
+      return fail(404, { error: 'Event not found', action: 'importContacts' })
     }
-    const organizationId = membership.items[0].organizationId as string
+    const eventId = events.items[0].id as string
 
     try {
       const rows = parseCsvToRows(csvText)
@@ -45,11 +45,7 @@ export const actions: Actions = {
       }
 
       const importContacts = createImportContactsUseCase(locals.pb)
-      const result = await importContacts(
-        organizationId,
-        rows,
-        strategy as 'skip' | 'merge' | 'overwrite'
-      )
+      const result = await importContacts(eventId, rows, strategy as 'skip' | 'merge' | 'overwrite')
 
       return {
         success: true,
@@ -72,23 +68,23 @@ export const actions: Actions = {
     }
   },
 
-  exportContacts: async ({ request, locals }) => {
+  exportContacts: async ({ request, locals, params }) => {
     const formData = await request.formData()
     const fieldsRaw = formData.get('fields') as string
 
-    const membership = await locals.pb.collection('organization_members').getList(1, 1, {
-      filter: `userId = "${locals.user?.id}"`
+    const events = await locals.pb.collection('events').getList(1, 1, {
+      filter: `slug = "${params.eventSlug}"`
     })
-    if (membership.items.length === 0) {
-      return fail(404, { error: 'No organization found', action: 'exportContacts' })
+    if (events.items.length === 0) {
+      return fail(404, { error: 'Event not found', action: 'exportContacts' })
     }
-    const organizationId = membership.items[0].organizationId as string
+    const eventId = events.items[0].id as string
 
     try {
       const fields = fieldsRaw ? fieldsRaw.split(',').filter(Boolean) : undefined
 
       const exportContacts = createExportContactsUseCase(locals.pb)
-      const csv = await exportContacts(organizationId, { fields })
+      const csv = await exportContacts(eventId, { fields })
 
       return {
         success: true,

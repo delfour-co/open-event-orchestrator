@@ -13,9 +13,9 @@ export const createEmailTemplateRepository = (pb: PocketBase) => ({
     }
   },
 
-  async findByOrganization(organizationId: string): Promise<EmailTemplate[]> {
+  async findByEvent(eventId: string): Promise<EmailTemplate[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `organizationId = "${organizationId}"`,
+      filter: `eventId = "${eventId}"`,
       sort: '-created'
     })
     return records.map(mapRecordToEmailTemplate)
@@ -58,7 +58,7 @@ const parseVariables = (value: unknown): string[] => {
 
 const mapRecordToEmailTemplate = (record: Record<string, unknown>): EmailTemplate => ({
   id: record.id as string,
-  organizationId: record.organizationId as string,
+  eventId: record.eventId as string,
   name: record.name as string,
   subject: record.subject as string,
   bodyHtml: record.bodyHtml as string,
