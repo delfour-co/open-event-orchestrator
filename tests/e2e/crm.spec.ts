@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('CRM Module', () => {
-  const eventSlug = 'devfest-paris'
+  const eventSlug = 'devfest'
   const crmUrl = `/admin/crm/${eventSlug}`
 
   test.beforeEach(async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe('CRM Module', () => {
       await expect(
         page.getByText('Select an event to manage its contacts, segments, and imports.')
       ).toBeVisible()
-      await expect(page.getByText('DevFest Paris')).toBeVisible()
+      await expect(page.getByText('DevFest')).toBeVisible()
     })
 
     test('should navigate to event CRM page', async ({ page }) => {
@@ -32,7 +32,7 @@ test.describe('CRM Module', () => {
       await page.getByRole('link', { name: /Manage Contacts/ }).click()
 
       await expect(page).toHaveURL(crmUrl)
-      await expect(page.getByRole('heading', { name: 'Contacts' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Contacts', exact: true })).toBeVisible()
     })
   })
 
@@ -43,12 +43,12 @@ test.describe('CRM Module', () => {
     test('should display contacts list with stats', async ({ page }) => {
       await page.goto(crmUrl)
 
-      await expect(page.getByRole('heading', { name: 'Contacts' })).toBeVisible()
-      await expect(page.getByText('Total Contacts')).toBeVisible()
-      await expect(page.getByText('Speakers')).toBeVisible()
-      await expect(page.getByText('Attendees')).toBeVisible()
-      await expect(page.getByText('Sponsors')).toBeVisible()
-      await expect(page.getByText('Manual')).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Contacts', exact: true })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Total Contacts' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Speakers', exact: true })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Attendees', exact: true })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Sponsors', exact: true })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Manual', exact: true })).toBeVisible()
     })
 
     test('should show source filter dropdown with all options', async ({ page }) => {
@@ -76,8 +76,12 @@ test.describe('CRM Module', () => {
       await expect(page.locator('th', { hasText: 'Source' })).toBeVisible()
       await expect(page.locator('th', { hasText: 'Tags' })).toBeVisible()
 
-      // Seeded contacts should be visible (latest first)
-      await expect(page.getByText('Jane Speaker')).toBeVisible()
+      // Search for a seeded contact to verify it exists
+      const searchInput = page.getByPlaceholder('Search by name, email, or company...')
+      await searchInput.fill('Jane')
+      await searchInput.press('Enter')
+      await page.waitForLoadState('networkidle')
+      await expect(page.locator('table a').filter({ hasText: 'Jane Speaker' })).toBeVisible()
     })
 
     test('should search contacts by name', async ({ page }) => {
@@ -86,6 +90,7 @@ test.describe('CRM Module', () => {
       const searchInput = page.getByPlaceholder('Search by name, email, or company...')
       await searchInput.fill('Alice')
       await searchInput.press('Enter')
+      await page.waitForLoadState('networkidle')
 
       await expect(page.getByText('Alice Martin')).toBeVisible()
     })
@@ -96,6 +101,7 @@ test.describe('CRM Module', () => {
       const searchInput = page.getByPlaceholder('Search by name, email, or company...')
       await searchInput.fill('bob.dupont@example.com')
       await searchInput.press('Enter')
+      await page.waitForLoadState('networkidle')
 
       await expect(page.getByText('Bob Dupont')).toBeVisible()
     })
@@ -119,7 +125,7 @@ test.describe('CRM Module', () => {
 
       // Open create form
       await page.getByRole('button', { name: /New Contact/ }).click()
-      await expect(page.getByText('New Contact')).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'New Contact' })).toBeVisible()
 
       // Fill the form
       await page.locator('#ct-firstName').fill(contactName)
@@ -136,7 +142,7 @@ test.describe('CRM Module', () => {
 
       // Verify success
       await expect(page.getByText('Contact created successfully.')).toBeVisible()
-      await expect(page.getByText(contactName)).toBeVisible()
+      await expect(page.locator('table a').filter({ hasText: contactName })).toBeVisible()
     })
 
     test('should show Sync Contacts button', async ({ page }) => {
@@ -165,7 +171,13 @@ test.describe('CRM Module', () => {
     test('should navigate to contact detail page', async ({ page }) => {
       await page.goto(crmUrl)
 
-      // Click on the first contact name link
+      // Search for the seeded contact (may be on page 2 due to parallel test data)
+      const searchInput = page.getByPlaceholder('Search by name, email, or company...')
+      await searchInput.fill('Jane')
+      await searchInput.press('Enter')
+      await page.waitForLoadState('networkidle')
+
+      // Click on the contact name link
       await page.locator('table a').filter({ hasText: 'Jane Speaker' }).click()
 
       await expect(page.getByRole('heading', { name: 'Jane Speaker' })).toBeVisible()
@@ -175,6 +187,10 @@ test.describe('CRM Module', () => {
     test('should view contact info fields', async ({ page }) => {
       await page.goto(crmUrl)
 
+      const searchInput = page.getByPlaceholder('Search by name, email, or company...')
+      await searchInput.fill('Jane')
+      await searchInput.press('Enter')
+      await page.waitForLoadState('networkidle')
       await page.locator('table a').filter({ hasText: 'Jane Speaker' }).click()
 
       // Contact Details card
@@ -248,7 +264,11 @@ test.describe('CRM Module', () => {
     test('should grant and withdraw consent', async ({ page }) => {
       await page.goto(crmUrl)
 
-      // Navigate to a seeded contact (Jane Speaker has marketing_email granted from seed)
+      // Search and navigate to a seeded contact (Jane Speaker has marketing_email granted from seed)
+      const searchInput = page.getByPlaceholder('Search by name, email, or company...')
+      await searchInput.fill('Jane')
+      await searchInput.press('Enter')
+      await page.waitForLoadState('networkidle')
       await page.locator('table a').filter({ hasText: 'Jane Speaker' }).click()
       await expect(page.getByRole('heading', { name: 'Jane Speaker' })).toBeVisible()
 
@@ -268,6 +288,10 @@ test.describe('CRM Module', () => {
     test('should display edition history section', async ({ page }) => {
       await page.goto(crmUrl)
 
+      const searchInput = page.getByPlaceholder('Search by name, email, or company...')
+      await searchInput.fill('Jane')
+      await searchInput.press('Enter')
+      await page.waitForLoadState('networkidle')
       await page.locator('table a').filter({ hasText: 'Jane Speaker' }).click()
       await expect(page.getByText('Edition History')).toBeVisible()
     })
@@ -345,7 +369,7 @@ test.describe('CRM Module', () => {
       )
 
       // Submit
-      await page.getByRole('button', { name: 'Create Segment' }).click()
+      await page.locator('form').getByRole('button', { name: 'Create Segment' }).click()
       await page.waitForLoadState('networkidle')
 
       await expect(page.getByText('Segment created successfully.')).toBeVisible()
@@ -361,7 +385,7 @@ test.describe('CRM Module', () => {
       await page.getByRole('button', { name: /Create Segment/ }).click()
       await page.locator('#seg-name').fill(segmentName)
       await page.locator('#seg-description').fill('To be edited')
-      await page.getByRole('button', { name: 'Create Segment' }).click()
+      await page.locator('form').getByRole('button', { name: 'Create Segment' }).click()
       await page.waitForLoadState('networkidle')
       await expect(page.getByText(segmentName)).toBeVisible()
 
@@ -391,7 +415,7 @@ test.describe('CRM Module', () => {
 
       await page.getByRole('button', { name: /Create Segment/ }).click()
       await page.locator('#seg-name').fill(segmentName)
-      await page.getByRole('button', { name: 'Create Segment' }).click()
+      await page.locator('form').getByRole('button', { name: 'Create Segment' }).click()
       await page.waitForLoadState('networkidle')
       await expect(page.getByText(segmentName)).toBeVisible()
 
@@ -417,7 +441,7 @@ test.describe('CRM Module', () => {
       await expect(
         page.getByText('Select an event to manage its email campaigns and templates.')
       ).toBeVisible()
-      await expect(page.getByText('DevFest Paris')).toBeVisible()
+      await expect(page.getByText('DevFest')).toBeVisible()
     })
 
     test('should navigate to email campaigns page', async ({ page }) => {
@@ -449,7 +473,7 @@ test.describe('CRM Module', () => {
 
       // Open create form
       await page.getByRole('button', { name: /New Campaign/ }).click()
-      await expect(page.getByText('New Campaign')).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'New Campaign' })).toBeVisible()
 
       // Fill form
       await page.locator('#camp-name').fill(campaignName)
