@@ -66,6 +66,63 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     checkInRate: tickets.length > 0 ? Math.round((ticketsCheckedIn / tickets.length) * 100) : 0
   }
 
+  // Budget data
+  let budgetRecords: Array<Record<string, unknown>> = []
+  let budgetTransactions: Array<Record<string, unknown>> = []
+  let budgetCategories: Array<Record<string, unknown>> = []
+  try {
+    const budgetFilter = selectedEditionId ? `editionId = "${selectedEditionId}"` : ''
+    budgetRecords = await locals.pb.collection('edition_budgets').getFullList({
+      filter: budgetFilter || undefined
+    })
+
+    if (budgetRecords.length > 0) {
+      const budgetIds = budgetRecords.map((b) => b.id as string)
+      const catFilter = budgetIds.map((id) => `budgetId = "${id}"`).join(' || ')
+      budgetCategories = await locals.pb.collection('budget_categories').getFullList({
+        filter: catFilter
+      })
+
+      if (budgetCategories.length > 0) {
+        const catIds = budgetCategories.map((c) => c.id as string)
+        const txFilter = catIds.map((id) => `categoryId = "${id}"`).join(' || ')
+        budgetTransactions = await locals.pb.collection('budget_transactions').getFullList({
+          filter: txFilter
+        })
+      }
+    }
+  } catch {
+    // Collections may not exist yet
+  }
+
+  const totalBudgetAmount = budgetRecords.reduce(
+    (sum, b) => sum + ((b.totalBudget as number) || 0),
+    0
+  )
+  let budgetExpenses = 0
+  let budgetIncome = 0
+  for (const t of budgetTransactions) {
+    if (t.status === 'paid') {
+      if (t.type === 'expense') budgetExpenses += (t.amount as number) || 0
+      if (t.type === 'income') budgetIncome += (t.amount as number) || 0
+    }
+  }
+  const budgetBalance = totalBudgetAmount - budgetExpenses + budgetIncome
+  const budgetUsagePercent =
+    totalBudgetAmount > 0 ? Math.round((budgetExpenses / totalBudgetAmount) * 100) : 0
+
+  const budgetStats = {
+    totalBudget: totalBudgetAmount,
+    expenses: budgetExpenses,
+    income: budgetIncome,
+    balance: budgetBalance,
+    usagePercent: Math.min(budgetUsagePercent, 100),
+    categoriesCount: budgetCategories.length,
+    transactionsCount: budgetTransactions.length,
+    budgetCount: budgetRecords.length,
+    currency: ((budgetRecords[0]?.currency as string) || 'EUR') as string
+  }
+
   const recentOrders = orders.slice(0, 5).map((o) => ({
     id: o.id as string,
     orderNumber: o.orderNumber as string,
@@ -96,6 +153,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       : null,
     stats,
     billingStats,
+    budgetStats,
     recentOrders,
     recentSubmissions: recentTalks.items.map((t) => ({
       id: t.id as string,

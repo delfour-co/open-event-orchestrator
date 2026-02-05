@@ -4,8 +4,8 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-504%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
-[![Coverage](https://img.shields.io/badge/coverage-97.3%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-1006%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 Open Event Orchestrator is an **all-in-one open-source platform** for managing conferences, meetups, and community events. CFP, scheduling, ticketing, and CRM — unified in one place.
 
@@ -15,6 +15,7 @@ Open Event Orchestrator is an **all-in-one open-source platform** for managing c
 - **Planning** — Build your schedule with drag-and-drop simplicity
 - **Ticketing** — Sell tickets, manage registrations, and check-in attendees
 - **CRM** — Keep track of your community across all events
+- **Budget** — Track expenses, income, and budget categories per edition
 - **API** — Headless API for custom integrations and websites
 
 ## Quick Start
@@ -92,7 +93,8 @@ src/
 │   │   ├── core/          # Organization, Event, Edition
 │   │   ├── planning/      # Schedule management (Phase 2)
 │   │   ├── billing/       # Ticketing (Phase 3)
-│   │   └── crm/           # Contact management (Phase 4)
+│   │   ├── crm/           # Contact management (Phase 4)
+│   │   └── budget/        # Budget & Finance (Phase 6)
 │   ├── server/            # Server-only code (PocketBase client)
 │   └── stores/            # Svelte stores
 ├── routes/                # SvelteKit routes
@@ -147,9 +149,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 236 | 97.3% statements |
-| E2E tests | 268 | - |
-| **Total** | **504** | **97.3%** |
+| Unit tests | 690 | 97% statements |
+| E2E tests | 316 | - |
+| **Total** | **1006** | **97%** |
 
 ```bash
 pnpm test              # Run unit tests
@@ -170,7 +172,7 @@ fix(billing): correct stock calculation
 test(planning): add scheduler unit tests
 ```
 
-Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
+Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 
 ## Roadmap
 
@@ -239,10 +241,10 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `api`, `core`, `ui`
 - [ ] Webhooks
 - [ ] Embeddable widgets
 
-### Phase 6 — Budget & Finance
+### Phase 6 — Budget & Finance 🚧
 
-- [ ] Budget model: categories, transactions (#60)
-- [ ] Budget dashboard with visualization (#61)
+- [x] Budget model: categories, transactions (#60)
+- [x] Budget dashboard with visualization (#61)
 - [ ] Quotes and invoices management (#62)
 - [ ] Speaker reimbursements (#63)
 

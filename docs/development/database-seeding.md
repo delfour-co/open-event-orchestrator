@@ -54,7 +54,11 @@ Demo Conference Org (organization)
         ├── Categories (5)
         ├── Formats (4)
         ├── Talks (5)
-        └── Reviews (7)
+        ├── Reviews (7)
+        └── Budget
+            ├── Edition Budget (50 000 €, approved)
+            ├── Budget Categories (7): Venue, Catering, Speakers, Marketing, Equipment, Staff, Other
+            └── Budget Transactions (~10): expenses and income with various statuses
 ```
 
 ### Categories
@@ -175,6 +179,9 @@ The seed script follows this order to respect foreign key relationships:
 7. **Speakers** - Depends on users
 8. **Talks** - Depends on editions, categories, formats, speakers
 9. **Reviews** - Depends on talks, users
+10. **Edition Budgets** - Depends on editions
+11. **Budget Categories** - Depends on edition budgets
+12. **Budget Transactions** - Depends on budget categories
 
 ## E2E Testing
 

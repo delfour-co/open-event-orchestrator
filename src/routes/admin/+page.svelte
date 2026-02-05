@@ -2,6 +2,8 @@
 import { goto } from '$app/navigation'
 import * as Card from '$lib/components/ui/card'
 import {
+  ArrowDownCircle,
+  ArrowUpCircle,
   Calendar,
   CheckCircle,
   Clock,
@@ -10,7 +12,9 @@ import {
   Send,
   ShoppingCart,
   Ticket,
+  TrendingUp,
   Users,
+  Wallet,
   XCircle
 } from 'lucide-svelte'
 import type { PageData } from './$types'
@@ -75,6 +79,13 @@ const getStatusColor = (status: string) => {
     default:
       return 'text-gray-600 dark:text-gray-400'
   }
+}
+
+const formatBudgetAmount = (amount: number, currency: string) => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency
+  }).format(amount)
 }
 
 const getOrderStatusColor = (status: string) => {
@@ -265,6 +276,88 @@ const getOrderStatusColor = (status: string) => {
               style="width: {data.billingStats.checkInRate}%"
             ></div>
           </div>
+        </Card.Content>
+      </Card.Root>
+    </div>
+  </div>
+
+  <!-- Budget Stats -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold">Budget</h3>
+      {#if data.selectedEdition}
+        <a
+          href="/admin/budget/{data.selectedEdition.slug}"
+          class="text-sm text-primary hover:underline"
+        >
+          Manage Budget
+        </a>
+      {/if}
+    </div>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Total Budget</Card.Title>
+          <Wallet class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">
+            {formatBudgetAmount(data.budgetStats.totalBudget, data.budgetStats.currency)}
+          </div>
+          <p class="text-xs text-muted-foreground">
+            {data.budgetStats.usagePercent}% used
+          </p>
+          <div class="mt-2 h-2 w-full rounded-full bg-muted">
+            <div
+              class="h-2 rounded-full transition-all {data.budgetStats.usagePercent > 90 ? 'bg-red-500' : data.budgetStats.usagePercent > 70 ? 'bg-yellow-500' : 'bg-blue-500'}"
+              style="width: {data.budgetStats.usagePercent}%"
+            ></div>
+          </div>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Expenses</Card.Title>
+          <ArrowDownCircle class="h-4 w-4 text-red-500" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">
+            {formatBudgetAmount(data.budgetStats.expenses, data.budgetStats.currency)}
+          </div>
+          <p class="text-xs text-muted-foreground">
+            {data.budgetStats.transactionsCount} transaction{data.budgetStats.transactionsCount !== 1 ? 's' : ''}
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Income</Card.Title>
+          <ArrowUpCircle class="h-4 w-4 text-green-500" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">
+            {formatBudgetAmount(data.budgetStats.income, data.budgetStats.currency)}
+          </div>
+          <p class="text-xs text-muted-foreground">
+            {data.budgetStats.categoriesCount} categor{data.budgetStats.categoriesCount !== 1 ? 'ies' : 'y'}
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Balance</Card.Title>
+          <TrendingUp class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold {data.budgetStats.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+            {formatBudgetAmount(data.budgetStats.balance, data.budgetStats.currency)}
+          </div>
+          <p class="text-xs text-muted-foreground">
+            budget - expenses + income
+          </p>
         </Card.Content>
       </Card.Root>
     </div>

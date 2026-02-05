@@ -42,12 +42,15 @@ src/
 │   │   │   ├── infra/      # PocketBase repositories for billing entities
 │   │   │   └── services/   # Stripe, QR code generation, email templates
 │   │   ├── crm/
+│   │   ├── budget/
+│   │   │   ├── domain/     # EditionBudget, BudgetCategory, BudgetTransaction
+│   │   │   └── infra/      # PocketBase repositories for budget entities
 │   │   └── core/           # Shared (Organization, Event, Edition)
 │   ├── components/         # Shared UI components
 │   ├── server/             # Server-only code (notifications, permissions, invitations)
 │   └── utils/              # Utilities
 ├── routes/
-│   ├── admin/              # Admin pages (billing, planning, cfp, organizations)
+│   ├── admin/              # Admin pages (billing, planning, cfp, budget, organizations)
 │   ├── tickets/            # Public ticket purchase pages
 │   ├── api/                # API routes (Stripe webhook, etc.)
 │   └── auth/               # Authentication (login, register)
@@ -101,7 +104,7 @@ fix/issue-{number}-{short-description}
 type(scope): description
 
 Types: feat, fix, docs, style, refactor, test, chore
-Scopes: cfp, planning, billing, crm, api, core, ui
+Scopes: cfp, planning, billing, crm, budget, api, core, ui
 ```
 
 Examples:
@@ -213,4 +216,5 @@ PUBLIC_STRIPE_PUBLISHABLE_KEY=
 - `domain:planning` - Programme, scheduler
 - `domain:billing` - Billetterie, payments
 - `domain:crm` - CRM, contacts, GDPR
+- `domain:budget` - Budget, finance, transactions
 - `domain:api` - Public API

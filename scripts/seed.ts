@@ -1332,6 +1332,60 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  // Budget collections
+  {
+    name: 'edition_budgets',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      numberField('totalBudget'),
+      selectField('currency', ['EUR', 'USD', 'GBP']),
+      selectField('status', ['draft', 'approved', 'closed']),
+      textField('notes'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'budget_categories',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('name', true),
+      numberField('plannedAmount'),
+      textField('notes'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'budget_transactions',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      selectField('type', ['expense', 'income'], true),
+      numberField('amount', true),
+      textField('description', true),
+      textField('vendor'),
+      textField('invoiceNumber'),
+      dateField('date'),
+      selectField('status', ['pending', 'paid', 'cancelled']),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -1394,7 +1448,16 @@ const relationDefinitions = [
   { collection: 'order_items', field: 'ticketTypeId', target: 'ticket_types', maxSelect: 1 },
   { collection: 'billing_tickets', field: 'orderId', target: 'orders', maxSelect: 1 },
   { collection: 'billing_tickets', field: 'ticketTypeId', target: 'ticket_types', maxSelect: 1 },
-  { collection: 'billing_tickets', field: 'editionId', target: 'editions', maxSelect: 1 }
+  { collection: 'billing_tickets', field: 'editionId', target: 'editions', maxSelect: 1 },
+  // Budget relations
+  { collection: 'edition_budgets', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'budget_categories', field: 'budgetId', target: 'edition_budgets', maxSelect: 1 },
+  {
+    collection: 'budget_transactions',
+    field: 'categoryId',
+    target: 'budget_categories',
+    maxSelect: 1
+  }
 ]
 
 // ============================================================================
@@ -1710,6 +1773,8 @@ async function seed(): Promise<void> {
     segments: string[]
     emailTemplates: string[]
     emailCampaigns: string[]
+    budget: string
+    budgetCategories: string[]
   } = {
     users: [],
     organization: '',
@@ -1728,7 +1793,9 @@ async function seed(): Promise<void> {
     contacts: [],
     segments: [],
     emailTemplates: [],
-    emailCampaigns: []
+    emailCampaigns: [],
+    budget: '',
+    budgetCategories: []
   }
 
   try {
@@ -3072,6 +3139,226 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 17. Create Budget
+    // ========================================================================
+    console.log('💰 Creating budget...')
+    try {
+      const existing = await pb.collection('edition_budgets').getList(1, 1, {
+        filter: `editionId = "${ids.edition}"`
+      })
+
+      if (existing.items.length > 0) {
+        console.log('  Budget already exists')
+        ids.budget = existing.items[0].id
+      } else {
+        const budget = await pb.collection('edition_budgets').create({
+          editionId: ids.edition,
+          totalBudget: 50000,
+          currency: 'EUR',
+          status: 'approved',
+          notes: 'Budget for DevFest Paris 2025'
+        })
+        console.log('  Created budget: 50,000 EUR (approved)')
+        ids.budget = budget.id
+      }
+    } catch (err) {
+      console.error('  Failed to create budget:', err)
+    }
+    console.log('')
+
+    // ========================================================================
+    // 17b. Create Budget Categories
+    // ========================================================================
+    console.log('📂 Creating budget categories...')
+    const budgetCategoryDefinitions = [
+      { name: 'Venue', plannedAmount: 15000, notes: 'Palais des Congres rental and setup' },
+      { name: 'Catering', plannedAmount: 8000, notes: 'Coffee breaks, lunch, and dinner' },
+      { name: 'Speakers', plannedAmount: 5000, notes: 'Travel and accommodation' },
+      { name: 'Marketing', plannedAmount: 3000, notes: 'Social media, flyers, videos' },
+      { name: 'Equipment', plannedAmount: 4000, notes: 'AV equipment, badges, signage' },
+      { name: 'Staff', plannedAmount: 2000, notes: 'Volunteer t-shirts and meals' },
+      { name: 'Other', plannedAmount: 3000, notes: 'Miscellaneous expenses' }
+    ]
+
+    if (ids.budget) {
+      for (const catDef of budgetCategoryDefinitions) {
+        try {
+          const existing = await pb.collection('budget_categories').getList(1, 1, {
+            filter: `budgetId = "${ids.budget}" && name = "${catDef.name}"`
+          })
+
+          if (existing.items.length > 0) {
+            console.log(`  Category '${catDef.name}' already exists`)
+            ids.budgetCategories.push(existing.items[0].id)
+          } else {
+            const cat = await pb.collection('budget_categories').create({
+              budgetId: ids.budget,
+              name: catDef.name,
+              plannedAmount: catDef.plannedAmount,
+              notes: catDef.notes
+            })
+            console.log(`  Created category: ${catDef.name} (${catDef.plannedAmount} EUR)`)
+            ids.budgetCategories.push(cat.id)
+          }
+        } catch (err) {
+          console.error(`  Failed to create budget category ${catDef.name}:`, err)
+        }
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 17c. Create Budget Transactions
+    // ========================================================================
+    console.log('💸 Creating budget transactions...')
+    const transactionDefinitions = [
+      // Venue expenses
+      {
+        categoryIndex: 0,
+        type: 'expense',
+        amount: 10000,
+        description: 'Venue deposit',
+        vendor: 'Palais des Congres',
+        invoiceNumber: 'PDC-2025-001',
+        date: '2025-06-01',
+        status: 'paid'
+      },
+      {
+        categoryIndex: 0,
+        type: 'expense',
+        amount: 5000,
+        description: 'Venue final payment',
+        vendor: 'Palais des Congres',
+        invoiceNumber: 'PDC-2025-002',
+        date: '2025-09-15',
+        status: 'paid'
+      },
+      // Catering
+      {
+        categoryIndex: 1,
+        type: 'expense',
+        amount: 4500,
+        description: 'Catering contract - Day 1',
+        vendor: 'Traiteur Paris',
+        invoiceNumber: 'TP-2025-042',
+        date: '2025-09-01',
+        status: 'paid'
+      },
+      {
+        categoryIndex: 1,
+        type: 'expense',
+        amount: 3500,
+        description: 'Catering contract - Day 2',
+        vendor: 'Traiteur Paris',
+        invoiceNumber: 'TP-2025-043',
+        date: '2025-09-01',
+        status: 'pending'
+      },
+      // Speakers
+      {
+        categoryIndex: 2,
+        type: 'expense',
+        amount: 1200,
+        description: 'Speaker travel - Jane Speaker',
+        vendor: 'Air France',
+        invoiceNumber: 'AF-789456',
+        date: '2025-10-01',
+        status: 'paid'
+      },
+      {
+        categoryIndex: 2,
+        type: 'expense',
+        amount: 800,
+        description: 'Hotel accommodation - Jane Speaker',
+        vendor: 'Hotel Mercure',
+        invoiceNumber: 'HM-2025-234',
+        date: '2025-10-14',
+        status: 'paid'
+      },
+      // Marketing
+      {
+        categoryIndex: 3,
+        type: 'expense',
+        amount: 1500,
+        description: 'Social media campaign',
+        vendor: 'Marketing Agency',
+        invoiceNumber: 'MA-2025-019',
+        date: '2025-08-01',
+        status: 'paid'
+      },
+      // Equipment
+      {
+        categoryIndex: 4,
+        type: 'expense',
+        amount: 2000,
+        description: 'Badge printing and lanyards',
+        vendor: 'PrintShop',
+        invoiceNumber: 'PS-2025-112',
+        date: '2025-09-20',
+        status: 'paid'
+      },
+      // Income - sponsorships
+      {
+        categoryIndex: 6,
+        type: 'income',
+        amount: 15000,
+        description: 'Gold sponsor - TechCorp',
+        vendor: 'TechCorp',
+        invoiceNumber: 'OEO-2025-S001',
+        date: '2025-07-01',
+        status: 'paid'
+      },
+      {
+        categoryIndex: 6,
+        type: 'income',
+        amount: 5000,
+        description: 'Silver sponsor - StartupXYZ',
+        vendor: 'StartupXYZ',
+        invoiceNumber: 'OEO-2025-S002',
+        date: '2025-08-01',
+        status: 'paid'
+      }
+    ]
+
+    let transactionsCreated = 0
+    if (ids.budget && ids.budgetCategories.length > 0) {
+      for (const txDef of transactionDefinitions) {
+        try {
+          const categoryId = ids.budgetCategories[txDef.categoryIndex]
+          if (!categoryId) {
+            console.log(`  Skipping transaction (category index ${txDef.categoryIndex} not found)`)
+            continue
+          }
+
+          const existing = await pb.collection('budget_transactions').getList(1, 1, {
+            filter: `categoryId = "${categoryId}" && description = "${txDef.description.replace(/"/g, '\\"')}"`
+          })
+
+          if (existing.items.length > 0) {
+            console.log(`  Transaction '${txDef.description}' already exists`)
+          } else {
+            await pb.collection('budget_transactions').create({
+              categoryId,
+              type: txDef.type,
+              amount: txDef.amount,
+              description: txDef.description,
+              vendor: txDef.vendor || '',
+              invoiceNumber: txDef.invoiceNumber || '',
+              date: txDef.date,
+              status: txDef.status
+            })
+            console.log(`  Created transaction: ${txDef.description} (${txDef.amount} EUR)`)
+            transactionsCreated++
+          }
+        } catch (err) {
+          console.error('  Failed to create transaction:', err)
+        }
+      }
+    }
+    console.log(`  Total: ${transactionsCreated} transactions created`)
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -3098,6 +3385,9 @@ async function seed(): Promise<void> {
     console.log(`   Segments: ${ids.segments.length}`)
     console.log(`   Email Templates: ${ids.emailTemplates.length}`)
     console.log(`   Email Campaigns: ${ids.emailCampaigns.length}`)
+    console.log(`   Budget: ${ids.budget ? 1 : 0}`)
+    console.log(`   Budget Categories: ${ids.budgetCategories.length}`)
+    console.log(`   Budget Transactions: ${transactionsCreated}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')

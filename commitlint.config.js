@@ -9,6 +9,7 @@ export default {
         'planning',
         'billing',
         'crm',
+        'budget',
         'api',
         'core',
         'ui',
