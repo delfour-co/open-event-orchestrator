@@ -82,6 +82,13 @@ export function canManageBilling(role: string | undefined): boolean {
 }
 
 /**
+ * Check if user can manage CRM (contacts, segments, campaigns)
+ */
+export function canManageCRM(role: string | undefined): boolean {
+  return role === 'admin' || role === 'organizer'
+}
+
+/**
  * Check if user is a reviewer only (no admin/organizer privileges)
  */
 export function isReviewerOnly(role: string | undefined): boolean {
