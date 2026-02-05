@@ -15,7 +15,10 @@
 git clone git@github.com:delfour-co/open-event-orchestrator.git
 cd open-event-orchestrator
 
-# Start services
+# Copy environment file
+cp .env.example .env
+
+# Start services (PocketBase + Mailpit)
 docker-compose up -d
 
 # Install dependencies
@@ -24,6 +27,18 @@ pnpm install
 # Run development server
 pnpm dev
 ```
+
+### Docker Services
+
+The project uses Docker Compose with the following services:
+
+| Service | Port | Description |
+|---------|------|-------------|
+| PocketBase | 8090 | Backend API + admin UI (http://localhost:8090/_/) |
+| Mailpit | 8025 | Email testing web UI (http://localhost:8025) |
+| Mailpit SMTP | 1025 | SMTP server for local email capture |
+
+All emails (invitations, order confirmations, refund notifications) are captured by Mailpit in development. No external email service is required for local development.
 
 ## Development Workflow
 
@@ -171,8 +186,17 @@ src/lib/features/{feature}/
 ├── domain/     # Entities, types, business rules
 ├── usecases/   # Application logic
 ├── infra/      # PocketBase repositories
+├── services/   # External services (email, Stripe, QR codes)
 └── ui/         # Svelte components
 ```
+
+### Feature Modules
+
+- **cfp** - Call for Papers: talk submissions, reviews, speaker management
+- **planning** - Programme scheduling, session management
+- **billing** - Ticketing, orders, Stripe payments, QR check-in
+- **crm** - (planned) CRM, contacts, GDPR
+- **core** - Shared entities (Organization, Event, Edition)
 
 ## Pull Request Guidelines
 

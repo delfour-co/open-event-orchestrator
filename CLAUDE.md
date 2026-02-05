@@ -13,6 +13,9 @@ Open Event Orchestrator is an all-in-one open-source platform for event manageme
 - **Testing**: Vitest (unit) + Playwright (E2E)
 - **Linting**: Biome
 - **Containerization**: Docker Compose
+- **Payments**: Stripe (Checkout Sessions)
+- **Email**: Nodemailer (SMTP) + Mailpit (local dev)
+- **QR Codes**: qrcode (generation) + html5-qrcode (scanning)
 
 ## Architecture
 
@@ -26,18 +29,30 @@ src/
 │   │   │   ├── domain/     # Entities, types, business rules
 │   │   │   ├── usecases/   # Application logic
 │   │   │   ├── infra/      # PocketBase repositories
+│   │   │   ├── services/   # External services (email, etc.)
 │   │   │   └── ui/         # Svelte components
 │   │   ├── planning/
+│   │   │   ├── domain/
+│   │   │   ├── usecases/
+│   │   │   ├── infra/
+│   │   │   └── ui/
 │   │   ├── billing/
+│   │   │   ├── domain/     # TicketType, Order, OrderItem, Ticket
+│   │   │   ├── usecases/   # create-order, complete-order, cancel-order, refund-order, check-in-ticket
+│   │   │   ├── infra/      # PocketBase repositories for billing entities
+│   │   │   └── services/   # Stripe, QR code generation, email templates
 │   │   ├── crm/
 │   │   └── core/           # Shared (Organization, Event, Edition)
 │   ├── components/         # Shared UI components
-│   ├── server/             # Server-only code
+│   ├── server/             # Server-only code (notifications, permissions, invitations)
 │   └── utils/              # Utilities
-├── routes/                 # SvelteKit routes
+├── routes/
+│   ├── admin/              # Admin pages (billing, planning, cfp, organizations)
+│   ├── tickets/            # Public ticket purchase pages
+│   ├── api/                # API routes (Stripe webhook, etc.)
+│   └── auth/               # Authentication (login, register)
 └── tests/
-    ├── unit/
-    └── e2e/
+    └── e2e/                # Playwright E2E tests
 ```
 
 ## Code Conventions
@@ -144,7 +159,7 @@ Before merge:
 ## Local Development
 
 ```bash
-# Start services
+# Start services (PocketBase + Mailpit)
 docker-compose up -d
 
 # Install dependencies
@@ -164,13 +179,31 @@ pnpm lint
 pnpm format
 ```
 
+### Docker Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| PocketBase | 8090 | Backend API + admin UI |
+| Mailpit | 8025 | Email testing web UI |
+| Mailpit SMTP | 1025 | SMTP server for local email capture |
+
+### Email Testing
+
+All emails (invitations, order confirmations, refund notifications) are sent via SMTP.
+In local development, Mailpit captures all outgoing emails. View them at http://localhost:8025.
+
+SMTP configuration defaults to `localhost:1025` (Mailpit). In production, SMTP settings will be configurable via the admin settings UI.
+
 ## Environment Variables
 
 ```env
+# PocketBase
 PUBLIC_POCKETBASE_URL=http://localhost:8090
-SMTP_HOST=...
-SMTP_PORT=...
-STRIPE_SECRET_KEY=...
+
+# Stripe (optional, for paid tickets)
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ```
 
 ## Domain Labels
