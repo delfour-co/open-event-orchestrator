@@ -1,7 +1,18 @@
 <script lang="ts">
 import { goto } from '$app/navigation'
 import * as Card from '$lib/components/ui/card'
-import { Calendar, CheckCircle, Clock, FileText, Send, XCircle } from 'lucide-svelte'
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  Send,
+  ShoppingCart,
+  Ticket,
+  Users,
+  XCircle
+} from 'lucide-svelte'
 import type { PageData } from './$types'
 
 interface Props {
@@ -42,6 +53,15 @@ const formatTimeAgo = (date: Date) => {
   return `${diffDays}d ago`
 }
 
+const formatPrice = (priceInCents: number, currency: string) => {
+  if (priceInCents === 0) return 'Free'
+  const amount = priceInCents / 100
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency
+  }).format(amount)
+}
+
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'submitted':
@@ -52,6 +72,21 @@ const getStatusColor = (status: string) => {
       return 'text-red-600 dark:text-red-400'
     case 'under_review':
       return 'text-yellow-600 dark:text-yellow-400'
+    default:
+      return 'text-gray-600 dark:text-gray-400'
+  }
+}
+
+const getOrderStatusColor = (status: string) => {
+  switch (status) {
+    case 'paid':
+      return 'text-green-600 dark:text-green-400'
+    case 'pending':
+      return 'text-yellow-600 dark:text-yellow-400'
+    case 'cancelled':
+      return 'text-red-600 dark:text-red-400'
+    case 'refunded':
+      return 'text-orange-600 dark:text-orange-400'
     default:
       return 'text-gray-600 dark:text-gray-400'
   }
@@ -94,8 +129,20 @@ const getStatusColor = (status: string) => {
     {/if}
   </div>
 
-  <!-- Stats Grid -->
-  <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+  <!-- CFP Stats -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold">Call for Papers</h3>
+      {#if data.selectedEdition}
+        <a
+          href="/admin/cfp/{data.selectedEdition.slug}/submissions"
+          class="text-sm text-primary hover:underline"
+        >
+          Manage CFP
+        </a>
+      {/if}
+    </div>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
         <Card.Title class="text-sm font-medium">Total Talks</Card.Title>
@@ -145,10 +192,86 @@ const getStatusColor = (status: string) => {
         <div class="text-2xl font-bold">{data.stats.rejectedTalks}</div>
       </Card.Content>
     </Card.Root>
+    </div>
+  </div>
+
+  <!-- Billing Stats -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold">Billing</h3>
+      {#if data.selectedEdition}
+        <a
+          href="/admin/billing/{data.selectedEdition.slug}"
+          class="text-sm text-primary hover:underline"
+        >
+          Manage Billing
+        </a>
+      {/if}
+    </div>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Revenue</Card.Title>
+          <DollarSign class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">
+            {formatPrice(data.billingStats.totalRevenue, 'EUR')}
+          </div>
+          <p class="text-xs text-muted-foreground">
+            {data.billingStats.paidOrders} paid order{data.billingStats.paidOrders !== 1
+              ? 's'
+              : ''}
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Tickets Sold</Card.Title>
+          <Ticket class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">{data.billingStats.ticketsSold}</div>
+          <p class="text-xs text-muted-foreground">
+            {data.billingStats.ticketsCheckedIn} checked in ({data.billingStats.checkInRate}%)
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Orders</Card.Title>
+          <ShoppingCart class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">{data.billingStats.totalOrders}</div>
+          <p class="text-xs text-muted-foreground">
+            {data.billingStats.pendingOrders} pending, {data.billingStats.cancelledOrders} cancelled
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Check-in Rate</Card.Title>
+          <Users class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">{data.billingStats.checkInRate}%</div>
+          <div class="mt-2 h-2 w-full rounded-full bg-muted">
+            <div
+              class="h-2 rounded-full bg-green-500 transition-all"
+              style="width: {data.billingStats.checkInRate}%"
+            ></div>
+          </div>
+        </Card.Content>
+      </Card.Root>
+    </div>
   </div>
 
   <!-- Recent Activity -->
-  <div class="grid gap-4 md:grid-cols-2">
+  <div class="grid gap-4 md:grid-cols-3">
     <Card.Root>
       <Card.Header>
         <Card.Title>Recent Submissions</Card.Title>
@@ -169,6 +292,36 @@ const getStatusColor = (status: string) => {
                 </div>
                 <span class="ml-2 text-xs font-medium {getStatusColor(submission.status)}">
                   {submission.status}
+                </span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Recent Orders</Card.Title>
+        <Card.Description>Latest ticket orders</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        {#if data.recentOrders.length === 0}
+          <p class="text-sm text-muted-foreground">No orders yet.</p>
+        {:else}
+          <div class="space-y-3">
+            {#each data.recentOrders as order}
+              <div class="flex items-center justify-between">
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm font-medium">
+                    {order.firstName} {order.lastName}
+                  </p>
+                  <p class="text-xs text-muted-foreground">
+                    {order.orderNumber} - {formatPrice(order.totalAmount, order.currency)}
+                  </p>
+                </div>
+                <span class="ml-2 text-xs font-medium {getOrderStatusColor(order.status)}">
+                  {order.status}
                 </span>
               </div>
             {/each}

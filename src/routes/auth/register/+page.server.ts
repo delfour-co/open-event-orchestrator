@@ -27,8 +27,7 @@ export const actions: Actions = {
         name: data.name,
         email: data.email,
         password: data.password,
-        passwordConfirm: data.passwordConfirm,
-        role: 'attendee'
+        passwordConfirm: data.passwordConfirm
       })
 
       // Auto login after registration
@@ -37,10 +36,16 @@ export const actions: Actions = {
         .authWithPassword(data.email, data.password)
 
       // Process any pending organization invitations
-      await processPendingInvitations(locals.pb, authData.record.id, data.email)
+      const accepted = await processPendingInvitations(locals.pb, authData.record.id, data.email)
+
+      // Refresh auth to pick up updated role
+      if (accepted > 0) {
+        await locals.pb.collection('users').authRefresh()
+      }
     } catch (err) {
-      const error = err as { response?: { data?: Record<string, { message: string }> } }
-      if (error.response?.data?.email) {
+      console.error('Registration error:', err)
+      const pbError = err as { response?: { data?: Record<string, { message: string }> } }
+      if (pbError.response?.data?.email) {
         return fail(400, { errors: { email: 'Email already exists' } })
       }
       return fail(500, { error: 'Failed to create account' })

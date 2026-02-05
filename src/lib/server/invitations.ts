@@ -1,5 +1,11 @@
 import type PocketBase from 'pocketbase'
 
+const ROLE_PRIORITY: Record<string, number> = {
+  admin: 3,
+  organizer: 2,
+  reviewer: 1
+}
+
 /**
  * Process pending organization invitations for a user.
  * Called after login or registration to automatically add the user
@@ -11,6 +17,7 @@ export async function processPendingInvitations(
   userEmail: string
 ): Promise<number> {
   let acceptedCount = 0
+  let highestRole: string | null = null
 
   try {
     // Find all pending invitations for this email
@@ -45,12 +52,19 @@ export async function processPendingInvitations(
         // Not a member, proceed to add
       }
 
+      const role = invitation.role as string
+
       // Add user to organization
       await pb.collection('organization_members').create({
         organizationId: invitation.organizationId,
         userId: userId,
-        role: invitation.role
+        role
       })
+
+      // Track highest role for user profile update
+      if (!highestRole || (ROLE_PRIORITY[role] || 0) > (ROLE_PRIORITY[highestRole] || 0)) {
+        highestRole = role
+      }
 
       // Mark invitation as accepted
       await pb.collection('organization_invitations').update(invitation.id, {
@@ -58,6 +72,15 @@ export async function processPendingInvitations(
       })
 
       acceptedCount++
+    }
+
+    // Update user role to the highest granted role
+    if (highestRole) {
+      const currentUser = await pb.collection('users').getOne(userId)
+      const currentRole = currentUser.role as string | undefined
+      if (!currentRole || (ROLE_PRIORITY[highestRole] || 0) > (ROLE_PRIORITY[currentRole] || 0)) {
+        await pb.collection('users').update(userId, { role: highestRole })
+      }
     }
   } catch (error) {
     // Log error but don't fail the login/registration

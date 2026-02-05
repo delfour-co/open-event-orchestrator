@@ -19,6 +19,7 @@ import {
   Mic,
   Pencil,
   Plus,
+  Settings,
   Trash2,
   Users,
   X
@@ -460,6 +461,11 @@ const roomsWithoutAssignments = $derived(() => {
         <Button variant="outline" size="sm" class="gap-2">
           <ExternalLink class="h-4 w-4" />
           Open
+        </Button>
+      </a>
+      <a href="/admin/planning/{data.edition.slug}/settings" title="Planning Settings">
+        <Button variant="ghost" size="icon">
+          <Settings class="h-4 w-4" />
         </Button>
       </a>
     </div>

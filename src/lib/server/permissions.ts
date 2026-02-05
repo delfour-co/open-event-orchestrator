@@ -75,6 +75,13 @@ export function canAddComments(role: string | undefined): boolean {
 }
 
 /**
+ * Check if user can manage billing (ticket types, orders, check-in)
+ */
+export function canManageBilling(role: string | undefined): boolean {
+  return role === 'admin' || role === 'organizer'
+}
+
+/**
  * Check if user is a reviewer only (no admin/organizer privileges)
  */
 export function isReviewerOnly(role: string | undefined): boolean {

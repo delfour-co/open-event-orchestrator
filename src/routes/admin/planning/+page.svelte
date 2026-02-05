@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
-import { ArrowRight, Calendar, LayoutGrid } from 'lucide-svelte'
+import { ArrowRight, Calendar, LayoutGrid, Settings } from 'lucide-svelte'
 import type { PageData } from './$types'
 
 interface Props {
@@ -64,11 +64,18 @@ const getStatusColor = (status: string) => {
                 <Calendar class="h-5 w-5" />
                 {edition.name}
               </Card.Title>
-              <span
-                class="rounded-full px-2 py-0.5 text-xs font-medium {getStatusColor(edition.status)}"
-              >
-                {edition.status}
-              </span>
+              <div class="flex items-center gap-2">
+                <span
+                  class="rounded-full px-2 py-0.5 text-xs font-medium {getStatusColor(edition.status)}"
+                >
+                  {edition.status}
+                </span>
+                <a href="/admin/planning/{edition.slug}/settings" title="Planning Settings">
+                  <Button variant="ghost" size="icon" class="h-8 w-8">
+                    <Settings class="h-4 w-4" />
+                  </Button>
+                </a>
+              </div>
             </div>
             <Card.Description>
               {formatDate(edition.startDate)} - {formatDate(edition.endDate)}

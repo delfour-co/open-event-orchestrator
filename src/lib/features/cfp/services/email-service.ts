@@ -1,3 +1,4 @@
+import nodemailer from 'nodemailer'
 import type { NotificationType } from '../domain/notification'
 
 export interface EmailOptions {
@@ -32,35 +33,39 @@ export const createConsoleEmailService = (): EmailService => ({
   }
 })
 
-export const createResendEmailService = (apiKey: string): EmailService => ({
-  async send(options: EmailOptions) {
-    try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'CFP <cfp@notifications.example.com>',
+export interface SmtpConfig {
+  host: string
+  port: number
+  user?: string
+  pass?: string
+  from: string
+}
+
+export const createSmtpEmailService = (config: SmtpConfig): EmailService => {
+  const transporter = nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.port === 465,
+    ...(config.user && config.pass ? { auth: { user: config.user, pass: config.pass } } : {})
+  })
+
+  return {
+    async send(options: EmailOptions) {
+      try {
+        await transporter.sendMail({
+          from: config.from,
           to: options.to,
           subject: options.subject,
           html: options.html,
           text: options.text
         })
-      })
-
-      if (!response.ok) {
-        const error = await response.text()
-        return { success: false, error }
+        return { success: true }
+      } catch (err) {
+        return { success: false, error: String(err) }
       }
-
-      return { success: true }
-    } catch (err) {
-      return { success: false, error: String(err) }
     }
   }
-})
+}
 
 export const generateEmailHtml = (type: NotificationType, data: EmailTemplateData): string => {
   const templates: Record<NotificationType, string> = {

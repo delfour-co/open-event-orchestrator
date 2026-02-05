@@ -1,9 +1,10 @@
 export {
   createConsoleEmailService,
-  createResendEmailService,
+  createSmtpEmailService,
   generateEmailHtml,
   generateEmailText,
   type EmailService,
   type EmailOptions,
-  type EmailTemplateData
+  type EmailTemplateData,
+  type SmtpConfig
 } from './email-service'

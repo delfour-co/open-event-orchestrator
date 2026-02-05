@@ -10,7 +10,17 @@ import { Select } from '$lib/components/ui/select'
 import * as Table from '$lib/components/ui/table'
 import { talkStatusSchema } from '$lib/features/cfp/domain'
 import { StatusBadge } from '$lib/features/cfp/ui'
-import { ArrowLeft, Check, Copy, Download, ExternalLink, FileText, Search, X } from 'lucide-svelte'
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  Download,
+  ExternalLink,
+  FileText,
+  Search,
+  Settings,
+  X
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -188,6 +198,11 @@ $effect(() => {
         </Button>
       </form>
     {/if}
+      <a href="/admin/cfp/{data.edition.slug}/settings" title="CFP Settings">
+        <Button variant="ghost" size="icon">
+          <Settings class="h-4 w-4" />
+        </Button>
+      </a>
     </div>
   </div>
 

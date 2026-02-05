@@ -1,3 +1,4 @@
+import { sendInvitationEmail } from '$lib/server/invitation-notifications'
 import { canAccessSettings } from '$lib/server/permissions'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -155,7 +156,7 @@ export const actions: Actions = {
     }
   },
 
-  addMember: async ({ request, locals, params }) => {
+  addMember: async ({ request, locals, params, url }) => {
     // Check permission
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
@@ -207,6 +208,15 @@ export const actions: Actions = {
           status: 'pending',
           invitedBy: locals.pb.authStore.record?.id || null,
           expiresAt: expiresAt.toISOString()
+        })
+
+        const invitedByName = locals.user?.name || 'A team member'
+        await sendInvitationEmail({
+          email,
+          organizationName: organization.name as string,
+          role,
+          invitedByName,
+          registerUrl: `${url.origin}/auth/register`
         })
 
         return { success: true, message: `Invitation sent to ${email}` }

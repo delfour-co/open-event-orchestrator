@@ -1068,6 +1068,99 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  // Billing collections
+  {
+    name: 'ticket_types',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('name', true),
+      textField('description'),
+      numberField('price'),
+      selectField('currency', ['EUR', 'USD', 'GBP']),
+      numberField('quantity', true),
+      numberField('quantitySold'),
+      dateField('salesStartDate'),
+      dateField('salesEndDate'),
+      {
+        id: 'isActive',
+        name: 'isActive',
+        type: 'bool',
+        required: false,
+        hidden: false,
+        presentable: false
+      },
+      numberField('order'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'orders',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('orderNumber', true),
+      emailField('email', true),
+      textField('firstName', true),
+      textField('lastName', true),
+      selectField('status', ['pending', 'paid', 'cancelled', 'refunded']),
+      numberField('totalAmount'),
+      selectField('currency', ['EUR', 'USD', 'GBP']),
+      textField('stripeSessionId'),
+      textField('stripePaymentIntentId'),
+      dateField('paidAt'),
+      dateField('cancelledAt'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'order_items',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('ticketTypeName', true),
+      numberField('quantity', true),
+      numberField('unitPrice'),
+      numberField('totalPrice'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'billing_tickets',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      emailField('attendeeEmail', true),
+      textField('attendeeFirstName', true),
+      textField('attendeeLastName', true),
+      textField('ticketNumber', true),
+      textField('qrCode'),
+      selectField('status', ['valid', 'used', 'cancelled']),
+      dateField('checkedInAt'),
+      textField('checkedInBy'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -1122,7 +1215,15 @@ const relationDefinitions = [
     target: 'organization_members',
     maxSelect: 1
   },
-  { collection: 'room_assignments', field: 'editionId', target: 'editions', maxSelect: 1 }
+  { collection: 'room_assignments', field: 'editionId', target: 'editions', maxSelect: 1 },
+  // Billing relations
+  { collection: 'ticket_types', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'orders', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'order_items', field: 'orderId', target: 'orders', maxSelect: 1 },
+  { collection: 'order_items', field: 'ticketTypeId', target: 'ticket_types', maxSelect: 1 },
+  { collection: 'billing_tickets', field: 'orderId', target: 'orders', maxSelect: 1 },
+  { collection: 'billing_tickets', field: 'ticketTypeId', target: 'ticket_types', maxSelect: 1 },
+  { collection: 'billing_tickets', field: 'editionId', target: 'editions', maxSelect: 1 }
 ]
 
 // ============================================================================
@@ -1983,6 +2084,320 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 15. Create Ticket Types
+    // ========================================================================
+    console.log('🎫 Creating ticket types...')
+    const ticketTypes = [
+      {
+        name: 'Early Bird',
+        description: 'Discounted early bird ticket - limited availability',
+        price: 4900,
+        currency: 'EUR',
+        quantity: 50,
+        isActive: true,
+        order: 0
+      },
+      {
+        name: 'Standard',
+        description: 'Standard conference ticket with access to all talks',
+        price: 9900,
+        currency: 'EUR',
+        quantity: 200,
+        isActive: true,
+        order: 1
+      },
+      {
+        name: 'VIP',
+        description: 'VIP ticket with reserved seating and exclusive networking dinner',
+        price: 19900,
+        currency: 'EUR',
+        quantity: 30,
+        isActive: true,
+        order: 2
+      },
+      {
+        name: 'Student',
+        description: 'Free ticket for students (valid student ID required at check-in)',
+        price: 0,
+        currency: 'EUR',
+        quantity: 100,
+        isActive: true,
+        order: 3
+      }
+    ]
+
+    for (const ticketType of ticketTypes) {
+      try {
+        const existing = await pb.collection('ticket_types').getList(1, 1, {
+          filter: `name = "${ticketType.name}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Ticket type '${ticketType.name}' already exists`)
+        } else {
+          await pb.collection('ticket_types').create({
+            ...ticketType,
+            editionId: ids.edition,
+            quantitySold: 0
+          })
+          console.log(`  Created ticket type: ${ticketType.name}`)
+        }
+      } catch (err) {
+        console.error(`  Failed to create ticket type ${ticketType.name}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // Billing: Orders, Order Items, and Tickets
+    // ========================================================================
+    console.log('🛒 Creating orders and tickets...')
+
+    // Get ticket type IDs
+    const ttRecords = await pb.collection('ticket_types').getFullList({
+      filter: `editionId = "${ids.edition}"`
+    })
+    const ttMap = new Map(ttRecords.map((r) => [r.name as string, r]))
+
+    const QRCode = await import('qrcode')
+
+    const generateOrderNumber = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+      let result = 'ORD-'
+      for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      return result
+    }
+
+    const generateTicketNumber = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+      let result = 'TKT-'
+      for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      return result
+    }
+
+    const orderData = [
+      {
+        email: 'alice.martin@example.com',
+        firstName: 'Alice',
+        lastName: 'Martin',
+        status: 'paid',
+        items: [{ ticketType: 'Early Bird', quantity: 2 }],
+        checkedIn: [true, false]
+      },
+      {
+        email: 'bob.dupont@example.com',
+        firstName: 'Bob',
+        lastName: 'Dupont',
+        status: 'paid',
+        items: [{ ticketType: 'Standard', quantity: 1 }],
+        checkedIn: [true]
+      },
+      {
+        email: 'claire.bernard@example.com',
+        firstName: 'Claire',
+        lastName: 'Bernard',
+        status: 'paid',
+        items: [
+          { ticketType: 'VIP', quantity: 1 },
+          { ticketType: 'Standard', quantity: 1 }
+        ],
+        checkedIn: [true, false]
+      },
+      {
+        email: 'david.leroy@example.com',
+        firstName: 'David',
+        lastName: 'Leroy',
+        status: 'paid',
+        items: [{ ticketType: 'Student', quantity: 3 }],
+        checkedIn: [true, true, false]
+      },
+      {
+        email: 'emma.petit@example.com',
+        firstName: 'Emma',
+        lastName: 'Petit',
+        status: 'paid',
+        items: [{ ticketType: 'Standard', quantity: 2 }],
+        checkedIn: [false, false]
+      },
+      {
+        email: 'francois.moreau@example.com',
+        firstName: 'François',
+        lastName: 'Moreau',
+        status: 'paid',
+        items: [{ ticketType: 'Early Bird', quantity: 1 }],
+        checkedIn: [true]
+      },
+      {
+        email: 'gabrielle.thomas@example.com',
+        firstName: 'Gabrielle',
+        lastName: 'Thomas',
+        status: 'cancelled',
+        items: [{ ticketType: 'Standard', quantity: 1 }],
+        checkedIn: [false]
+      },
+      {
+        email: 'hugo.robert@example.com',
+        firstName: 'Hugo',
+        lastName: 'Robert',
+        status: 'pending',
+        items: [{ ticketType: 'VIP', quantity: 2 }],
+        checkedIn: [false, false]
+      },
+      {
+        email: 'isabelle.richard@example.com',
+        firstName: 'Isabelle',
+        lastName: 'Richard',
+        status: 'paid',
+        items: [{ ticketType: 'Student', quantity: 2 }],
+        checkedIn: [false, false]
+      },
+      {
+        email: 'julien.durand@example.com',
+        firstName: 'Julien',
+        lastName: 'Durand',
+        status: 'paid',
+        items: [
+          { ticketType: 'Standard', quantity: 1 },
+          { ticketType: 'Student', quantity: 1 }
+        ],
+        checkedIn: [true, false]
+      }
+    ]
+
+    let ordersCreated = 0
+    let orderItemsCreated = 0
+    let ticketsCreated = 0
+
+    for (const order of orderData) {
+      try {
+        // Check if order already exists
+        const existing = await pb.collection('orders').getList(1, 1, {
+          filter: `email = "${order.email}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Order for '${order.email}' already exists`)
+          continue
+        }
+
+        // Calculate total
+        let totalAmount = 0
+        const resolvedItems: Array<{
+          ticketType: string
+          ticketTypeId: string
+          quantity: number
+          unitPrice: number
+        }> = []
+
+        for (const item of order.items) {
+          const tt = ttMap.get(item.ticketType)
+          if (!tt) {
+            console.error(`  Ticket type '${item.ticketType}' not found`)
+            continue
+          }
+          const unitPrice = tt.price as number
+          totalAmount += unitPrice * item.quantity
+          resolvedItems.push({
+            ticketType: item.ticketType,
+            ticketTypeId: tt.id,
+            quantity: item.quantity,
+            unitPrice
+          })
+        }
+
+        const orderNumber = generateOrderNumber()
+
+        const orderRecord = await pb.collection('orders').create({
+          editionId: ids.edition,
+          orderNumber,
+          email: order.email,
+          firstName: order.firstName,
+          lastName: order.lastName,
+          status: order.status,
+          totalAmount,
+          currency: 'EUR',
+          paidAt: order.status === 'paid' ? new Date().toISOString() : undefined
+        })
+        ordersCreated++
+
+        // Create order items
+        for (const item of resolvedItems) {
+          await pb.collection('order_items').create({
+            orderId: orderRecord.id,
+            ticketTypeId: item.ticketTypeId,
+            ticketTypeName: item.ticketType,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.unitPrice * item.quantity
+          })
+          orderItemsCreated++
+        }
+
+        // Create tickets (only for paid orders)
+        if (order.status === 'paid') {
+          let ticketIndex = 0
+          for (const item of resolvedItems) {
+            const tt = ttMap.get(item.ticketType)
+            if (!tt) continue
+
+            for (let i = 0; i < item.quantity; i++) {
+              const ticketNumber = generateTicketNumber()
+              const isCheckedIn = order.checkedIn[ticketIndex] === true
+              const qrPayload = JSON.stringify({
+                ticketId: 'pending',
+                ticketNumber,
+                editionId: ids.edition
+              })
+              const qrCode = await QRCode.default.toDataURL(qrPayload, {
+                errorCorrectionLevel: 'M',
+                type: 'image/png',
+                margin: 2,
+                width: 300
+              })
+
+              await pb.collection('billing_tickets').create({
+                orderId: orderRecord.id,
+                ticketTypeId: tt.id,
+                editionId: ids.edition,
+                attendeeEmail: order.email,
+                attendeeFirstName: order.firstName,
+                attendeeLastName: order.lastName,
+                ticketNumber,
+                qrCode,
+                status: isCheckedIn ? 'used' : 'valid',
+                checkedInAt: isCheckedIn ? new Date().toISOString() : undefined,
+                checkedInBy: isCheckedIn ? 'admin' : undefined
+              })
+              ticketsCreated++
+
+              // Update quantitySold on ticket type
+              await pb.collection('ticket_types').update(tt.id, {
+                quantitySold: ((tt.quantitySold as number) || 0) + 1
+              })
+
+              ticketIndex++
+            }
+          }
+        }
+
+        console.log(
+          `  Created order: ${orderNumber} (${order.firstName} ${order.lastName}, ${order.status})`
+        )
+      } catch (err) {
+        console.error(`  Failed to create order for ${order.email}:`, err)
+      }
+    }
+
+    console.log(
+      `  Total: ${ordersCreated} orders, ${orderItemsCreated} order items, ${ticketsCreated} tickets`
+    )
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -2001,6 +2416,9 @@ async function seed(): Promise<void> {
     console.log(`   Slots: ${ids.slots.size}`)
     console.log(`   Sessions: ${ids.sessions.length}`)
     console.log(`   Room Assignments: ${ids.roomAssignments.length}`)
+    console.log(`   Orders: ${ordersCreated}`)
+    console.log(`   Order Items: ${orderItemsCreated}`)
+    console.log(`   Tickets: ${ticketsCreated}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')

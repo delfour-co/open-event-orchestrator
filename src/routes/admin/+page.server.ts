@@ -34,6 +34,50 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     underReviewTalks: filteredTalks.filter((t) => t.status === 'under_review').length
   }
 
+  // Billing data
+  const editionFilter = selectedEditionId ? `editionId = "${selectedEditionId}"` : ''
+
+  let orders: Array<Record<string, unknown>> = []
+  let tickets: Array<Record<string, unknown>> = []
+  try {
+    orders = await locals.pb.collection('orders').getFullList({
+      filter: editionFilter || undefined,
+      sort: '-created'
+    })
+    tickets = await locals.pb.collection('billing_tickets').getFullList({
+      filter: editionFilter || undefined
+    })
+  } catch {
+    // Collections may not exist yet
+  }
+
+  const paidOrders = orders.filter((o) => o.status === 'paid')
+  const totalRevenue = paidOrders.reduce((sum, o) => sum + ((o.totalAmount as number) || 0), 0)
+  const ticketsCheckedIn = tickets.filter((t) => t.status === 'used').length
+
+  const billingStats = {
+    totalRevenue,
+    totalOrders: orders.length,
+    paidOrders: paidOrders.length,
+    pendingOrders: orders.filter((o) => o.status === 'pending').length,
+    cancelledOrders: orders.filter((o) => o.status === 'cancelled').length,
+    ticketsSold: tickets.filter((t) => t.status !== 'cancelled').length,
+    ticketsCheckedIn,
+    checkInRate: tickets.length > 0 ? Math.round((ticketsCheckedIn / tickets.length) * 100) : 0
+  }
+
+  const recentOrders = orders.slice(0, 5).map((o) => ({
+    id: o.id as string,
+    orderNumber: o.orderNumber as string,
+    email: o.email as string,
+    firstName: o.firstName as string,
+    lastName: o.lastName as string,
+    status: o.status as string,
+    totalAmount: (o.totalAmount as number) || 0,
+    currency: ((o.currency as string) || 'EUR') as string,
+    createdAt: new Date(o.created as string)
+  }))
+
   return {
     editions: editions.map((e) => ({
       id: e.id as string,
@@ -46,10 +90,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     selectedEdition: selectedEdition
       ? {
           id: selectedEdition.id as string,
-          name: selectedEdition.name as string
+          name: selectedEdition.name as string,
+          slug: selectedEdition.slug as string
         }
       : null,
     stats,
+    billingStats,
+    recentOrders,
     recentSubmissions: recentTalks.items.map((t) => ({
       id: t.id as string,
       title: t.title as string,

@@ -1,4 +1,3 @@
-import { env } from '$env/dynamic/private'
 import type { NotificationType } from '$lib/features/cfp/domain'
 import { getNotificationSubject } from '$lib/features/cfp/domain/notification'
 import {
@@ -8,19 +7,19 @@ import {
 } from '$lib/features/cfp/infra'
 import {
   type EmailTemplateData,
-  createConsoleEmailService,
-  createResendEmailService,
+  createSmtpEmailService,
   generateEmailHtml,
   generateEmailText
 } from '$lib/features/cfp/services'
 import type PocketBase from 'pocketbase'
 
 const getEmailService = () => {
-  if (env.RESEND_API_KEY) {
-    return createResendEmailService(env.RESEND_API_KEY)
-  }
-  // Fall back to console logging in development
-  return createConsoleEmailService()
+  // TODO: load SMTP config from app settings (database)
+  return createSmtpEmailService({
+    host: 'localhost',
+    port: 1025,
+    from: 'noreply@open-event-orchestrator.local'
+  })
 }
 
 export interface SendCfpNotificationParams {
