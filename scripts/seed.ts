@@ -1069,6 +1069,33 @@ const collectionSchemas: Array<{
       autodateField('updated', true, true)
     ]
   },
+  // App settings (singleton)
+  {
+    name: 'app_settings',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('smtpHost'),
+      numberField('smtpPort'),
+      textField('smtpUser'),
+      textField('smtpPass'),
+      textField('smtpFrom'),
+      {
+        id: 'smtpEnabled',
+        name: 'smtpEnabled',
+        type: 'bool',
+        required: false,
+        hidden: false,
+        presentable: false
+      },
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
   // Billing collections
   {
     name: 'ticket_types',
@@ -2145,6 +2172,30 @@ async function seed(): Promise<void> {
       } catch (err) {
         console.error(`  Failed to create ticket type ${ticketType.name}:`, err)
       }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 15b. Create App Settings (SMTP defaults for Mailpit)
+    // ========================================================================
+    console.log('⚙️  Creating app settings...')
+    try {
+      const existing = await pb.collection('app_settings').getList(1, 1)
+      if (existing.items.length > 0) {
+        console.log('  App settings already exist')
+      } else {
+        await pb.collection('app_settings').create({
+          smtpHost: 'localhost',
+          smtpPort: 1025,
+          smtpUser: '',
+          smtpPass: '',
+          smtpFrom: 'noreply@open-event-orchestrator.local',
+          smtpEnabled: true
+        })
+        console.log('  Created default SMTP settings (Mailpit localhost:1025)')
+      }
+    } catch (err) {
+      console.error('  Failed to create app settings:', err)
     }
     console.log('')
 

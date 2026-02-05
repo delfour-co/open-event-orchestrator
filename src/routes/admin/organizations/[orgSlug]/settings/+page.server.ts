@@ -212,6 +212,7 @@ export const actions: Actions = {
 
         const invitedByName = locals.user?.name || 'A team member'
         await sendInvitationEmail({
+          pb: locals.pb,
           email,
           organizationName: organization.name as string,
           role,

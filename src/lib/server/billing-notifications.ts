@@ -9,17 +9,8 @@ import {
   generateOrderRefundHtml,
   generateOrderRefundText
 } from '$lib/features/billing/services'
-import { createSmtpEmailService } from '$lib/features/cfp/services'
+import { getEmailService } from '$lib/server/app-settings'
 import type PocketBase from 'pocketbase'
-
-const getEmailService = () => {
-  // TODO: load SMTP config from app settings (database)
-  return createSmtpEmailService({
-    host: 'localhost',
-    port: 1025,
-    from: 'noreply@open-event-orchestrator.local'
-  })
-}
 
 export interface SendOrderEmailParams {
   pb: PocketBase
@@ -48,7 +39,7 @@ export async function sendOrderConfirmationEmail(
     const items = await orderItemRepo.findByOrder(orderId)
     const tickets = await ticketRepo.findByOrder(orderId)
 
-    const emailService = getEmailService()
+    const emailService = await getEmailService(pb)
 
     const html = generateOrderConfirmationHtml({
       order,
@@ -101,7 +92,7 @@ export async function sendOrderRefundEmail(
     }
 
     const items = await orderItemRepo.findByOrder(orderId)
-    const emailService = getEmailService()
+    const emailService = await getEmailService(pb)
 
     const html = generateOrderRefundHtml({ order, items, editionName, eventName })
     const text = generateOrderRefundText({ order, items, editionName, eventName })

@@ -1,15 +1,8 @@
-import { createSmtpEmailService } from '$lib/features/cfp/services'
-
-const getEmailService = () => {
-  // TODO: load SMTP config from app settings (database)
-  return createSmtpEmailService({
-    host: 'localhost',
-    port: 1025,
-    from: 'noreply@open-event-orchestrator.local'
-  })
-}
+import { getEmailService } from '$lib/server/app-settings'
+import type PocketBase from 'pocketbase'
 
 export interface SendInvitationEmailParams {
+  pb: PocketBase
   email: string
   organizationName: string
   role: string
@@ -20,9 +13,9 @@ export interface SendInvitationEmailParams {
 export async function sendInvitationEmail(
   params: SendInvitationEmailParams
 ): Promise<{ success: boolean; error?: string }> {
-  const { email, organizationName, role, invitedByName, registerUrl } = params
+  const { pb, email, organizationName, role, invitedByName, registerUrl } = params
 
-  const emailService = getEmailService()
+  const emailService = await getEmailService(pb)
 
   const subject = `You've been invited to join ${organizationName}`
 

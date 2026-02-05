@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private'
+import { getSmtpSettings } from '$lib/server/app-settings'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -26,6 +27,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
   const totalSold = ticketTypes.reduce((sum, tt) => sum + ((tt.quantitySold as number) || 0), 0)
 
   const publicUrl = `${url.origin}/tickets/${editionSlug}`
+  const smtpSettings = await getSmtpSettings(locals.pb)
 
   return {
     edition: {
@@ -38,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
       publicUrl,
       stripeConfigured: !!env.STRIPE_SECRET_KEY,
       stripeWebhookConfigured: !!env.STRIPE_WEBHOOK_SECRET,
-      emailConfigured: true,
+      emailConfigured: smtpSettings.smtpEnabled && !!smtpSettings.smtpHost,
       activeTicketTypes: activeTicketTypes.length,
       totalTicketTypes: ticketTypes.length,
       totalCapacity,

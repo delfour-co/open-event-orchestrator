@@ -7,20 +7,11 @@ import {
 } from '$lib/features/cfp/infra'
 import {
   type EmailTemplateData,
-  createSmtpEmailService,
   generateEmailHtml,
   generateEmailText
 } from '$lib/features/cfp/services'
+import { getEmailService } from '$lib/server/app-settings'
 import type PocketBase from 'pocketbase'
-
-const getEmailService = () => {
-  // TODO: load SMTP config from app settings (database)
-  return createSmtpEmailService({
-    host: 'localhost',
-    port: 1025,
-    from: 'noreply@open-event-orchestrator.local'
-  })
-}
 
 export interface SendCfpNotificationParams {
   pb: PocketBase
@@ -56,7 +47,7 @@ export async function sendCfpNotification(params: SendCfpNotificationParams): Pr
   const speakerRepo = createSpeakerRepository(pb)
   const talkRepo = createTalkRepository(pb)
   const emailLogRepo = createEmailLogRepository(pb)
-  const emailService = getEmailService()
+  const emailService = await getEmailService(pb)
 
   try {
     // Get speaker info
