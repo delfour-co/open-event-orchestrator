@@ -26,6 +26,7 @@ src/lib/features/budget/
 │   ├── quote.ts                   # BudgetQuote entity, line items, status workflow
 │   ├── invoice.ts                 # BudgetInvoice entity, file attachment
 │   ├── reimbursement.ts           # ReimbursementRequest/Item entities
+│   ├── audit-log.ts               # FinancialAuditLog entity, action/entity helpers
 │   └── index.ts                   # Barrel exports
 ├── infra/                         # PocketBase repositories
 │   ├── budget-repository.ts       # CRUD for edition_budgets
@@ -35,7 +36,10 @@ src/lib/features/budget/
 │   ├── invoice-repository.ts      # CRUD for budget_invoices
 │   ├── reimbursement-repository.ts      # CRUD for reimbursement_requests
 │   ├── reimbursement-item-repository.ts # CRUD for reimbursement_items
+│   ├── audit-log-repository.ts    # CRUD for financial_audit_log
 │   └── index.ts                   # Barrel exports
+├── services/                      # External services
+│   └── financial-audit-service.ts # Fire-and-forget audit logging
 ├── usecases/                      # Application logic
 │   ├── convert-quote-to-transaction.ts  # Quote → Transaction conversion
 │   ├── approve-reimbursement.ts         # Reimbursement approval workflow
@@ -56,6 +60,8 @@ src/lib/features/budget/
 | `/admin/budget/[editionSlug]/quotes` | Quotes management (create, edit, send, accept, convert to transaction) |
 | `/admin/budget/[editionSlug]/invoices` | Invoices management (upload, link to transactions) |
 | `/admin/budget/[editionSlug]/reimbursements` | Speaker reimbursement review (approve, reject, mark paid, CSV export) |
+| `/admin/budget/[editionSlug]/journal` | Financial audit journal with filters, search, and export |
+| `/admin/budget/[editionSlug]/journal/export` | Export journal as CSV or PDF |
 
 ### Speaker Routes
 
@@ -180,6 +186,24 @@ The main admin dashboard (`/admin`) includes a Budget Stats section with 4 cards
 | `receipt` | file | Receipt file (image, PDF) - max 10MB |
 | `notes` | string | Additional notes |
 
+### FinancialAuditLog
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `editionId` | string | Relation to editions collection |
+| `userId` | string | Relation to users (who performed the action) |
+| `action` | enum | `create`, `update`, `delete`, `status_change`, `send`, `accept`, `reject`, `convert`, `submit`, `approve`, `mark_paid` |
+| `entityType` | enum | `transaction`, `quote`, `invoice`, `reimbursement`, `category`, `budget` |
+| `entityId` | string | ID of the affected entity |
+| `entityReference` | string | Human-readable reference (QT-2025-001, RB-2025-001, etc.) |
+| `oldValue` | json | Previous state (for updates/changes) |
+| `newValue` | json | New state (for creates/updates) |
+| `metadata` | json | Additional context (source, notes, etc.) |
+| `created` | date | Timestamp (auto-set, immutable) |
+
+**Note:** Audit log records are immutable (no update/delete allowed).
+
 ## Budget Status Flow
 
 ```
@@ -280,6 +304,35 @@ Complete reimbursement workflow for speakers:
 - CSV export for accounting integration
 - Public URL display with copy button for sharing
 
+### 9. Financial Audit Journal
+
+Complete audit trail for all financial operations:
+
+**Automatic Logging:**
+- All budget actions (create, update, delete) are automatically logged
+- Transaction changes including status transitions
+- Quote lifecycle (create, send, accept, reject, convert to transaction)
+- Invoice uploads and deletions
+- Reimbursement workflow (submit, approve, reject, mark paid)
+- Category changes
+
+**Journal Viewer (`/admin/budget/[editionSlug]/journal`):**
+- Paginated table with all audit entries
+- Filter by action type (create, update, delete, status_change, etc.)
+- Filter by entity type (transaction, quote, invoice, reimbursement, etc.)
+- Filter by date range
+- Search by reference (QT-2025-001, RB-2025-001, etc.)
+- Detail dialog showing old/new values for changes
+- Color-coded action badges
+
+**Export:**
+- CSV export with all filters applied
+- PDF export (HTML for browser print)
+- Includes: Date, User, Action, Entity Type, Reference, Description, Amount
+
+**Fire-and-Forget Pattern:**
+Audit logging is implemented as fire-and-forget to not block main operations. Logs are created asynchronously after the main action completes.
+
 ## Database Collections
 
 | Collection | Description |
@@ -291,6 +344,7 @@ Complete reimbursement workflow for speakers:
 | `budget_invoices` | Invoice files linked to transactions |
 | `reimbursement_requests` | Speaker reimbursement requests |
 | `reimbursement_items` | Individual expense items with receipts |
+| `financial_audit_log` | Immutable audit trail for all financial operations |
 
 ## PocketBase Migrations
 
@@ -307,7 +361,7 @@ Complete reimbursement workflow for speakers:
 
 ## Testing
 
-### Unit Tests (209 tests)
+### Unit Tests (234 tests)
 
 Tests located in `src/lib/features/budget/domain/*.test.ts` and `src/lib/features/budget/usecases/*.test.ts`:
 
@@ -317,11 +371,12 @@ Tests located in `src/lib/features/budget/domain/*.test.ts` and `src/lib/feature
 - **quote.test.ts** (54 tests) — BudgetQuote schema, line items, status workflow, number generation, total calculation
 - **invoice.test.ts** (11 tests) — BudgetInvoice schema, file validation, due date helpers
 - **reimbursement.test.ts** (59 tests) — Request/Item schemas, expense types, status workflow, permission helpers
+- **audit-log.test.ts** (25 tests) — FinancialAuditLog schema, action/entity enums, helper functions
 - **convert-quote-to-transaction.test.ts** (4 tests) — Quote to transaction conversion usecase
 - **approve-reimbursement.test.ts** (5 tests) — Reimbursement approval workflow
 - **export-reimbursements.test.ts** (5 tests) — CSV export functionality
 
-### E2E Tests (23 + 60 tests)
+### E2E Tests (23 + 60 + 23 tests)
 
 Tests located in `tests/e2e/budget*.spec.ts` and `tests/e2e/speaker-reimbursements.spec.ts`:
 
@@ -344,6 +399,14 @@ Tests located in `tests/e2e/budget*.spec.ts` and `tests/e2e/speaker-reimbursemen
 - Admin review workflow
 - Approve/reject actions
 - CSV export
+
+**budget-journal.spec.ts (23 tests):**
+- Journal page display with filters
+- Filtering by action, entity type, date range, search
+- Detail dialog with old/new values
+- Export links (CSV/PDF)
+- Table display and navigation
+- Access control and empty state
 
 **speaker-reimbursements.spec.ts:**
 - Token-based authentication

@@ -242,12 +242,12 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [x] Quotes and invoices management (#62)
 - [x] Speaker reimbursements with portal (#63)
 
-### Phase 6 — Financial Journal
+### Phase 6 — Financial Journal ✅
 
-- [ ] Financial audit log model (#90)
-- [ ] Automatic logging of all financial operations (#91)
-- [ ] Journal viewer with filters and search (#92)
-- [ ] Export journal for accounting (#93)
+- [x] Financial audit log model (#90)
+- [x] Automatic logging of all financial operations (#91)
+- [x] Journal viewer with filters and search (#92)
+- [x] Export journal for accounting (CSV/PDF) (#93)
 
 ### Phase 7 — Sponsoring
 
