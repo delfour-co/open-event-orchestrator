@@ -7,6 +7,10 @@
 [![Tests](https://img.shields.io/badge/tests-445%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
+<p align="center">
+  <img src="static/img/hero.png" alt="Open Event Orchestrator - Orchestration visuelle" width="480" />
+</p>
+
 Open Event Orchestrator is an **all-in-one open-source platform** for managing conferences, meetups, and community events. CFP, scheduling, ticketing, and CRM — unified in one place.
 
 ## Features

@@ -1,12 +1,21 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
-import { ArrowRight, BarChart, Calendar, Ticket, Users } from 'lucide-svelte'
+import {
+  ArrowRight,
+  BarChart,
+  Calendar,
+  Code2,
+  Handshake,
+  Ticket,
+  Users,
+  Wallet
+} from 'lucide-svelte'
 
 const features = [
   {
     icon: Calendar,
     title: 'Call for Papers',
-    description: 'Manage speaker submissions with a powerful CFP system'
+    description: 'Manage speaker submissions, reviews, and notifications'
   },
   {
     icon: Users,
@@ -16,12 +25,27 @@ const features = [
   {
     icon: Ticket,
     title: 'Ticketing',
-    description: 'Sell tickets and manage registrations in one place'
+    description: 'Sell tickets, manage registrations, and check-in attendees'
   },
   {
     icon: BarChart,
     title: 'CRM',
     description: 'Keep track of your community across all events'
+  },
+  {
+    icon: Wallet,
+    title: 'Budget',
+    description: 'Track expenses, income, quotes, invoices, and speaker reimbursements'
+  },
+  {
+    icon: Handshake,
+    title: 'Sponsoring',
+    description: 'Manage sponsors, packages, pipeline, and sponsor portal'
+  },
+  {
+    icon: Code2,
+    title: 'API',
+    description: 'Headless API for custom integrations and websites'
   }
 ]
 </script>
@@ -50,13 +74,19 @@ const features = [
 
   <!-- Hero -->
   <section class="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+    <img
+      src="/img/hero.png"
+      alt="Open Event Orchestrator - Orchestration visuelle"
+      class="mb-8 max-h-64 w-auto object-contain sm:max-h-80"
+    />
     <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
       The open-source control plane for
       <span class="text-primary">events</span>
     </h1>
     <p class="mt-6 max-w-2xl text-lg text-muted-foreground">
       Open Event Orchestrator is an all-in-one platform for managing conferences, meetups, and
-      community events. CFP, scheduling, ticketing, and CRM — unified in one place.
+      community events. CFP, planning, ticketing, CRM, budget, sponsoring, and API — unified in one
+      place.
     </p>
     <div class="mt-10 flex flex-col gap-4 sm:flex-row">
       <a href="/auth/register">
