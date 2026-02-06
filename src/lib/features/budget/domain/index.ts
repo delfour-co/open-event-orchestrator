@@ -93,3 +93,23 @@ export {
   type ReimbursementItem,
   type CreateReimbursementItem
 } from './reimbursement'
+
+export {
+  auditActionSchema,
+  auditEntityTypeSchema,
+  financialAuditLogSchema,
+  createAuditLogSchema,
+  auditLogFiltersSchema,
+  getActionLabel,
+  getActionColor,
+  getEntityTypeLabel,
+  extractAmount,
+  buildAuditDescription,
+  sanitizeForAudit,
+  type AuditAction,
+  type AuditEntityType,
+  type FinancialAuditLog,
+  type CreateAuditLog,
+  type AuditLogFilters,
+  type PaginatedAuditLogs
+} from './audit-log'

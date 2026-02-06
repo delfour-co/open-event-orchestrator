@@ -1,6 +1,85 @@
 import { generateQuoteNumber } from '$lib/features/budget/domain'
+import { createFinancialAuditService } from '$lib/features/budget/services/financial-audit-service'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
+
+type QuoteLineItem = { description: string; quantity: number; unitPrice: number }
+
+function parseQuoteFormData(formData: FormData): {
+  vendor: string
+  vendorEmail: string
+  vendorAddress: string
+  description: string
+  items: QuoteLineItem[]
+  totalAmount: number
+  currency: string
+  validUntil: string
+  notes: string
+  error?: string
+} {
+  const vendor = formData.get('vendor') as string
+  const itemsJson = formData.get('items') as string
+
+  if (!vendor || vendor.trim().length === 0) {
+    return {
+      vendor: '',
+      vendorEmail: '',
+      vendorAddress: '',
+      description: '',
+      items: [],
+      totalAmount: 0,
+      currency: 'EUR',
+      validUntil: '',
+      notes: '',
+      error: 'Vendor is required'
+    }
+  }
+
+  let items: QuoteLineItem[] = []
+  try {
+    items = JSON.parse(itemsJson || '[]')
+  } catch {
+    return {
+      vendor: '',
+      vendorEmail: '',
+      vendorAddress: '',
+      description: '',
+      items: [],
+      totalAmount: 0,
+      currency: 'EUR',
+      validUntil: '',
+      notes: '',
+      error: 'Invalid items format'
+    }
+  }
+
+  if (items.length === 0) {
+    return {
+      vendor: '',
+      vendorEmail: '',
+      vendorAddress: '',
+      description: '',
+      items: [],
+      totalAmount: 0,
+      currency: 'EUR',
+      validUntil: '',
+      notes: '',
+      error: 'At least one line item is required'
+    }
+  }
+
+  return {
+    vendor: vendor.trim(),
+    vendorEmail: (formData.get('vendorEmail') as string)?.trim() || '',
+    vendorAddress: (formData.get('vendorAddress') as string)?.trim() || '',
+    description: (formData.get('description') as string)?.trim() || '',
+    items,
+    totalAmount: Number(formData.get('totalAmount')) || 0,
+    currency: (formData.get('currency') as string) || 'EUR',
+    validUntil: (formData.get('validUntil') as string) || '',
+    notes: (formData.get('notes') as string)?.trim() || ''
+  }
+}
 
 function mapQuoteRecord(record: Record<string, unknown>) {
   let items: Array<{ description: string; quantity: number; unitPrice: number }> = []
@@ -100,29 +179,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
   createQuote: async ({ request, params, locals }) => {
     const formData = await request.formData()
-    const vendor = formData.get('vendor') as string
-    const vendorEmail = formData.get('vendorEmail') as string
-    const vendorAddress = formData.get('vendorAddress') as string
-    const description = formData.get('description') as string
-    const itemsJson = formData.get('items') as string
-    const totalAmount = formData.get('totalAmount') as string
-    const currency = formData.get('currency') as string
-    const validUntil = formData.get('validUntil') as string
-    const notes = formData.get('notes') as string
+    const parsed = parseQuoteFormData(formData)
 
-    if (!vendor || vendor.trim().length === 0) {
-      return fail(400, { error: 'Vendor is required', action: 'createQuote' })
-    }
-
-    let items: Array<{ description: string; quantity: number; unitPrice: number }> = []
-    try {
-      items = JSON.parse(itemsJson || '[]')
-    } catch {
-      return fail(400, { error: 'Invalid items format', action: 'createQuote' })
-    }
-
-    if (items.length === 0) {
-      return fail(400, { error: 'At least one line item is required', action: 'createQuote' })
+    if (parsed.error) {
+      return fail(400, { error: parsed.error, action: 'createQuote' })
     }
 
     const { editionSlug } = params
@@ -138,6 +198,11 @@ export const actions: Actions = {
     const editionId = editions.items[0].id as string
 
     try {
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       const existingQuotes = await locals.pb.collection('budget_quotes').getList(1, 1, {
         filter: `editionId = "${editionId}"`,
         sort: '-created'
@@ -145,19 +210,26 @@ export const actions: Actions = {
       const sequence = existingQuotes.totalItems + 1
       const quoteNumber = generateQuoteNumber(editionSlug, sequence)
 
-      await locals.pb.collection('budget_quotes').create({
+      const quote = await locals.pb.collection('budget_quotes').create({
         editionId,
         quoteNumber,
-        vendor: vendor.trim(),
-        vendorEmail: vendorEmail?.trim() || null,
-        vendorAddress: vendorAddress?.trim() || null,
-        description: description?.trim() || null,
-        items: JSON.stringify(items),
-        totalAmount: Number(totalAmount) || 0,
-        currency: currency || 'EUR',
+        vendor: parsed.vendor,
+        vendorEmail: parsed.vendorEmail || null,
+        vendorAddress: parsed.vendorAddress || null,
+        description: parsed.description || null,
+        items: JSON.stringify(parsed.items),
+        totalAmount: parsed.totalAmount,
+        currency: parsed.currency,
         status: 'draft',
-        validUntil: validUntil ? new Date(validUntil).toISOString() : null,
-        notes: notes?.trim() || null
+        validUntil: parsed.validUntil ? new Date(parsed.validUntil).toISOString() : null,
+        notes: parsed.notes || null
+      })
+
+      auditService.logQuoteCreate(quote.id as string, quoteNumber, {
+        vendor: parsed.vendor,
+        totalAmount: parsed.totalAmount,
+        currency: parsed.currency,
+        itemCount: parsed.items.length
       })
 
       return { success: true, action: 'createQuote' }
@@ -200,6 +272,21 @@ export const actions: Actions = {
     }
 
     try {
+      const oldQuote = await locals.pb.collection('budget_quotes').getOne(id)
+      const editionId = oldQuote.editionId as string
+      const quoteNumber = oldQuote.quoteNumber as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const oldData = {
+        vendor: oldQuote.vendor,
+        totalAmount: oldQuote.totalAmount,
+        status: oldQuote.status
+      }
+
       await locals.pb.collection('budget_quotes').update(id, {
         vendor: vendor.trim(),
         vendorEmail: vendorEmail?.trim() || null,
@@ -210,6 +297,12 @@ export const actions: Actions = {
         currency: currency || 'EUR',
         validUntil: validUntil ? new Date(validUntil).toISOString() : null,
         notes: notes?.trim() || null
+      })
+
+      auditService.logQuoteUpdate(id, quoteNumber, oldData, {
+        vendor: vendor.trim(),
+        totalAmount: Number(totalAmount) || 0,
+        itemCount: items.length
       })
 
       return { success: true, action: 'updateQuote' }
@@ -228,7 +321,25 @@ export const actions: Actions = {
     }
 
     try {
+      const oldQuote = await locals.pb.collection('budget_quotes').getOne(id)
+      const editionId = oldQuote.editionId as string
+      const quoteNumber = oldQuote.quoteNumber as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const oldData = {
+        vendor: oldQuote.vendor,
+        totalAmount: oldQuote.totalAmount,
+        status: oldQuote.status
+      }
+
       await locals.pb.collection('budget_quotes').delete(id)
+
+      auditService.logQuoteDelete(id, quoteNumber, oldData)
+
       return { success: true, action: 'deleteQuote' }
     } catch (err) {
       console.error('Failed to delete quote:', err)
@@ -245,9 +356,23 @@ export const actions: Actions = {
     }
 
     try {
+      const quote = await locals.pb.collection('budget_quotes').getOne(id)
+      const editionId = quote.editionId as string
+      const quoteNumber = quote.quoteNumber as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       await locals.pb.collection('budget_quotes').update(id, {
         status: 'sent',
         sentAt: new Date().toISOString()
+      })
+
+      auditService.logQuoteSend(id, quoteNumber, {
+        vendor: quote.vendor,
+        totalAmount: quote.totalAmount
       })
 
       return { success: true, action: 'sendQuote' }
@@ -266,8 +391,22 @@ export const actions: Actions = {
     }
 
     try {
+      const quote = await locals.pb.collection('budget_quotes').getOne(id)
+      const editionId = quote.editionId as string
+      const quoteNumber = quote.quoteNumber as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       await locals.pb.collection('budget_quotes').update(id, {
         status: 'accepted'
+      })
+
+      auditService.logQuoteAccept(id, quoteNumber, {
+        vendor: quote.vendor,
+        totalAmount: quote.totalAmount
       })
 
       return { success: true, action: 'markAccepted' }
@@ -286,8 +425,22 @@ export const actions: Actions = {
     }
 
     try {
+      const quote = await locals.pb.collection('budget_quotes').getOne(id)
+      const editionId = quote.editionId as string
+      const quoteNumber = quote.quoteNumber as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       await locals.pb.collection('budget_quotes').update(id, {
         status: 'rejected'
+      })
+
+      auditService.logQuoteReject(id, quoteNumber, {
+        vendor: quote.vendor,
+        totalAmount: quote.totalAmount
       })
 
       return { success: true, action: 'markRejected' }
@@ -312,6 +465,13 @@ export const actions: Actions = {
 
     try {
       const quote = await locals.pb.collection('budget_quotes').getOne(id)
+      const editionId = quote.editionId as string
+      const quoteNumber = quote.quoteNumber as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
 
       const transaction = await locals.pb.collection('budget_transactions').create({
         categoryId,
@@ -326,6 +486,20 @@ export const actions: Actions = {
 
       await locals.pb.collection('budget_quotes').update(id, {
         transactionId: transaction.id
+      })
+
+      auditService.logQuoteConvert(id, quoteNumber, transaction.id as string, {
+        vendor: quote.vendor,
+        totalAmount: quote.totalAmount
+      })
+
+      auditService.logTransactionCreate(transaction.id as string, {
+        type: 'expense',
+        amount: quote.totalAmount,
+        description: `${quote.vendor} - ${quote.description || quote.quoteNumber}`,
+        vendor: quote.vendor,
+        status: 'pending',
+        sourceQuote: quoteNumber
       })
 
       return { success: true, action: 'convertToTransaction' }

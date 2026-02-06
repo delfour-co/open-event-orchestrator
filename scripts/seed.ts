@@ -1478,6 +1478,45 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  // Financial Audit Log - immutable audit trail for budget operations
+  {
+    name: 'financial_audit_log',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: null,
+    deleteRule: null,
+    fields: [
+      selectField('action', [
+        'create',
+        'update',
+        'delete',
+        'status_change',
+        'send',
+        'accept',
+        'reject',
+        'convert',
+        'submit',
+        'approve',
+        'mark_paid'
+      ]),
+      selectField('entityType', [
+        'transaction',
+        'quote',
+        'invoice',
+        'reimbursement',
+        'category',
+        'budget'
+      ]),
+      textField('entityId', true),
+      textField('entityReference'),
+      jsonField('oldValue'),
+      jsonField('newValue'),
+      jsonField('metadata'),
+      autodateField('created', true, false)
+    ]
   }
 ]
 
@@ -1579,7 +1618,10 @@ const relationDefinitions = [
     field: 'requestId',
     target: 'reimbursement_requests',
     maxSelect: 1
-  }
+  },
+  // Financial Audit Log relations
+  { collection: 'financial_audit_log', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'financial_audit_log', field: 'userId', target: 'users', maxSelect: 1 }
 ]
 
 // ============================================================================
@@ -3771,6 +3813,216 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 17g. Create Financial Audit Log Entries
+    // ========================================================================
+    console.log('📋 Creating financial audit log entries...')
+    let auditLogsCreated = 0
+
+    if (ids.edition && ids.users.length > 0) {
+      const auditLogEntries = [
+        // Budget creation
+        {
+          action: 'create',
+          entityType: 'budget',
+          entityId: ids.budget || 'budget-001',
+          entityReference: 'Budget 2025',
+          oldValue: null,
+          newValue: { totalBudget: 50000, currency: 'EUR', status: 'draft' },
+          metadata: { source: 'seed' },
+          daysAgo: 30
+        },
+        // Category creations
+        {
+          action: 'create',
+          entityType: 'category',
+          entityId: ids.budgetCategories[0] || 'cat-001',
+          entityReference: 'Venue & Logistics',
+          oldValue: null,
+          newValue: { name: 'Venue & Logistics', plannedBudget: 20000 },
+          metadata: { source: 'seed' },
+          daysAgo: 29
+        },
+        {
+          action: 'create',
+          entityType: 'category',
+          entityId: ids.budgetCategories[1] || 'cat-002',
+          entityReference: 'Catering',
+          oldValue: null,
+          newValue: { name: 'Catering', plannedBudget: 15000 },
+          metadata: { source: 'seed' },
+          daysAgo: 29
+        },
+        // Transaction creations
+        {
+          action: 'create',
+          entityType: 'transaction',
+          entityId: transactionRecords[0]?.id || 'tx-001',
+          entityReference: 'Venue deposit',
+          oldValue: null,
+          newValue: { description: 'Venue deposit', amount: 10000, type: 'expense' },
+          metadata: { source: 'seed' },
+          daysAgo: 25
+        },
+        {
+          action: 'status_change',
+          entityType: 'transaction',
+          entityId: transactionRecords[0]?.id || 'tx-001',
+          entityReference: 'Venue deposit',
+          oldValue: { status: 'pending' },
+          newValue: { status: 'paid' },
+          metadata: { source: 'seed' },
+          daysAgo: 20
+        },
+        {
+          action: 'create',
+          entityType: 'transaction',
+          entityId: transactionRecords[1]?.id || 'tx-002',
+          entityReference: 'Catering contract - Day 1',
+          oldValue: null,
+          newValue: { description: 'Catering contract - Day 1', amount: 4500, type: 'expense' },
+          metadata: { source: 'seed' },
+          daysAgo: 18
+        },
+        // Quote operations
+        {
+          action: 'create',
+          entityType: 'quote',
+          entityId: ids.quotes[0] || 'quote-001',
+          entityReference: 'QT-2025-001',
+          oldValue: null,
+          newValue: { quoteNumber: 'QT-2025-001', vendorName: 'AudioTech Pro', totalAmount: 3500 },
+          metadata: { source: 'seed' },
+          daysAgo: 15
+        },
+        {
+          action: 'send',
+          entityType: 'quote',
+          entityId: ids.quotes[0] || 'quote-001',
+          entityReference: 'QT-2025-001',
+          oldValue: { status: 'draft' },
+          newValue: { status: 'sent' },
+          metadata: { sentTo: 'vendor@audiotech.com', source: 'seed' },
+          daysAgo: 14
+        },
+        {
+          action: 'accept',
+          entityType: 'quote',
+          entityId: ids.quotes[0] || 'quote-001',
+          entityReference: 'QT-2025-001',
+          oldValue: { status: 'sent' },
+          newValue: { status: 'accepted' },
+          metadata: { source: 'seed' },
+          daysAgo: 10
+        },
+        // Invoice operations
+        {
+          action: 'create',
+          entityType: 'invoice',
+          entityId: ids.invoices[0] || 'inv-001',
+          entityReference: 'INV-PDC-2025-001',
+          oldValue: null,
+          newValue: { invoiceNumber: 'INV-PDC-2025-001', amount: 10000 },
+          metadata: { source: 'seed' },
+          daysAgo: 12
+        },
+        // Reimbursement operations
+        {
+          action: 'create',
+          entityType: 'reimbursement',
+          entityId: ids.reimbursementRequests[0] || 'rb-001',
+          entityReference: 'RB-DEVFEST-0001',
+          oldValue: null,
+          newValue: { requestNumber: 'RB-DEVFEST-0001', totalAmount: 615, status: 'draft' },
+          metadata: { speakerName: 'Jane Speaker', source: 'seed' },
+          daysAgo: 7
+        },
+        {
+          action: 'submit',
+          entityType: 'reimbursement',
+          entityId: ids.reimbursementRequests[0] || 'rb-001',
+          entityReference: 'RB-DEVFEST-0001',
+          oldValue: { status: 'draft' },
+          newValue: { status: 'submitted' },
+          metadata: { source: 'seed' },
+          daysAgo: 6
+        },
+        // Budget update
+        {
+          action: 'update',
+          entityType: 'budget',
+          entityId: ids.budget || 'budget-001',
+          entityReference: 'Budget 2025',
+          oldValue: { totalBudget: 50000 },
+          newValue: { totalBudget: 55000 },
+          metadata: { reason: 'Additional sponsorship received', source: 'seed' },
+          daysAgo: 5
+        },
+        // Recent transaction
+        {
+          action: 'create',
+          entityType: 'transaction',
+          entityId: transactionRecords[2]?.id || 'tx-003',
+          entityReference: 'Speaker gifts',
+          oldValue: null,
+          newValue: { description: 'Speaker gifts', amount: 500, type: 'expense' },
+          metadata: { source: 'seed' },
+          daysAgo: 2
+        },
+        // Quote rejection
+        {
+          action: 'create',
+          entityType: 'quote',
+          entityId: ids.quotes[2] || 'quote-003',
+          entityReference: 'QT-2025-003',
+          oldValue: null,
+          newValue: {
+            quoteNumber: 'QT-2025-003',
+            vendorName: 'PrintShop Express',
+            totalAmount: 800
+          },
+          metadata: { source: 'seed' },
+          daysAgo: 3
+        },
+        {
+          action: 'reject',
+          entityType: 'quote',
+          entityId: ids.quotes[2] || 'quote-003',
+          entityReference: 'QT-2025-003',
+          oldValue: { status: 'sent' },
+          newValue: { status: 'rejected' },
+          metadata: { reason: 'Found better pricing elsewhere', source: 'seed' },
+          daysAgo: 1
+        }
+      ]
+
+      for (const entry of auditLogEntries) {
+        try {
+          const createdDate = new Date()
+          createdDate.setDate(createdDate.getDate() - entry.daysAgo)
+
+          await pb.collection('financial_audit_log').create({
+            editionId: ids.edition,
+            userId: ids.users[0], // admin user
+            action: entry.action,
+            entityType: entry.entityType,
+            entityId: entry.entityId,
+            entityReference: entry.entityReference,
+            oldValue: entry.oldValue,
+            newValue: entry.newValue,
+            metadata: entry.metadata
+          })
+          auditLogsCreated++
+        } catch (err) {
+          console.error('  Failed to create audit log entry:', err)
+        }
+      }
+      console.log(`  Created ${auditLogsCreated} audit log entries`)
+    } else {
+      console.log('  Skipping audit log entries (no edition or users)')
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -3803,6 +4055,7 @@ async function seed(): Promise<void> {
     console.log(`   Budget Quotes: ${ids.quotes.length}`)
     console.log(`   Budget Invoices: ${ids.invoices.length}`)
     console.log(`   Reimbursement Requests: ${ids.reimbursementRequests.length}`)
+    console.log(`   Audit Log Entries: ${auditLogsCreated}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')

@@ -32,3 +32,8 @@ export {
   createReimbursementItemRepository,
   type ReimbursementItemRepository
 } from './reimbursement-item-repository'
+
+export {
+  createAuditLogRepository,
+  type AuditLogRepository
+} from './audit-log-repository'

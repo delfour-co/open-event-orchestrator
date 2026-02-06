@@ -1,10 +1,83 @@
 import { env } from '$env/dynamic/public'
+import { createFinancialAuditService } from '$lib/features/budget/services/financial-audit-service'
 import { error, fail } from '@sveltejs/kit'
+import type PocketBase from 'pocketbase'
 import type { Actions, PageServerLoad } from './$types'
 
 function buildFileUrl(collectionName: string, recordId: string, filename: string): string {
   const baseUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
   return `${baseUrl}/api/files/${collectionName}/${recordId}/${filename}`
+}
+
+function escapeCsvField(value: string | number): string {
+  const str = String(value)
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+async function getSpeakerName(
+  pb: PocketBase,
+  speakerId: string,
+  cache: Map<string, string>
+): Promise<string> {
+  if (cache.has(speakerId)) {
+    return cache.get(speakerId) || 'Unknown Speaker'
+  }
+  try {
+    const speaker = await pb.collection('speakers').getOne(speakerId)
+    const firstName = (speaker.firstName as string) || ''
+    const lastName = (speaker.lastName as string) || ''
+    const name = `${firstName} ${lastName}`.trim() || 'Unknown Speaker'
+    cache.set(speakerId, name)
+    return name
+  } catch {
+    cache.set(speakerId, 'Unknown Speaker')
+    return 'Unknown Speaker'
+  }
+}
+
+function buildCsvRowsForRequest(
+  requestNumber: string,
+  speakerName: string,
+  status: string,
+  currency: string,
+  totalAmount: number,
+  items: Array<Record<string, unknown>>
+): string[] {
+  if (items.length === 0) {
+    return [
+      [
+        escapeCsvField(requestNumber),
+        escapeCsvField(speakerName),
+        escapeCsvField(status),
+        '',
+        '',
+        String(totalAmount),
+        '',
+        escapeCsvField(currency)
+      ].join(',')
+    ]
+  }
+
+  return items.map((item) => {
+    const expenseType = (item.expenseType as string) || 'other'
+    const description = (item.description as string) || ''
+    const amount = (item.amount as number) || 0
+    const date = item.date ? new Date(item.date as string).toISOString().split('T')[0] : ''
+
+    return [
+      escapeCsvField(requestNumber),
+      escapeCsvField(speakerName),
+      escapeCsvField(status),
+      escapeCsvField(expenseType),
+      escapeCsvField(description),
+      String(amount),
+      escapeCsvField(date),
+      escapeCsvField(currency)
+    ].join(',')
+  })
 }
 
 interface MappedItem {
@@ -194,7 +267,21 @@ export const actions: Actions = {
     }
 
     try {
+      const reimbursement = await locals.pb.collection('reimbursement_requests').getOne(id)
+      const editionId = reimbursement.editionId as string
+      const requestNumber = reimbursement.requestNumber as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       await locals.pb.collection('reimbursement_requests').update(id, {
+        status: 'under_review'
+      })
+
+      auditService.logReimbursementSubmit(id, requestNumber, {
+        totalAmount: reimbursement.totalAmount,
         status: 'under_review'
       })
 
@@ -220,6 +307,13 @@ export const actions: Actions = {
 
     try {
       const reimbursementRequest = await locals.pb.collection('reimbursement_requests').getOne(id)
+      const editionId = reimbursementRequest.editionId as string
+      const requestNumber = (reimbursementRequest.requestNumber as string) || id
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
 
       const items = await locals.pb.collection('reimbursement_items').getFullList({
         filter: `requestId = "${id}"`,
@@ -238,8 +332,6 @@ export const actions: Actions = {
       } catch {
         // Speaker not found, use default name
       }
-
-      const requestNumber = (reimbursementRequest.requestNumber as string) || id
 
       const transaction = await locals.pb.collection('budget_transactions').create({
         categoryId,
@@ -260,6 +352,20 @@ export const actions: Actions = {
         totalAmount
       })
 
+      auditService.logReimbursementApprove(id, requestNumber, transaction.id as string, {
+        totalAmount,
+        speakerName
+      })
+
+      auditService.logTransactionCreate(transaction.id as string, {
+        type: 'expense',
+        amount: totalAmount,
+        description: `Speaker reimbursement - ${requestNumber}`,
+        vendor: speakerName,
+        status: 'pending',
+        sourceReimbursement: requestNumber
+      })
+
       return { success: true, action: 'approve' }
     } catch (err) {
       console.error('Failed to approve reimbursement:', err)
@@ -277,11 +383,25 @@ export const actions: Actions = {
     }
 
     try {
+      const reimbursement = await locals.pb.collection('reimbursement_requests').getOne(id)
+      const editionId = reimbursement.editionId as string
+      const requestNumber = (reimbursement.requestNumber as string) || id
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       await locals.pb.collection('reimbursement_requests').update(id, {
         status: 'rejected',
         adminNotes: adminNotes?.trim() || null,
         reviewedBy: locals.user?.id || '',
         reviewedAt: new Date().toISOString()
+      })
+
+      auditService.logReimbursementReject(id, requestNumber, {
+        totalAmount: reimbursement.totalAmount,
+        adminNotes: adminNotes?.trim() || null
       })
 
       return { success: true, action: 'reject' }
@@ -300,8 +420,21 @@ export const actions: Actions = {
     }
 
     try {
+      const reimbursement = await locals.pb.collection('reimbursement_requests').getOne(id)
+      const editionId = reimbursement.editionId as string
+      const requestNumber = (reimbursement.requestNumber as string) || id
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       await locals.pb.collection('reimbursement_requests').update(id, {
         status: 'paid'
+      })
+
+      auditService.logReimbursementMarkPaid(id, requestNumber, {
+        totalAmount: reimbursement.totalAmount
       })
 
       return { success: true, action: 'markPaid' }
@@ -322,8 +455,7 @@ export const actions: Actions = {
       return fail(404, { error: 'Edition not found', action: 'exportCsv' })
     }
 
-    const edition = editions.items[0]
-    const editionId = edition.id as string
+    const editionId = editions.items[0].id as string
 
     try {
       const requestRecords = await locals.pb.collection('reimbursement_requests').getFullList({
@@ -332,78 +464,30 @@ export const actions: Actions = {
       })
 
       const speakerCache = new Map<string, string>()
-      const csvRows: string[] = []
-
-      const CSV_HEADERS = [
-        'Request Number',
-        'Speaker',
-        'Status',
-        'Expense Type',
-        'Description',
-        'Amount',
-        'Date',
-        'Currency'
+      const csvRows: string[] = [
+        'Request Number,Speaker,Status,Expense Type,Description,Amount,Date,Currency'
       ]
-      csvRows.push(CSV_HEADERS.join(','))
 
       for (const record of requestRecords) {
-        const speakerId = record.speakerId as string
-
-        if (!speakerCache.has(speakerId)) {
-          try {
-            const speaker = await locals.pb.collection('speakers').getOne(speakerId)
-            const firstName = (speaker.firstName as string) || ''
-            const lastName = (speaker.lastName as string) || ''
-            speakerCache.set(speakerId, `${firstName} ${lastName}`.trim() || 'Unknown Speaker')
-          } catch {
-            speakerCache.set(speakerId, 'Unknown Speaker')
-          }
-        }
-
-        const speakerName = speakerCache.get(speakerId) || 'Unknown Speaker'
-        const requestNumber = (record.requestNumber as string) || ''
-        const status = (record.status as string) || 'draft'
-        const currency = (record.currency as string) || 'EUR'
-
+        const speakerName = await getSpeakerName(
+          locals.pb,
+          record.speakerId as string,
+          speakerCache
+        )
         const items = await locals.pb.collection('reimbursement_items').getFullList({
           filter: `requestId = "${record.id}"`,
           sort: 'date'
         })
 
-        if (items.length === 0) {
-          csvRows.push(
-            [
-              escapeCsvField(requestNumber),
-              escapeCsvField(speakerName),
-              escapeCsvField(status),
-              '',
-              '',
-              String((record.totalAmount as number) || 0),
-              '',
-              escapeCsvField(currency)
-            ].join(',')
-          )
-        } else {
-          for (const item of items) {
-            const expenseType = (item.expenseType as string) || 'other'
-            const description = (item.description as string) || ''
-            const amount = (item.amount as number) || 0
-            const date = item.date ? new Date(item.date as string).toISOString().split('T')[0] : ''
-
-            csvRows.push(
-              [
-                escapeCsvField(requestNumber),
-                escapeCsvField(speakerName),
-                escapeCsvField(status),
-                escapeCsvField(expenseType),
-                escapeCsvField(description),
-                String(amount),
-                escapeCsvField(date),
-                escapeCsvField(currency)
-              ].join(',')
-            )
-          }
-        }
+        const rows = buildCsvRowsForRequest(
+          (record.requestNumber as string) || '',
+          speakerName,
+          (record.status as string) || 'draft',
+          (record.currency as string) || 'EUR',
+          (record.totalAmount as number) || 0,
+          items
+        )
+        csvRows.push(...rows)
       }
 
       return { csv: csvRows.join('\n'), action: 'exportCsv' }
@@ -412,12 +496,4 @@ export const actions: Actions = {
       return fail(500, { error: 'Failed to export reimbursements', action: 'exportCsv' })
     }
   }
-}
-
-function escapeCsvField(value: string | number): string {
-  const str = String(value)
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`
-  }
-  return str
 }

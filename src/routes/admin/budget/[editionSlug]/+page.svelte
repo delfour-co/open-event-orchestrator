@@ -201,6 +201,12 @@ $effect(() => {
 		>
 			Reimbursements
 		</a>
+		<a
+			href="/admin/budget/{data.edition.slug}/journal"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Journal
+		</a>
 	</nav>
 
 	{#if data.budget}

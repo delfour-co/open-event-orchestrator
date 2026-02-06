@@ -1,4 +1,5 @@
 import { DEFAULT_CATEGORIES } from '$lib/features/budget/domain'
+import { createFinancialAuditService } from '$lib/features/budget/services/financial-audit-service'
 import { error, fail } from '@sveltejs/kit'
 import type PocketBase from 'pocketbase'
 import type { Actions, PageServerLoad } from './$types'
@@ -147,6 +148,11 @@ export const actions: Actions = {
       return fail(400, { error: 'Edition ID is required', action: 'createBudget' })
     }
 
+    const auditService = createFinancialAuditService(locals.pb, {
+      editionId,
+      userId: locals.user?.id
+    })
+
     try {
       // Create budget
       const budget = await locals.pb.collection('edition_budgets').create({
@@ -157,13 +163,23 @@ export const actions: Actions = {
         notes: null
       })
 
+      auditService.logBudgetCreate(budget.id as string, {
+        totalBudget: Number(totalBudget) || 0,
+        currency: currency || 'EUR',
+        status: 'draft'
+      })
+
       // Create default categories
       for (const name of DEFAULT_CATEGORIES) {
-        await locals.pb.collection('budget_categories').create({
+        const category = await locals.pb.collection('budget_categories').create({
           budgetId: budget.id,
           name,
           plannedAmount: 0,
           notes: null
+        })
+        auditService.logCategoryCreate(category.id as string, name, {
+          name,
+          plannedAmount: 0
         })
       }
 
@@ -188,11 +204,24 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('budget_categories').create({
+      const budget = await locals.pb.collection('edition_budgets').getOne(budgetId)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const category = await locals.pb.collection('budget_categories').create({
         budgetId,
         name: name.trim(),
         plannedAmount: Number(plannedAmount) || 0,
         notes: null
+      })
+
+      auditService.logCategoryCreate(category.id as string, name.trim(), {
+        name: name.trim(),
+        plannedAmount: Number(plannedAmount) || 0
       })
 
       return { success: true, action: 'createCategory' }
@@ -217,7 +246,30 @@ export const actions: Actions = {
     }
 
     try {
+      const oldCategory = await locals.pb.collection('budget_categories').getOne(id)
+      const budget = await locals.pb
+        .collection('edition_budgets')
+        .getOne(oldCategory.budgetId as string)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const oldData = {
+        name: oldCategory.name,
+        plannedAmount: oldCategory.plannedAmount,
+        notes: oldCategory.notes
+      }
+
       await locals.pb.collection('budget_categories').update(id, {
+        name: name.trim(),
+        plannedAmount: Number(plannedAmount) || 0,
+        notes: notes?.trim() || null
+      })
+
+      auditService.logCategoryUpdate(id, name.trim(), oldData, {
         name: name.trim(),
         plannedAmount: Number(plannedAmount) || 0,
         notes: notes?.trim() || null
@@ -252,7 +304,27 @@ export const actions: Actions = {
         })
       }
 
+      const oldCategory = await locals.pb.collection('budget_categories').getOne(id)
+      const budget = await locals.pb
+        .collection('edition_budgets')
+        .getOne(oldCategory.budgetId as string)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const oldData = {
+        name: oldCategory.name,
+        plannedAmount: oldCategory.plannedAmount,
+        notes: oldCategory.notes
+      }
+
       await locals.pb.collection('budget_categories').delete(id)
+
+      auditService.logCategoryDelete(id, oldCategory.name as string, oldData)
+
       return { success: true, action: 'deleteCategory' }
     } catch (err) {
       console.error('Failed to delete category:', err)
@@ -282,7 +354,18 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('budget_transactions').create({
+      const category = await locals.pb.collection('budget_categories').getOne(categoryId)
+      const budget = await locals.pb
+        .collection('edition_budgets')
+        .getOne(category.budgetId as string)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const transaction = await locals.pb.collection('budget_transactions').create({
         categoryId,
         type: type || 'expense',
         amount: Number(amount),
@@ -290,6 +373,14 @@ export const actions: Actions = {
         vendor: vendor?.trim() || null,
         invoiceNumber: invoiceNumber?.trim() || null,
         date: date ? new Date(date).toISOString() : new Date().toISOString(),
+        status: status || 'pending'
+      })
+
+      auditService.logTransactionCreate(transaction.id as string, {
+        type: type || 'expense',
+        amount: Number(amount),
+        description: description.trim(),
+        vendor: vendor?.trim() || null,
         status: status || 'pending'
       })
 
@@ -319,6 +410,28 @@ export const actions: Actions = {
     }
 
     try {
+      const oldTransaction = await locals.pb.collection('budget_transactions').getOne(id)
+      const category = await locals.pb
+        .collection('budget_categories')
+        .getOne(oldTransaction.categoryId as string)
+      const budget = await locals.pb
+        .collection('edition_budgets')
+        .getOne(category.budgetId as string)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const oldData = {
+        type: oldTransaction.type,
+        amount: oldTransaction.amount,
+        description: oldTransaction.description,
+        vendor: oldTransaction.vendor,
+        status: oldTransaction.status
+      }
+
       await locals.pb.collection('budget_transactions').update(id, {
         type: type || 'expense',
         amount: Number(amount) || 0,
@@ -326,6 +439,14 @@ export const actions: Actions = {
         vendor: vendor?.trim() || null,
         invoiceNumber: invoiceNumber?.trim() || null,
         date: date ? new Date(date).toISOString() : undefined,
+        status: status || 'pending'
+      })
+
+      auditService.logTransactionUpdate(id, oldData, {
+        type: type || 'expense',
+        amount: Number(amount) || 0,
+        description: description.trim(),
+        vendor: vendor?.trim() || null,
         status: status || 'pending'
       })
 
@@ -345,7 +466,32 @@ export const actions: Actions = {
     }
 
     try {
+      const oldTransaction = await locals.pb.collection('budget_transactions').getOne(id)
+      const category = await locals.pb
+        .collection('budget_categories')
+        .getOne(oldTransaction.categoryId as string)
+      const budget = await locals.pb
+        .collection('edition_budgets')
+        .getOne(category.budgetId as string)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const oldData = {
+        type: oldTransaction.type,
+        amount: oldTransaction.amount,
+        description: oldTransaction.description,
+        vendor: oldTransaction.vendor,
+        status: oldTransaction.status
+      }
+
       await locals.pb.collection('budget_transactions').delete(id)
+
+      auditService.logTransactionDelete(id, oldData)
+
       return { success: true, action: 'deleteTransaction' }
     } catch (err) {
       console.error('Failed to delete transaction:', err)

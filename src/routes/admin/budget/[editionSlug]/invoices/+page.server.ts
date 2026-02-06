@@ -1,3 +1,4 @@
+import { createFinancialAuditService } from '$lib/features/budget/services/financial-audit-service'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -145,6 +146,20 @@ export const actions: Actions = {
     }
 
     try {
+      const transaction = await locals.pb.collection('budget_transactions').getOne(transactionId)
+      const category = await locals.pb
+        .collection('budget_categories')
+        .getOne(transaction.categoryId as string)
+      const budget = await locals.pb
+        .collection('edition_budgets')
+        .getOne(category.budgetId as string)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
       const pbFormData = new FormData()
       pbFormData.append('transactionId', transactionId)
       pbFormData.append('invoiceNumber', invoiceNumber.trim())
@@ -165,7 +180,13 @@ export const actions: Actions = {
         pbFormData.append('file', file)
       }
 
-      await locals.pb.collection('budget_invoices').create(pbFormData)
+      const invoice = await locals.pb.collection('budget_invoices').create(pbFormData)
+
+      auditService.logInvoiceCreate(invoice.id as string, invoiceNumber.trim(), {
+        amount: Number(amount),
+        transactionId,
+        hasFile: !!(file && file.size > 0)
+      })
 
       return { success: true, action: 'uploadInvoice' }
     } catch (err) {
@@ -183,7 +204,32 @@ export const actions: Actions = {
     }
 
     try {
+      const oldInvoice = await locals.pb.collection('budget_invoices').getOne(id)
+      const transaction = await locals.pb
+        .collection('budget_transactions')
+        .getOne(oldInvoice.transactionId as string)
+      const category = await locals.pb
+        .collection('budget_categories')
+        .getOne(transaction.categoryId as string)
+      const budget = await locals.pb
+        .collection('edition_budgets')
+        .getOne(category.budgetId as string)
+      const editionId = budget.editionId as string
+
+      const auditService = createFinancialAuditService(locals.pb, {
+        editionId,
+        userId: locals.user?.id
+      })
+
+      const oldData = {
+        invoiceNumber: oldInvoice.invoiceNumber,
+        amount: oldInvoice.amount
+      }
+
       await locals.pb.collection('budget_invoices').delete(id)
+
+      auditService.logInvoiceDelete(id, oldInvoice.invoiceNumber as string, oldData)
+
       return { success: true, action: 'deleteInvoice' }
     } catch (err) {
       console.error('Failed to delete invoice:', err)
