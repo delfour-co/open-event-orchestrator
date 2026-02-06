@@ -15,6 +15,7 @@
  * - First run: go to http://localhost:8090/_/ to create admin account
  */
 
+import { randomBytes } from 'node:crypto'
 import PocketBase from 'pocketbase'
 
 const POCKETBASE_URL = process.env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
@@ -702,10 +703,15 @@ function jsonField(name: string, required = false): Record<string, unknown> {
 }
 
 // Collection schemas WITHOUT relation fields (relations are added later)
-// Test tokens for E2E tests (64 hex chars = 32 bytes)
+// Generate real random tokens for speaker access (32 bytes = 64 hex chars)
+function generateToken(): string {
+  return randomBytes(32).toString('hex')
+}
+
+// Tokens are generated at runtime for security
 const TEST_SPEAKER_TOKENS = {
-  speaker1: 'a'.repeat(64), // For speaker@example.com
-  speaker2: 'b'.repeat(64) // For speaker2@example.com
+  speaker1: generateToken(), // For speaker@example.com
+  speaker2: generateToken() // For speaker2@example.com
 }
 
 const collectionSchemas: Array<{
