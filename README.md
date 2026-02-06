@@ -235,18 +235,19 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [x] One-click unsubscribe mechanism
 - [x] Unit and E2E tests
 
-### Phase 5 — API
-
-- [ ] REST API with authentication
-- [ ] Webhooks
-- [ ] Embeddable widgets
-
-### Phase 6 — Budget & Finance ✅
+### Phase 5 — Budget & Finance ✅
 
 - [x] Budget model: categories, transactions (#60)
 - [x] Budget dashboard with visualization (#61)
 - [x] Quotes and invoices management (#62)
 - [x] Speaker reimbursements with portal (#63)
+
+### Phase 6 — Financial Journal
+
+- [ ] Financial audit log model (#90)
+- [ ] Automatic logging of all financial operations (#91)
+- [ ] Journal viewer with filters and search (#92)
+- [ ] Export journal for accounting (#93)
 
 ### Phase 7 — Sponsoring
 
@@ -255,6 +256,19 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [ ] Sponsoring packages configuration (#66)
 - [ ] Public sponsors page (#67)
 - [ ] Sponsor portal (#68)
+
+### Phase 8 — API
+
+- [ ] REST API with authentication
+- [ ] Webhooks
+- [ ] Embeddable widgets
+
+### Phase 9 — CRM & Emails v2
+
+- [ ] Advanced email templates with visual editor
+- [ ] Email automation workflows
+- [ ] A/B testing for campaigns
+- [ ] Enhanced analytics and reporting
 
 See the [GitHub Milestones](https://github.com/delfour-co/open-event-orchestrator/milestones) for detailed progress.
 
