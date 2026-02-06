@@ -99,7 +99,7 @@ export const load: PageServerLoad = async ({ parent, url, locals }) => {
       try {
         const invitations = await locals.pb.collection('cospeaker_invitations').getFullList({
           filter: `talkId="${talk.id}" && status="pending"`,
-          requestKey: `cospeaker-invitations-${talk.id}`
+          requestKey: null
         })
         coSpeakerInvitations = invitations.map((inv) => ({
           id: inv.id as string,

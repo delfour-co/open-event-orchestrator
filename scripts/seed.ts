@@ -1386,6 +1386,92 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  // Quotes & Invoices collections
+  {
+    name: 'budget_quotes',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('quoteNumber', true),
+      textField('vendor', true),
+      emailField('vendorEmail'),
+      textField('vendorAddress'),
+      textField('description'),
+      jsonField('items'),
+      numberField('totalAmount'),
+      selectField('currency', ['EUR', 'USD', 'GBP']),
+      selectField('status', ['draft', 'sent', 'accepted', 'rejected', 'expired']),
+      dateField('validUntil'),
+      textField('notes'),
+      dateField('sentAt'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'budget_invoices',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('invoiceNumber', true),
+      textField('file'),
+      dateField('issueDate'),
+      dateField('dueDate'),
+      numberField('amount'),
+      textField('notes'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  // Reimbursement collections
+  {
+    name: 'reimbursement_requests',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('requestNumber', true),
+      selectField('status', ['draft', 'submitted', 'under_review', 'approved', 'rejected', 'paid']),
+      numberField('totalAmount'),
+      selectField('currency', ['EUR', 'USD', 'GBP']),
+      textField('notes'),
+      textField('adminNotes'),
+      dateField('reviewedAt'),
+      dateField('submittedAt'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'reimbursement_items',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      selectField('expenseType', ['transport', 'accommodation', 'meals', 'other']),
+      textField('description', true),
+      numberField('amount', true),
+      dateField('date'),
+      textField('receipt'),
+      textField('notes'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -1456,6 +1542,36 @@ const relationDefinitions = [
     collection: 'budget_transactions',
     field: 'categoryId',
     target: 'budget_categories',
+    maxSelect: 1
+  },
+  // Quotes & Invoices relations
+  { collection: 'budget_quotes', field: 'editionId', target: 'editions', maxSelect: 1 },
+  {
+    collection: 'budget_quotes',
+    field: 'transactionId',
+    target: 'budget_transactions',
+    maxSelect: 1
+  },
+  {
+    collection: 'budget_invoices',
+    field: 'transactionId',
+    target: 'budget_transactions',
+    maxSelect: 1
+  },
+  // Reimbursement relations
+  { collection: 'reimbursement_requests', field: 'editionId', target: 'editions', maxSelect: 1 },
+  { collection: 'reimbursement_requests', field: 'speakerId', target: 'speakers', maxSelect: 1 },
+  { collection: 'reimbursement_requests', field: 'reviewedBy', target: 'users', maxSelect: 1 },
+  {
+    collection: 'reimbursement_requests',
+    field: 'transactionId',
+    target: 'budget_transactions',
+    maxSelect: 1
+  },
+  {
+    collection: 'reimbursement_items',
+    field: 'requestId',
+    target: 'reimbursement_requests',
     maxSelect: 1
   }
 ]
@@ -1775,6 +1891,9 @@ async function seed(): Promise<void> {
     emailCampaigns: string[]
     budget: string
     budgetCategories: string[]
+    quotes: string[]
+    invoices: string[]
+    reimbursementRequests: string[]
   } = {
     users: [],
     organization: '',
@@ -1795,7 +1914,10 @@ async function seed(): Promise<void> {
     emailTemplates: [],
     emailCampaigns: [],
     budget: '',
-    budgetCategories: []
+    budgetCategories: [],
+    quotes: [],
+    invoices: [],
+    reimbursementRequests: []
   }
 
   try {
@@ -3359,6 +3481,290 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // 17d. Create Budget Quotes
+    // ========================================================================
+    console.log('📝 Creating budget quotes...')
+    const quoteDefinitions = [
+      {
+        quoteNumber: 'QT-DEVFEST-0001',
+        vendor: 'AudioVisual Pro',
+        vendorEmail: 'contact@avpro.fr',
+        vendorAddress: '12 Rue de la Technique, 75001 Paris',
+        description: 'AV equipment rental for 2-day conference',
+        items: [
+          { description: 'Projector rental (3 rooms)', quantity: 3, unitPrice: 500 },
+          { description: 'Microphone sets', quantity: 6, unitPrice: 150 },
+          { description: 'Sound system', quantity: 3, unitPrice: 800 }
+        ],
+        totalAmount: 5700,
+        currency: 'EUR',
+        status: 'accepted',
+        validUntil: '2025-09-30',
+        notes: 'Includes delivery and setup'
+      },
+      {
+        quoteNumber: 'QT-DEVFEST-0002',
+        vendor: 'PrintMaster',
+        vendorEmail: 'info@printmaster.fr',
+        vendorAddress: '45 Avenue du Commerce, 75008 Paris',
+        description: 'Conference materials printing',
+        items: [
+          { description: 'Event program booklets (500)', quantity: 500, unitPrice: 2.5 },
+          { description: 'Roll-up banners', quantity: 4, unitPrice: 120 },
+          { description: 'Speaker name badges', quantity: 20, unitPrice: 8 }
+        ],
+        totalAmount: 1890,
+        currency: 'EUR',
+        status: 'sent',
+        validUntil: '2025-10-15',
+        notes: ''
+      },
+      {
+        quoteNumber: 'QT-DEVFEST-0003',
+        vendor: 'SwagFactory',
+        vendorEmail: 'orders@swagfactory.com',
+        vendorAddress: '8 Boulevard des Goodies, 69002 Lyon',
+        description: 'Conference swag and goodies',
+        items: [
+          { description: 'Custom t-shirts (400)', quantity: 400, unitPrice: 8 },
+          { description: 'Branded stickers pack', quantity: 1000, unitPrice: 0.5 },
+          { description: 'Tote bags', quantity: 400, unitPrice: 3 }
+        ],
+        totalAmount: 4900,
+        currency: 'EUR',
+        status: 'draft',
+        validUntil: '2025-11-01',
+        notes: 'Pending design approval'
+      }
+    ]
+
+    if (ids.budget) {
+      for (const quoteDef of quoteDefinitions) {
+        try {
+          const existing = await pb.collection('budget_quotes').getList(1, 1, {
+            filter: `quoteNumber = "${quoteDef.quoteNumber}" && editionId = "${ids.edition}"`
+          })
+
+          if (existing.items.length > 0) {
+            console.log(`  Quote '${quoteDef.quoteNumber}' already exists`)
+            ids.quotes.push(existing.items[0].id)
+          } else {
+            const q = await pb.collection('budget_quotes').create({
+              editionId: ids.edition,
+              quoteNumber: quoteDef.quoteNumber,
+              vendor: quoteDef.vendor,
+              vendorEmail: quoteDef.vendorEmail,
+              vendorAddress: quoteDef.vendorAddress,
+              description: quoteDef.description,
+              items: JSON.stringify(quoteDef.items),
+              totalAmount: quoteDef.totalAmount,
+              currency: quoteDef.currency,
+              status: quoteDef.status,
+              validUntil: quoteDef.validUntil,
+              notes: quoteDef.notes,
+              sentAt:
+                quoteDef.status === 'sent' || quoteDef.status === 'accepted' ? '2025-09-01' : ''
+            })
+            console.log(`  Created quote: ${quoteDef.quoteNumber} (${quoteDef.vendor})`)
+            ids.quotes.push(q.id)
+          }
+        } catch (err) {
+          console.error(`  Failed to create quote ${quoteDef.quoteNumber}:`, err)
+        }
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 17e. Create Budget Invoices
+    // ========================================================================
+    console.log('🧾 Creating budget invoices...')
+    // Get transaction IDs for linking invoices
+    let transactionRecords: Array<{ id: string; description: string }> = []
+    if (ids.budget && ids.budgetCategories.length > 0) {
+      try {
+        const filter = ids.budgetCategories.map((id) => `categoryId = "${id}"`).join(' || ')
+        const txRecords = await pb.collection('budget_transactions').getFullList({
+          filter,
+          sort: '-date'
+        })
+        transactionRecords = txRecords.map((r) => ({
+          id: r.id as string,
+          description: r.description as string
+        }))
+      } catch {
+        console.log('  Could not fetch transactions for invoices')
+      }
+    }
+
+    const invoiceDefinitions = [
+      {
+        invoiceNumber: 'INV-PDC-2025-001',
+        transactionDescription: 'Venue deposit',
+        issueDate: '2025-06-01',
+        dueDate: '2025-06-30',
+        amount: 10000,
+        notes: 'Palais des Congres - 50% deposit'
+      },
+      {
+        invoiceNumber: 'INV-TP-2025-042',
+        transactionDescription: 'Catering contract - Day 1',
+        issueDate: '2025-09-01',
+        dueDate: '2025-10-01',
+        amount: 4500,
+        notes: 'Traiteur Paris - Day 1 catering'
+      }
+    ]
+
+    for (const invDef of invoiceDefinitions) {
+      try {
+        const matchingTx = transactionRecords.find(
+          (t) => t.description === invDef.transactionDescription
+        )
+        if (!matchingTx) {
+          console.log(`  Skipping invoice ${invDef.invoiceNumber} (no matching transaction)`)
+          continue
+        }
+
+        const existing = await pb.collection('budget_invoices').getList(1, 1, {
+          filter: `invoiceNumber = "${invDef.invoiceNumber}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Invoice '${invDef.invoiceNumber}' already exists`)
+          ids.invoices.push(existing.items[0].id)
+        } else {
+          const inv = await pb.collection('budget_invoices').create({
+            transactionId: matchingTx.id,
+            invoiceNumber: invDef.invoiceNumber,
+            issueDate: invDef.issueDate,
+            dueDate: invDef.dueDate,
+            amount: invDef.amount,
+            notes: invDef.notes
+          })
+          console.log(`  Created invoice: ${invDef.invoiceNumber} (${invDef.amount} EUR)`)
+          ids.invoices.push(inv.id)
+        }
+      } catch (err) {
+        console.error(`  Failed to create invoice ${invDef.invoiceNumber}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
+    // 17f. Create Reimbursement Requests
+    // ========================================================================
+    console.log('💸 Creating reimbursement requests...')
+    const reimbursementDefinitions = [
+      {
+        speakerIndex: 0,
+        requestNumber: 'RB-DEVFEST-0001',
+        status: 'submitted',
+        currency: 'EUR',
+        notes: 'Travel expenses for DevFest Paris 2025',
+        items: [
+          {
+            expenseType: 'transport',
+            description: 'Train ticket London-Paris (Eurostar)',
+            amount: 250,
+            date: '2025-10-14',
+            notes: 'Round trip'
+          },
+          {
+            expenseType: 'accommodation',
+            description: 'Hotel Mercure 2 nights',
+            amount: 320,
+            date: '2025-10-14',
+            notes: 'Oct 14-16'
+          },
+          {
+            expenseType: 'meals',
+            description: 'Dinner with co-speakers',
+            amount: 45,
+            date: '2025-10-14',
+            notes: ''
+          }
+        ]
+      },
+      {
+        speakerIndex: 1,
+        requestNumber: 'RB-DEVFEST-0002',
+        status: 'draft',
+        currency: 'EUR',
+        notes: 'Speaker expenses',
+        items: [
+          {
+            expenseType: 'transport',
+            description: 'TGV Lyon-Paris return',
+            amount: 120,
+            date: '2025-10-15',
+            notes: ''
+          },
+          {
+            expenseType: 'other',
+            description: 'Taxi to venue',
+            amount: 35,
+            date: '2025-10-15',
+            notes: 'From Gare de Lyon'
+          }
+        ]
+      }
+    ]
+
+    for (const rbDef of reimbursementDefinitions) {
+      try {
+        const speakerId = ids.speakers[rbDef.speakerIndex]
+        if (!speakerId) {
+          console.log(`  Skipping reimbursement (speaker index ${rbDef.speakerIndex} not found)`)
+          continue
+        }
+
+        const existing = await pb.collection('reimbursement_requests').getList(1, 1, {
+          filter: `requestNumber = "${rbDef.requestNumber}" && editionId = "${ids.edition}"`
+        })
+
+        if (existing.items.length > 0) {
+          console.log(`  Reimbursement '${rbDef.requestNumber}' already exists`)
+          ids.reimbursementRequests.push(existing.items[0].id)
+          continue
+        }
+
+        const totalAmount = rbDef.items.reduce((sum, item) => sum + item.amount, 0)
+
+        const req = await pb.collection('reimbursement_requests').create({
+          editionId: ids.edition,
+          speakerId,
+          requestNumber: rbDef.requestNumber,
+          status: rbDef.status,
+          totalAmount,
+          currency: rbDef.currency,
+          notes: rbDef.notes,
+          submittedAt: rbDef.status === 'submitted' ? new Date().toISOString() : ''
+        })
+        ids.reimbursementRequests.push(req.id)
+
+        // Create items
+        for (const itemDef of rbDef.items) {
+          await pb.collection('reimbursement_items').create({
+            requestId: req.id,
+            expenseType: itemDef.expenseType,
+            description: itemDef.description,
+            amount: itemDef.amount,
+            date: itemDef.date,
+            notes: itemDef.notes
+          })
+        }
+
+        console.log(
+          `  Created reimbursement: ${rbDef.requestNumber} (${totalAmount} EUR, ${rbDef.items.length} items)`
+        )
+      } catch (err) {
+        console.error(`  Failed to create reimbursement ${rbDef.requestNumber}:`, err)
+      }
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -3388,6 +3794,9 @@ async function seed(): Promise<void> {
     console.log(`   Budget: ${ids.budget ? 1 : 0}`)
     console.log(`   Budget Categories: ${ids.budgetCategories.length}`)
     console.log(`   Budget Transactions: ${transactionsCreated}`)
+    console.log(`   Budget Quotes: ${ids.quotes.length}`)
+    console.log(`   Budget Invoices: ${ids.invoices.length}`)
+    console.log(`   Reimbursement Requests: ${ids.reimbursementRequests.length}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')

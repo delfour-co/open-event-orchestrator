@@ -34,10 +34,8 @@ export const createSpeakerRepository = (pb: PocketBase) => ({
   async findByIds(ids: string[]): Promise<Speaker[]> {
     if (ids.length === 0) return []
     const filter = ids.map((id) => `id = "${id}"`).join(' || ')
-    // Use unique requestKey to prevent auto-cancellation when called in parallel
-    const records = await pb
-      .collection(COLLECTION)
-      .getFullList({ filter, requestKey: `speakers-${ids.join('-')}` })
+    // Disable auto-cancellation to allow parallel calls
+    const records = await pb.collection(COLLECTION).getFullList({ filter, requestKey: null })
     return records.map(mapRecordToSpeaker)
   },
 

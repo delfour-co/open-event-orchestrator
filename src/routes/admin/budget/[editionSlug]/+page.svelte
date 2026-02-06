@@ -175,6 +175,34 @@ $effect(() => {
 		</div>
 	</div>
 
+	<!-- Sub-navigation -->
+	<nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+		<a
+			href="/admin/budget/{data.edition.slug}"
+			class="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm"
+		>
+			Dashboard
+		</a>
+		<a
+			href="/admin/budget/{data.edition.slug}/quotes"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Quotes
+		</a>
+		<a
+			href="/admin/budget/{data.edition.slug}/invoices"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Invoices
+		</a>
+		<a
+			href="/admin/budget/{data.edition.slug}/reimbursements"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Reimbursements
+		</a>
+	</nav>
+
 	{#if data.budget}
 		<!-- Stats Cards -->
 		<div class="grid gap-4 md:grid-cols-4">

@@ -89,3 +89,11 @@ export async function refreshSpeakerToken(
 export function buildSubmissionsUrl(baseUrl: string, editionSlug: string, token: string): string {
   return `${baseUrl}/cfp/${editionSlug}/submissions?token=${token}`
 }
+
+export function buildReimbursementsUrl(
+  baseUrl: string,
+  editionSlug: string,
+  token: string
+): string {
+  return `${baseUrl}/speaker/${editionSlug}/reimbursements?token=${token}`
+}
