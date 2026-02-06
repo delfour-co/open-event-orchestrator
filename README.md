@@ -15,7 +15,7 @@ Open Event Orchestrator is an **all-in-one open-source platform** for managing c
 - **Planning** — Build your schedule with drag-and-drop simplicity
 - **Ticketing** — Sell tickets, manage registrations, and check-in attendees
 - **CRM** — Keep track of your community across all events
-- **Budget** — Track expenses, income, and budget categories per edition
+- **Budget** — Track expenses, income, quotes, invoices, and speaker reimbursements
 - **API** — Headless API for custom integrations and websites
 
 ## Quick Start
@@ -241,12 +241,12 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [ ] Webhooks
 - [ ] Embeddable widgets
 
-### Phase 6 — Budget & Finance 🚧
+### Phase 6 — Budget & Finance ✅
 
 - [x] Budget model: categories, transactions (#60)
 - [x] Budget dashboard with visualization (#61)
-- [ ] Quotes and invoices management (#62)
-- [ ] Speaker reimbursements (#63)
+- [x] Quotes and invoices management (#62)
+- [x] Speaker reimbursements with portal (#63)
 
 ### Phase 7 — Sponsoring
 
