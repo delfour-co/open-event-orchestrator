@@ -199,7 +199,7 @@ test.describe('Billing Public Module', () => {
 
       // Verify confirmation page
       await expect(page.getByText('Order Confirmed')).toBeVisible()
-      await expect(page.getByText('Test User')).toBeVisible()
+      await expect(page.getByText('Test User').first()).toBeVisible()
     })
 
     test('should display order details on confirmation', async ({ page }) => {
@@ -228,8 +228,8 @@ test.describe('Billing Public Module', () => {
 
       // Order Details
       await expect(page.getByText('Order Details')).toBeVisible()
-      await expect(page.getByText('Jane Doe')).toBeVisible()
-      await expect(page.getByText(email)).toBeVisible()
+      await expect(page.getByText('Jane Doe').first()).toBeVisible()
+      await expect(page.getByText(email).first()).toBeVisible()
       await expect(page.getByText('Student').first()).toBeVisible()
     })
 
@@ -257,7 +257,7 @@ test.describe('Billing Public Module', () => {
       await page.waitForURL(/\/confirmation\?order=/, { timeout: 15000 })
 
       // Should show Your Tickets section
-      await expect(page.getByText('Your Tickets')).toBeVisible()
+      await expect(page.getByText('Your Tickets').first()).toBeVisible()
 
       // Should have a ticket with Valid status
       await expect(page.getByText('Valid')).toBeVisible()

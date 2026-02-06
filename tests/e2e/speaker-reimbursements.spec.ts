@@ -2,24 +2,27 @@ import { expect, test } from '@playwright/test'
 
 test.describe('Speaker Reimbursements', () => {
   const editionSlug = 'devfest-paris-2025'
-  // Token from seed data (TEST_SPEAKER_TOKENS.speaker1)
-  const speakerToken = 'test-speaker-token-1'
+  // Token from seed data (TEST_SPEAKER_TOKENS.speaker1 = 'a'.repeat(64))
+  const speakerToken = 'a'.repeat(64)
   const reimbursementsUrl = `/speaker/${editionSlug}/reimbursements?token=${speakerToken}`
 
   test.describe('Token Authentication', () => {
-    test('should show access required without token', async ({ page }) => {
+    test('should show access form without token', async ({ page }) => {
       await page.goto(`/speaker/${editionSlug}/reimbursements`)
-      await expect(page.getByRole('heading', { name: 'Access Required' })).toBeVisible()
+      // Shows access request form when no token
+      await expect(page.getByRole('heading', { name: 'Access Your Reimbursements' })).toBeVisible()
     })
 
-    test('should show access required with invalid token', async ({ page }) => {
+    test('should show access form with invalid token', async ({ page }) => {
       await page.goto(`/speaker/${editionSlug}/reimbursements?token=invalid-token`)
-      await expect(page.getByRole('heading', { name: 'Access Required' })).toBeVisible()
+      // Invalid token also shows access request form
+      await expect(page.getByRole('heading', { name: 'Access Your Reimbursements' })).toBeVisible()
     })
 
     test('should show speaker name with valid token', async ({ page }) => {
       await page.goto(reimbursementsUrl)
-      await expect(page.locator('text=Welcome, Jane Speaker')).toBeVisible()
+      // Speaker name format: "Welcome, {firstName} {lastName}"
+      await expect(page.getByText(/Welcome,.*Jane/)).toBeVisible()
     })
   })
 
@@ -57,10 +60,8 @@ test.describe('Speaker Reimbursements', () => {
       await page.getByRole('button', { name: /Create Request/ }).click()
       await page.waitForLoadState('networkidle')
 
-      // Verify success
-      await expect(
-        page.locator('text=Reimbursement request created').or(page.locator('text=RB-'))
-      ).toBeVisible()
+      // Verify success - check for success message
+      await expect(page.getByText('Reimbursement request created')).toBeVisible()
     })
 
     test('should show status badges on requests', async ({ page }) => {

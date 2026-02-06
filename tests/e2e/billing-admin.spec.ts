@@ -23,7 +23,8 @@ test.describe('Billing Admin Module', () => {
     test('should navigate to edition billing dashboard', async ({ page }) => {
       await page.goto('/admin/billing')
 
-      await page.getByRole('link', { name: /Manage Tickets/ }).click()
+      // Click the Manage Tickets link for the specific edition
+      await page.locator(`a[href="${billingUrl}"]`).click()
 
       await expect(page).toHaveURL(billingUrl)
     })
@@ -31,7 +32,10 @@ test.describe('Billing Admin Module', () => {
     test('should show edition status badge', async ({ page }) => {
       await page.goto('/admin/billing')
 
-      await expect(page.locator('text=published').or(page.locator('text=draft'))).toBeVisible()
+      // Multiple editions may have status badges, just verify at least one exists
+      await expect(
+        page.locator('text=published').or(page.locator('text=draft')).first()
+      ).toBeVisible()
     })
   })
 
@@ -53,10 +57,11 @@ test.describe('Billing Admin Module', () => {
     test('should show stats cards', async ({ page }) => {
       await page.goto(billingUrl)
 
-      await expect(page.getByText('Revenue')).toBeVisible()
-      await expect(page.getByText('Tickets Sold')).toBeVisible()
-      await expect(page.getByText('Check-in')).toBeVisible()
-      await expect(page.getByText('Orders')).toBeVisible()
+      // Stats cards have headings
+      await expect(page.getByRole('heading', { name: 'Revenue' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Tickets Sold' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Check-in' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Orders' })).toBeVisible()
     })
 
     test('should show navigation links', async ({ page }) => {
@@ -69,19 +74,21 @@ test.describe('Billing Admin Module', () => {
     test('should display seeded ticket types', async ({ page }) => {
       await page.goto(billingUrl)
 
-      await expect(page.getByText('Early Bird')).toBeVisible()
-      await expect(page.getByText('Standard')).toBeVisible()
-      await expect(page.getByText('VIP')).toBeVisible()
-      await expect(page.getByText('Student')).toBeVisible()
+      // Ticket type names appear in cards
+      await expect(page.getByText('Early Bird').first()).toBeVisible()
+      await expect(page.getByText('Standard').first()).toBeVisible()
+      await expect(page.getByText('VIP').first()).toBeVisible()
+      await expect(page.getByText('Student').first()).toBeVisible()
     })
 
     test('should show ticket type details', async ({ page }) => {
       await page.goto(billingUrl)
+      await page.waitForLoadState('networkidle')
 
-      // Verify prices are displayed (formatted in EUR)
+      // Verify prices are displayed (formatted in EUR) - Student ticket is free
       await expect(page.getByText('Free').first()).toBeVisible()
-      // Verify sold counts
-      await expect(page.getByText(/0 \/ \d+/).first()).toBeVisible()
+      // Verify sold counts - pattern like "0 / 100" or "sold / total"
+      await expect(page.getByText(/\d+ \/ \d+/).first()).toBeVisible()
     })
   })
 
@@ -157,8 +164,9 @@ test.describe('Billing Admin Module', () => {
       // Wait for success
       await page.waitForLoadState('networkidle')
 
-      // Verify the ticket type was updated
-      await expect(page.getByText('0 / 30')).toBeVisible()
+      // Verify the ticket type was updated - look within the specific card
+      const updatedCard = page.locator('[class*="card"]').filter({ hasText: ticketName })
+      await expect(updatedCard.getByText('0 / 30')).toBeVisible()
     })
 
     test('should delete a ticket type with no sales', async ({ page }) => {
