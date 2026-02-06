@@ -7,7 +7,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const { editionSlug } = params
 
   // Get edition with event
-  let edition: { id: string; slug: string; expand?: { eventId?: { organizationId: string } } }
+  let edition: {
+    id: string
+    slug: string
+    name: string
+    expand?: { eventId?: { organizationId: string; name: string } }
+  }
   try {
     edition = await locals.pb
       .collection('editions')
@@ -69,10 +74,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
   return {
     edition: {
-      id: edition.id as string,
-      name: edition.name as string,
-      slug: edition.slug as string,
-      eventName: event.name as string
+      id: edition.id,
+      name: edition.name,
+      slug: edition.slug,
+      eventName: event.name
     },
     members: members.map((m) => ({
       ...m,

@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit'
-import type { Actions } from './$types'
+import type { Actions, PageServerLoad } from './$types'
 
 export const actions: Actions = {
   default: async ({ locals }) => {
@@ -8,7 +8,7 @@ export const actions: Actions = {
   }
 }
 
-export const load = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
   locals.pb.authStore.clear()
   throw redirect(303, '/')
 }

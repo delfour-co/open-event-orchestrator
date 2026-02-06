@@ -75,9 +75,6 @@ test.describe('CFP Admin Submissions', () => {
     await page.waitForLoadState('networkidle')
     await expect(page.locator('tbody tr').first()).toBeVisible()
 
-    // Count initial talks
-    const initialCount = await page.locator('tbody tr').count()
-
     // Filter by accepted status
     await page.getByLabel('Status').selectOption('accepted')
     await page.waitForLoadState('networkidle')
