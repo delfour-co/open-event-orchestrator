@@ -123,6 +123,47 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     currency: ((budgetRecords[0]?.currency as string) || 'EUR') as string
   }
 
+  // Sponsoring data
+  let editionSponsors: Array<Record<string, unknown>> = []
+  let sponsorPackages: Array<Record<string, unknown>> = []
+  try {
+    const sponsorFilter = selectedEditionId ? `editionId = "${selectedEditionId}"` : ''
+    editionSponsors = await locals.pb.collection('edition_sponsors').getFullList({
+      filter: sponsorFilter || undefined,
+      expand: 'packageId'
+    })
+    sponsorPackages = await locals.pb.collection('sponsor_packages').getFullList({
+      filter: sponsorFilter || undefined
+    })
+  } catch {
+    // Collections may not exist yet
+  }
+
+  const confirmedSponsors = editionSponsors.filter((s) => s.status === 'confirmed')
+  const sponsorRevenue = confirmedSponsors.reduce((sum, s) => sum + ((s.amount as number) || 0), 0)
+  const paidSponsors = confirmedSponsors.filter((s) => s.paidAt).length
+  const pipelineValue = editionSponsors
+    .filter((s) => s.status === 'negotiating' || s.status === 'contacted')
+    .reduce((sum, s) => {
+      const expand = s.expand as Record<string, Record<string, unknown>> | undefined
+      const pkg = expand?.packageId
+      return sum + ((s.amount as number) || (pkg?.price as number) || 0)
+    }, 0)
+
+  const sponsoringStats = {
+    totalSponsors: editionSponsors.length,
+    confirmedSponsors: confirmedSponsors.length,
+    paidSponsors,
+    prospects: editionSponsors.filter((s) => s.status === 'prospect').length,
+    contacted: editionSponsors.filter((s) => s.status === 'contacted').length,
+    negotiating: editionSponsors.filter((s) => s.status === 'negotiating').length,
+    declined: editionSponsors.filter((s) => s.status === 'declined').length,
+    revenue: sponsorRevenue,
+    pipelineValue,
+    packagesCount: sponsorPackages.length,
+    currency: ((sponsorPackages[0]?.currency as string) || 'EUR') as string
+  }
+
   const recentOrders = orders.slice(0, 5).map((o) => ({
     id: o.id as string,
     orderNumber: o.orderNumber as string,
@@ -154,6 +195,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     stats,
     billingStats,
     budgetStats,
+    sponsoringStats,
     recentOrders,
     recentSubmissions: recentTalks.items.map((t) => ({
       id: t.id as string,

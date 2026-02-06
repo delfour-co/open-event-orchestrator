@@ -41,7 +41,10 @@ export const load: PageServerLoad = async ({ locals }) => {
         year: ed.year as number,
         status: ed.status as string,
         startDate: new Date(ed.startDate as string),
-        endDate: new Date(ed.endDate as string)
+        endDate: new Date(ed.endDate as string),
+        venue: (ed.venue as string) || '',
+        city: (ed.city as string) || '',
+        country: (ed.country as string) || ''
       }))
     }
   })

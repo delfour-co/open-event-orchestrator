@@ -33,7 +33,6 @@ test-results/
 
 # PocketBase
 pb_data/
-pb_migrations/
 
 # Misc
 *.tgz

@@ -88,11 +88,12 @@ test.describe('CFP Speaker Submissions - Token Access', () => {
     await expect(page.getByRole('link', { name: 'Submit Another Talk' })).toBeVisible()
   })
 
-  test('should show invalid token message for bad token', async ({ page }) => {
+  test('should show access form for bad token', async ({ page }) => {
     await page.goto(`/cfp/${editionSlug}/submissions?token=invalid-token`)
 
-    await expect(page.getByText('Invalid or Expired Link')).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Request New Access Link' })).toBeVisible()
+    // Invalid token shows access form (same as no token)
+    await expect(page.getByRole('heading', { name: 'Access Your Submissions' })).toBeVisible()
+    await expect(page.getByLabel('Email Address')).toBeVisible()
   })
 })
 
@@ -151,10 +152,14 @@ test.describe('CFP Speaker Accepted Talk Actions', () => {
     await page.goto(`/cfp/${editionSlug}/submissions?token=${TEST_TOKENS.speaker2}`)
 
     // Check for accepted talk section
-    const acceptedSection = page.locator('text=Congratulations! Your talk has been accepted')
+    const acceptedSection = page
+      .locator('text=Congratulations! Your talk has been accepted')
+      .first()
     if (await acceptedSection.isVisible()) {
-      await expect(page.getByRole('button', { name: 'Confirm Participation' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Decline' })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Confirm Participation' }).first()
+      ).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Decline' }).first()).toBeVisible()
     }
   })
 

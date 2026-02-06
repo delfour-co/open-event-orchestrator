@@ -35,20 +35,22 @@ test.describe('Budget Reimbursements (Admin)', () => {
     test('should display seeded reimbursement requests', async ({ page }) => {
       await page.goto(reimbursementsUrl)
       await expect(
-        page.locator('text=RB-DEVFEST-0001').or(page.locator('text=RB-DEVFEST-0002'))
+        page.locator('text=RB-DEVFEST-0001').or(page.locator('text=RB-DEVFEST-0002')).first()
       ).toBeVisible()
     })
 
     test('should show speaker name in request row', async ({ page }) => {
       await page.goto(reimbursementsUrl)
       await expect(
-        page.locator('text=Jane Speaker').or(page.locator('text=John Talker'))
+        page.locator('text=Jane Speaker').or(page.locator('text=John Talker')).first()
       ).toBeVisible()
     })
 
     test('should show status badges', async ({ page }) => {
       await page.goto(reimbursementsUrl)
-      await expect(page.locator('text=Submitted').or(page.locator('text=Draft'))).toBeVisible()
+      await expect(
+        page.locator('text=Submitted').or(page.locator('text=Draft')).first()
+      ).toBeVisible()
     })
 
     test('should navigate back to budget dashboard', async ({ page }) => {
@@ -64,13 +66,13 @@ test.describe('Budget Reimbursements (Admin)', () => {
       await page.goto(reimbursementsUrl)
 
       // Click on a request row to expand it
-      const row = page.locator('tr').filter({ hasText: 'RB-DEVFEST-0001' })
+      const row = page.locator('tr').filter({ hasText: 'RB-DEVFEST-0001' }).first()
       await row.click()
 
       // Should show expense items
-      await expect(page.locator('text=Expense Items')).toBeVisible()
+      await expect(page.locator('text=Expense Items').first()).toBeVisible()
       await expect(
-        page.locator('text=Transport').or(page.locator('text=Accommodation'))
+        page.locator('text=Transport').or(page.locator('text=Accommodation')).first()
       ).toBeVisible()
     })
   })
@@ -84,6 +86,7 @@ test.describe('Budget Reimbursements (Admin)', () => {
         page
           .getByRole('button', { name: /Review/ })
           .or(page.getByRole('button', { name: /Approve/ }))
+          .first()
       ).toBeVisible()
     })
 
@@ -94,7 +97,7 @@ test.describe('Budget Reimbursements (Admin)', () => {
       const approveBtn = page.getByRole('button', { name: /Approve/ }).first()
       const rejectBtn = page.getByRole('button', { name: /Reject/ }).first()
 
-      await expect(approveBtn.or(rejectBtn)).toBeVisible()
+      await expect(approveBtn.or(rejectBtn).first()).toBeVisible()
     })
 
     test('should open approve dialog', async ({ page }) => {

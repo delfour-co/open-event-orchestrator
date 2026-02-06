@@ -5,7 +5,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { ArrowLeft, Loader2 } from 'lucide-svelte'
+import { AlertTriangle, ArrowLeft, Loader2, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -224,13 +224,61 @@ const getStatusColor = (status: string) => {
       <Card.Description>Manage other aspects of this edition</Card.Description>
     </Card.Header>
     <Card.Content>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
+        <a href="/admin/editions/{data.edition.slug}/team">
+          <Button variant="outline">Team Members</Button>
+        </a>
         <a href="/admin/cfp/{data.edition.slug}/settings">
           <Button variant="outline">CFP Settings</Button>
         </a>
         <a href="/admin/cfp/{data.edition.slug}/submissions">
           <Button variant="outline">View Submissions</Button>
         </a>
+      </div>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Danger Zone -->
+  <Card.Root class="border-destructive">
+    <Card.Header>
+      <Card.Title class="flex items-center gap-2 text-destructive">
+        <AlertTriangle class="h-5 w-5" />
+        Danger Zone
+      </Card.Title>
+      <Card.Description>
+        Irreversible actions that affect this edition
+      </Card.Description>
+    </Card.Header>
+    <Card.Content>
+      <div class="flex items-center justify-between rounded-lg border border-destructive/50 p-4">
+        <div>
+          <h4 class="font-medium">Delete this edition</h4>
+          <p class="text-sm text-muted-foreground">
+            Permanently delete this edition and all its associated data. This action cannot be undone.
+          </p>
+        </div>
+        <form
+          method="POST"
+          action="?/deleteEdition"
+          use:enhance={() => {
+            return async ({ update }) => {
+              await update()
+            }
+          }}
+        >
+          <Button
+            type="submit"
+            variant="destructive"
+            onclick={(e) => {
+              if (!confirm(`Are you sure you want to delete "${data.edition.name}"? This action cannot be undone.`)) {
+                e.preventDefault()
+              }
+            }}
+          >
+            <Trash2 class="mr-2 h-4 w-4" />
+            Delete Edition
+          </Button>
+        </form>
       </div>
     </Card.Content>
   </Card.Root>

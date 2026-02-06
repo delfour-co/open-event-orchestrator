@@ -63,11 +63,13 @@ const getStatusColor = (status: string) => {
                 {edition.name}
               </Card.Title>
               <div class="flex items-center gap-2">
-                <span
-                  class="rounded-full px-2 py-0.5 text-xs font-medium {getStatusColor(edition.status)}"
-                >
-                  {edition.status}
-                </span>
+                <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
+                  <span
+                    class="rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer hover:opacity-80 {getStatusColor(edition.status)}"
+                  >
+                    {edition.status}
+                  </span>
+                </a>
                 {#if data.permissions.canManageSettings}
                   <a href="/admin/cfp/{edition.slug}/settings" title="CFP Settings">
                     <Button variant="ghost" size="icon" class="h-8 w-8">

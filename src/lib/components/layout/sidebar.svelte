@@ -5,6 +5,7 @@ import {
   Calendar,
   CalendarDays,
   ChevronLeft,
+  Handshake,
   Home,
   LayoutGrid,
   Mail,
@@ -44,6 +45,12 @@ const allNavItems: NavItem[] = [
   { href: '/admin/cfp', icon: Calendar, label: 'CFP' },
   { href: '/admin/planning', icon: LayoutGrid, label: 'Planning', requiresOrganizerAccess: true },
   { href: '/admin/billing', icon: Ticket, label: 'Billetterie', requiresOrganizerAccess: true },
+  {
+    href: '/admin/sponsoring',
+    icon: Handshake,
+    label: 'Sponsoring',
+    requiresOrganizerAccess: true
+  },
   { href: '/admin/budget', icon: Wallet, label: 'Budget', requiresOrganizerAccess: true },
   { href: '/admin/crm', icon: Users, label: 'CRM', requiresOrganizerAccess: true },
   { href: '/admin/emails', icon: Mail, label: 'Emails', requiresOrganizerAccess: true }

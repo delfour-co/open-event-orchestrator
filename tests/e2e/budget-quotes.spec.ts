@@ -27,7 +27,7 @@ test.describe('Budget Quotes', () => {
     test('should display seeded quotes', async ({ page }) => {
       await page.goto(quotesUrl)
       await expect(
-        page.locator('text=QT-DEVFEST-0001').or(page.locator('text=AudioVisual Pro'))
+        page.locator('text=QT-DEVFEST-0001').or(page.locator('text=AudioVisual Pro')).first()
       ).toBeVisible()
     })
 
@@ -73,7 +73,7 @@ test.describe('Budget Quotes', () => {
       await page.waitForLoadState('networkidle')
 
       // Verify the new quote appears
-      await expect(page.locator('text=E2E Test Vendor')).toBeVisible()
+      await expect(page.locator('text=E2E Test Vendor').first()).toBeVisible()
     })
 
     test('should delete a draft quote', async ({ page }) => {

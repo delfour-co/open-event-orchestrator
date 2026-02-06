@@ -14,7 +14,7 @@ test.describe('Admin Permissions - Reviewer Role', () => {
     // Login as reviewer
     await page.goto('/auth/login')
     await page.fill('input[name="email"]', 'reviewer@example.com')
-    await page.fill('input[name="password"]', 'password123')
+    await page.fill('input[name="password"]', 'reviewer123')
     await page.click('button[type="submit"]')
     await page.waitForURL('/admin')
   })
@@ -36,29 +36,29 @@ test.describe('Admin Permissions - Reviewer Role', () => {
   })
 
   test('reviewer cannot access CFP settings page', async ({ page }) => {
-    const response = await page.goto('/admin/cfp/techwork-2026/settings')
+    const response = await page.goto('/admin/cfp/devfest-paris-2025/settings')
     // Should get 403 Forbidden
     expect(response?.status()).toBe(403)
   })
 
   test('reviewer can access submissions list', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     await expect(page.locator('h2')).toContainText('CFP Submissions')
   })
 
   test('reviewer cannot see export button on submissions page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     await expect(page.locator('button:has-text("Export CSV")')).toHaveCount(0)
   })
 
   test('reviewer cannot see bulk action checkboxes on submissions page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     // Checkboxes in table header should not be visible
     await expect(page.locator('table thead input[type="checkbox"]')).toHaveCount(0)
   })
 
   test('reviewer can access talk detail page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     // Click on first talk link
     const talkLink = page.locator('a.font-medium.hover\\:underline').first()
     if (await talkLink.isVisible()) {
@@ -68,7 +68,7 @@ test.describe('Admin Permissions - Reviewer Role', () => {
   })
 
   test('reviewer cannot see delete button on talk detail page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     const talkLink = page.locator('a.font-medium.hover\\:underline').first()
     if (await talkLink.isVisible()) {
       await talkLink.click()
@@ -77,7 +77,7 @@ test.describe('Admin Permissions - Reviewer Role', () => {
   })
 
   test('reviewer cannot see status change buttons on talk detail page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     const talkLink = page.locator('a.font-medium.hover\\:underline').first()
     if (await talkLink.isVisible()) {
       await talkLink.click()
@@ -87,7 +87,7 @@ test.describe('Admin Permissions - Reviewer Role', () => {
   })
 
   test('reviewer can submit a review', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     const talkLink = page.locator('a.font-medium.hover\\:underline').first()
     if (await talkLink.isVisible()) {
       await talkLink.click()
@@ -97,7 +97,7 @@ test.describe('Admin Permissions - Reviewer Role', () => {
   })
 
   test('reviewer can add a comment', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     const talkLink = page.locator('a.font-medium.hover\\:underline').first()
     if (await talkLink.isVisible()) {
       await talkLink.click()
@@ -117,7 +117,7 @@ test.describe('Admin Permissions - Reviewer Role', () => {
   })
 
   test('reviewer cannot access edition settings page', async ({ page }) => {
-    const response = await page.goto('/admin/editions/techwork-2026/settings')
+    const response = await page.goto('/admin/editions/devfest-paris-2025/settings')
     expect(response?.status()).toBe(403)
   })
 
@@ -136,10 +136,10 @@ test.describe('Admin Permissions - Reviewer Role', () => {
 
 test.describe('Admin Permissions - Organizer Role', () => {
   test.beforeEach(async ({ page }) => {
-    // Login as organizer
+    // Login as organizer (using admin account which has organizer role)
     await page.goto('/auth/login')
-    await page.fill('input[name="email"]', 'organizer@example.com')
-    await page.fill('input[name="password"]', 'password123')
+    await page.fill('input[name="email"]', 'admin@example.com')
+    await page.fill('input[name="password"]', 'admin123')
     await page.click('button[type="submit"]')
     await page.waitForURL('/admin')
   })
@@ -150,7 +150,7 @@ test.describe('Admin Permissions - Organizer Role', () => {
   })
 
   test('organizer can access CFP settings page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/settings')
+    await page.goto('/admin/cfp/devfest-paris-2025/settings')
     await expect(page.locator('h2')).toContainText('CFP Settings')
   })
 
@@ -160,18 +160,18 @@ test.describe('Admin Permissions - Organizer Role', () => {
   })
 
   test('organizer can see export button on submissions page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     await expect(page.locator('button:has-text("Export CSV")')).toBeVisible()
   })
 
   test('organizer can see bulk action checkboxes', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     // Checkboxes in table should be visible
-    await expect(page.locator('table thead button[role="checkbox"]')).toBeVisible()
+    await expect(page.getByRole('checkbox').first()).toBeVisible()
   })
 
   test('organizer can see delete button on talk detail page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     const talkLink = page.locator('a.font-medium.hover\\:underline').first()
     if (await talkLink.isVisible()) {
       await talkLink.click()
@@ -180,7 +180,7 @@ test.describe('Admin Permissions - Organizer Role', () => {
   })
 
   test('organizer can see status change buttons on talk detail page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     const talkLink = page.locator('a.font-medium.hover\\:underline').first()
     if (await talkLink.isVisible()) {
       await talkLink.click()
@@ -212,7 +212,7 @@ test.describe('Admin Permissions - Admin Role', () => {
     // Login as admin
     await page.goto('/auth/login')
     await page.fill('input[name="email"]', 'admin@example.com')
-    await page.fill('input[name="password"]', 'password123')
+    await page.fill('input[name="password"]', 'admin123')
     await page.click('button[type="submit"]')
     await page.waitForURL('/admin')
   })
@@ -225,14 +225,14 @@ test.describe('Admin Permissions - Admin Role', () => {
     await page.goto('/admin/events')
     await expect(page.locator('h2')).toContainText('Events')
 
-    await page.goto('/admin/cfp/techwork-2026/settings')
+    await page.goto('/admin/cfp/devfest-paris-2025/settings')
     await expect(page.locator('h2')).toContainText('CFP Settings')
   })
 
   test('admin can see all controls on submissions page', async ({ page }) => {
-    await page.goto('/admin/cfp/techwork-2026/submissions')
+    await page.goto('/admin/cfp/devfest-paris-2025/submissions')
     await expect(page.locator('button:has-text("Export CSV")')).toBeVisible()
-    await expect(page.locator('table thead button[role="checkbox"]')).toBeVisible()
+    await expect(page.getByRole('checkbox').first()).toBeVisible()
   })
 })
 

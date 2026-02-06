@@ -17,10 +17,10 @@ test.describe('Billing Participants Module', () => {
       await page.goto(participantsUrl)
 
       await expect(page.getByRole('heading', { name: 'Participants' })).toBeVisible()
-      await expect(page.getByText('Revenue')).toBeVisible()
-      await expect(page.getByText('Orders')).toBeVisible()
-      await expect(page.getByText('Tickets')).toBeVisible()
-      await expect(page.getByText('Check-in Rate')).toBeVisible()
+      await expect(page.getByText('Revenue').first()).toBeVisible()
+      await expect(page.locator('main').getByText('Orders').first()).toBeVisible()
+      await expect(page.locator('main').getByText('Tickets').first()).toBeVisible()
+      await expect(page.getByText('Check-in Rate').first()).toBeVisible()
     })
 
     test('should display edition name', async ({ page }) => {

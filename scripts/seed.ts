@@ -708,10 +708,10 @@ function generateToken(): string {
   return randomBytes(32).toString('hex')
 }
 
-// Tokens are generated at runtime for security
+// Fixed tokens for E2E tests - must match tests/e2e/cfp-speaker-submissions.spec.ts
 const TEST_SPEAKER_TOKENS = {
-  speaker1: generateToken(), // For speaker@example.com
-  speaker2: generateToken() // For speaker2@example.com
+  speaker1: 'a'.repeat(64), // For speaker@example.com (Jane Speaker)
+  speaker2: 'b'.repeat(64) // For speaker2@example.com (John Talker)
 }
 
 const collectionSchemas: Array<{
@@ -1942,6 +1942,9 @@ async function seed(): Promise<void> {
     quotes: string[]
     invoices: string[]
     reimbursementRequests: string[]
+    sponsors: string[]
+    sponsorPackages: string[]
+    editionSponsors: string[]
   } = {
     users: [],
     organization: '',
@@ -1965,7 +1968,10 @@ async function seed(): Promise<void> {
     budgetCategories: [],
     quotes: [],
     invoices: [],
-    reimbursementRequests: []
+    reimbursementRequests: [],
+    sponsors: [],
+    sponsorPackages: [],
+    editionSponsors: []
   }
 
   try {
@@ -4023,6 +4029,305 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // Sponsors
+    // ========================================================================
+    console.log('🤝 Creating sponsors...')
+    if (ids.organization && ids.edition) {
+      const sponsorDefs = [
+        {
+          name: 'TechCorp International',
+          website: 'https://techcorp.example.com',
+          description: 'Leading provider of enterprise software solutions',
+          contactName: 'Sarah Johnson',
+          contactEmail: 'sarah.johnson@techcorp.example.com',
+          contactPhone: '+1 555 123 4567'
+        },
+        {
+          name: 'CloudScale Inc',
+          website: 'https://cloudscale.example.com',
+          description: 'Cloud infrastructure and DevOps solutions',
+          contactName: 'Michael Chen',
+          contactEmail: 'mchen@cloudscale.example.com',
+          contactPhone: '+1 555 234 5678'
+        },
+        {
+          name: 'DataFlow Systems',
+          website: 'https://dataflow.example.com',
+          description: 'Big data and analytics platform',
+          contactName: 'Emily Davis',
+          contactEmail: 'emily.davis@dataflow.example.com',
+          contactPhone: '+1 555 345 6789'
+        },
+        {
+          name: 'SecureNet Solutions',
+          website: 'https://securenet.example.com',
+          description: 'Cybersecurity and compliance services',
+          contactName: 'James Wilson',
+          contactEmail: 'jwilson@securenet.example.com',
+          contactPhone: '+1 555 456 7890'
+        },
+        {
+          name: 'AI Innovations Lab',
+          website: 'https://ailab.example.com',
+          description: 'Artificial intelligence research and products',
+          contactName: 'Lisa Park',
+          contactEmail: 'lisa@ailab.example.com',
+          contactPhone: '+1 555 567 8901'
+        },
+        {
+          name: 'StartupXYZ',
+          website: 'https://startupxyz.example.com',
+          description: 'Emerging tech startup accelerator',
+          contactName: 'Alex Kumar',
+          contactEmail: 'alex@startupxyz.example.com',
+          contactPhone: '+1 555 678 9012'
+        }
+      ]
+
+      for (const sponsor of sponsorDefs) {
+        try {
+          const existing = await pb.collection('sponsors').getList(1, 1, {
+            filter: `name = "${sponsor.name}" && organizationId = "${ids.organization}"`
+          })
+
+          if (existing.items.length === 0) {
+            const record = await pb.collection('sponsors').create({
+              organizationId: ids.organization,
+              ...sponsor
+            })
+            ids.sponsors.push(record.id)
+            console.log(`  Created sponsor: ${sponsor.name}`)
+          } else {
+            ids.sponsors.push(existing.items[0].id)
+            console.log(`  Sponsor already exists: ${sponsor.name}`)
+          }
+        } catch (err) {
+          console.error(`  Failed to create sponsor ${sponsor.name}:`, err)
+        }
+      }
+    } else {
+      console.log('  Skipping sponsors (no organization)')
+    }
+    console.log('')
+
+    // ========================================================================
+    // Sponsor Packages
+    // ========================================================================
+    console.log('📦 Creating sponsor packages...')
+    if (ids.edition) {
+      const packageDefs = [
+        {
+          name: 'Platinum',
+          tier: 1,
+          price: 25000,
+          currency: 'EUR',
+          maxSponsors: 2,
+          description: 'Premium visibility with exclusive benefits',
+          benefits: [
+            { name: 'Logo on website', included: true },
+            { name: 'Logo on printed materials', included: true },
+            { name: 'Social media mention', included: true },
+            { name: 'Booth at venue', included: true },
+            { name: 'Speaking slot', included: true },
+            { name: 'Attendee list access', included: true },
+            { name: 'VIP dinner invitation', included: true },
+            { name: 'Free tickets', included: true }
+          ],
+          isActive: true
+        },
+        {
+          name: 'Gold',
+          tier: 2,
+          price: 15000,
+          currency: 'EUR',
+          maxSponsors: 5,
+          description: 'High visibility with great exposure',
+          benefits: [
+            { name: 'Logo on website', included: true },
+            { name: 'Logo on printed materials', included: true },
+            { name: 'Social media mention', included: true },
+            { name: 'Booth at venue', included: true },
+            { name: 'Speaking slot', included: false },
+            { name: 'Attendee list access', included: true },
+            { name: 'VIP dinner invitation', included: true },
+            { name: 'Free tickets', included: true }
+          ],
+          isActive: true
+        },
+        {
+          name: 'Silver',
+          tier: 3,
+          price: 8000,
+          currency: 'EUR',
+          maxSponsors: 10,
+          description: 'Standard sponsorship package',
+          benefits: [
+            { name: 'Logo on website', included: true },
+            { name: 'Logo on printed materials', included: true },
+            { name: 'Social media mention', included: true },
+            { name: 'Booth at venue', included: false },
+            { name: 'Speaking slot', included: false },
+            { name: 'Attendee list access', included: false },
+            { name: 'VIP dinner invitation', included: false },
+            { name: 'Free tickets', included: true }
+          ],
+          isActive: true
+        },
+        {
+          name: 'Bronze',
+          tier: 4,
+          price: 3000,
+          currency: 'EUR',
+          maxSponsors: null,
+          description: 'Entry-level sponsorship',
+          benefits: [
+            { name: 'Logo on website', included: true },
+            { name: 'Logo on printed materials', included: false },
+            { name: 'Social media mention', included: true },
+            { name: 'Booth at venue', included: false },
+            { name: 'Speaking slot', included: false },
+            { name: 'Attendee list access', included: false },
+            { name: 'VIP dinner invitation', included: false },
+            { name: 'Free tickets', included: false }
+          ],
+          isActive: true
+        }
+      ]
+
+      for (const pkg of packageDefs) {
+        try {
+          const existing = await pb.collection('sponsor_packages').getList(1, 1, {
+            filter: `name = "${pkg.name}" && editionId = "${ids.edition}"`
+          })
+
+          if (existing.items.length === 0) {
+            const record = await pb.collection('sponsor_packages').create({
+              editionId: ids.edition,
+              name: pkg.name,
+              tier: pkg.tier,
+              price: pkg.price,
+              currency: pkg.currency,
+              maxSponsors: pkg.maxSponsors,
+              description: pkg.description,
+              benefits: pkg.benefits,
+              isActive: pkg.isActive
+            })
+            ids.sponsorPackages.push(record.id)
+            console.log(`  Created package: ${pkg.name} (${pkg.price} ${pkg.currency})`)
+          } else {
+            ids.sponsorPackages.push(existing.items[0].id)
+            console.log(`  Package already exists: ${pkg.name}`)
+          }
+        } catch (err) {
+          console.error(`  Failed to create package ${pkg.name}:`, err)
+        }
+      }
+    } else {
+      console.log('  Skipping sponsor packages (no edition)')
+    }
+    console.log('')
+
+    // ========================================================================
+    // Edition Sponsors (linking sponsors to edition with status)
+    // ========================================================================
+    console.log('🔗 Creating edition sponsors...')
+    if (ids.edition && ids.sponsors.length > 0 && ids.sponsorPackages.length > 0) {
+      const editionSponsorDefs = [
+        {
+          sponsorIndex: 0, // TechCorp - Platinum sponsor, confirmed & paid
+          packageIndex: 0,
+          status: 'confirmed',
+          amount: 25000,
+          paidAt: new Date('2025-07-15'),
+          notes: 'Long-term partner, signed early'
+        },
+        {
+          sponsorIndex: 1, // CloudScale - Gold sponsor, confirmed & paid
+          packageIndex: 1,
+          status: 'confirmed',
+          amount: 15000,
+          paidAt: new Date('2025-08-01'),
+          notes: 'First time sponsor, very engaged'
+        },
+        {
+          sponsorIndex: 2, // DataFlow - Gold sponsor, confirmed but not yet paid
+          packageIndex: 1,
+          status: 'confirmed',
+          amount: 15000,
+          paidAt: null,
+          notes: 'Invoice sent, awaiting payment'
+        },
+        {
+          sponsorIndex: 3, // SecureNet - Silver, negotiating
+          packageIndex: 2,
+          status: 'negotiating',
+          amount: null,
+          paidAt: null,
+          notes: 'Discussing custom booth location'
+        },
+        {
+          sponsorIndex: 4, // AI Lab - Bronze, contacted
+          packageIndex: 3,
+          status: 'contacted',
+          amount: null,
+          paidAt: null,
+          notes: 'Initial contact made, waiting for response'
+        },
+        {
+          sponsorIndex: 5, // StartupXYZ - prospect
+          packageIndex: null,
+          status: 'prospect',
+          amount: null,
+          paidAt: null,
+          notes: 'Potential sponsor from accelerator network'
+        }
+      ]
+
+      for (const esDef of editionSponsorDefs) {
+        const sponsorId = ids.sponsors[esDef.sponsorIndex]
+        const packageId =
+          esDef.packageIndex !== null ? ids.sponsorPackages[esDef.packageIndex] : null
+
+        if (!sponsorId) continue
+
+        try {
+          const existing = await pb.collection('edition_sponsors').getList(1, 1, {
+            filter: `editionId = "${ids.edition}" && sponsorId = "${sponsorId}"`
+          })
+
+          if (existing.items.length === 0) {
+            const data: Record<string, unknown> = {
+              editionId: ids.edition,
+              sponsorId,
+              status: esDef.status,
+              notes: esDef.notes
+            }
+            if (packageId) data.packageId = packageId
+            if (esDef.amount) data.amount = esDef.amount
+            if (esDef.paidAt) data.paidAt = esDef.paidAt.toISOString()
+            if (esDef.status === 'confirmed') data.confirmedAt = new Date().toISOString()
+
+            const record = await pb.collection('edition_sponsors').create(data)
+            ids.editionSponsors.push(record.id)
+
+            // Get sponsor name for logging
+            const sponsor = await pb.collection('sponsors').getOne(sponsorId)
+            console.log(`  Created edition sponsor: ${sponsor.name} (${esDef.status})`)
+          } else {
+            ids.editionSponsors.push(existing.items[0].id)
+            const sponsor = await pb.collection('sponsors').getOne(sponsorId)
+            console.log(`  Edition sponsor already exists: ${sponsor.name}`)
+          }
+        } catch (err) {
+          console.error('  Failed to create edition sponsor:', err)
+        }
+      }
+    } else {
+      console.log('  Skipping edition sponsors (no sponsors or packages)')
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -4056,6 +4361,9 @@ async function seed(): Promise<void> {
     console.log(`   Budget Invoices: ${ids.invoices.length}`)
     console.log(`   Reimbursement Requests: ${ids.reimbursementRequests.length}`)
     console.log(`   Audit Log Entries: ${auditLogsCreated}`)
+    console.log(`   Sponsors: ${ids.sponsors.length}`)
+    console.log(`   Sponsor Packages: ${ids.sponsorPackages.length}`)
+    console.log(`   Edition Sponsors: ${ids.editionSponsors.length}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')

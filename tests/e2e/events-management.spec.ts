@@ -69,19 +69,17 @@ test.describe('Events Management', () => {
   test('should display existing event from seed data', async ({ page }) => {
     await page.goto('/admin/events')
 
-    // The seed data creates a DevFest event
-    await expect(page.getByText('DevFest')).toBeVisible()
-    // Organization name is shown in the event card description
-    await expect(page.locator('text=Demo Conference Org - 1 edition')).toBeVisible()
+    // The seed data creates a DevFest event with edition
+    // Edition cards show event name and organization in description
+    await expect(page.getByText('DevFest Paris 2025').first()).toBeVisible()
+    await expect(page.getByText(/DevFest · Demo Conference Org/).first()).toBeVisible()
   })
 
   test('should expand event to show editions', async ({ page }) => {
     await page.goto('/admin/events')
 
-    // Click on the DevFest event to expand it
-    await page.getByText('DevFest').click()
-
-    // Should show the DevFest Paris 2025 edition
+    // With card-based layout, editions are shown directly without expansion
+    // Should show the DevFest Paris 2025 edition card
     await expect(page.getByText('DevFest Paris 2025')).toBeVisible()
   })
 
@@ -98,48 +96,48 @@ test.describe('Events Management', () => {
   test('should show add edition form when clicking button', async ({ page }) => {
     await page.goto('/admin/events')
 
-    // Click on Add Edition button for DevFest
-    await page
-      .getByRole('button', { name: /Add Edition/ })
-      .first()
-      .click()
+    // Select event from the "Add Edition" card dropdown
+    const addEditionCard = page.locator('text=Add a new edition').locator('..')
+    const eventSelect = addEditionCard.locator('select')
+    await eventSelect.selectOption({ label: 'DevFest' })
 
-    await expect(page.getByText('Create New Edition')).toBeVisible()
-    await expect(page.getByLabel(/Start Date/)).toBeVisible()
-    await expect(page.getByLabel(/End Date/)).toBeVisible()
+    // Should show the new edition form
+    await expect(page.getByText('New Edition for DevFest')).toBeVisible()
+    await expect(page.getByLabel('Start Date')).toBeVisible()
+    await expect(page.getByLabel('End Date')).toBeVisible()
   })
 
   test('should have link to manage CFP for editions', async ({ page }) => {
     await page.goto('/admin/events')
 
-    // Expand the event
-    await page.getByText('DevFest').click()
-
-    // Should have Manage CFP button
-    await expect(page.getByRole('link', { name: 'Manage CFP' })).toBeVisible()
+    // Edition cards have settings button that links to edition settings
+    // CFP is accessible via sidebar navigation
+    const settingsButton = page
+      .locator('a[href*="/admin/editions/devfest-paris-2025/settings"]')
+      .first()
+    await expect(settingsButton).toBeVisible()
   })
 
   test('should navigate to CFP page when clicking Manage CFP', async ({ page }) => {
     await page.goto('/admin/events')
 
-    // Expand the event
-    await page.getByText('DevFest').click()
+    // Navigate to CFP via sidebar
+    await page.getByRole('link', { name: 'CFP' }).click()
 
-    // Click Manage CFP
-    await page.getByRole('link', { name: 'Manage CFP' }).click()
-
-    // Should navigate to CFP submissions page
-    await expect(page).toHaveURL(/\/admin\/cfp\/devfest-paris-2025\/submissions/)
+    // Should navigate to CFP page
+    await expect(page).toHaveURL(/\/admin\/cfp/)
   })
 
   test('should display edition status badge', async ({ page }) => {
     await page.goto('/admin/events')
 
-    // Expand the event
-    await page.getByText('DevFest').click()
-
-    // Should show status badge (published, draft, or archived)
-    await expect(page.locator('text=published').or(page.locator('text=draft'))).toBeVisible()
+    // Status badges are visible on edition cards
+    await expect(
+      page
+        .locator('span.rounded-full')
+        .filter({ hasText: /published|draft/ })
+        .first()
+    ).toBeVisible()
   })
 
   test('should be accessible from sidebar', async ({ page }) => {

@@ -27,7 +27,8 @@ test.describe('Budget Module', () => {
     test('should navigate to edition budget dashboard', async ({ page }) => {
       await page.goto('/admin/budget')
 
-      await page.getByRole('link', { name: /Manage Budget/ }).click()
+      // Click the specific edition's Manage Budget link
+      await page.locator(`a[href="${budgetUrl}"]`).click()
 
       await expect(page).toHaveURL(budgetUrl)
     })
@@ -35,13 +36,17 @@ test.describe('Budget Module', () => {
     test('should show edition status badge', async ({ page }) => {
       await page.goto('/admin/budget')
 
-      await expect(page.locator('text=published').or(page.locator('text=draft'))).toBeVisible()
+      // Multiple editions may have status badges, verify at least one exists
+      await expect(
+        page.locator('text=published').or(page.locator('text=draft')).first()
+      ).toBeVisible()
     })
 
     test('should show settings icon on edition card', async ({ page }) => {
       await page.goto('/admin/budget')
 
-      await expect(page.locator('a[title="Budget Settings"]')).toBeVisible()
+      // Multiple settings icons exist, verify at least one is visible
+      await expect(page.locator('a[title="Budget Settings"]').first()).toBeVisible()
     })
   })
 

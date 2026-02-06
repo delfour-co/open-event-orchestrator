@@ -15,7 +15,7 @@ test.describe('Budget Invoices', () => {
   test.describe('Invoices Page', () => {
     test('should display invoices page with header', async ({ page }) => {
       await page.goto(invoicesUrl)
-      await expect(page.getByRole('heading', { name: 'Invoices' })).toBeVisible()
+      await expect(page.locator('h2').filter({ hasText: 'Invoices' })).toBeVisible()
       await expect(page.getByText('DevFest Paris 2025')).toBeVisible()
     })
 
@@ -31,9 +31,9 @@ test.describe('Budget Invoices', () => {
 
     test('should show seeded invoices in table', async ({ page }) => {
       await page.goto(invoicesUrl)
-      // Check for seeded invoice numbers
+      // Check for seeded invoice numbers - use first() to avoid strict mode violation
       await expect(
-        page.locator('text=INV-PDC-2025-001').or(page.locator('text=INV-TP-2025-042'))
+        page.locator('text=INV-PDC-2025-001').or(page.locator('text=INV-TP-2025-042')).first()
       ).toBeVisible()
     })
 
@@ -66,7 +66,7 @@ test.describe('Budget Invoices', () => {
       await page.locator('#inv-number').fill(`INV-E2E-${Date.now()}`)
       await page.locator('#inv-amount').fill('500')
 
-      await page.getByRole('button', { name: 'Upload' }).click()
+      await page.locator('form').getByRole('button', { name: 'Upload' }).click()
       await page.waitForLoadState('networkidle')
     })
 

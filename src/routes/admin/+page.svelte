@@ -4,11 +4,13 @@ import * as Card from '$lib/components/ui/card'
 import {
   ArrowDownCircle,
   ArrowUpCircle,
+  Building2,
   Calendar,
   CheckCircle,
   Clock,
   DollarSign,
   FileText,
+  Handshake,
   Send,
   ShoppingCart,
   Ticket,
@@ -358,6 +360,92 @@ const getOrderStatusColor = (status: string) => {
           <p class="text-xs text-muted-foreground">
             budget - expenses + income
           </p>
+        </Card.Content>
+      </Card.Root>
+    </div>
+  </div>
+
+  <!-- Sponsoring Stats -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold">Sponsoring</h3>
+      {#if data.selectedEdition}
+        <a
+          href="/admin/sponsoring/{data.selectedEdition.slug}"
+          class="text-sm text-primary hover:underline"
+        >
+          Manage Sponsors
+        </a>
+      {/if}
+    </div>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Total Sponsors</Card.Title>
+          <Building2 class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">{data.sponsoringStats.totalSponsors}</div>
+          <p class="text-xs text-muted-foreground">
+            {data.sponsoringStats.confirmedSponsors} confirmed
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Revenue</Card.Title>
+          <Handshake class="h-4 w-4 text-green-500" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">
+            {formatBudgetAmount(data.sponsoringStats.revenue, data.sponsoringStats.currency)}
+          </div>
+          <p class="text-xs text-muted-foreground">
+            {data.sponsoringStats.paidSponsors} paid
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Pipeline</Card.Title>
+          <TrendingUp class="h-4 w-4 text-blue-500" />
+        </Card.Header>
+        <Card.Content>
+          <div class="text-2xl font-bold">
+            {formatBudgetAmount(data.sponsoringStats.pipelineValue, data.sponsoringStats.currency)}
+          </div>
+          <p class="text-xs text-muted-foreground">
+            {data.sponsoringStats.contacted + data.sponsoringStats.negotiating} in progress
+          </p>
+        </Card.Content>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card.Title class="text-sm font-medium">Pipeline Status</Card.Title>
+          <Users class="h-4 w-4 text-muted-foreground" />
+        </Card.Header>
+        <Card.Content>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="text-muted-foreground">Prospects</span>
+              <span class="font-medium">{data.sponsoringStats.prospects}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-muted-foreground">Contacted</span>
+              <span class="font-medium">{data.sponsoringStats.contacted}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-muted-foreground">Negotiating</span>
+              <span class="font-medium">{data.sponsoringStats.negotiating}</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-muted-foreground">Declined</span>
+              <span class="font-medium">{data.sponsoringStats.declined}</span>
+            </div>
+          </div>
         </Card.Content>
       </Card.Root>
     </div>

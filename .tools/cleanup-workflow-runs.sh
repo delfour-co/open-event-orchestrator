@@ -3,7 +3,30 @@
 
 set -e
 
-REPO="delfour-co/open-event-orchestrator"
+# Détecter automatiquement le dépôt GitHub depuis le dépôt Git local
+if [ -z "$REPO" ]; then
+    # Essayer d'abord avec gh CLI
+    if command -v gh &> /dev/null; then
+        REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || echo "")
+    fi
+    
+    # Si gh CLI n'a pas fonctionné, essayer avec git remote
+    if [ -z "$REPO" ]; then
+        REMOTE_URL=$(git remote get-url origin 2>/dev/null || echo "")
+        if [[ "$REMOTE_URL" =~ github\.com[:/]([^/]+)/([^/]+)\.git$ ]] || [[ "$REMOTE_URL" =~ github\.com[:/]([^/]+)/([^/]+)$ ]]; then
+            REPO="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+        fi
+    fi
+    
+    # Si toujours vide, afficher une erreur
+    if [ -z "$REPO" ]; then
+        echo "❌ Impossible de détecter le dépôt GitHub."
+        echo "   Assurez-vous d'être dans un dépôt Git avec une remote 'origin' pointant vers GitHub,"
+        echo "   ou spécifiez manuellement: REPO=\"owner/repo\" $0"
+        exit 1
+    fi
+fi
+
 TOTAL_DELETED=0
 
 echo "🧹 Nettoyage de l'historique des workflows pour $REPO"

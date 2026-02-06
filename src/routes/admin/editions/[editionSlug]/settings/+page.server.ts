@@ -108,5 +108,28 @@ export const actions: Actions = {
       console.error('Failed to update status:', e)
       return fail(500, { error: 'Failed to update status' })
     }
+  },
+
+  deleteEdition: async ({ locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to delete editions' })
+    }
+
+    try {
+      const edition = await locals.pb
+        .collection('editions')
+        .getFirstListItem(`slug="${params.editionSlug}"`)
+
+      await locals.pb.collection('editions').delete(edition.id)
+      throw redirect(303, '/admin/events')
+    } catch (e) {
+      if ((e as { status?: number }).status === 303) throw e
+      console.error('Failed to delete edition:', e)
+      return fail(500, {
+        error: 'Failed to delete edition. Make sure all related data is deleted first.'
+      })
+    }
   }
 }

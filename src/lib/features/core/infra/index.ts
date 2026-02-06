@@ -6,3 +6,6 @@ export type { EventRepository } from './event-repository'
 
 export { createEditionRepository } from './edition-repository'
 export type { EditionRepository } from './edition-repository'
+
+export { createTeamMemberRepository } from './team-member-repository'
+export type { TeamMemberRepository } from './team-member-repository'
