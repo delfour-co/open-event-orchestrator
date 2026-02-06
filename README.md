@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-1006%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-445%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 Open Event Orchestrator is an **all-in-one open-source platform** for managing conferences, meetups, and community events. CFP, scheduling, ticketing, and CRM — unified in one place.
@@ -16,6 +16,7 @@ Open Event Orchestrator is an **all-in-one open-source platform** for managing c
 - **Ticketing** — Sell tickets, manage registrations, and check-in attendees
 - **CRM** — Keep track of your community across all events
 - **Budget** — Track expenses, income, quotes, invoices, and speaker reimbursements
+- **Sponsoring** — Manage sponsors, packages, pipeline, and sponsor portal
 - **API** — Headless API for custom integrations and websites
 
 ## Quick Start
@@ -94,7 +95,8 @@ src/
 │   │   ├── planning/      # Schedule management (Phase 2)
 │   │   ├── billing/       # Ticketing (Phase 3)
 │   │   ├── crm/           # Contact management (Phase 4)
-│   │   └── budget/        # Budget & Finance (Phase 6)
+│   │   ├── budget/        # Budget & Finance (Phase 5-6)
+│   │   └── sponsoring/    # Sponsoring (Phase 7)
 │   ├── server/            # Server-only code (PocketBase client)
 │   └── stores/            # Svelte stores
 ├── routes/                # SvelteKit routes
@@ -149,9 +151,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 690 | 97% statements |
-| E2E tests | 316 | - |
-| **Total** | **1006** | **97%** |
+| Unit tests | 690+ | 97% statements |
+| E2E tests | 445 | Chromium |
+| **Total** | **1100+** | **97%** |
 
 ```bash
 pnpm test              # Run unit tests
@@ -249,13 +251,15 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [x] Journal viewer with filters and search (#92)
 - [x] Export journal for accounting (CSV/PDF) (#93)
 
-### Phase 7 — Sponsoring
+### Phase 7 — Sponsoring ✅
 
-- [ ] Sponsor model: sponsors, packages, benefits (#64)
-- [ ] Sponsor dashboard with pipeline (#65)
-- [ ] Sponsoring packages configuration (#66)
-- [ ] Public sponsors page (#67)
-- [ ] Sponsor portal (#68)
+- [x] Sponsor model: sponsors, packages, benefits (#64)
+- [x] Sponsor dashboard with pipeline (#65)
+- [x] Sponsoring packages configuration (#66)
+- [x] Public sponsors page (#67)
+- [x] Sponsor portal (#68)
+- [x] Team members management per edition
+- [x] E2E tests (445 tests passing)
 
 ### Phase 8 — API
 
