@@ -1,9 +1,10 @@
-import { PUBLIC_POCKETBASE_URL } from '$env/static/public'
+import { env } from '$env/dynamic/public'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 function buildFileUrl(collectionName: string, recordId: string, filename: string): string {
-  return `${PUBLIC_POCKETBASE_URL}/api/files/${collectionName}/${recordId}/${filename}`
+  const baseUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
+  return `${baseUrl}/api/files/${collectionName}/${recordId}/${filename}`
 }
 
 interface MappedItem {
