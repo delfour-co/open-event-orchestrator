@@ -75,7 +75,7 @@ const features = [
   <!-- Hero -->
   <section class="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
     <img
-      src="/img/hero.png"
+      src="/img/oeo_illustrations-transparent.png"
       alt="Open Event Orchestrator - Orchestration visuelle"
       class="mb-8 max-h-64 w-auto object-contain sm:max-h-80"
     />
