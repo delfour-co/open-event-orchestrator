@@ -5,6 +5,7 @@ import {
   generateSpeakerToken,
   validateSpeakerToken
 } from '$lib/server/speaker-tokens'
+import { getSpeakerToken } from '$lib/server/token-cookies'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -13,7 +14,7 @@ function buildFileUrl(collectionName: string, recordId: string, filename: string
   return `${baseUrl}/api/files/${collectionName}/${recordId}/${filename}`
 }
 
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
   const { editionSlug } = params
 
   const editions = await locals.pb.collection('editions').getList(1, 1, {
@@ -31,7 +32,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
     throw error(404, 'Edition not available')
   }
 
-  const token = url.searchParams.get('token')
+  // Get token from cookie or URL (backwards compatibility)
+  const token = getSpeakerToken(cookies, url, editionSlug)
   if (!token) {
     return {
       edition: { id: editionId, name: edition.name as string, slug: editionSlug },
@@ -125,9 +127,11 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 async function validateTokenForAction(
   locals: App.Locals,
   url: URL,
-  editionId: string
+  editionId: string,
+  cookies: import('@sveltejs/kit').Cookies,
+  editionSlug: string
 ): Promise<{ speakerId: string | null; error: string | null }> {
-  const token = url.searchParams.get('token')
+  const token = getSpeakerToken(cookies, url, editionSlug)
   if (!token) return { speakerId: null, error: 'Authentication token is required' }
 
   const validation = await validateSpeakerToken(locals.pb, token, editionId)
@@ -138,14 +142,20 @@ async function validateTokenForAction(
 }
 
 export const actions: Actions = {
-  createRequest: async ({ request, locals, url, params }) => {
+  createRequest: async ({ request, locals, url, params, cookies }) => {
     const editions = await locals.pb.collection('editions').getList(1, 1, {
       filter: `slug = "${params.editionSlug}"`
     })
     if (editions.items.length === 0) return fail(404, { error: 'Edition not found' })
     const editionId = editions.items[0].id as string
 
-    const { speakerId, error: authError } = await validateTokenForAction(locals, url, editionId)
+    const { speakerId, error: authError } = await validateTokenForAction(
+      locals,
+      url,
+      editionId,
+      cookies,
+      params.editionSlug
+    )
     if (authError || !speakerId) return fail(401, { error: authError || 'Authentication required' })
 
     const formData = await request.formData()
@@ -179,14 +189,20 @@ export const actions: Actions = {
     }
   },
 
-  addItem: async ({ request, locals, url, params }) => {
+  addItem: async ({ request, locals, url, params, cookies }) => {
     const editions = await locals.pb.collection('editions').getList(1, 1, {
       filter: `slug = "${params.editionSlug}"`
     })
     if (editions.items.length === 0) return fail(404, { error: 'Edition not found' })
     const editionId = editions.items[0].id as string
 
-    const { speakerId, error: authError } = await validateTokenForAction(locals, url, editionId)
+    const { speakerId, error: authError } = await validateTokenForAction(
+      locals,
+      url,
+      editionId,
+      cookies,
+      params.editionSlug
+    )
     if (authError || !speakerId) return fail(401, { error: authError || 'Authentication required' })
 
     const formData = await request.formData()
@@ -243,14 +259,20 @@ export const actions: Actions = {
     }
   },
 
-  removeItem: async ({ request, locals, url, params }) => {
+  removeItem: async ({ request, locals, url, params, cookies }) => {
     const editions = await locals.pb.collection('editions').getList(1, 1, {
       filter: `slug = "${params.editionSlug}"`
     })
     if (editions.items.length === 0) return fail(404, { error: 'Edition not found' })
     const editionId = editions.items[0].id as string
 
-    const { speakerId, error: authError } = await validateTokenForAction(locals, url, editionId)
+    const { speakerId, error: authError } = await validateTokenForAction(
+      locals,
+      url,
+      editionId,
+      cookies,
+      params.editionSlug
+    )
     if (authError || !speakerId) return fail(401, { error: authError || 'Authentication required' })
 
     const formData = await request.formData()
@@ -281,14 +303,20 @@ export const actions: Actions = {
     }
   },
 
-  submitRequest: async ({ request, locals, url, params }) => {
+  submitRequest: async ({ request, locals, url, params, cookies }) => {
     const editions = await locals.pb.collection('editions').getList(1, 1, {
       filter: `slug = "${params.editionSlug}"`
     })
     if (editions.items.length === 0) return fail(404, { error: 'Edition not found' })
     const editionId = editions.items[0].id as string
 
-    const { speakerId, error: authError } = await validateTokenForAction(locals, url, editionId)
+    const { speakerId, error: authError } = await validateTokenForAction(
+      locals,
+      url,
+      editionId,
+      cookies,
+      params.editionSlug
+    )
     if (authError || !speakerId) return fail(401, { error: authError || 'Authentication required' })
 
     const formData = await request.formData()
@@ -320,14 +348,20 @@ export const actions: Actions = {
     }
   },
 
-  deleteRequest: async ({ request, locals, url, params }) => {
+  deleteRequest: async ({ request, locals, url, params, cookies }) => {
     const editions = await locals.pb.collection('editions').getList(1, 1, {
       filter: `slug = "${params.editionSlug}"`
     })
     if (editions.items.length === 0) return fail(404, { error: 'Edition not found' })
     const editionId = editions.items[0].id as string
 
-    const { speakerId, error: authError } = await validateTokenForAction(locals, url, editionId)
+    const { speakerId, error: authError } = await validateTokenForAction(
+      locals,
+      url,
+      editionId,
+      cookies,
+      params.editionSlug
+    )
     if (authError || !speakerId) return fail(401, { error: authError || 'Authentication required' })
 
     const formData = await request.formData()

@@ -1,11 +1,13 @@
 import { createSponsorRepository } from '$lib/features/sponsoring/infra'
 import { createSponsorTokenService } from '$lib/features/sponsoring/services'
+import { getSponsorToken } from '$lib/server/token-cookies'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
   const { editionSlug } = params
-  const token = url.searchParams.get('token')
+  // Get token from cookie or URL (backwards compatibility)
+  const token = getSponsorToken(cookies, url, editionSlug)
 
   if (!token) {
     throw error(400, 'Token is required')
@@ -62,10 +64,11 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 }
 
 export const actions: Actions = {
-  updateProfile: async ({ request, url, locals }) => {
+  updateProfile: async ({ request, url, locals, cookies, params }) => {
     const formData = await request.formData()
-    // Token can come from URL params or form data (form data is fallback when form action replaces query string)
-    const token = url.searchParams.get('token') || (formData.get('token') as string)
+    // Token can come from cookie, URL params or form data (for backwards compatibility)
+    const token =
+      getSponsorToken(cookies, url, params.editionSlug) || (formData.get('token') as string)
     const sponsorId = formData.get('sponsorId') as string
     const name = formData.get('name') as string
     const website = formData.get('website') as string
@@ -109,10 +112,11 @@ export const actions: Actions = {
     }
   },
 
-  uploadLogo: async ({ request, url, locals }) => {
+  uploadLogo: async ({ request, url, locals, cookies, params }) => {
     const formData = await request.formData()
-    // Token can come from URL params or form data (form data is fallback when form action replaces query string)
-    const token = url.searchParams.get('token') || (formData.get('token') as string)
+    // Token can come from cookie, URL params or form data (for backwards compatibility)
+    const token =
+      getSponsorToken(cookies, url, params.editionSlug) || (formData.get('token') as string)
     const sponsorId = formData.get('sponsorId') as string
     const logo = formData.get('logo') as File
 
@@ -148,10 +152,11 @@ export const actions: Actions = {
     }
   },
 
-  removeLogo: async ({ request, url, locals }) => {
+  removeLogo: async ({ request, url, locals, cookies, params }) => {
     const formData = await request.formData()
-    // Token can come from URL params or form data (form data is fallback when form action replaces query string)
-    const token = url.searchParams.get('token') || (formData.get('token') as string)
+    // Token can come from cookie, URL params or form data (for backwards compatibility)
+    const token =
+      getSponsorToken(cookies, url, params.editionSlug) || (formData.get('token') as string)
     const sponsorId = formData.get('sponsorId') as string
 
     if (!token) {

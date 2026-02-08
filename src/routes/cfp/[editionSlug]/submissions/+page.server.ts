@@ -6,6 +6,7 @@ import {
   generateSpeakerToken,
   validateSpeakerToken
 } from '$lib/server/speaker-tokens'
+import { getSpeakerToken } from '$lib/server/token-cookies'
 import { fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -29,9 +30,11 @@ interface TalkWithCoSpeakers {
 async function getSpeakerFromAuth(
   locals: App.Locals,
   url: URL,
-  editionId: string
+  editionId: string,
+  cookies: import('@sveltejs/kit').Cookies,
+  editionSlug: string
 ): Promise<{ speakerId: string | null; token: string | null }> {
-  const token = url.searchParams.get('token')
+  const token = getSpeakerToken(cookies, url, editionSlug)
 
   if (token) {
     const validation = await validateSpeakerToken(locals.pb, token, editionId)
@@ -43,12 +46,18 @@ async function getSpeakerFromAuth(
   return { speakerId: null, token: null }
 }
 
-export const load: PageServerLoad = async ({ parent, url, locals }) => {
+export const load: PageServerLoad = async ({ parent, url, locals, cookies, params }) => {
   const { edition, cfpStatus, allowCoSpeakers } = await parent()
   const success = url.searchParams.get('success') === 'true'
 
-  // Try token-based authentication
-  const { speakerId, token } = await getSpeakerFromAuth(locals, url, edition.id)
+  // Try token-based authentication (from cookie or URL for backwards compatibility)
+  const { speakerId, token } = await getSpeakerFromAuth(
+    locals,
+    url,
+    edition.id,
+    cookies,
+    params.editionSlug
+  )
 
   if (!speakerId) {
     return {
@@ -144,9 +153,11 @@ export const load: PageServerLoad = async ({ parent, url, locals }) => {
 async function validateTokenAndGetSpeaker(
   locals: App.Locals,
   url: URL,
-  editionId: string
+  editionId: string,
+  cookies: import('@sveltejs/kit').Cookies,
+  editionSlug: string
 ): Promise<{ speaker: { id: string; email: string } | null; error: string | null }> {
-  const token = url.searchParams.get('token')
+  const token = getSpeakerToken(cookies, url, editionSlug)
 
   if (!token) {
     return { speaker: null, error: 'Authentication token is required' }
@@ -167,7 +178,7 @@ async function validateTokenAndGetSpeaker(
 }
 
 export const actions: Actions = {
-  withdraw: async ({ request, locals, url, params }) => {
+  withdraw: async ({ request, locals, url, params, cookies }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
 
@@ -180,7 +191,13 @@ export const actions: Actions = {
       .collection('editions')
       .getFirstListItem(`slug="${params.editionSlug}"`)
 
-    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    const { speaker, error } = await validateTokenAndGetSpeaker(
+      locals,
+      url,
+      edition.id,
+      cookies,
+      params.editionSlug
+    )
     if (error || !speaker) {
       return fail(401, { error: error || 'Authentication required' })
     }
@@ -219,7 +236,7 @@ export const actions: Actions = {
     }
   },
 
-  confirm: async ({ request, locals, url, params }) => {
+  confirm: async ({ request, locals, url, params, cookies }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
 
@@ -231,7 +248,13 @@ export const actions: Actions = {
       .collection('editions')
       .getFirstListItem(`slug="${params.editionSlug}"`)
 
-    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    const { speaker, error } = await validateTokenAndGetSpeaker(
+      locals,
+      url,
+      edition.id,
+      cookies,
+      params.editionSlug
+    )
     if (error || !speaker) {
       return fail(401, { error: error || 'Authentication required' })
     }
@@ -263,7 +286,7 @@ export const actions: Actions = {
     }
   },
 
-  decline: async ({ request, locals, url, params }) => {
+  decline: async ({ request, locals, url, params, cookies }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
 
@@ -275,7 +298,13 @@ export const actions: Actions = {
       .collection('editions')
       .getFirstListItem(`slug="${params.editionSlug}"`)
 
-    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    const { speaker, error } = await validateTokenAndGetSpeaker(
+      locals,
+      url,
+      edition.id,
+      cookies,
+      params.editionSlug
+    )
     if (error || !speaker) {
       return fail(401, { error: error || 'Authentication required' })
     }
@@ -307,7 +336,7 @@ export const actions: Actions = {
     }
   },
 
-  inviteCospeaker: async ({ request, locals, url, params }) => {
+  inviteCospeaker: async ({ request, locals, url, params, cookies }) => {
     const formData = await request.formData()
     const talkId = formData.get('talkId') as string
     const cospeakerEmail = formData.get('cospeakerEmail') as string
@@ -320,7 +349,13 @@ export const actions: Actions = {
       .collection('editions')
       .getFirstListItem(`slug="${params.editionSlug}"`)
 
-    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    const { speaker, error } = await validateTokenAndGetSpeaker(
+      locals,
+      url,
+      edition.id,
+      cookies,
+      params.editionSlug
+    )
     if (error || !speaker) {
       return fail(401, { error: error || 'Authentication required' })
     }
@@ -388,7 +423,7 @@ export const actions: Actions = {
     }
   },
 
-  cancelCospeakerInvitation: async ({ request, locals, url, params }) => {
+  cancelCospeakerInvitation: async ({ request, locals, url, params, cookies }) => {
     const formData = await request.formData()
     const invitationId = formData.get('invitationId') as string
 
@@ -400,7 +435,13 @@ export const actions: Actions = {
       .collection('editions')
       .getFirstListItem(`slug="${params.editionSlug}"`)
 
-    const { speaker, error } = await validateTokenAndGetSpeaker(locals, url, edition.id)
+    const { speaker, error } = await validateTokenAndGetSpeaker(
+      locals,
+      url,
+      edition.id,
+      cookies,
+      params.editionSlug
+    )
     if (error || !speaker) {
       return fail(401, { error: error || 'Authentication required' })
     }

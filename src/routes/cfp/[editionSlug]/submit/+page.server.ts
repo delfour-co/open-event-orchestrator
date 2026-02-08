@@ -3,6 +3,7 @@ import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp
 import { createSubmitTalkUseCase } from '$lib/features/cfp/usecases'
 import { sendCfpNotification } from '$lib/server/cfp-notifications'
 import { buildSubmissionsUrl, generateSpeakerToken } from '$lib/server/speaker-tokens'
+import { setSpeakerTokenCookie } from '$lib/server/token-cookies'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -23,7 +24,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 }
 
 export const actions: Actions = {
-  submit: async ({ request, locals, params }) => {
+  submit: async ({ request, locals, params, cookies }) => {
     // First, verify CFP is still open
     const editions = await locals.pb.collection('editions').getList(1, 1, {
       filter: `slug = "${params.editionSlug}"`
@@ -163,8 +164,9 @@ export const actions: Actions = {
         console.error('Failed to send submission confirmation email:', err)
       })
 
-      // Redirect to submissions page with token
-      throw redirect(303, `/cfp/${params.editionSlug}/submissions?success=true&token=${token}`)
+      // Set token in secure cookie and redirect to submissions page
+      setSpeakerTokenCookie(cookies, token, params.editionSlug)
+      throw redirect(303, `/cfp/${params.editionSlug}/submissions?success=true`)
     } catch (err) {
       if (isRedirect(err)) {
         throw err // Re-throw redirect

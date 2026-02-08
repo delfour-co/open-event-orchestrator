@@ -8,6 +8,7 @@ declare global {
       user: import('pocketbase').RecordModel | null
       apiKey?: import('$lib/features/api/domain').ApiKey
       apiKeyScope?: import('$lib/features/api/domain').ApiKeyScope
+      rateLimit?: import('$lib/features/api/services').RateLimitResult
     }
     // interface PageData {}
     // interface PageState {}

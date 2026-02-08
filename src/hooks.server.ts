@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/public'
-import { createApiKeyService } from '$lib/features/api/services'
-import type { Handle } from '@sveltejs/kit'
+import { createApiKeyService, rateLimiter } from '$lib/features/api/services'
+import { type Handle, json } from '@sveltejs/kit'
 import PocketBase from 'pocketbase'
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -22,7 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   event.locals.pb = pb
   event.locals.user = pb.authStore.model
 
-  // API key authentication for /api/v1/* routes
+  // API key authentication and rate limiting for /api/v1/* routes
   if (event.url.pathname.startsWith('/api/v1/')) {
     const authHeader = event.request.headers.get('Authorization')
     if (authHeader?.startsWith('Bearer ')) {
@@ -33,11 +33,46 @@ export const handle: Handle = async ({ event, resolve }) => {
       if (result.valid && result.apiKey) {
         event.locals.apiKey = result.apiKey
         event.locals.apiKeyScope = result.scope
+
+        // Apply rate limiting
+        const rateLimitResult = rateLimiter.check(result.apiKey)
+
+        if (!rateLimitResult.allowed) {
+          return json(
+            {
+              error: 'Too Many Requests',
+              message: 'Rate limit exceeded. Please try again later.',
+              retryAfter: Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
+            },
+            {
+              status: 429,
+              headers: {
+                'X-RateLimit-Limit': String(rateLimitResult.limit),
+                'X-RateLimit-Remaining': '0',
+                'X-RateLimit-Reset': String(Math.floor(rateLimitResult.resetAt.getTime() / 1000)),
+                'Retry-After': String(
+                  Math.ceil((rateLimitResult.resetAt.getTime() - Date.now()) / 1000)
+                )
+              }
+            }
+          )
+        }
+
+        // Store rate limit info for response headers
+        event.locals.rateLimit = rateLimitResult
       }
     }
   }
 
   const response = await resolve(event)
+
+  // Add rate limit headers to API responses
+  if (event.url.pathname.startsWith('/api/v1/') && event.locals.rateLimit) {
+    const rl = event.locals.rateLimit
+    response.headers.set('X-RateLimit-Limit', String(rl.limit))
+    response.headers.set('X-RateLimit-Remaining', String(rl.remaining))
+    response.headers.set('X-RateLimit-Reset', String(Math.floor(rl.resetAt.getTime() / 1000)))
+  }
 
   // Set auth cookie (skip for API routes to avoid unnecessary headers)
   if (!event.url.pathname.startsWith('/api/v1/')) {
