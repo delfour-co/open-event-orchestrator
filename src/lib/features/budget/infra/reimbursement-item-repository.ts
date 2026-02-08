@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { ReimbursementItem } from '../domain/reimbursement'
 
@@ -6,7 +7,7 @@ const COLLECTION = 'reimbursement_items'
 export const createReimbursementItemRepository = (pb: PocketBase) => ({
   async findByRequest(requestId: string): Promise<ReimbursementItem[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `requestId = "${requestId}"`,
+      filter: safeFilter`requestId = ${requestId}`,
       sort: 'date'
     })
     return records.map(mapRecordToItem)

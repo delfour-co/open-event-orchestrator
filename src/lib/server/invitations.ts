@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 
 const ROLE_PRIORITY: Record<string, number> = {
@@ -22,7 +23,7 @@ export async function processPendingInvitations(
   try {
     // Find all pending invitations for this email
     const invitations = await pb.collection('organization_invitations').getFullList({
-      filter: `email="${userEmail}" && status="pending"`
+      filter: filterAnd(safeFilter`email = ${userEmail}`, safeFilter`status = ${'pending'}`)
     })
 
     const now = new Date()
@@ -42,7 +43,12 @@ export async function processPendingInvitations(
       try {
         await pb
           .collection('organization_members')
-          .getFirstListItem(`organizationId="${invitation.organizationId}" && userId="${userId}"`)
+          .getFirstListItem(
+            filterAnd(
+              safeFilter`organizationId = ${invitation.organizationId as string}`,
+              safeFilter`userId = ${userId}`
+            )
+          )
         // Already a member, mark invitation as accepted
         await pb.collection('organization_invitations').update(invitation.id, {
           status: 'accepted'

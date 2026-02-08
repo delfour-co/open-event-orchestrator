@@ -243,7 +243,7 @@ describe('createEvaluateSegmentUseCase', () => {
         const result = await evaluate(segment)
 
         expect(pb.collection('contacts').getFullList).toHaveBeenCalledWith({
-          filter: 'eventId = "evt-001" && (source != "spam" && source != "bot")',
+          filter: 'eventId = "evt-001" && source != "spam" && source != "bot"',
           fields: 'id'
         })
         expect(result).toEqual(['c3'])
@@ -568,7 +568,7 @@ describe('createEvaluateSegmentUseCase', () => {
         const result = await evaluate(segment)
 
         expect(pb.collection('contact_edition_links').getFullList).toHaveBeenCalledWith({
-          filter: '(roles != "attendee" && roles != "volunteer")',
+          filter: 'roles != "attendee" && roles != "volunteer"',
           fields: 'contactId'
         })
         expect(result).toEqual(['c5'])
@@ -1517,9 +1517,9 @@ describe('createEvaluateSegmentUseCase', () => {
 
       const result = await evaluate(segment)
 
-      // Empty array with 'in' => filter is "()" which is still a valid call
+      // Empty array with 'in' => filter is "false" (matches nothing)
       expect(pb.collection('contact_edition_links').getFullList).toHaveBeenCalledWith({
-        filter: '()',
+        filter: 'false',
         fields: 'contactId'
       })
       expect(result).toEqual([])
@@ -1528,8 +1528,6 @@ describe('createEvaluateSegmentUseCase', () => {
     it('should handle not_in operator with empty array', async () => {
       const pb = createMockPb()
       const evaluate = createEvaluateSegmentUseCase(pb)
-
-      pb.collection('contact_edition_links').getFullList.mockResolvedValue([])
 
       const segment = makeSegment({
         criteria: {
@@ -1540,10 +1538,8 @@ describe('createEvaluateSegmentUseCase', () => {
 
       const result = await evaluate(segment)
 
-      expect(pb.collection('contact_edition_links').getFullList).toHaveBeenCalledWith({
-        filter: '()',
-        fields: 'contactId'
-      })
+      // Empty array with 'not_in' => buildRelatedFilter returns empty string (falsy)
+      // which means the rule is skipped. With no other rules, result is empty.
       expect(result).toEqual([])
     })
   })
@@ -1570,7 +1566,7 @@ describe('createEvaluateSegmentUseCase', () => {
       {
         operator: 'not_in',
         value: ['spam', 'bot'],
-        expectedFilter: '(source != "spam" && source != "bot")'
+        expectedFilter: 'source != "spam" && source != "bot"'
       }
     ]
 

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 
 const TOKEN_EXPIRY_DAYS = 30
@@ -21,7 +22,11 @@ export async function generateSpeakerToken(
     const existing = await pb
       .collection('speaker_tokens')
       .getFirstListItem(
-        `speakerId="${speakerId}" && editionId="${editionId}" && expiresAt > "${new Date().toISOString()}"`
+        filterAnd(
+          safeFilter`speakerId = ${speakerId}`,
+          safeFilter`editionId = ${editionId}`,
+          `expiresAt > "${new Date().toISOString()}"`
+        )
       )
     if (existing) {
       return existing.token as string
@@ -57,7 +62,11 @@ export async function validateSpeakerToken(
     const record = await pb
       .collection('speaker_tokens')
       .getFirstListItem(
-        `token="${token}" && editionId="${editionId}" && expiresAt > "${new Date().toISOString()}"`
+        filterAnd(
+          safeFilter`token = ${token}`,
+          safeFilter`editionId = ${editionId}`,
+          `expiresAt > "${new Date().toISOString()}"`
+        )
       )
     return { valid: true, speakerId: record.speakerId as string }
   } catch {
@@ -73,7 +82,7 @@ export async function refreshSpeakerToken(
   // Delete any existing tokens for this speaker/edition
   try {
     const existing = await pb.collection('speaker_tokens').getFullList({
-      filter: `speakerId="${speakerId}" && editionId="${editionId}"`
+      filter: filterAnd(safeFilter`speakerId = ${speakerId}`, safeFilter`editionId = ${editionId}`)
     })
     for (const record of existing) {
       await pb.collection('speaker_tokens').delete(record.id)

@@ -1,3 +1,4 @@
+import { filterIn, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { BudgetInvoice } from '../domain/invoice'
 
@@ -6,7 +7,7 @@ const COLLECTION = 'budget_invoices'
 export const createInvoiceRepository = (pb: PocketBase) => ({
   async findByTransaction(transactionId: string): Promise<BudgetInvoice[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `transactionId = "${transactionId}"`,
+      filter: safeFilter`transactionId = ${transactionId}`,
       sort: '-issueDate'
     })
     return records.map(mapRecordToInvoice)
@@ -14,7 +15,7 @@ export const createInvoiceRepository = (pb: PocketBase) => ({
 
   async findByEdition(transactionIds: string[]): Promise<BudgetInvoice[]> {
     if (transactionIds.length === 0) return []
-    const filter = transactionIds.map((id) => `transactionId = "${id}"`).join(' || ')
+    const filter = filterIn('transactionId', transactionIds)
     const records = await pb.collection(COLLECTION).getFullList({
       filter,
       sort: '-issueDate'

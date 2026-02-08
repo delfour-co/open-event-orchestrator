@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CampaignStatus, CreateEmailCampaign, EmailCampaign } from '../domain'
 
@@ -22,7 +23,7 @@ export const createEmailCampaignRepository = (pb: PocketBase) => ({
 
   async findByEvent(eventId: string): Promise<EmailCampaign[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `eventId = "${eventId}"`,
+      filter: safeFilter`eventId = ${eventId}`,
       sort: '-created'
     })
     return records.map(mapRecordToEmailCampaign)

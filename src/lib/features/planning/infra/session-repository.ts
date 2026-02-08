@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateSession, Session, SessionType, UpdateSession } from '../domain'
 
@@ -41,14 +42,16 @@ export function createSessionRepository(pb: PocketBase): SessionRepository {
 
     async findByEdition(editionId: string): Promise<Session[]> {
       const records = await pb.collection('sessions').getFullList({
-        filter: `editionId = "${editionId}"`
+        filter: safeFilter`editionId = ${editionId}`
       })
       return records.map(mapRecordToSession)
     },
 
     async findBySlot(slotId: string): Promise<Session | null> {
       try {
-        const record = await pb.collection('sessions').getFirstListItem(`slotId = "${slotId}"`)
+        const record = await pb
+          .collection('sessions')
+          .getFirstListItem(safeFilter`slotId = ${slotId}`)
         return mapRecordToSession(record)
       } catch {
         return null
@@ -57,7 +60,9 @@ export function createSessionRepository(pb: PocketBase): SessionRepository {
 
     async findByTalk(talkId: string): Promise<Session | null> {
       try {
-        const record = await pb.collection('sessions').getFirstListItem(`talkId = "${talkId}"`)
+        const record = await pb
+          .collection('sessions')
+          .getFirstListItem(safeFilter`talkId = ${talkId}`)
         return mapRecordToSession(record)
       } catch {
         return null
@@ -66,7 +71,7 @@ export function createSessionRepository(pb: PocketBase): SessionRepository {
 
     async findByTrack(trackId: string): Promise<Session[]> {
       const records = await pb.collection('sessions').getFullList({
-        filter: `trackId = "${trackId}"`
+        filter: safeFilter`trackId = ${trackId}`
       })
       return records.map(mapRecordToSession)
     },
@@ -103,10 +108,9 @@ export function createSessionRepository(pb: PocketBase): SessionRepository {
 
     async isSlotOccupied(slotId: string, excludeSessionId?: string): Promise<boolean> {
       try {
-        let filter = `slotId = "${slotId}"`
-        if (excludeSessionId) {
-          filter += ` && id != "${excludeSessionId}"`
-        }
+        const filter = excludeSessionId
+          ? filterAnd(safeFilter`slotId = ${slotId}`, safeFilter`id != ${excludeSessionId}`)
+          : safeFilter`slotId = ${slotId}`
         const records = await pb.collection('sessions').getList(1, 1, { filter })
         return records.items.length > 0
       } catch {

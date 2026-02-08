@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { ContactSource, CreateContact, EditionRole } from '../domain'
 
@@ -13,7 +14,7 @@ export const createSyncContactsUseCase = (pb: PocketBase) => {
     const result: SyncContactsResult = { created: 0, updated: 0, linked: 0, errors: [] }
 
     const editions = await pb.collection('editions').getFullList({
-      filter: `eventId = "${eventId}"`
+      filter: safeFilter`eventId = ${eventId}`
     })
     const editionIds = editions.map((e) => e.id)
 
@@ -39,7 +40,7 @@ async function findOrCreateContact(
   result: SyncContactsResult
 ): Promise<string> {
   const existing = await pb.collection('contacts').getList(1, 1, {
-    filter: `eventId = "${eventId}" && email = "${email}"`
+    filter: safeFilter`eventId = ${eventId} && email = ${email}`
   })
 
   if (existing.items.length > 0) {
@@ -93,7 +94,7 @@ async function ensureEditionLink(
   speakerId?: string
 ): Promise<boolean> {
   const existing = await pb.collection('contact_edition_links').getList(1, 1, {
-    filter: `contactId = "${contactId}" && editionId = "${editionId}"`
+    filter: safeFilter`contactId = ${contactId} && editionId = ${editionId}`
   })
 
   if (existing.items.length > 0) {
@@ -125,7 +126,7 @@ async function syncSpeakers(
   result: SyncContactsResult
 ): Promise<void> {
   const talks = await pb.collection('talks').getFullList({
-    filter: `editionId = "${editionId}"`,
+    filter: safeFilter`editionId = ${editionId}`,
     expand: 'speakerIds'
   })
 
@@ -181,7 +182,7 @@ async function syncAttendees(
   result: SyncContactsResult
 ): Promise<void> {
   const tickets = await pb.collection('billing_tickets').getFullList({
-    filter: `editionId = "${editionId}" && status != "cancelled"`
+    filter: safeFilter`editionId = ${editionId} && status != ${'cancelled'}`
   })
 
   const seen = new Set<string>()

@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateTicket, Ticket, TicketStatus } from '../domain'
 
@@ -15,7 +16,7 @@ export const createTicketRepository = (pb: PocketBase) => ({
 
   async findByOrder(orderId: string): Promise<Ticket[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `orderId = "${orderId}"`,
+      filter: safeFilter`orderId = ${orderId}`,
       sort: 'created'
     })
     return records.map(mapRecordToTicket)
@@ -23,7 +24,7 @@ export const createTicketRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<Ticket[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToTicket)
@@ -32,7 +33,7 @@ export const createTicketRepository = (pb: PocketBase) => ({
   async findByTicketNumber(ticketNumber: string): Promise<Ticket | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `ticketNumber = "${ticketNumber}"`
+        filter: safeFilter`ticketNumber = ${ticketNumber}`
       })
       if (records.items.length === 0) return null
       return mapRecordToTicket(records.items[0])
@@ -67,7 +68,7 @@ export const createTicketRepository = (pb: PocketBase) => ({
     editionId: string
   ): Promise<{ total: number; byStatus: Record<TicketStatus, number> }> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       fields: 'status'
     })
 

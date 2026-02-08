@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateTicketType, TicketType, UpdateTicketType } from '../domain'
 
@@ -15,7 +16,7 @@ export const createTicketTypeRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<TicketType[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: 'order,name'
     })
     return records.map(mapRecordToTicketType)
@@ -23,7 +24,7 @@ export const createTicketTypeRepository = (pb: PocketBase) => ({
 
   async findActiveByEdition(editionId: string): Promise<TicketType[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}" && isActive = true`,
+      filter: filterAnd(safeFilter`editionId = ${editionId}`, 'isActive = true'),
       sort: 'order,price'
     })
     return records.map(mapRecordToTicketType)

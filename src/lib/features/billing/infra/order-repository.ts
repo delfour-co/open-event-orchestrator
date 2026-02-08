@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateOrder, Order, OrderStatus } from '../domain'
 
@@ -23,19 +24,17 @@ export const createOrderRepository = (pb: PocketBase) => ({
     const records = await pb
       .collection(COLLECTION)
       .getList(options?.page ?? 1, options?.perPage ?? 50, {
-        filter: `editionId = "${editionId}"`,
+        filter: safeFilter`editionId = ${editionId}`,
         sort: options?.sort ?? '-created'
       })
     return records.items.map(mapRecordToOrder)
   },
 
   async findByEmail(email: string, editionId?: string): Promise<Order[]> {
-    let filter = `email = "${email}"`
-    if (editionId) {
-      filter += ` && editionId = "${editionId}"`
-    }
+    const emailFilter = safeFilter`email = ${email}`
+    const editionFilter = editionId ? safeFilter`editionId = ${editionId}` : undefined
     const records = await pb.collection(COLLECTION).getFullList({
-      filter,
+      filter: filterAnd(emailFilter, editionFilter),
       sort: '-created'
     })
     return records.map(mapRecordToOrder)
@@ -44,7 +43,7 @@ export const createOrderRepository = (pb: PocketBase) => ({
   async findByStripeSessionId(stripeSessionId: string): Promise<Order | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `stripeSessionId = "${stripeSessionId}"`
+        filter: safeFilter`stripeSessionId = ${stripeSessionId}`
       })
       if (records.items.length === 0) return null
       return mapRecordToOrder(records.items[0])
@@ -85,7 +84,7 @@ export const createOrderRepository = (pb: PocketBase) => ({
     editionId: string
   ): Promise<{ total: number; byStatus: Record<OrderStatus, number>; totalRevenue: number }> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       fields: 'status,totalAmount'
     })
 

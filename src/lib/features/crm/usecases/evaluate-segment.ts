@@ -1,3 +1,12 @@
+import {
+  escapeFilterValue,
+  filterAnd,
+  filterContains,
+  filterEquals,
+  filterIn,
+  filterOr,
+  safeFilter
+} from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { Segment, SegmentRule } from '../domain'
 
@@ -17,12 +26,10 @@ export const createEvaluateSegmentUseCase = (pb: PocketBase) => {
     // Get contact IDs matching direct rules
     let directContactIds: Set<string> | null = null
     if (directRules.length > 0) {
-      const filters = directRules.map((rule) => ruleToFilter(rule)).filter(Boolean)
+      const filters = directRules.map((rule) => ruleToFilter(rule)).filter(Boolean) as string[]
       if (filters.length > 0) {
-        const combinedFilter = [
-          `eventId = "${segment.eventId}"`,
-          criteria.match === 'all' ? filters.join(' && ') : `(${filters.join(' || ')})`
-        ].join(' && ')
+        const rulesFilter = criteria.match === 'all' ? filterAnd(...filters) : filterOr(...filters)
+        const combinedFilter = filterAnd(safeFilter`eventId = ${segment.eventId}`, rulesFilter)
 
         try {
           const contacts = await pb.collection('contacts').getFullList({
@@ -122,7 +129,7 @@ async function evaluateRelatedRule(
         const wantGranted =
           rule.value === 'true' || rule.value === true || rule.operator === 'equals'
         const consents = await pb.collection('consents').getFullList({
-          filter: `type = "marketing_email" && status = "granted"`,
+          filter: safeFilter`type = ${'marketing_email'} && status = ${'granted'}`,
           fields: 'contactId'
         })
         const grantedIds = new Set(consents.map((c) => c.contactId as string))
@@ -133,7 +140,7 @@ async function evaluateRelatedRule(
 
         // Want contacts WITHOUT marketing consent — get all event contacts then subtract
         const allContacts = await pb.collection('contacts').getFullList({
-          filter: `eventId = "${eventId}"`,
+          filter: safeFilter`eventId = ${eventId}`,
           fields: 'id'
         })
         return new Set(allContacts.map((c) => c.id as string).filter((id) => !grantedIds.has(id)))
@@ -150,13 +157,13 @@ async function evaluateRelatedRule(
           rule.value === 'true' || rule.value === true || rule.operator === 'equals'
 
         const tickets = await pb.collection('tickets').getFullList({
-          filter: 'checkedIn = true',
+          filter: safeFilter`checkedIn = ${true}`,
           fields: 'email'
         })
         const checkedInEmails = new Set(tickets.map((t) => (t.email as string).toLowerCase()))
 
         const allContacts = await pb.collection('contacts').getFullList({
-          filter: `eventId = "${eventId}"`,
+          filter: safeFilter`eventId = ${eventId}`,
           fields: 'id,email'
         })
 
@@ -186,28 +193,30 @@ async function evaluateRelatedRule(
 
 function buildRelatedFilter(pbField: string, rule: SegmentRule): string | null {
   const { operator, value } = rule
+  const strValue = String(value)
 
   switch (operator) {
     case 'equals':
-      return `${pbField} = "${value}"`
+      return filterEquals(pbField, strValue)
     case 'not_equals':
-      return `${pbField} != "${value}"`
+      return `${pbField} != "${escapeFilterValue(strValue)}"`
     case 'contains':
-      return `${pbField} ~ "${value}"`
+      return filterContains(pbField, strValue)
     case 'not_contains':
-      return `${pbField} !~ "${value}"`
+      return `${pbField} !~ "${escapeFilterValue(strValue)}"`
     case 'is_empty':
       return `${pbField} = ""`
     case 'is_not_empty':
       return `${pbField} != ""`
     case 'in':
       if (Array.isArray(value)) {
-        return `(${value.map((v) => `${pbField} = "${v}"`).join(' || ')})`
+        return filterIn(pbField, value.map(String))
       }
       return null
     case 'not_in':
       if (Array.isArray(value)) {
-        return `(${value.map((v) => `${pbField} != "${v}"`).join(' && ')})`
+        const conditions = value.map((v) => `${pbField} != "${escapeFilterValue(String(v))}"`)
+        return filterAnd(...conditions)
       }
       return null
     default:
@@ -229,27 +238,30 @@ function ruleToFilter(rule: SegmentRule): string | null {
   const pbField = mapping[field]
   if (!pbField) return null
 
+  const strValue = String(value)
+
   switch (operator) {
     case 'equals':
-      return `${pbField} = "${value}"`
+      return filterEquals(pbField, strValue)
     case 'not_equals':
-      return `${pbField} != "${value}"`
+      return `${pbField} != "${escapeFilterValue(strValue)}"`
     case 'contains':
-      return `${pbField} ~ "${value}"`
+      return filterContains(pbField, strValue)
     case 'not_contains':
-      return `${pbField} !~ "${value}"`
+      return `${pbField} !~ "${escapeFilterValue(strValue)}"`
     case 'is_empty':
       return `${pbField} = ""`
     case 'is_not_empty':
       return `${pbField} != ""`
     case 'in':
       if (Array.isArray(value)) {
-        return `(${value.map((v) => `${pbField} = "${v}"`).join(' || ')})`
+        return filterIn(pbField, value.map(String))
       }
       return null
     case 'not_in':
       if (Array.isArray(value)) {
-        return `(${value.map((v) => `${pbField} != "${v}"`).join(' && ')})`
+        const conditions = value.map((v) => `${pbField} != "${escapeFilterValue(String(v))}"`)
+        return filterAnd(...conditions)
       }
       return null
     default:

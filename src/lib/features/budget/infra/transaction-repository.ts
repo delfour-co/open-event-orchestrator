@@ -1,3 +1,4 @@
+import { filterIn, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { BudgetTransaction, CreateTransaction, UpdateTransaction } from '../domain'
 
@@ -18,7 +19,7 @@ const buildUpdateData = (data: UpdateTransaction): Record<string, unknown> => {
 export const createTransactionRepository = (pb: PocketBase) => ({
   async findByCategory(categoryId: string): Promise<BudgetTransaction[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `categoryId = "${categoryId}"`,
+      filter: safeFilter`categoryId = ${categoryId}`,
       sort: '-date'
     })
     return records.map(mapRecordToTransaction)
@@ -26,7 +27,7 @@ export const createTransactionRepository = (pb: PocketBase) => ({
 
   async findByBudget(categoryIds: string[]): Promise<BudgetTransaction[]> {
     if (categoryIds.length === 0) return []
-    const filter = categoryIds.map((id) => `categoryId = "${id}"`).join(' || ')
+    const filter = filterIn('categoryId', categoryIds)
     const records = await pb.collection(COLLECTION).getFullList({
       filter,
       sort: '-date'
@@ -68,7 +69,7 @@ export const createTransactionRepository = (pb: PocketBase) => ({
 
   async countByCategory(categoryId: string): Promise<number> {
     const records = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `categoryId = "${categoryId}"`,
+      filter: safeFilter`categoryId = ${categoryId}`,
       fields: 'id'
     })
     return records.totalItems
@@ -80,7 +81,7 @@ export const createTransactionRepository = (pb: PocketBase) => ({
     status: 'paid' | 'pending' | 'cancelled' = 'paid'
   ): Promise<number> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `categoryId = "${categoryId}" && type = "${type}" && status = "${status}"`,
+      filter: safeFilter`categoryId = ${categoryId} && type = ${type} && status = ${status}`,
       fields: 'amount'
     })
     return records.reduce((sum, r) => sum + ((r.amount as number) || 0), 0)

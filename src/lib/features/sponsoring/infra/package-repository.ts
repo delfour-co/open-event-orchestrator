@@ -1,3 +1,4 @@
+import { filterAnd, filterOr, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { Benefit, CreatePackage, SponsorPackage, UpdatePackage } from '../domain'
 
@@ -15,7 +16,7 @@ export const createPackageRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<SponsorPackage[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: 'tier'
     })
     return records.map(mapRecordToPackage)
@@ -23,7 +24,7 @@ export const createPackageRepository = (pb: PocketBase) => ({
 
   async findActiveByEdition(editionId: string): Promise<SponsorPackage[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}" && isActive = true`,
+      filter: filterAnd(safeFilter`editionId = ${editionId}`, 'isActive = true'),
       sort: 'tier'
     })
     return records.map(mapRecordToPackage)
@@ -63,8 +64,9 @@ export const createPackageRepository = (pb: PocketBase) => ({
   },
 
   async countSponsorsByPackage(packageId: string): Promise<number> {
+    const statusCondition = filterOr('status = "confirmed"', 'status = "negotiating"')
     const records = await pb.collection('edition_sponsors').getList(1, 1, {
-      filter: `packageId = "${packageId}" && (status = "confirmed" || status = "negotiating")`,
+      filter: filterAnd(safeFilter`packageId = ${packageId}`, statusCondition),
       fields: 'id',
       requestKey: null // Disable auto-cancellation for parallel requests
     })

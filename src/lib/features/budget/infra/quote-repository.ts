@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { BudgetQuote, CreateQuote, QuoteLineItem, UpdateQuote } from '../domain/quote'
 
@@ -6,7 +7,7 @@ const COLLECTION = 'budget_quotes'
 export const createQuoteRepository = (pb: PocketBase) => ({
   async findByEdition(editionId: string): Promise<BudgetQuote[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToQuote)
@@ -75,7 +76,7 @@ export const createQuoteRepository = (pb: PocketBase) => ({
 
   async getNextSequence(editionId: string): Promise<number> {
     const records = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created',
       fields: 'id'
     })

@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { ContactEditionLink, CreateContactEditionLink, EditionRole } from '../domain'
 
@@ -15,7 +16,7 @@ export const createContactEditionLinkRepository = (pb: PocketBase) => ({
 
   async findByContact(contactId: string): Promise<ContactEditionLink[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `contactId = "${contactId}"`,
+      filter: safeFilter`contactId = ${contactId}`,
       sort: '-created'
     })
     return records.map(mapRecordToContactEditionLink)
@@ -23,7 +24,7 @@ export const createContactEditionLinkRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<ContactEditionLink[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToContactEditionLink)
@@ -35,7 +36,7 @@ export const createContactEditionLinkRepository = (pb: PocketBase) => ({
   ): Promise<ContactEditionLink | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `contactId = "${contactId}" && editionId = "${editionId}"`
+        filter: safeFilter`contactId = ${contactId} && editionId = ${editionId}`
       })
       if (records.items.length === 0) return null
       return mapRecordToContactEditionLink(records.items[0])

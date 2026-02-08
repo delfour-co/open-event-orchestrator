@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { env } from '$env/dynamic/public'
 import { getEmailService } from '$lib/server/app-settings'
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import { interpolateTemplate } from '../domain'
 
@@ -35,14 +36,14 @@ export const createSendCampaignUseCase = (pb: PocketBase) => {
     try {
       // Get recipients
       const contacts = await pb.collection('contacts').getFullList({
-        filter: `eventId = "${campaign.eventId}"`
+        filter: safeFilter`eventId = ${campaign.eventId as string}`
       })
 
       // Filter contacts with marketing consent
       const contactsWithConsent: Array<Record<string, unknown>> = []
       for (const contact of contacts) {
         const consents = await pb.collection('consents').getList(1, 1, {
-          filter: `contactId = "${contact.id}" && type = "marketing_email" && status = "granted"`
+          filter: safeFilter`contactId = ${contact.id as string} && type = ${'marketing_email'} && status = ${'granted'}`
         })
         if (consents.items.length > 0) {
           contactsWithConsent.push(contact)

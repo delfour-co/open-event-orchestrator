@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateSegment, Segment, SegmentCriteria } from '../domain'
 
@@ -15,7 +16,7 @@ export const createSegmentRepository = (pb: PocketBase) => ({
 
   async findByEvent(eventId: string): Promise<Segment[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `eventId = "${eventId}"`,
+      filter: safeFilter`eventId = ${eventId}`,
       sort: '-created'
     })
     return records.map(mapRecordToSegment)

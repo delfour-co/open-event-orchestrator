@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type {
   Benefit,
@@ -36,7 +37,7 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<EditionSponsor[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToEditionSponsor)
@@ -44,7 +45,7 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
 
   async findByEditionWithExpand(editionId: string): Promise<EditionSponsorExpanded[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created',
       expand: 'sponsorId,packageId',
       requestKey: null // Disable auto-cancellation for parallel requests
@@ -54,7 +55,7 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
 
   async findBySponsor(sponsorId: string): Promise<EditionSponsor[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `sponsorId = "${sponsorId}"`,
+      filter: safeFilter`sponsorId = ${sponsorId}`,
       sort: '-created'
     })
     return records.map(mapRecordToEditionSponsor)
@@ -62,7 +63,7 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
 
   async findByStatus(editionId: string, status: SponsorStatus): Promise<EditionSponsor[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}" && status = "${status}"`,
+      filter: filterAnd(safeFilter`editionId = ${editionId}`, safeFilter`status = ${status}`),
       sort: '-created'
     })
     return records.map(mapRecordToEditionSponsor)
@@ -70,7 +71,7 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
 
   async findConfirmed(editionId: string): Promise<EditionSponsorExpanded[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}" && status = "confirmed"`,
+      filter: filterAnd(safeFilter`editionId = ${editionId}`, 'status = "confirmed"'),
       sort: '-created',
       expand: 'sponsorId,packageId'
     })
@@ -83,7 +84,10 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
   ): Promise<EditionSponsor | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `editionId = "${editionId}" && sponsorId = "${sponsorId}"`
+        filter: filterAnd(
+          safeFilter`editionId = ${editionId}`,
+          safeFilter`sponsorId = ${sponsorId}`
+        )
       })
       if (records.items.length === 0) return null
       return mapRecordToEditionSponsor(records.items[0])
@@ -134,7 +138,7 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
 
   async getStats(editionId: string): Promise<SponsorStats> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       fields: 'id,status,amount,paidAt',
       requestKey: null // Disable auto-cancellation for parallel requests
     })

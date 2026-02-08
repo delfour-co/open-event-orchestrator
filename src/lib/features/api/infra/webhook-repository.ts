@@ -1,3 +1,4 @@
+import { filterAnd, filterOr, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type {
   CreateWebhook,
@@ -23,17 +24,19 @@ export const createWebhookRepository = (pb: PocketBase) => ({
     const filters: string[] = ['isActive = true']
 
     if (scope.editionId) {
-      filters.push(`(editionId = "${scope.editionId}" || editionId = "")`)
+      filters.push(filterOr(safeFilter`editionId = ${scope.editionId}`, 'editionId = ""'))
     }
     if (scope.eventId) {
-      filters.push(`(eventId = "${scope.eventId}" || eventId = "")`)
+      filters.push(filterOr(safeFilter`eventId = ${scope.eventId}`, 'eventId = ""'))
     }
     if (scope.organizationId) {
-      filters.push(`(organizationId = "${scope.organizationId}" || organizationId = "")`)
+      filters.push(
+        filterOr(safeFilter`organizationId = ${scope.organizationId}`, 'organizationId = ""')
+      )
     }
 
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: filters.join(' && '),
+      filter: filterAnd(...filters),
       sort: 'created'
     })
 
@@ -47,7 +50,7 @@ export const createWebhookRepository = (pb: PocketBase) => ({
 
   async findByOrganization(organizationId: string): Promise<Webhook[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `organizationId = "${organizationId}"`,
+      filter: safeFilter`organizationId = ${organizationId}`,
       sort: '-created'
     })
     return records.map(mapRecordToWebhook)
@@ -55,7 +58,7 @@ export const createWebhookRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<Webhook[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToWebhook)

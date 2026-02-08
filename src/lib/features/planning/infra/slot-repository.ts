@@ -1,3 +1,4 @@
+import { filterAnd, filterContains, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateSlot, Slot, UpdateSlot } from '../domain'
 import { slotsOverlap } from '../domain'
@@ -39,7 +40,7 @@ export function createSlotRepository(pb: PocketBase): SlotRepository {
 
     async findByEdition(editionId: string): Promise<Slot[]> {
       const records = await pb.collection('slots').getFullList({
-        filter: `editionId = "${editionId}"`,
+        filter: safeFilter`editionId = ${editionId}`,
         sort: 'date,startTime'
       })
       return records.map(mapRecordToSlot)
@@ -47,7 +48,7 @@ export function createSlotRepository(pb: PocketBase): SlotRepository {
 
     async findByRoom(roomId: string): Promise<Slot[]> {
       const records = await pb.collection('slots').getFullList({
-        filter: `roomId = "${roomId}"`,
+        filter: safeFilter`roomId = ${roomId}`,
         sort: 'date,startTime'
       })
       return records.map(mapRecordToSlot)
@@ -56,7 +57,7 @@ export function createSlotRepository(pb: PocketBase): SlotRepository {
     async findByDate(editionId: string, date: Date): Promise<Slot[]> {
       const dateStr = date.toISOString().split('T')[0]
       const records = await pb.collection('slots').getFullList({
-        filter: `editionId = "${editionId}" && date ~ "${dateStr}"`,
+        filter: filterAnd(safeFilter`editionId = ${editionId}`, filterContains('date', dateStr)),
         sort: 'startTime'
       })
       return records.map(mapRecordToSlot)
@@ -92,7 +93,7 @@ export function createSlotRepository(pb: PocketBase): SlotRepository {
       // Find all slots for the same room and date
       const dateStr = slot.date.toISOString().split('T')[0]
       const records = await pb.collection('slots').getFullList({
-        filter: `roomId = "${slot.roomId}" && date ~ "${dateStr}"`
+        filter: filterAnd(safeFilter`roomId = ${slot.roomId}`, filterContains('date', dateStr))
       })
 
       const existingSlots = records.map(mapRecordToSlot)

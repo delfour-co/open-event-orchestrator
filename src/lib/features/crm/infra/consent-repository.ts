@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { Consent, ConsentSource, ConsentStatus, ConsentType, CreateConsent } from '../domain'
 
@@ -15,7 +16,7 @@ export const createConsentRepository = (pb: PocketBase) => ({
 
   async findByContact(contactId: string): Promise<Consent[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `contactId = "${contactId}"`,
+      filter: safeFilter`contactId = ${contactId}`,
       sort: '-created'
     })
     return records.map(mapRecordToConsent)
@@ -24,7 +25,7 @@ export const createConsentRepository = (pb: PocketBase) => ({
   async findByContactAndType(contactId: string, type: ConsentType): Promise<Consent | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `contactId = "${contactId}" && type = "${type}"`
+        filter: safeFilter`contactId = ${contactId} && type = ${type}`
       })
       if (records.items.length === 0) return null
       return mapRecordToConsent(records.items[0])
@@ -101,7 +102,7 @@ export const createConsentRepository = (pb: PocketBase) => ({
 
   async deleteByContact(contactId: string): Promise<void> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `contactId = "${contactId}"`,
+      filter: safeFilter`contactId = ${contactId}`,
       fields: 'id'
     })
     for (const record of records) {

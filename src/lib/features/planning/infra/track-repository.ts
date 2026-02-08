@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateTrack, Track, UpdateTrack } from '../domain'
 
@@ -35,7 +36,7 @@ export function createTrackRepository(pb: PocketBase): TrackRepository {
 
     async findByEdition(editionId: string): Promise<Track[]> {
       const records = await pb.collection('tracks').getFullList({
-        filter: `editionId = "${editionId}"`,
+        filter: safeFilter`editionId = ${editionId}`,
         sort: 'order,name'
       })
       return records.map(mapRecordToTrack)

@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateBudget, EditionBudget, UpdateBudget } from '../domain'
 
@@ -7,7 +8,7 @@ export const createBudgetRepository = (pb: PocketBase) => ({
   async findByEdition(editionId: string): Promise<EditionBudget | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `editionId = "${editionId}"`
+        filter: safeFilter`editionId = ${editionId}`
       })
       if (records.items.length === 0) return null
       return mapRecordToBudget(records.items[0])

@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { Comment, CreateComment } from '../domain'
 
@@ -14,10 +15,8 @@ export const createCommentRepository = (pb: PocketBase) => ({
   },
 
   async findByTalk(talkId: string, internalOnly = true): Promise<Comment[]> {
-    let filter = `talkId = "${talkId}"`
-    if (internalOnly) {
-      filter += ' && isInternal = true'
-    }
+    const talkFilter = safeFilter`talkId = ${talkId}`
+    const filter = internalOnly ? filterAnd(talkFilter, 'isInternal = true') : talkFilter
 
     const records = await pb.collection(COLLECTION).getFullList({
       filter,
@@ -28,7 +27,7 @@ export const createCommentRepository = (pb: PocketBase) => ({
 
   async findByUser(userId: string): Promise<Comment[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `userId = "${userId}"`,
+      filter: safeFilter`userId = ${userId}`,
       sort: '-created'
     })
     return records.map(mapRecordToComment)
@@ -48,7 +47,7 @@ export const createCommentRepository = (pb: PocketBase) => ({
 
   async countByTalk(talkId: string): Promise<number> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `talkId = "${talkId}"`,
+      filter: safeFilter`talkId = ${talkId}`,
       fields: 'id'
     })
     return records.length

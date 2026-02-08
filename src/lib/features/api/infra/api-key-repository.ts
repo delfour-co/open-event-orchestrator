@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { ApiKey, ApiKeyPermission, CreateApiKey } from '../domain/api-key'
 import { API_KEY_LENGTH, API_KEY_PREFIX, DEFAULT_RATE_LIMIT } from '../domain/api-key'
@@ -31,7 +32,7 @@ export const createApiKeyRepository = (pb: PocketBase) => ({
   async findByKeyPrefix(keyPrefix: string): Promise<ApiKey | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `keyPrefix = "${keyPrefix}"`
+        filter: safeFilter`keyPrefix = ${keyPrefix}`
       })
       if (records.items.length === 0) return null
       return mapRecordToApiKey(records.items[0])
@@ -43,7 +44,7 @@ export const createApiKeyRepository = (pb: PocketBase) => ({
   async findByHash(keyHash: string): Promise<ApiKey | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `keyHash = "${keyHash}"`
+        filter: safeFilter`keyHash = ${keyHash}`
       })
       if (records.items.length === 0) return null
       return mapRecordToApiKey(records.items[0])
@@ -54,7 +55,7 @@ export const createApiKeyRepository = (pb: PocketBase) => ({
 
   async findAllByOrganization(organizationId: string): Promise<ApiKey[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `organizationId = "${organizationId}"`,
+      filter: safeFilter`organizationId = ${organizationId}`,
       sort: '-created'
     })
     return records.map(mapRecordToApiKey)
@@ -62,7 +63,7 @@ export const createApiKeyRepository = (pb: PocketBase) => ({
 
   async findAllByEvent(eventId: string): Promise<ApiKey[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `eventId = "${eventId}"`,
+      filter: safeFilter`eventId = ${eventId}`,
       sort: '-created'
     })
     return records.map(mapRecordToApiKey)
@@ -70,7 +71,7 @@ export const createApiKeyRepository = (pb: PocketBase) => ({
 
   async findAllByEdition(editionId: string): Promise<ApiKey[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToApiKey)

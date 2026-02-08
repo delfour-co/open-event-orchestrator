@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
 import type { CreateEventInput, Event, UpdateEventInput } from '../domain'
@@ -40,7 +41,7 @@ export const createEventRepository = (pb: PocketBase): EventRepository => ({
 
   async findBySlug(slug) {
     try {
-      const record = await pb.collection('events').getFirstListItem(`slug="${slug}"`)
+      const record = await pb.collection('events').getFirstListItem(safeFilter`slug = ${slug}`)
       return mapToEvent(record)
     } catch {
       return null
@@ -50,7 +51,7 @@ export const createEventRepository = (pb: PocketBase): EventRepository => ({
   async findByOrganization(organizationId) {
     const records = await pb
       .collection('events')
-      .getFullList({ filter: `organizationId="${organizationId}"` })
+      .getFullList({ filter: safeFilter`organizationId = ${organizationId}` })
     return records.map(mapToEvent)
   },
 

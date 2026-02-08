@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type {
   CreateTeamMemberInput,
@@ -70,7 +71,9 @@ export function createTeamMemberRepository(pb: PocketBase): TeamMemberRepository
       try {
         const record = await pb
           .collection(collection)
-          .getFirstListItem(`editionId="${editionId}" && slug="${slug}"`)
+          .getFirstListItem(
+            filterAnd(safeFilter`editionId = ${editionId}`, safeFilter`slug = ${slug}`)
+          )
         return mapRecordToTeamMember(record as unknown as TeamMemberRecord)
       } catch {
         return null
@@ -79,7 +82,7 @@ export function createTeamMemberRepository(pb: PocketBase): TeamMemberRepository
 
     async findByEdition(editionId: string): Promise<TeamMember[]> {
       const records = await pb.collection(collection).getFullList({
-        filter: `editionId="${editionId}"`,
+        filter: safeFilter`editionId = ${editionId}`,
         sort: 'displayOrder,name'
       })
       return records.map((r) => mapRecordToTeamMember(r as unknown as TeamMemberRecord))
@@ -87,7 +90,7 @@ export function createTeamMemberRepository(pb: PocketBase): TeamMemberRepository
 
     async findByTeam(editionId: string, team: string): Promise<TeamMember[]> {
       const records = await pb.collection(collection).getFullList({
-        filter: `editionId="${editionId}" && team="${team}"`,
+        filter: filterAnd(safeFilter`editionId = ${editionId}`, safeFilter`team = ${team}`),
         sort: 'displayOrder,name'
       })
       return records.map((r) => mapRecordToTeamMember(r as unknown as TeamMemberRecord))
@@ -95,7 +98,7 @@ export function createTeamMemberRepository(pb: PocketBase): TeamMemberRepository
 
     async getTeams(editionId: string): Promise<string[]> {
       const records = await pb.collection(collection).getFullList({
-        filter: `editionId="${editionId}" && team != ""`,
+        filter: filterAnd(safeFilter`editionId = ${editionId}`, 'team != ""'),
         fields: 'team'
       })
       const teams = new Set<string>()

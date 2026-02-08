@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { ReimbursementRequest } from '../domain/reimbursement'
 
@@ -6,7 +7,7 @@ const COLLECTION = 'reimbursement_requests'
 export const createReimbursementRepository = (pb: PocketBase) => ({
   async findByEdition(editionId: string): Promise<ReimbursementRequest[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToRequest)
@@ -14,7 +15,7 @@ export const createReimbursementRepository = (pb: PocketBase) => ({
 
   async findBySpeaker(speakerId: string, editionId: string): Promise<ReimbursementRequest[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `speakerId = "${speakerId}" && editionId = "${editionId}"`,
+      filter: safeFilter`speakerId = ${speakerId} && editionId = ${editionId}`,
       sort: '-created'
     })
     return records.map(mapRecordToRequest)
@@ -79,7 +80,7 @@ export const createReimbursementRepository = (pb: PocketBase) => ({
 
   async getNextSequence(editionId: string): Promise<number> {
     const records = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-created',
       fields: 'id'
     })

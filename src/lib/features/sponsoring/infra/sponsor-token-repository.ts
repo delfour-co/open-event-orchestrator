@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { filterAnd, filterOr, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { SponsorToken } from '../domain'
 import { TOKEN_LENGTH, getTokenExpiryDate } from '../domain'
@@ -13,7 +14,7 @@ export const createSponsorTokenRepository = (pb: PocketBase) => ({
   async findByToken(token: string): Promise<SponsorToken | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `token = "${token}"`
+        filter: safeFilter`token = ${token}`
       })
       if (records.items.length === 0) return null
       return mapRecordToToken(records.items[0])
@@ -25,7 +26,7 @@ export const createSponsorTokenRepository = (pb: PocketBase) => ({
   async findByEditionSponsor(editionSponsorId: string): Promise<SponsorToken | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `editionSponsorId = "${editionSponsorId}"`,
+        filter: safeFilter`editionSponsorId = ${editionSponsorId}`,
         sort: '-created'
       })
       if (records.items.length === 0) return null
@@ -38,8 +39,10 @@ export const createSponsorTokenRepository = (pb: PocketBase) => ({
   async findValidByEditionSponsor(editionSponsorId: string): Promise<SponsorToken | null> {
     try {
       const now = new Date().toISOString()
+      const expiryCondition = filterOr('expiresAt = ""', safeFilter`expiresAt > ${now}`)
+      const filter = filterAnd(safeFilter`editionSponsorId = ${editionSponsorId}`, expiryCondition)
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `editionSponsorId = "${editionSponsorId}" && (expiresAt = "" || expiresAt > "${now}")`,
+        filter,
         sort: '-created'
       })
       if (records.items.length === 0) return null
@@ -73,7 +76,7 @@ export const createSponsorTokenRepository = (pb: PocketBase) => ({
 
   async deleteByEditionSponsor(editionSponsorId: string): Promise<void> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionSponsorId = "${editionSponsorId}"`
+      filter: safeFilter`editionSponsorId = ${editionSponsorId}`
     })
     for (const record of records) {
       await pb.collection(COLLECTION).delete(record.id)

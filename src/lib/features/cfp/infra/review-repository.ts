@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateReview, Review, UpdateReview } from '../domain'
 
@@ -15,7 +16,7 @@ export const createReviewRepository = (pb: PocketBase) => ({
 
   async findByTalk(talkId: string): Promise<Review[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `talkId = "${talkId}"`,
+      filter: safeFilter`talkId = ${talkId}`,
       sort: '-created'
     })
     return records.map(mapRecordToReview)
@@ -23,7 +24,7 @@ export const createReviewRepository = (pb: PocketBase) => ({
 
   async findByUser(userId: string): Promise<Review[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `userId = "${userId}"`,
+      filter: safeFilter`userId = ${userId}`,
       sort: '-created'
     })
     return records.map(mapRecordToReview)
@@ -33,7 +34,7 @@ export const createReviewRepository = (pb: PocketBase) => ({
     try {
       const record = await pb
         .collection(COLLECTION)
-        .getFirstListItem(`talkId = "${talkId}" && userId = "${userId}"`)
+        .getFirstListItem(filterAnd(safeFilter`talkId = ${talkId}`, safeFilter`userId = ${userId}`))
       return mapRecordToReview(record)
     } catch {
       return null

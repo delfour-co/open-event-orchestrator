@@ -1,3 +1,4 @@
+import { filterAnd, filterContains, filterEquals, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type {
   AuditLogFilters,
@@ -9,18 +10,18 @@ import type {
 const COLLECTION = 'financial_audit_log'
 
 const buildFilterQuery = (editionId: string, filters?: AuditLogFilters): string => {
-  const conditions: string[] = [`editionId = "${editionId}"`]
+  const conditions: string[] = [filterEquals('editionId', editionId)]
 
   if (filters?.action) {
-    conditions.push(`action = "${filters.action}"`)
+    conditions.push(filterEquals('action', filters.action))
   }
 
   if (filters?.entityType) {
-    conditions.push(`entityType = "${filters.entityType}"`)
+    conditions.push(filterEquals('entityType', filters.entityType))
   }
 
   if (filters?.userId) {
-    conditions.push(`userId = "${filters.userId}"`)
+    conditions.push(filterEquals('userId', filters.userId))
   }
 
   if (filters?.startDate) {
@@ -32,10 +33,10 @@ const buildFilterQuery = (editionId: string, filters?: AuditLogFilters): string 
   }
 
   if (filters?.search) {
-    conditions.push(`entityReference ~ "${filters.search}"`)
+    conditions.push(filterContains('entityReference', filters.search))
   }
 
-  return conditions.join(' && ')
+  return filterAnd(...conditions)
 }
 
 export const createAuditLogRepository = (pb: PocketBase) => ({
@@ -71,7 +72,7 @@ export const createAuditLogRepository = (pb: PocketBase) => ({
 
   async findByEntity(entityType: string, entityId: string): Promise<FinancialAuditLog[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `entityType = "${entityType}" && entityId = "${entityId}"`,
+      filter: safeFilter`entityType = ${entityType} && entityId = ${entityId}`,
       sort: '-created'
     })
     return records.map(mapRecordToAuditLog)
@@ -106,7 +107,7 @@ export const createAuditLogRepository = (pb: PocketBase) => ({
 
   async countByEdition(editionId: string): Promise<number> {
     const result = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       fields: 'id'
     })
     return result.totalItems

@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateOrderItem, OrderItem } from '../domain'
 
@@ -15,7 +16,7 @@ export const createOrderItemRepository = (pb: PocketBase) => ({
 
   async findByOrder(orderId: string): Promise<OrderItem[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `orderId = "${orderId}"`,
+      filter: safeFilter`orderId = ${orderId}`,
       sort: 'created'
     })
     return records.map(mapRecordToOrderItem)

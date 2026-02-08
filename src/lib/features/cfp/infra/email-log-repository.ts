@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateEmailLog, EmailLog, NotificationType } from '../domain'
 
@@ -15,7 +16,7 @@ export const createEmailLogRepository = (pb: PocketBase) => ({
 
   async findByTalk(talkId: string): Promise<EmailLog[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `talkId = "${talkId}"`,
+      filter: safeFilter`talkId = ${talkId}`,
       sort: '-sentAt'
     })
     return records.map(mapRecordToEmailLog)
@@ -23,7 +24,7 @@ export const createEmailLogRepository = (pb: PocketBase) => ({
 
   async findBySpeaker(speakerId: string): Promise<EmailLog[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `speakerId = "${speakerId}"`,
+      filter: safeFilter`speakerId = ${speakerId}`,
       sort: '-sentAt'
     })
     return records.map(mapRecordToEmailLog)
@@ -31,7 +32,7 @@ export const createEmailLogRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<EmailLog[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: '-sentAt'
     })
     return records.map(mapRecordToEmailLog)
@@ -39,7 +40,7 @@ export const createEmailLogRepository = (pb: PocketBase) => ({
 
   async findByType(editionId: string, type: NotificationType): Promise<EmailLog[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}" && type = "${type}"`,
+      filter: filterAnd(safeFilter`editionId = ${editionId}`, safeFilter`type = ${type}`),
       sort: '-sentAt'
     })
     return records.map(mapRecordToEmailLog)
@@ -64,7 +65,7 @@ export const createEmailLogRepository = (pb: PocketBase) => ({
 
   async countByEdition(editionId: string): Promise<Record<string, number>> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       fields: 'type,status'
     })
 

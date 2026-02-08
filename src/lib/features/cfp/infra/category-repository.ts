@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { Category, CreateCategory, UpdateCategory } from '../domain'
 
@@ -15,7 +16,7 @@ export const createCategoryRepository = (pb: PocketBase) => ({
 
   async findByEdition(editionId: string): Promise<Category[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       sort: 'order'
     })
     return records.map(mapRecordToCategory)

@@ -1,3 +1,4 @@
+import { filterAnd, filterContains, filterIn, filterOr, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { Contact, ContactSource, CreateContact } from '../domain'
 
@@ -22,26 +23,30 @@ export const createContactRepository = (pb: PocketBase) => ({
   },
 
   async findByEvent(eventId: string, options?: ContactListOptions): Promise<Contact[]> {
-    const filters: string[] = [`eventId = "${eventId}"`]
+    const filters: string[] = [safeFilter`eventId = ${eventId}`]
 
     if (options?.search) {
-      const search = options.search.replace(/"/g, '\\"')
       filters.push(
-        `(firstName ~ "${search}" || lastName ~ "${search}" || email ~ "${search}" || company ~ "${search}")`
+        filterOr(
+          filterContains('firstName', options.search),
+          filterContains('lastName', options.search),
+          filterContains('email', options.search),
+          filterContains('company', options.search)
+        )
       )
     }
 
     if (options?.source) {
-      filters.push(`source = "${options.source}"`)
+      filters.push(safeFilter`source = ${options.source}`)
     }
 
     if (options?.tags && options.tags.length > 0) {
       for (const tag of options.tags) {
-        filters.push(`tags ~ "${tag.replace(/"/g, '\\"')}"`)
+        filters.push(filterContains('tags', tag))
       }
     }
 
-    const filter = filters.join(' && ')
+    const filter = filterAnd(...filters)
 
     if (options?.limit !== undefined) {
       const page = options.offset ? Math.floor(options.offset / options.limit) + 1 : 1
@@ -62,7 +67,7 @@ export const createContactRepository = (pb: PocketBase) => ({
   async findByEmail(email: string, eventId: string): Promise<Contact | null> {
     try {
       const records = await pb.collection(COLLECTION).getList(1, 1, {
-        filter: `email = "${email}" && eventId = "${eventId}"`
+        filter: safeFilter`email = ${email} && eventId = ${eventId}`
       })
       if (records.items.length === 0) return null
       return mapRecordToContact(records.items[0])
@@ -94,7 +99,7 @@ export const createContactRepository = (pb: PocketBase) => ({
 
   async countByEvent(eventId: string): Promise<number> {
     const records = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `eventId = "${eventId}"`,
+      filter: safeFilter`eventId = ${eventId}`,
       fields: 'id'
     })
     return records.totalItems
@@ -102,7 +107,7 @@ export const createContactRepository = (pb: PocketBase) => ({
 
   async findByIds(ids: string[]): Promise<Contact[]> {
     if (ids.length === 0) return []
-    const filter = ids.map((id) => `id = "${id}"`).join(' || ')
+    const filter = filterIn('id', ids)
     const records = await pb.collection(COLLECTION).getFullList({
       filter,
       sort: '-created'

@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateRoom, Room, UpdateRoom } from '../domain'
 
@@ -38,7 +39,7 @@ export function createRoomRepository(pb: PocketBase): RoomRepository {
 
     async findByEdition(editionId: string): Promise<Room[]> {
       const records = await pb.collection('rooms').getFullList({
-        filter: `editionId = "${editionId}"`,
+        filter: safeFilter`editionId = ${editionId}`,
         sort: 'order,name'
       })
       return records.map(mapRecordToRoom)

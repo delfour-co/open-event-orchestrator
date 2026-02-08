@@ -1,3 +1,4 @@
+import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateWebhookDelivery, WebhookDelivery, WebhookEventType } from '../domain/webhook'
 
@@ -24,7 +25,7 @@ export const createWebhookDeliveryRepository = (pb: PocketBase) => ({
 
   async findByWebhook(webhookId: string, page = 1, perPage = 50): Promise<WebhookDelivery[]> {
     const records = await pb.collection(COLLECTION).getList(page, perPage, {
-      filter: `webhookId = "${webhookId}"`,
+      filter: safeFilter`webhookId = ${webhookId}`,
       sort: '-created'
     })
     return records.items.map(mapRecordToDelivery)
@@ -33,7 +34,7 @@ export const createWebhookDeliveryRepository = (pb: PocketBase) => ({
   async findPendingRetries(): Promise<WebhookDelivery[]> {
     const now = new Date().toISOString()
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `deliveredAt = "" && nextRetryAt != "" && nextRetryAt <= "${now}"`,
+      filter: filterAnd('deliveredAt = ""', 'nextRetryAt != ""', safeFilter`nextRetryAt <= ${now}`),
       sort: 'nextRetryAt'
     })
     return records.map(mapRecordToDelivery)
@@ -41,7 +42,7 @@ export const createWebhookDeliveryRepository = (pb: PocketBase) => ({
 
   async findFailedByWebhook(webhookId: string): Promise<WebhookDelivery[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `webhookId = "${webhookId}" && deliveredAt = "" && error != ""`,
+      filter: filterAnd(safeFilter`webhookId = ${webhookId}`, 'deliveredAt = ""', 'error != ""'),
       sort: '-created'
     })
     return records.map(mapRecordToDelivery)
@@ -49,7 +50,7 @@ export const createWebhookDeliveryRepository = (pb: PocketBase) => ({
 
   async findRecentByWebhook(webhookId: string, limit = 10): Promise<WebhookDelivery[]> {
     const records = await pb.collection(COLLECTION).getList(1, limit, {
-      filter: `webhookId = "${webhookId}"`,
+      filter: safeFilter`webhookId = ${webhookId}`,
       sort: '-created'
     })
     return records.items.map(mapRecordToDelivery)
@@ -112,7 +113,7 @@ export const createWebhookDeliveryRepository = (pb: PocketBase) => ({
 
   async deleteByWebhook(webhookId: string): Promise<void> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `webhookId = "${webhookId}"`
+      filter: safeFilter`webhookId = ${webhookId}`
     })
     for (const record of records) {
       await pb.collection(COLLECTION).delete(record.id)
@@ -123,13 +124,13 @@ export const createWebhookDeliveryRepository = (pb: PocketBase) => ({
     webhookId: string
   ): Promise<{ total: number; delivered: number; failed: number }> {
     const all = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `webhookId = "${webhookId}"`
+      filter: safeFilter`webhookId = ${webhookId}`
     })
     const delivered = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `webhookId = "${webhookId}" && deliveredAt != ""`
+      filter: filterAnd(safeFilter`webhookId = ${webhookId}`, 'deliveredAt != ""')
     })
     const failed = await pb.collection(COLLECTION).getList(1, 1, {
-      filter: `webhookId = "${webhookId}" && deliveredAt = "" && error != ""`
+      filter: filterAnd(safeFilter`webhookId = ${webhookId}`, 'deliveredAt = ""', 'error != ""')
     })
 
     return {

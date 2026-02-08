@@ -1,3 +1,4 @@
+import { filterAnd, filterContains, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateSponsor, Sponsor, UpdateSponsor } from '../domain'
 
@@ -15,7 +16,7 @@ export const createSponsorRepository = (pb: PocketBase) => ({
 
   async findByOrganization(organizationId: string): Promise<Sponsor[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `organizationId = "${organizationId}"`,
+      filter: safeFilter`organizationId = ${organizationId}`,
       sort: 'name'
     })
     return records.map(mapRecordToSponsor)
@@ -29,10 +30,9 @@ export const createSponsorRepository = (pb: PocketBase) => ({
   },
 
   async search(query: string, organizationId?: string): Promise<Sponsor[]> {
-    let filter = `name ~ "${query}"`
-    if (organizationId) {
-      filter = `organizationId = "${organizationId}" && ${filter}`
-    }
+    const nameFilter = filterContains('name', query)
+    const orgFilter = organizationId ? safeFilter`organizationId = ${organizationId}` : undefined
+    const filter = filterAnd(orgFilter, nameFilter)
     const records = await pb.collection(COLLECTION).getFullList({
       filter,
       sort: 'name'

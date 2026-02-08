@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 
 export interface ImportContactRow {
@@ -50,7 +51,7 @@ export const createImportContactsUseCase = (pb: PocketBase) => {
 
       try {
         const existing = await pb.collection('contacts').getList(1, 1, {
-          filter: `eventId = "${eventId}" && email = "${row.email}"`
+          filter: safeFilter`eventId = ${eventId} && email = ${row.email}`
         })
 
         if (existing.items.length > 0) {

@@ -1,3 +1,4 @@
+import { filterAnd, filterContains, filterIn, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { CreateTalk, Talk, TalkStatus, UpdateTalk } from '../domain'
 
@@ -31,7 +32,7 @@ export const createTalkRepository = (pb: PocketBase) => ({
     const records = await pb
       .collection(COLLECTION)
       .getList(options?.page ?? 1, options?.perPage ?? 50, {
-        filter: `editionId = "${editionId}"`,
+        filter: safeFilter`editionId = ${editionId}`,
         sort: options?.sort ?? '-created'
       })
     return records.items.map(mapRecordToTalk)
@@ -39,37 +40,36 @@ export const createTalkRepository = (pb: PocketBase) => ({
 
   async findBySpeaker(speakerId: string): Promise<Talk[]> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `speakerIds ~ "${speakerId}"`,
+      filter: filterContains('speakerIds', speakerId),
       sort: '-created'
     })
     return records.map(mapRecordToTalk)
   },
 
   async findByFilters(filters: TalkFilters, options?: TalkListOptions): Promise<Talk[]> {
-    const conditions: string[] = []
+    const conditions: (string | null)[] = []
 
     if (filters.editionId) {
-      conditions.push(`editionId = "${filters.editionId}"`)
+      conditions.push(safeFilter`editionId = ${filters.editionId}`)
     }
     if (filters.speakerId) {
-      conditions.push(`speakerIds ~ "${filters.speakerId}"`)
+      conditions.push(filterContains('speakerIds', filters.speakerId))
     }
     if (filters.status) {
       if (Array.isArray(filters.status)) {
-        const statusConditions = filters.status.map((s) => `status = "${s}"`).join(' || ')
-        conditions.push(`(${statusConditions})`)
+        conditions.push(filterIn('status', filters.status))
       } else {
-        conditions.push(`status = "${filters.status}"`)
+        conditions.push(safeFilter`status = ${filters.status}`)
       }
     }
     if (filters.categoryId) {
-      conditions.push(`categoryId = "${filters.categoryId}"`)
+      conditions.push(safeFilter`categoryId = ${filters.categoryId}`)
     }
     if (filters.formatId) {
-      conditions.push(`formatId = "${filters.formatId}"`)
+      conditions.push(safeFilter`formatId = ${filters.formatId}`)
     }
 
-    const filter = conditions.length > 0 ? conditions.join(' && ') : ''
+    const filter = filterAnd(...conditions)
 
     const records = await pb
       .collection(COLLECTION)
@@ -82,7 +82,7 @@ export const createTalkRepository = (pb: PocketBase) => ({
 
   async countByEdition(editionId: string): Promise<Record<TalkStatus, number>> {
     const records = await pb.collection(COLLECTION).getFullList({
-      filter: `editionId = "${editionId}"`,
+      filter: safeFilter`editionId = ${editionId}`,
       fields: 'status'
     })
 
