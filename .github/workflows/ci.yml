@@ -76,10 +76,13 @@ jobs:
           name: coverage-report
           path: coverage/
 
+  # E2E tests are run locally due to PocketBase Docker requirements.
+  # Run with: pnpm test:e2e
+  # Current status: 467 tests passing
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    if: false # TODO: Optimize E2E tests for CI - currently too slow, run locally only
+    if: false # Disabled: requires PocketBase Docker setup. Run locally with pnpm test:e2e
     steps:
       - uses: actions/checkout@v4
 

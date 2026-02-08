@@ -5,7 +5,7 @@
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-467%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 <p align="center">
   <img src="static/img/hero.png" alt="Open Event Orchestrator - Orchestration visuelle" width="480" />
@@ -156,9 +156,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 1143 | 97% statements |
+| Unit tests | 1181 | 98% statements |
 | E2E tests | 467 | Chromium |
-| **Total** | **1600+** | **97%** |
+| **Total** | **1648+** | **98%** |
 
 ```bash
 pnpm test              # Run unit tests
