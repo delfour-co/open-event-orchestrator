@@ -83,7 +83,7 @@ export class ScheduleWidget extends BaseWidget {
     const trackBtns = this.tracks
       .map(
         (track) =>
-          `<button class="filter-btn ${this.selectedTrack === track.id ? 'active' : ''}" data-track="${track.id}" style="${track.color ? `border-color: ${track.color}` : ''}">${this.escapeHtml(track.name)}</button>`
+          `<button class="filter-btn ${this.selectedTrack === track.id ? 'active' : ''}" data-track="${track.id}" style="${track.color ? `border-color: ${this.sanitizeCssColor(track.color)}` : ''}">${this.escapeHtml(track.name)}</button>`
       )
       .join('')
     return `<div class="filter-group">${allBtn}${trackBtns}</div>`
@@ -91,7 +91,7 @@ export class ScheduleWidget extends BaseWidget {
 
   private renderSessionCard(session: ScheduleSession): string {
     const trackHtml = session.track
-      ? `<span class="session-track" style="background-color: ${session.track.color || '#e5e7eb'}20; color: ${session.track.color || '#374151'}">${this.escapeHtml(session.track.name)}</span>`
+      ? `<span class="session-track" style="background-color: ${this.sanitizeCssColor(session.track.color) || '#e5e7eb'}20; color: ${this.sanitizeCssColor(session.track.color) || '#374151'}">${this.escapeHtml(session.track.name)}</span>`
       : ''
     const roomHtml = session.room
       ? `<div class="session-meta">${this.escapeHtml(session.room.name)}</div>`

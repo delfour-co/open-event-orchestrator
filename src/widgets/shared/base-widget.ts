@@ -129,4 +129,62 @@ export abstract class BaseWidget extends HTMLElement {
       currency
     }).format(cents / 100)
   }
+
+  /**
+   * Sanitizes a CSS color value to prevent CSS injection attacks.
+   * Only allows valid hex colors, rgb/rgba, hsl/hsla, and named colors.
+   */
+  protected sanitizeCssColor(color: string | null | undefined): string {
+    if (!color) return ''
+
+    // Remove any whitespace
+    const trimmed = color.trim().toLowerCase()
+
+    // Allow hex colors: #rgb, #rrggbb, #rgba, #rrggbbaa
+    if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/.test(trimmed)) {
+      return trimmed
+    }
+
+    // Allow rgb/rgba: rgb(r, g, b) or rgba(r, g, b, a)
+    if (
+      /^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+))?\s*\)$/.test(trimmed)
+    ) {
+      return trimmed
+    }
+
+    // Allow hsl/hsla: hsl(h, s%, l%) or hsla(h, s%, l%, a)
+    if (
+      /^hsla?\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*(,\s*(0|1|0?\.\d+))?\s*\)$/.test(trimmed)
+    ) {
+      return trimmed
+    }
+
+    // Allow common named colors (subset for safety)
+    const namedColors = new Set([
+      'black',
+      'white',
+      'red',
+      'green',
+      'blue',
+      'yellow',
+      'orange',
+      'purple',
+      'pink',
+      'gray',
+      'grey',
+      'brown',
+      'cyan',
+      'magenta',
+      'transparent',
+      'inherit',
+      'initial',
+      'currentcolor'
+    ])
+    if (namedColors.has(trimmed)) {
+      return trimmed
+    }
+
+    // Invalid color - return empty string
+    return ''
+  }
 }

@@ -30,7 +30,7 @@
     "@commitlint/config-conventional": "^19.0.0",
     "@playwright/test": "^1.48.0",
     "@sveltejs/adapter-node": "^5.2.0",
-    "@sveltejs/kit": "^2.15.0",
+    "@sveltejs/kit": "^2.50.2",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/svelte": "^5.2.0",
@@ -70,7 +70,10 @@
     "zod": "^3.24.0"
   },
   "lint-staged": {
-    "*.{ts,svelte,js}": ["biome check --fix", "biome format --write"]
+    "*.{ts,svelte,js}": [
+      "biome check --fix",
+      "biome format --write"
+    ]
   },
   "pnpm": {
     "overrides": {

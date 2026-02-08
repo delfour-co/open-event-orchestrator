@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/public'
 import { getEmailService } from '$lib/server/app-settings'
+import { validateDocumentFile } from '$lib/server/file-validation'
 import {
   buildReimbursementsUrl,
   generateSpeakerToken,
@@ -237,8 +238,12 @@ export const actions: Actions = {
       pbData.append('date', date || new Date().toISOString().split('T')[0])
       if (notes) pbData.append('notes', notes)
 
-      // Check if receiptFile is a File with content
+      // Validate and append receipt file
       if (receiptFile instanceof File && receiptFile.size > 0) {
+        const validation = validateDocumentFile(receiptFile, { maxSizeMB: 10 })
+        if (!validation.valid) {
+          return fail(400, { error: validation.error, action: 'addItem' })
+        }
         pbData.append('receipt', receiptFile)
       }
 

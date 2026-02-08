@@ -1,5 +1,6 @@
 import { createSponsorRepository } from '$lib/features/sponsoring/infra'
 import { createSponsorTokenService } from '$lib/features/sponsoring/services'
+import { validateImageFile } from '$lib/server/file-validation'
 import { getSponsorToken } from '$lib/server/token-cookies'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -126,6 +127,12 @@ export const actions: Actions = {
 
     if (!logo || logo.size === 0) {
       return fail(400, { error: 'Logo file is required', action: 'uploadLogo' })
+    }
+
+    // Validate file type and size
+    const validation = validateImageFile(logo, { maxSizeMB: 5 })
+    if (!validation.valid) {
+      return fail(400, { error: validation.error, action: 'uploadLogo' })
     }
 
     // Validate token

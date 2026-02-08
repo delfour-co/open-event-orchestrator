@@ -81,7 +81,7 @@ export const actions: Actions = {
     }
   },
 
-  updateTemplate: async ({ request, locals }) => {
+  updateTemplate: async ({ request, locals, params }) => {
     const formData = await request.formData()
     const id = formData.get('id') as string
     const name = (formData.get('name') as string)?.trim()
@@ -97,6 +97,24 @@ export const actions: Actions = {
     }
     if (!subject) {
       return fail(400, { error: 'Subject is required', action: 'updateTemplate' })
+    }
+
+    // Verify template belongs to current event (IDOR protection)
+    const events = await locals.pb.collection('events').getList(1, 1, {
+      filter: `slug = "${params.eventSlug}"`
+    })
+    if (events.items.length === 0) {
+      return fail(404, { error: 'Event not found', action: 'updateTemplate' })
+    }
+    const eventId = events.items[0].id as string
+
+    try {
+      const template = await locals.pb.collection('email_templates').getOne(id)
+      if (template.eventId !== eventId) {
+        return fail(403, { error: 'Unauthorized', action: 'updateTemplate' })
+      }
+    } catch {
+      return fail(404, { error: 'Template not found', action: 'updateTemplate' })
     }
 
     // Extract variables
@@ -128,12 +146,30 @@ export const actions: Actions = {
     }
   },
 
-  deleteTemplate: async ({ request, locals }) => {
+  deleteTemplate: async ({ request, locals, params }) => {
     const formData = await request.formData()
     const id = formData.get('id') as string
 
     if (!id) {
       return fail(400, { error: 'Template ID is required', action: 'deleteTemplate' })
+    }
+
+    // Verify template belongs to current event (IDOR protection)
+    const events = await locals.pb.collection('events').getList(1, 1, {
+      filter: `slug = "${params.eventSlug}"`
+    })
+    if (events.items.length === 0) {
+      return fail(404, { error: 'Event not found', action: 'deleteTemplate' })
+    }
+    const eventId = events.items[0].id as string
+
+    try {
+      const template = await locals.pb.collection('email_templates').getOne(id)
+      if (template.eventId !== eventId) {
+        return fail(403, { error: 'Unauthorized', action: 'deleteTemplate' })
+      }
+    } catch {
+      return fail(404, { error: 'Template not found', action: 'deleteTemplate' })
     }
 
     try {

@@ -74,6 +74,17 @@ export const handle: Handle = async ({ event, resolve }) => {
     response.headers.set('X-RateLimit-Reset', String(Math.floor(rl.resetAt.getTime() / 1000)))
   }
 
+  // Add security headers
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+
+  // Only add HSTS in production (when not localhost)
+  if (!event.url.hostname.includes('localhost')) {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+
   // Set auth cookie (skip for API routes to avoid unnecessary headers)
   if (!event.url.pathname.startsWith('/api/v1/')) {
     response.headers.append(
