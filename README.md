@@ -276,6 +276,51 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [x] Admin UI for API keys and webhooks
 - [x] E2E tests (467 tests passing)
 
+### Phase 8.5 — Stabilisation & Design System 🚧
+
+**Security** (10 issues)
+- [ ] Remove AWS credentials from .env file (#94)
+- [ ] Fix NoSQL injection vulnerabilities in PocketBase filters (#95)
+- [ ] Implement rate limiting on API endpoints (#96)
+- [ ] Move authentication tokens from URL to cookies/headers (#97)
+- [ ] Add authentication check to admin dashboard load function (#98)
+- [ ] Add file type validation for uploads (#99)
+- [ ] Add security headers (CSP, X-Frame-Options, etc.) (#100)
+- [ ] Sanitize CSS values in widget innerHTML (#101)
+- [ ] Fix IDOR in email template operations (#102)
+- [ ] Update vulnerable cookie package dependency (#126)
+
+**Technical Debt** (8 issues)
+- [ ] Refactor planning scheduler (757-line route file) (#103)
+- [ ] Fix Svelte 5 deprecated patterns (#104)
+- [ ] Reduce cognitive complexity in 17 functions (#105)
+- [ ] Create missing usecases for core, auth, planning modules (#106)
+- [ ] Remove debug console.log statements (#116)
+- [ ] Fix silent error handling in repositories (#117)
+- [ ] Create base repository abstraction (#118)
+- [ ] Fix N+1 query patterns (#125)
+
+**Design System** (10 issues)
+- [ ] Create EmptyState shared component (#107)
+- [ ] Create PageHeader shared component (#108)
+- [ ] Create ErrorAlert and SuccessAlert components (#109)
+- [ ] Create EditionCard shared component (#110)
+- [ ] Create StatsCard shared component (#111)
+- [ ] Create SearchInput shared component (#112)
+- [ ] Create Pagination shared component (#113)
+- [ ] Extract utility functions (formatDate, getStatusColor) (#114)
+- [ ] Generalize StatusBadge component (#115)
+- [ ] Setup Storybook for component documentation (#124)
+
+**Accessibility** (2 issues)
+- [ ] Add missing alt text to images (#119)
+- [ ] Add ARIA labels to icon-only buttons (#120)
+
+**Testing** (3 issues)
+- [ ] Add missing service tests (Stripe, webhooks, email) (#121)
+- [ ] Add missing usecase tests for CFP module (#122)
+- [ ] Add component tests for UI patterns (#123)
+
 ### Phase 9 — CRM & Emails v2
 
 - [ ] Advanced email templates with visual editor
