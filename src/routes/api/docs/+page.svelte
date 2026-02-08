@@ -2,7 +2,19 @@
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
-import { Check, ChevronDown, ChevronRight, Copy, ExternalLink, Key, Server } from 'lucide-svelte'
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  ExternalLink,
+  Gauge,
+  Key,
+  List,
+  Server,
+  Shield,
+  Webhook
+} from 'lucide-svelte'
 import type { PageData } from './$types'
 
 interface Props {
@@ -56,7 +68,7 @@ const getStatusColor = (status: string) => {
   <!-- Header -->
   <div class="mb-8">
     <h1 class="text-4xl font-bold mb-2">{data.info.title}</h1>
-    <p class="text-muted-foreground text-lg mb-4">{data.info.description}</p>
+    <p class="text-muted-foreground text-lg mb-4">Public REST API for Open Event Orchestrator</p>
     <div class="flex items-center gap-4">
       <Badge variant="secondary">Version {data.info.version}</Badge>
       <a href="/api/v1/openapi.json" target="_blank" rel="noopener noreferrer">
@@ -68,53 +80,173 @@ const getStatusColor = (status: string) => {
     </div>
   </div>
 
-  <!-- Authentication -->
-  <Card.Root class="mb-8">
-    <Card.Header>
-      <Card.Title class="flex items-center gap-2">
-        <Key class="h-5 w-5" />
-        Authentication
-      </Card.Title>
-    </Card.Header>
-    <Card.Content>
-      <p class="text-muted-foreground mb-4">
-        All API requests require a valid API key passed in the Authorization header.
-      </p>
-      <div class="bg-muted rounded-lg p-4 font-mono text-sm">
-        <span class="text-muted-foreground">Authorization:</span> Bearer <span class="text-primary">oeo_live_your_api_key</span>
-      </div>
-      <p class="text-sm text-muted-foreground mt-4">
-        Create API keys in the <a href="/admin/api/keys" class="text-primary hover:underline">Admin Panel</a>.
-      </p>
-    </Card.Content>
-  </Card.Root>
-
-  <!-- Base URL -->
-  <Card.Root class="mb-8">
-    <Card.Header>
-      <Card.Title class="flex items-center gap-2">
-        <Server class="h-5 w-5" />
-        Base URL
-      </Card.Title>
-    </Card.Header>
-    <Card.Content>
-      {#each data.servers || [] as server}
-        <div class="bg-muted rounded-lg p-4 font-mono text-sm flex items-center justify-between">
-          <span>{server.url}</span>
-          <Button variant="ghost" size="sm" onclick={() => copyToClipboard(server.url)}>
-            {#if copiedPath === server.url}
-              <Check class="h-4 w-4 text-green-500" />
-            {:else}
-              <Copy class="h-4 w-4" />
-            {/if}
-          </Button>
+  <!-- Quick Start Grid -->
+  <div class="grid md:grid-cols-2 gap-6 mb-8">
+    <!-- Authentication -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+          <Key class="h-5 w-5" />
+          Authentication
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <p class="text-muted-foreground mb-4">
+          Include your API key in the Authorization header:
+        </p>
+        <div class="bg-muted rounded-lg p-4 font-mono text-sm">
+          <span class="text-muted-foreground">Authorization:</span> Bearer <span class="text-primary">oeo_live_xxx</span>
         </div>
-        {#if server.description}
-          <p class="text-sm text-muted-foreground mt-2">{server.description}</p>
-        {/if}
-      {/each}
-    </Card.Content>
-  </Card.Root>
+        <p class="text-sm text-muted-foreground mt-4">
+          <a href="/admin/api/keys" class="text-primary hover:underline">Create API keys →</a>
+        </p>
+      </Card.Content>
+    </Card.Root>
+
+    <!-- Base URL -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+          <Server class="h-5 w-5" />
+          Base URL
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
+        {#each data.servers || [] as server}
+          <div class="bg-muted rounded-lg p-4 font-mono text-sm flex items-center justify-between">
+            <span>{server.url}</span>
+            <Button variant="ghost" size="sm" onclick={() => copyToClipboard(server.url)}>
+              {#if copiedPath === server.url}
+                <Check class="h-4 w-4 text-green-500" />
+              {:else}
+                <Copy class="h-4 w-4" />
+              {/if}
+            </Button>
+          </div>
+        {/each}
+      </Card.Content>
+    </Card.Root>
+
+    <!-- Rate Limiting -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+          <Gauge class="h-5 w-5" />
+          Rate Limiting
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <p class="text-muted-foreground mb-3">
+          Default: <span class="font-semibold">60 requests/minute</span> per API key.
+        </p>
+        <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+            <code class="text-muted-foreground">X-RateLimit-Limit</code>
+            <span>Max requests</span>
+          </div>
+          <div class="flex justify-between">
+            <code class="text-muted-foreground">X-RateLimit-Remaining</code>
+            <span>Remaining</span>
+          </div>
+          <div class="flex justify-between">
+            <code class="text-muted-foreground">X-RateLimit-Reset</code>
+            <span>Reset time</span>
+          </div>
+        </div>
+      </Card.Content>
+    </Card.Root>
+
+    <!-- Pagination -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+          <List class="h-5 w-5" />
+          Pagination
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <p class="text-muted-foreground mb-3">
+          List endpoints support pagination:
+        </p>
+        <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+            <code class="text-muted-foreground">?page=1</code>
+            <span>Page number</span>
+          </div>
+          <div class="flex justify-between">
+            <code class="text-muted-foreground">?per_page=20</code>
+            <span>Items per page (max 100)</span>
+          </div>
+        </div>
+        <p class="text-sm text-muted-foreground mt-3">
+          Response includes <code class="bg-muted px-1 rounded">meta</code> object with total count.
+        </p>
+      </Card.Content>
+    </Card.Root>
+  </div>
+
+  <!-- Permissions & Webhooks -->
+  <div class="grid md:grid-cols-2 gap-6 mb-8">
+    <!-- Permissions -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+          <Shield class="h-5 w-5" />
+          Permissions
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <p class="text-muted-foreground mb-3">
+          API keys have specific permissions:
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <Badge variant="outline">read:organizations</Badge>
+          <Badge variant="outline">read:events</Badge>
+          <Badge variant="outline">read:editions</Badge>
+          <Badge variant="outline">read:speakers</Badge>
+          <Badge variant="outline">read:sessions</Badge>
+          <Badge variant="outline">read:schedule</Badge>
+          <Badge variant="outline">read:ticket-types</Badge>
+          <Badge variant="outline">read:sponsors</Badge>
+          <Badge variant="secondary">write:orders</Badge>
+        </div>
+      </Card.Content>
+    </Card.Root>
+
+    <!-- Webhooks -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+          <Webhook class="h-5 w-5" />
+          Webhooks
+        </Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <p class="text-muted-foreground mb-3">
+          Subscribe to event notifications:
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <Badge variant="outline">talk.submitted</Badge>
+          <Badge variant="outline">talk.accepted</Badge>
+          <Badge variant="outline">talk.rejected</Badge>
+          <Badge variant="outline">order.created</Badge>
+          <Badge variant="outline">order.completed</Badge>
+          <Badge variant="outline">order.refunded</Badge>
+          <Badge variant="outline">ticket.checked_in</Badge>
+          <Badge variant="outline">sponsor.confirmed</Badge>
+        </div>
+        <p class="text-sm text-muted-foreground mt-3">
+          <a href="/admin/api/webhooks" class="text-primary hover:underline">Configure webhooks →</a>
+        </p>
+      </Card.Content>
+    </Card.Root>
+  </div>
+
+  <!-- Endpoints Section Header -->
+  <div class="mb-6">
+    <h2 class="text-3xl font-bold mb-2">Endpoints</h2>
+    <p class="text-muted-foreground">Available API endpoints grouped by resource.</p>
+  </div>
 
   <!-- Endpoints by Tag -->
   {#each Object.entries(data.endpointsByTag) as [tag, endpoints]}
