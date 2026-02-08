@@ -1945,6 +1945,8 @@ async function seed(): Promise<void> {
     sponsors: string[]
     sponsorPackages: string[]
     editionSponsors: string[]
+    apiKeys: string[]
+    webhooks: string[]
   } = {
     users: [],
     organization: '',
@@ -1971,7 +1973,9 @@ async function seed(): Promise<void> {
     reimbursementRequests: [],
     sponsors: [],
     sponsorPackages: [],
-    editionSponsors: []
+    editionSponsors: [],
+    apiKeys: [],
+    webhooks: []
   }
 
   try {
@@ -4328,6 +4332,383 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // API Keys
+    // ========================================================================
+    console.log('🔑 Creating API keys...')
+    let apiKeysCreated = 0
+    if (ids.users.length > 0) {
+      const apiKeyDefs = [
+        {
+          name: 'Production API Key',
+          keyPrefix: 'oeo_live_abc',
+          // Pre-hashed for testing - in real use, this would be generated
+          keyHash: 'a'.repeat(64),
+          permissions: [
+            'read:organizations',
+            'read:events',
+            'read:editions',
+            'read:speakers',
+            'read:sessions',
+            'read:schedule',
+            'read:ticket-types',
+            'read:sponsors'
+          ],
+          rateLimit: 60,
+          isActive: true,
+          organizationId: ids.organization || null,
+          lastUsedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+        },
+        {
+          name: 'Mobile App Key',
+          keyPrefix: 'oeo_live_xyz',
+          keyHash: 'b'.repeat(64),
+          permissions: ['read:events', 'read:editions', 'read:schedule', 'read:speakers'],
+          rateLimit: 120,
+          isActive: true,
+          editionId: ids.edition || null,
+          lastUsedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() // 30 min ago
+        },
+        {
+          name: 'Test Environment Key',
+          keyPrefix: 'oeo_test_123',
+          keyHash: 'c'.repeat(64),
+          permissions: [
+            'read:organizations',
+            'read:events',
+            'read:editions',
+            'read:speakers',
+            'read:sessions',
+            'read:schedule',
+            'write:orders'
+          ],
+          rateLimit: 100,
+          isActive: true,
+          lastUsedAt: null
+        },
+        {
+          name: 'Deprecated Legacy Key',
+          keyPrefix: 'oeo_live_old',
+          keyHash: 'd'.repeat(64),
+          permissions: ['read:events', 'read:editions'],
+          rateLimit: 30,
+          isActive: false, // Revoked
+          lastUsedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days ago
+        }
+      ]
+
+      for (const keyDef of apiKeyDefs) {
+        try {
+          const existing = await pb.collection('api_keys').getList(1, 1, {
+            filter: `name = "${keyDef.name}"`
+          })
+
+          if (existing.items.length === 0) {
+            const data: Record<string, unknown> = {
+              name: keyDef.name,
+              keyPrefix: keyDef.keyPrefix,
+              keyHash: keyDef.keyHash,
+              permissions: keyDef.permissions,
+              rateLimit: keyDef.rateLimit,
+              isActive: keyDef.isActive,
+              createdBy: ids.users[0]
+            }
+            if (keyDef.organizationId) data.organizationId = keyDef.organizationId
+            if (keyDef.editionId) data.editionId = keyDef.editionId
+            if (keyDef.lastUsedAt) data.lastUsedAt = keyDef.lastUsedAt
+
+            const record = await pb.collection('api_keys').create(data)
+            ids.apiKeys.push(record.id)
+            console.log(`  Created API key: ${keyDef.name}`)
+            apiKeysCreated++
+          } else {
+            ids.apiKeys.push(existing.items[0].id)
+            console.log(`  API key already exists: ${keyDef.name}`)
+          }
+        } catch (err) {
+          console.error(`  Failed to create API key ${keyDef.name}:`, err)
+        }
+      }
+    } else {
+      console.log('  Skipping API keys (no users)')
+    }
+    console.log('')
+
+    // ========================================================================
+    // Webhooks
+    // ========================================================================
+    console.log('🔔 Creating webhooks...')
+    let webhooksCreated = 0
+    if (ids.users.length > 0) {
+      const webhookDefs = [
+        {
+          name: 'Slack Notifications',
+          url: 'https://hooks.slack.example.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX',
+          secret: randomBytes(32).toString('hex'),
+          events: ['talk.submitted', 'talk.accepted', 'order.completed'],
+          isActive: true,
+          retryCount: 3,
+          headers: { 'X-Custom-Header': 'slack-integration' },
+          organizationId: ids.organization || null
+        },
+        {
+          name: 'CRM Sync',
+          url: 'https://api.crm.example.com/webhooks/oeo',
+          secret: randomBytes(32).toString('hex'),
+          events: ['order.created', 'order.completed', 'order.refunded', 'ticket.checked_in'],
+          isActive: true,
+          retryCount: 5,
+          headers: {},
+          editionId: ids.edition || null
+        },
+        {
+          name: 'Analytics Pipeline',
+          url: 'https://analytics.example.com/ingest/events',
+          secret: randomBytes(32).toString('hex'),
+          events: [
+            'talk.submitted',
+            'talk.accepted',
+            'talk.rejected',
+            'order.created',
+            'order.completed',
+            'ticket.checked_in',
+            'sponsor.confirmed'
+          ],
+          isActive: true,
+          retryCount: 3,
+          headers: { Authorization: 'Bearer analytics-token' }
+        },
+        {
+          name: 'Legacy System (Disabled)',
+          url: 'https://old-system.example.com/webhook',
+          secret: randomBytes(32).toString('hex'),
+          events: ['order.completed'],
+          isActive: false, // Disabled
+          retryCount: 1,
+          headers: {}
+        }
+      ]
+
+      for (const whDef of webhookDefs) {
+        try {
+          const existing = await pb.collection('webhooks').getList(1, 1, {
+            filter: `name = "${whDef.name}"`
+          })
+
+          if (existing.items.length === 0) {
+            const data: Record<string, unknown> = {
+              name: whDef.name,
+              url: whDef.url,
+              secret: whDef.secret,
+              events: whDef.events,
+              isActive: whDef.isActive,
+              retryCount: whDef.retryCount,
+              headers: whDef.headers,
+              createdBy: ids.users[0]
+            }
+            if (whDef.organizationId) data.organizationId = whDef.organizationId
+            if (whDef.editionId) data.editionId = whDef.editionId
+
+            const record = await pb.collection('webhooks').create(data)
+            ids.webhooks.push(record.id)
+            console.log(`  Created webhook: ${whDef.name}`)
+            webhooksCreated++
+          } else {
+            ids.webhooks.push(existing.items[0].id)
+            console.log(`  Webhook already exists: ${whDef.name}`)
+          }
+        } catch (err) {
+          console.error(`  Failed to create webhook ${whDef.name}:`, err)
+        }
+      }
+    } else {
+      console.log('  Skipping webhooks (no users)')
+    }
+    console.log('')
+
+    // ========================================================================
+    // API Request Logs
+    // ========================================================================
+    console.log('📊 Creating API request logs...')
+    let apiLogsCreated = 0
+    if (ids.apiKeys.length > 0) {
+      const logEntries = [
+        {
+          method: 'GET',
+          path: '/api/v1/editions',
+          statusCode: 200,
+          responseTimeMs: 45,
+          hoursAgo: 0.5
+        },
+        {
+          method: 'GET',
+          path: '/api/v1/editions/abc123/schedule',
+          statusCode: 200,
+          responseTimeMs: 120,
+          hoursAgo: 1
+        },
+        {
+          method: 'GET',
+          path: '/api/v1/speakers',
+          statusCode: 200,
+          responseTimeMs: 35,
+          hoursAgo: 1.5
+        },
+        {
+          method: 'GET',
+          path: '/api/v1/organizations',
+          statusCode: 200,
+          responseTimeMs: 28,
+          hoursAgo: 2
+        },
+        {
+          method: 'GET',
+          path: '/api/v1/editions/abc123/sessions',
+          statusCode: 200,
+          responseTimeMs: 89,
+          hoursAgo: 3
+        },
+        {
+          method: 'GET',
+          path: '/api/v1/events/xyz789',
+          statusCode: 404,
+          responseTimeMs: 12,
+          hoursAgo: 4
+        },
+        {
+          method: 'GET',
+          path: '/api/v1/editions',
+          statusCode: 200,
+          responseTimeMs: 42,
+          hoursAgo: 5
+        },
+        {
+          method: 'GET',
+          path: '/api/v1/editions/abc123/sponsors',
+          statusCode: 200,
+          responseTimeMs: 56,
+          hoursAgo: 6
+        },
+        { method: 'POST', path: '/api/v1/orders', statusCode: 401, responseTimeMs: 8, hoursAgo: 8 },
+        {
+          method: 'GET',
+          path: '/api/v1/editions/abc123/ticket-types',
+          statusCode: 200,
+          responseTimeMs: 33,
+          hoursAgo: 12
+        }
+      ]
+
+      for (const log of logEntries) {
+        try {
+          const createdAt = new Date(Date.now() - log.hoursAgo * 60 * 60 * 1000)
+          await pb.collection('api_request_logs').create({
+            apiKeyId: ids.apiKeys[0],
+            method: log.method,
+            path: log.path,
+            statusCode: log.statusCode,
+            responseTimeMs: log.responseTimeMs,
+            ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
+            userAgent: 'Mozilla/5.0 (compatible; APIClient/1.0)'
+          })
+          apiLogsCreated++
+        } catch (err) {
+          // Silently ignore log creation errors
+        }
+      }
+      console.log(`  Created ${apiLogsCreated} API request logs`)
+    } else {
+      console.log('  Skipping API logs (no API keys)')
+    }
+    console.log('')
+
+    // ========================================================================
+    // Webhook Deliveries
+    // ========================================================================
+    console.log('📤 Creating webhook deliveries...')
+    let deliveriesCreated = 0
+    if (ids.webhooks.length > 0) {
+      const deliveryDefs = [
+        {
+          webhookIndex: 0,
+          event: 'talk.submitted',
+          payload: {
+            talkId: 'talk-001',
+            title: 'Introduction to SvelteKit',
+            speakerName: 'Jane Speaker'
+          },
+          statusCode: 200,
+          responseBody: '{"ok":true}',
+          attempt: 1,
+          deliveredAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          hoursAgo: 2
+        },
+        {
+          webhookIndex: 0,
+          event: 'order.completed',
+          payload: { orderId: 'order-001', amount: 5000, currency: 'EUR', tickets: 2 },
+          statusCode: 200,
+          responseBody: '{"received":true}',
+          attempt: 1,
+          deliveredAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          hoursAgo: 4
+        },
+        {
+          webhookIndex: 1,
+          event: 'ticket.checked_in',
+          payload: {
+            ticketId: 'ticket-001',
+            attendeeName: 'John Doe',
+            checkInTime: new Date().toISOString()
+          },
+          statusCode: 200,
+          responseBody: '{"status":"ok"}',
+          attempt: 1,
+          deliveredAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+          hoursAgo: 1
+        },
+        {
+          webhookIndex: 2,
+          event: 'sponsor.confirmed',
+          payload: { sponsorId: 'sponsor-001', sponsorName: 'TechCorp', package: 'Gold' },
+          statusCode: 500,
+          responseBody: 'Internal Server Error',
+          attempt: 2,
+          error: 'Server returned 500',
+          nextRetryAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          hoursAgo: 0.5
+        }
+      ]
+
+      for (const delDef of deliveryDefs) {
+        try {
+          const webhookId = ids.webhooks[delDef.webhookIndex]
+          if (!webhookId) continue
+
+          const data: Record<string, unknown> = {
+            webhookId,
+            event: delDef.event,
+            payload: delDef.payload,
+            statusCode: delDef.statusCode,
+            responseBody: delDef.responseBody,
+            attempt: delDef.attempt
+          }
+          if (delDef.deliveredAt) data.deliveredAt = delDef.deliveredAt
+          if (delDef.error) data.error = delDef.error
+          if (delDef.nextRetryAt) data.nextRetryAt = delDef.nextRetryAt
+
+          await pb.collection('webhook_deliveries').create(data)
+          deliveriesCreated++
+        } catch (err) {
+          // Silently ignore delivery creation errors
+        }
+      }
+      console.log(`  Created ${deliveriesCreated} webhook deliveries`)
+    } else {
+      console.log('  Skipping webhook deliveries (no webhooks)')
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -4364,6 +4745,10 @@ async function seed(): Promise<void> {
     console.log(`   Sponsors: ${ids.sponsors.length}`)
     console.log(`   Sponsor Packages: ${ids.sponsorPackages.length}`)
     console.log(`   Edition Sponsors: ${ids.editionSponsors.length}`)
+    console.log(`   API Keys: ${ids.apiKeys.length}`)
+    console.log(`   Webhooks: ${ids.webhooks.length}`)
+    console.log(`   API Request Logs: ${apiLogsCreated}`)
+    console.log(`   Webhook Deliveries: ${deliveriesCreated}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')
