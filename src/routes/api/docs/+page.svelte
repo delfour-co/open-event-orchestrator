@@ -32,13 +32,13 @@ onMount(async () => {
   if (!browser) return
 
   try {
-    // Load CSS
-    loadStylesheet('https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css')
+    // Load CSS and scripts from local static files (much faster than CDN)
+    loadStylesheet('/swagger-ui/swagger-ui.css')
     addCustomStyles()
 
     // Load scripts sequentially
-    await loadScript('https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js')
-    await loadScript('https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js')
+    await loadScript('/swagger-ui/swagger-ui-bundle.js')
+    await loadScript('/swagger-ui/swagger-ui-standalone-preset.js')
 
     // Initialize Swagger UI
     // @ts-ignore - SwaggerUIBundle is loaded from CDN

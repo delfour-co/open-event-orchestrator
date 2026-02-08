@@ -37,3 +37,6 @@ pb_data/
 # Misc
 *.tgz
 .cache/
+
+# Swagger UI (copied from node_modules via postinstall)
+static/swagger-ui/
