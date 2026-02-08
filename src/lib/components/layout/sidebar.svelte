@@ -5,6 +5,7 @@ import {
   Calendar,
   CalendarDays,
   ChevronLeft,
+  Code2,
   Handshake,
   Home,
   LayoutGrid,
@@ -53,7 +54,8 @@ const allNavItems: NavItem[] = [
   },
   { href: '/admin/budget', icon: Wallet, label: 'Budget', requiresOrganizerAccess: true },
   { href: '/admin/crm', icon: Users, label: 'CRM', requiresOrganizerAccess: true },
-  { href: '/admin/emails', icon: Mail, label: 'Emails', requiresOrganizerAccess: true }
+  { href: '/admin/emails', icon: Mail, label: 'Emails', requiresOrganizerAccess: true },
+  { href: '/admin/api', icon: Code2, label: 'API', requiresOrganizerAccess: true }
 ]
 
 // Filter nav items based on role

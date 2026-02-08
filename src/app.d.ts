@@ -6,6 +6,8 @@ declare global {
     interface Locals {
       pb: import('pocketbase').default
       user: import('pocketbase').RecordModel | null
+      apiKey?: import('$lib/features/api/domain').ApiKey
+      apiKeyScope?: import('$lib/features/api/domain').ApiKeyScope
     }
     // interface PageData {}
     // interface PageState {}

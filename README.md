@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-445%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-467%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 <p align="center">
@@ -100,7 +100,8 @@ src/
 │   │   ├── billing/       # Ticketing (Phase 3)
 │   │   ├── crm/           # Contact management (Phase 4)
 │   │   ├── budget/        # Budget & Finance (Phase 5-6)
-│   │   └── sponsoring/    # Sponsoring (Phase 7)
+│   │   ├── sponsoring/    # Sponsoring (Phase 7)
+│   │   └── api/           # Public API (Phase 8)
 │   ├── server/            # Server-only code (PocketBase client)
 │   └── stores/            # Svelte stores
 ├── routes/                # SvelteKit routes
@@ -155,9 +156,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 690+ | 97% statements |
-| E2E tests | 445 | Chromium |
-| **Total** | **1100+** | **97%** |
+| Unit tests | 1143 | 97% statements |
+| E2E tests | 467 | Chromium |
+| **Total** | **1600+** | **97%** |
 
 ```bash
 pnpm test              # Run unit tests
@@ -263,13 +264,17 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [x] Public sponsors page (#67)
 - [x] Sponsor portal (#68)
 - [x] Team members management per edition
-- [x] E2E tests (445 tests passing)
+- [x] E2E tests
 
-### Phase 8 — API
+### Phase 8 — Public API ✅
 
-- [ ] REST API with authentication
-- [ ] Webhooks
-- [ ] Embeddable widgets
+- [x] REST API endpoints with Bearer token authentication
+- [x] API key management (create, revoke, rate limiting)
+- [x] OpenAPI 3.1 documentation with Swagger UI
+- [x] Outgoing webhooks with HMAC signing
+- [x] Embeddable widgets (schedule, speakers, tickets)
+- [x] Admin UI for API keys and webhooks
+- [x] E2E tests (467 tests passing)
 
 ### Phase 9 — CRM & Emails v2
 
