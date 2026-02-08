@@ -1,7 +1,8 @@
 <script lang="ts">
+import { page } from '$app/stores'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
-import { Activity, ArrowRight, Book, Code2, Key, Plus, Webhook } from 'lucide-svelte'
+import { Activity, ArrowRight, Check, Copy, ExternalLink, Key, Plus, Webhook } from 'lucide-svelte'
 import type { PageData } from './$types'
 
 interface Props {
@@ -9,6 +10,21 @@ interface Props {
 }
 
 const { data }: Props = $props()
+
+let copiedUrl = $state(false)
+
+const getDocsUrl = () => {
+  const origin = $page.url.origin
+  return `${origin}/api/docs`
+}
+
+const copyDocsUrl = async () => {
+  await navigator.clipboard.writeText(getDocsUrl())
+  copiedUrl = true
+  setTimeout(() => {
+    copiedUrl = false
+  }, 2000)
+}
 
 const formatDate = (date: Date | null) => {
   if (!date) return 'Never'
@@ -52,7 +68,29 @@ const getStatusColor = (statusCode: number) => {
         Manage API keys, webhooks, and access the API documentation.
       </p>
     </div>
-    <div class="flex gap-2">
+    <div class="flex items-center gap-4">
+      <!-- Public API Docs URL -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
+          <span class="text-sm text-muted-foreground">Public URL:</span>
+          <code class="text-sm">/api/docs</code>
+        </div>
+        <Button variant="outline" size="sm" onclick={copyDocsUrl} class="gap-2">
+          {#if copiedUrl}
+            <Check class="h-4 w-4 text-green-500" />
+            Copied
+          {:else}
+            <Copy class="h-4 w-4" />
+            Copy
+          {/if}
+        </Button>
+        <a href="/api/docs" target="_blank">
+          <Button variant="outline" size="sm" class="gap-2">
+            <ExternalLink class="h-4 w-4" />
+            Open
+          </Button>
+        </a>
+      </div>
       <a href="/admin/api/keys/new">
         <Button>
           <Plus class="mr-2 h-4 w-4" />
@@ -63,7 +101,7 @@ const getStatusColor = (statusCode: number) => {
   </div>
 
   <!-- Stats Cards -->
-  <div class="grid gap-4 md:grid-cols-4">
+  <div class="grid gap-4 md:grid-cols-3">
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
         <Card.Title class="text-sm font-medium">API Keys</Card.Title>
@@ -98,21 +136,6 @@ const getStatusColor = (statusCode: number) => {
       <Card.Content>
         <div class="text-2xl font-bold">{data.stats.requestsLast24h}</div>
         <p class="text-xs text-muted-foreground">API calls in the last 24 hours</p>
-      </Card.Content>
-    </Card.Root>
-
-    <Card.Root>
-      <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Documentation</Card.Title>
-        <Book class="h-4 w-4 text-muted-foreground" />
-      </Card.Header>
-      <Card.Content>
-        <a href="/api/docs" target="_blank" rel="noopener noreferrer">
-          <Button variant="outline" size="sm" class="w-full gap-2">
-            <Code2 class="h-4 w-4" />
-            Open API Docs
-          </Button>
-        </a>
       </Card.Content>
     </Card.Root>
   </div>

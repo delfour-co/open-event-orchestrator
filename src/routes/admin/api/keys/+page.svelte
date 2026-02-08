@@ -1,9 +1,21 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { page } from '$app/stores'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
-import { ArrowLeft, Key, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-svelte'
+import {
+  ArrowLeft,
+  Check,
+  Copy,
+  ExternalLink,
+  Key,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Trash2,
+  X
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -16,6 +28,20 @@ const { data, form }: Props = $props()
 let confirmingRevoke = $state<string | null>(null)
 let confirmingDelete = $state<string | null>(null)
 let isSubmitting = $state(false)
+let copiedUrl = $state(false)
+
+const getDocsUrl = () => {
+  const origin = $page.url.origin
+  return `${origin}/api/docs`
+}
+
+const copyDocsUrl = async () => {
+  await navigator.clipboard.writeText(getDocsUrl())
+  copiedUrl = true
+  setTimeout(() => {
+    copiedUrl = false
+  }, 2000)
+}
 
 const formatDate = (date: Date | null) => {
   if (!date) return 'Never'
@@ -83,12 +109,36 @@ $effect(() => {
         </p>
       </div>
     </div>
-    <a href="/admin/api/keys/new">
-      <Button>
-        <Plus class="mr-2 h-4 w-4" />
-        New API Key
-      </Button>
-    </a>
+    <div class="flex items-center gap-4">
+      <!-- Public API Docs URL -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
+          <span class="text-sm text-muted-foreground">Public URL:</span>
+          <code class="text-sm">/api/docs</code>
+        </div>
+        <Button variant="outline" size="sm" onclick={copyDocsUrl} class="gap-2">
+          {#if copiedUrl}
+            <Check class="h-4 w-4 text-green-500" />
+            Copied
+          {:else}
+            <Copy class="h-4 w-4" />
+            Copy
+          {/if}
+        </Button>
+        <a href="/api/docs" target="_blank">
+          <Button variant="outline" size="sm" class="gap-2">
+            <ExternalLink class="h-4 w-4" />
+            Open
+          </Button>
+        </a>
+      </div>
+      <a href="/admin/api/keys/new">
+        <Button>
+          <Plus class="mr-2 h-4 w-4" />
+          New API Key
+        </Button>
+      </a>
+    </div>
   </div>
 
   {#if data.apiKeys.length === 0}
