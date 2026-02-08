@@ -72,6 +72,19 @@ onMount(async () => {
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
   <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
   <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+  {@html `<style>
+    .swagger-ui .topbar { display: none; }
+    .swagger-ui .info { margin: 20px 0; }
+    .swagger-ui .info .title { font-size: 28px; }
+    .swagger-ui .scheme-container { background: transparent; box-shadow: none; padding: 15px 0; }
+    .swagger-ui .opblock-tag { border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+    .swagger-ui .opblock { border-radius: 8px; margin-bottom: 10px; }
+    .swagger-ui .btn { border-radius: 6px; }
+    .swagger-ui input[type="text"], .swagger-ui textarea { border-radius: 6px; }
+    .swagger-ui select { border-radius: 6px; }
+    body.dark .swagger-ui { filter: invert(88%) hue-rotate(180deg); }
+    body.dark .swagger-ui img { filter: invert(100%) hue-rotate(180deg); }
+  </style>`}
 </svelte:head>
 
 <div class="min-h-screen bg-white">
@@ -98,52 +111,3 @@ onMount(async () => {
   {/if}
 </div>
 
-<style>
-  :global(.swagger-ui .topbar) {
-    display: none;
-  }
-
-  :global(.swagger-ui .info) {
-    margin: 20px 0;
-  }
-
-  :global(.swagger-ui .info .title) {
-    font-size: 28px;
-  }
-
-  :global(.swagger-ui .scheme-container) {
-    background: transparent;
-    box-shadow: none;
-    padding: 15px 0;
-  }
-
-  :global(.swagger-ui .opblock-tag) {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  :global(.swagger-ui .opblock) {
-    border-radius: 8px;
-    margin-bottom: 10px;
-  }
-
-  :global(.swagger-ui .btn) {
-    border-radius: 6px;
-  }
-
-  :global(.swagger-ui input[type="text"]),
-  :global(.swagger-ui textarea) {
-    border-radius: 6px;
-  }
-
-  :global(.swagger-ui select) {
-    border-radius: 6px;
-  }
-
-  :global(body.dark .swagger-ui) {
-    filter: invert(88%) hue-rotate(180deg);
-  }
-
-  :global(body.dark .swagger-ui img) {
-    filter: invert(100%) hue-rotate(180deg);
-  }
-</style>
