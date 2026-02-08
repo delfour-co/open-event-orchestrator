@@ -1,8 +1,9 @@
 import { buildOpenAPISpec } from '$lib/features/api/openapi'
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async () => {
-  const spec = buildOpenAPISpec()
+export const load: PageServerLoad = async ({ url }) => {
+  const baseUrl = `${url.protocol}//${url.host}`
+  const spec = buildOpenAPISpec(baseUrl)
 
   // Group endpoints by tag
   const endpointsByTag: Record<

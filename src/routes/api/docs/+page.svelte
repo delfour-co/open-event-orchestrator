@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   Copy,
+  Download,
   ExternalLink,
   Gauge,
   Key,
@@ -69,12 +70,18 @@ const getStatusColor = (status: string) => {
   <div class="mb-8">
     <h1 class="text-4xl font-bold mb-2">{data.info.title}</h1>
     <p class="text-muted-foreground text-lg mb-4">Public REST API for Open Event Orchestrator</p>
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-4 flex-wrap">
       <Badge variant="secondary">Version {data.info.version}</Badge>
       <a href="/api/v1/openapi.json" target="_blank" rel="noopener noreferrer">
         <Button variant="outline" size="sm">
           <ExternalLink class="mr-2 h-4 w-4" />
           OpenAPI Spec
+        </Button>
+      </a>
+      <a href="/api/v1/postman.json" download="oeo-api-collection.json">
+        <Button variant="outline" size="sm">
+          <Download class="mr-2 h-4 w-4" />
+          Postman Collection
         </Button>
       </a>
     </div>
