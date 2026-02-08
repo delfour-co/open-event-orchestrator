@@ -1,9 +1,10 @@
+// @ts-nocheck - Storybook types incompatible with Svelte 5 component types
 import type { Meta, StoryObj } from '@storybook/sveltekit'
 import StatsCard from './StatsCard.svelte'
 
-const meta = {
+const meta: Meta = {
   title: 'Shared/StatsCard',
-  component: StatsCard,
+  component: StatsCard as object,
   tags: ['autodocs'],
   argTypes: {
     title: { control: 'text' },
@@ -15,7 +16,7 @@ const meta = {
     },
     currency: { control: 'text' }
   }
-} satisfies Meta<StatsCard>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>

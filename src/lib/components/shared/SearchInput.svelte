@@ -76,6 +76,7 @@ function handleClear() {
   {:else if value}
     <button
       type="button"
+      aria-label="Clear search"
       class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
       onclick={handleClear}
     >

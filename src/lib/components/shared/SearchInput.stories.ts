@@ -1,16 +1,17 @@
+// @ts-nocheck - Storybook types incompatible with Svelte 5 component types
 import type { Meta, StoryObj } from '@storybook/sveltekit'
 import SearchInput from './SearchInput.svelte'
 
-const meta = {
+const meta: Meta = {
   title: 'Shared/SearchInput',
-  component: SearchInput,
+  component: SearchInput as object,
   tags: ['autodocs'],
   argTypes: {
     placeholder: { control: 'text' },
     loading: { control: 'boolean' },
     debounceMs: { control: 'number' }
   }
-} satisfies Meta<SearchInput>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>

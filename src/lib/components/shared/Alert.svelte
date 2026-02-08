@@ -94,6 +94,7 @@ const icons: Record<AlertVariant, string> = {
   {#if dismissible && onDismiss}
     <button
       type="button"
+      aria-label="Dismiss alert"
       class="flex-shrink-0 rounded p-1 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
       onclick={onDismiss}
     >

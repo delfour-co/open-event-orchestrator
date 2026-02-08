@@ -1,14 +1,15 @@
+// @ts-nocheck - Storybook types incompatible with Svelte 5 component types
 import type { Meta, StoryObj } from '@storybook/sveltekit'
 import EditionCard from './EditionCard.svelte'
 
-const meta = {
+const meta: Meta = {
   title: 'Shared/EditionCard',
-  component: EditionCard,
+  component: EditionCard as object,
   tags: ['autodocs'],
   argTypes: {
     selected: { control: 'boolean' }
   }
-} satisfies Meta<EditionCard>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>
