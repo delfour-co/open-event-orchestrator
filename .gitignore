@@ -39,4 +39,3 @@ pb_data/
 .cache/
 
 # Swagger UI (copied from node_modules via postinstall)
-static/swagger-ui/
