@@ -486,11 +486,9 @@ const teamNames = $derived(() => {
                 <Label>Socials</Label>
                 <div class="space-y-2">
                   {#each formSocials as social, index}
+                    {@const SocialIcon = getSocialIconComponent(social.icon)}
                     <div class="flex items-center gap-2 rounded-md border p-2">
-                      <svelte:component
-                        this={getSocialIconComponent(social.icon)}
-                        class="h-4 w-4 text-muted-foreground"
-                      />
+                      <SocialIcon class="h-4 w-4 text-muted-foreground" />
                       <span class="flex-1 truncate text-sm">{social.name}: {social.url}</span>
                       <Button
                         type="button"
@@ -599,6 +597,7 @@ const teamNames = $derived(() => {
                 {#if member.socials && member.socials.length > 0}
                   <div class="mt-2 flex gap-2">
                     {#each member.socials as social}
+                      {@const SocialIcon = getSocialIconComponent(social.icon)}
                       <a
                         href={social.url}
                         target="_blank"
@@ -606,10 +605,7 @@ const teamNames = $derived(() => {
                         class="text-muted-foreground hover:text-foreground"
                         title={social.name}
                       >
-                        <svelte:component
-                          this={getSocialIconComponent(social.icon)}
-                          class="h-4 w-4"
-                        />
+                        <SocialIcon class="h-4 w-4" />
                       </a>
                     {/each}
                   </div>
