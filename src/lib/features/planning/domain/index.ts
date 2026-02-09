@@ -53,3 +53,13 @@ export {
   type CreateSession,
   type UpdateSession
 } from './session'
+
+// Room Assignment
+export {
+  roomAssignmentSchema,
+  createRoomAssignmentSchema,
+  validateRoomAssignment,
+  createRoomAssignment,
+  type RoomAssignment,
+  type CreateRoomAssignment
+} from './room-assignment'

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
@@ -44,25 +45,6 @@ const formatDate = (date: Date) => {
     day: 'numeric',
     year: 'numeric'
   }).format(date)
-}
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'draft':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    case 'submitted':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-    case 'under_review':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-    case 'approved':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    case 'rejected':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    case 'paid':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-  }
 }
 
 const getStatusLabel = (status: string) => {
@@ -254,13 +236,7 @@ $effect(() => {
 											</div>
 										</button>
 										<div class="flex items-center gap-2">
-											<span
-												class="rounded-full px-2 py-0.5 text-xs font-medium {getStatusColor(
-													request.status
-												)}"
-											>
-												{getStatusLabel(request.status)}
-											</span>
+											<StatusBadge status={request.status} size="sm" />
 											{#if request.status === 'draft'}
 												<form
 													method="POST"

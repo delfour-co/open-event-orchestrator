@@ -1,4 +1,5 @@
 <script lang="ts">
+import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { ArrowRight, Calendar, LayoutGrid, Settings } from 'lucide-svelte'
@@ -16,19 +17,6 @@ const formatDate = (date: Date) => {
     day: 'numeric',
     year: 'numeric'
   }).format(date)
-}
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'published':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    case 'draft':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    case 'archived':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-  }
 }
 </script>
 
@@ -66,11 +54,7 @@ const getStatusColor = (status: string) => {
               </Card.Title>
               <div class="flex items-center gap-2">
                 <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
-                  <span
-                    class="rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer hover:opacity-80 {getStatusColor(edition.status)}"
-                  >
-                    {edition.status}
-                  </span>
+                  <StatusBadge status={edition.status} size="sm" />
                 </a>
                 <a href="/admin/planning/{edition.slug}/settings" title="Planning Settings">
                   <Button variant="ghost" size="icon" class="h-8 w-8">

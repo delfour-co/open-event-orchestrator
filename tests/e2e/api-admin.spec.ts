@@ -23,8 +23,8 @@ test.describe('API Admin UI', () => {
       await expect(page.getByText('API Keys').first()).toBeVisible()
       await expect(page.getByText('Webhooks').first()).toBeVisible()
       await expect(page.getByText('Requests (24h)')).toBeVisible()
-      // Use heading role to specifically target the Documentation card title
-      await expect(page.getByRole('heading', { name: 'Documentation' })).toBeVisible()
+      // Check Recent API Activity section is present
+      await expect(page.getByText('Recent API Activity')).toBeVisible()
     })
 
     test('should have link to create new API key', async ({ page }) => {
@@ -41,9 +41,12 @@ test.describe('API Admin UI', () => {
     test('should have link to API documentation', async ({ page }) => {
       await page.goto('/admin/api')
 
-      // Look for button with "Open API Docs" text
-      const docsButton = page.getByText('Open API Docs')
-      await expect(docsButton).toBeVisible()
+      // Look for the docs link with /api/docs URL and Open button
+      const docsLink = page.locator('a[href="/api/docs"]')
+      await expect(docsLink).toBeVisible()
+
+      // The button contains "Open" text and an ExternalLink icon
+      await expect(docsLink.getByText('Open')).toBeVisible()
     })
   })
 

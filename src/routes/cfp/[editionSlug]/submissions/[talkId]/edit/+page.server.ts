@@ -4,11 +4,12 @@ import { validateSpeakerToken } from '$lib/server/speaker-tokens'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
+const EDITABLE_STATUSES = ['draft', 'submitted']
+
 export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
   const { edition, categories, formats, cfpStatus } = await parent()
   const token = url.searchParams.get('token')
 
-  // Check CFP is still open
   if (cfpStatus !== 'open') {
     throw error(403, 'Editing is not available when the CFP is closed.')
   }
@@ -17,7 +18,6 @@ export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
     throw error(400, 'A valid access token is required to edit a submission.')
   }
 
-  // Validate token
   const tokenResult = await validateSpeakerToken(locals.pb, token, edition.id)
   if (!tokenResult.valid || !tokenResult.speakerId) {
     throw error(403, 'Invalid or expired access token. Please request a new access link.')
@@ -26,59 +26,95 @@ export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
   const talkRepository = createTalkRepository(locals.pb)
   const speakerRepository = createSpeakerRepository(locals.pb)
 
-  // Get the talk
   const talk = await talkRepository.findById(params.talkId)
-  if (!talk) {
+  if (!talk || talk.editionId !== edition.id) {
     throw error(404, 'Talk not found')
   }
 
-  // Verify the talk belongs to this edition
-  if (talk.editionId !== edition.id) {
-    throw error(404, 'Talk not found in this edition')
-  }
-
-  // Check talk status allows editing
-  const editableStatuses = ['draft', 'submitted']
-  if (!editableStatuses.includes(talk.status)) {
+  if (!EDITABLE_STATUSES.includes(talk.status)) {
     throw error(403, `Cannot edit a talk with status "${talk.status}"`)
   }
 
-  // Get the speaker and verify ownership via token
   const speaker = await speakerRepository.findById(tokenResult.speakerId)
   if (!speaker || !talk.speakerIds.includes(speaker.id)) {
     throw error(403, 'You are not authorized to edit this talk')
   }
 
+  return { edition, categories, formats, talk, speaker, token }
+}
+
+function parseSpeakerFormData(formData: FormData) {
   return {
-    edition,
-    categories,
-    formats,
-    talk,
-    speaker,
-    token
+    email: formData.get('email') as string,
+    firstName: formData.get('firstName') as string,
+    lastName: formData.get('lastName') as string,
+    bio: (formData.get('bio') as string) || undefined,
+    company: (formData.get('company') as string) || undefined,
+    jobTitle: (formData.get('jobTitle') as string) || undefined,
+    city: (formData.get('city') as string) || undefined,
+    country: (formData.get('country') as string) || undefined,
+    twitter: (formData.get('twitter') as string) || undefined,
+    github: (formData.get('github') as string) || undefined,
+    linkedin: (formData.get('linkedin') as string) || undefined
   }
 }
+
+function parseTalkFormData(formData: FormData) {
+  return {
+    title: formData.get('title') as string,
+    abstract: formData.get('abstract') as string,
+    description: (formData.get('description') as string) || undefined,
+    language: formData.get('language') as 'fr' | 'en',
+    level: (formData.get('level') as 'beginner' | 'intermediate' | 'advanced') || undefined,
+    categoryId: (formData.get('categoryId') as string) || undefined,
+    formatId: (formData.get('formatId') as string) || undefined,
+    notes: (formData.get('notes') as string) || undefined
+  }
+}
+
+function extractValidationErrors(
+  issues: Array<{ path: (string | number)[]; message: string }>
+): Record<string, string> {
+  const errors: Record<string, string> = {}
+  for (const issue of issues) {
+    errors[issue.path[0] as string] = issue.message
+  }
+  return errors
+}
+
+async function verifyCfpOpen(pb: PocketBase, editionId: string): Promise<boolean> {
+  let cfpSettings = null
+  try {
+    cfpSettings = await pb.collection('cfp_settings').getFirstListItem(`editionId="${editionId}"`)
+  } catch {
+    return true // No settings means CFP is open
+  }
+
+  const cfpCloseDate = cfpSettings?.cfpCloseDate
+    ? new Date(cfpSettings.cfpCloseDate as string)
+    : null
+
+  return !cfpCloseDate || new Date() <= cfpCloseDate
+}
+
+import type PocketBase from 'pocketbase'
 
 export const actions: Actions = {
   update: async ({ request, locals, params, url }) => {
     const token = url.searchParams.get('token')
-
     if (!token) {
       return fail(400, { error: 'A valid access token is required' })
     }
 
-    // Verify CFP is still open
     const editions = await locals.pb.collection('editions').getList(1, 1, {
       filter: `slug = "${params.editionSlug}"`
     })
-
     if (editions.items.length === 0) {
       return fail(404, { error: 'Edition not found' })
     }
 
     const editionId = editions.items[0].id as string
 
-    // Validate token
     const tokenResult = await validateSpeakerToken(locals.pb, token, editionId)
     if (!tokenResult.valid || !tokenResult.speakerId) {
       return fail(403, {
@@ -86,28 +122,14 @@ export const actions: Actions = {
       })
     }
 
-    let cfpSettings = null
-    try {
-      cfpSettings = await locals.pb
-        .collection('cfp_settings')
-        .getFirstListItem(`editionId="${editionId}"`)
-    } catch {
-      // No settings
-    }
-
-    const now = new Date()
-    const cfpCloseDate = cfpSettings?.cfpCloseDate
-      ? new Date(cfpSettings.cfpCloseDate as string)
-      : null
-
-    if (cfpCloseDate && now > cfpCloseDate) {
+    const cfpOpen = await verifyCfpOpen(locals.pb, editionId)
+    if (!cfpOpen) {
       return fail(403, { error: 'The Call for Papers is now closed. Editing is not allowed.' })
     }
 
     const talkRepository = createTalkRepository(locals.pb)
     const speakerRepository = createSpeakerRepository(locals.pb)
 
-    // Verify ownership
     const talk = await talkRepository.findById(params.talkId)
     if (!talk) {
       return fail(404, { error: 'Talk not found' })
@@ -118,73 +140,35 @@ export const actions: Actions = {
       return fail(403, { error: 'You are not authorized to edit this talk' })
     }
 
-    // Check status
-    const editableStatuses = ['draft', 'submitted']
-    if (!editableStatuses.includes(talk.status)) {
+    if (!EDITABLE_STATUSES.includes(talk.status)) {
       return fail(403, { error: `Cannot edit a talk with status "${talk.status}"` })
     }
 
     const formData = await request.formData()
+    const speakerData = parseSpeakerFormData(formData)
+    const talkData = parseTalkFormData(formData)
 
-    // Parse speaker data
-    const speakerData = {
-      email: formData.get('email') as string,
-      firstName: formData.get('firstName') as string,
-      lastName: formData.get('lastName') as string,
-      bio: (formData.get('bio') as string) || undefined,
-      company: (formData.get('company') as string) || undefined,
-      jobTitle: (formData.get('jobTitle') as string) || undefined,
-      city: (formData.get('city') as string) || undefined,
-      country: (formData.get('country') as string) || undefined,
-      twitter: (formData.get('twitter') as string) || undefined,
-      github: (formData.get('github') as string) || undefined,
-      linkedin: (formData.get('linkedin') as string) || undefined
-    }
-
-    // Parse talk data
-    const talkData = {
-      title: formData.get('title') as string,
-      abstract: formData.get('abstract') as string,
-      description: (formData.get('description') as string) || undefined,
-      language: formData.get('language') as 'fr' | 'en',
-      level: (formData.get('level') as 'beginner' | 'intermediate' | 'advanced') || undefined,
-      categoryId: (formData.get('categoryId') as string) || undefined,
-      formatId: (formData.get('formatId') as string) || undefined,
-      notes: (formData.get('notes') as string) || undefined
-    }
-
-    // Validate speaker
     const speakerResult = createSpeakerSchema.safeParse(speakerData)
     if (!speakerResult.success) {
-      const errors: Record<string, string> = {}
-      for (const issue of speakerResult.error.issues) {
-        errors[issue.path[0] as string] = issue.message
-      }
       return fail(400, {
-        speakerErrors: errors,
+        speakerErrors: extractValidationErrors(speakerResult.error.issues),
         speaker: speakerData,
         talk: talkData
       })
     }
 
-    // Validate talk
     const talkValidation = createTalkSchema
       .omit({ editionId: true, speakerIds: true })
       .safeParse(talkData)
     if (!talkValidation.success) {
-      const errors: Record<string, string> = {}
-      for (const issue of talkValidation.error.issues) {
-        errors[issue.path[0] as string] = issue.message
-      }
       return fail(400, {
-        talkErrors: errors,
+        talkErrors: extractValidationErrors(talkValidation.error.issues),
         speaker: speakerData,
         talk: talkData
       })
     }
 
     try {
-      // Update speaker
       await speakerRepository.update(speaker.id, {
         firstName: speakerResult.data.firstName,
         lastName: speakerResult.data.lastName,
@@ -198,7 +182,6 @@ export const actions: Actions = {
         linkedin: speakerResult.data.linkedin
       })
 
-      // Update talk
       await talkRepository.update(params.talkId, {
         title: talkValidation.data.title,
         abstract: talkValidation.data.abstract,
@@ -212,9 +195,7 @@ export const actions: Actions = {
 
       throw redirect(303, `/cfp/${params.editionSlug}/submissions?token=${token}`)
     } catch (err) {
-      if (isRedirect(err)) {
-        throw err
-      }
+      if (isRedirect(err)) throw err
       console.error('Failed to update submission:', err)
       return fail(500, {
         error: 'Failed to update submission. Please try again.',

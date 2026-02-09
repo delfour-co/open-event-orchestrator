@@ -1,10 +1,21 @@
+import {
+  createManageRoomAssignmentsUseCase,
+  createManageRoomsUseCase,
+  createManageSessionsUseCase,
+  createManageSlotsUseCase,
+  createManageTracksUseCase,
+  createRoomAssignmentRepository,
+  createRoomRepository,
+  createSessionRepository,
+  createSlotRepository,
+  createTrackRepository
+} from '$lib/features/planning'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const { editionSlug } = params
 
-  // Get the edition
   const editions = await locals.pb.collection('editions').getList(1, 1, {
     filter: `slug = "${editionSlug}"`
   })
@@ -16,11 +27,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const edition = editions.items[0]
   const editionId = edition.id as string
 
-  // Get organization ID from edition -> event -> organization
   const event = await locals.pb.collection('events').getOne(edition.eventId as string)
   const organizationId = event.organizationId as string
 
-  // Load rooms, tracks, slots, sessions, accepted talks, and organization members in parallel
   const [rooms, tracks, slots, sessions, acceptedTalks, formats, orgMembers, roomAssignments] =
     await Promise.all([
       locals.pb.collection('rooms').getFullList({
@@ -38,37 +47,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       locals.pb.collection('sessions').getFullList({
         filter: `editionId = "${editionId}"`
       }),
-      // Load accepted talks with speaker information expanded
-      locals.pb
-        .collection('talks')
-        .getFullList({
-          filter: `editionId = "${editionId}" && (status = "accepted" || status = "confirmed")`,
-          expand: 'speakerIds',
-          sort: 'title'
-        }),
-      // Load formats for duration information
-      locals.pb
-        .collection('formats')
-        .getFullList({
-          filter: `editionId = "${editionId}"`,
-          sort: 'order,name'
-        }),
-      // Load organization members for room assignments
-      locals.pb
-        .collection('organization_members')
-        .getFullList({
-          filter: `organizationId = "${organizationId}"`,
-          expand: 'userId'
-        }),
-      // Load room assignments for this edition
-      locals.pb
-        .collection('room_assignments')
-        .getFullList({
-          filter: `editionId = "${editionId}"`
-        })
+      locals.pb.collection('talks').getFullList({
+        filter: `editionId = "${editionId}" && (status = "accepted" || status = "confirmed")`,
+        expand: 'speakerIds',
+        sort: 'title'
+      }),
+      locals.pb.collection('formats').getFullList({
+        filter: `editionId = "${editionId}"`,
+        sort: 'order,name'
+      }),
+      locals.pb.collection('organization_members').getFullList({
+        filter: `organizationId = "${organizationId}"`,
+        expand: 'userId'
+      }),
+      locals.pb.collection('room_assignments').getFullList({
+        filter: `editionId = "${editionId}"`
+      })
     ])
 
-  // Create a map of formats by ID for easy lookup
   const formatsMap = new Map(formats.map((f) => [f.id, f]))
 
   return {
@@ -109,7 +105,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       title: s.title as string,
       type: (s.type as string) || 'talk'
     })),
-    // Accepted talks available for scheduling
     acceptedTalks: acceptedTalks.map((t) => {
       const format = t.formatId ? formatsMap.get(t.formatId as string) : null
       const expandedSpeakers = t.expand?.speakerIds as Array<Record<string, unknown>> | undefined
@@ -135,7 +130,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       name: f.name as string,
       duration: f.duration as number
     })),
-    // Organization members available for room assignments
     organizationMembers: orgMembers.map((m) => {
       const user = m.expand?.userId as Record<string, unknown> | undefined
       return {
@@ -146,9 +140,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         userEmail: user ? (user.email as string) : ''
       }
     }),
-    // Room assignments - use orgMembers to get member names
     roomAssignments: roomAssignments.map((a) => {
-      // Find the organization member and their user name
       const member = orgMembers.find((m) => m.id === a.memberId)
       const user = member?.expand?.userId as Record<string, unknown> | undefined
       const memberName = user ? (user.name as string) : 'Unknown'
@@ -170,28 +162,25 @@ export const actions: Actions = {
   // ============ ROOMS ============
   createRoom: async ({ request, locals }) => {
     const formData = await request.formData()
-    const name = formData.get('name') as string
-    const capacity = formData.get('capacity') as string
-    const floor = formData.get('floor') as string
-    const equipment = formData.getAll('equipment') as string[]
-    const equipmentNotes = formData.get('equipmentNotes') as string
-    const editionId = formData.get('editionId') as string
-
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: 'Room name is required', action: 'createRoom' })
-    }
+    const roomRepo = createRoomRepository(locals.pb)
+    const slotRepo = createSlotRepository(locals.pb)
+    const useCase = createManageRoomsUseCase(roomRepo, slotRepo)
 
     try {
-      await locals.pb.collection('rooms').create({
-        editionId,
-        name: name.trim(),
-        capacity: capacity ? Number.parseInt(capacity, 10) : null,
-        floor: floor?.trim() || null,
-        equipment: equipment.filter((e) => e),
-        equipmentNotes: equipmentNotes?.trim() || null,
-        order: 0
+      const result = await useCase.create({
+        editionId: formData.get('editionId') as string,
+        name: formData.get('name') as string,
+        capacity: formData.get('capacity')
+          ? Number.parseInt(formData.get('capacity') as string, 10)
+          : undefined,
+        floor: (formData.get('floor') as string) || undefined,
+        equipment: formData.getAll('equipment') as string[],
+        equipmentNotes: (formData.get('equipmentNotes') as string) || undefined
       })
 
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'createRoom' })
+      }
       return { success: true, action: 'createRoom' }
     } catch (err) {
       console.error('Failed to create room:', err)
@@ -201,29 +190,25 @@ export const actions: Actions = {
 
   updateRoom: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-    const name = formData.get('name') as string
-    const capacity = formData.get('capacity') as string
-    const floor = formData.get('floor') as string
-    const equipment = formData.getAll('equipment') as string[]
-    const equipmentNotes = formData.get('equipmentNotes') as string
-
-    if (!id) {
-      return fail(400, { error: 'Room ID is required', action: 'updateRoom' })
-    }
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: 'Room name is required', action: 'updateRoom' })
-    }
+    const roomRepo = createRoomRepository(locals.pb)
+    const slotRepo = createSlotRepository(locals.pb)
+    const useCase = createManageRoomsUseCase(roomRepo, slotRepo)
 
     try {
-      await locals.pb.collection('rooms').update(id, {
-        name: name.trim(),
-        capacity: capacity ? Number.parseInt(capacity, 10) : null,
-        floor: floor?.trim() || null,
-        equipment: equipment.filter((e) => e),
-        equipmentNotes: equipmentNotes?.trim() || null
+      const result = await useCase.update({
+        id: formData.get('id') as string,
+        name: formData.get('name') as string,
+        capacity: formData.get('capacity')
+          ? Number.parseInt(formData.get('capacity') as string, 10)
+          : undefined,
+        floor: (formData.get('floor') as string) || undefined,
+        equipment: formData.getAll('equipment') as string[],
+        equipmentNotes: (formData.get('equipmentNotes') as string) || undefined
       })
 
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'updateRoom' })
+      }
       return { success: true, action: 'updateRoom' }
     } catch (err) {
       console.error('Failed to update room:', err)
@@ -233,26 +218,15 @@ export const actions: Actions = {
 
   deleteRoom: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-
-    if (!id) {
-      return fail(400, { error: 'Room ID is required', action: 'deleteRoom' })
-    }
+    const roomRepo = createRoomRepository(locals.pb)
+    const slotRepo = createSlotRepository(locals.pb)
+    const useCase = createManageRoomsUseCase(roomRepo, slotRepo)
 
     try {
-      // Check if room has slots
-      const slots = await locals.pb.collection('slots').getList(1, 1, {
-        filter: `roomId = "${id}"`
-      })
-
-      if (slots.items.length > 0) {
-        return fail(400, {
-          error: 'Cannot delete room with existing slots. Delete slots first.',
-          action: 'deleteRoom'
-        })
+      const result = await useCase.delete(formData.get('id') as string)
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'deleteRoom' })
       }
-
-      await locals.pb.collection('rooms').delete(id)
       return { success: true, action: 'deleteRoom' }
     } catch (err) {
       console.error('Failed to delete room:', err)
@@ -263,22 +237,20 @@ export const actions: Actions = {
   // ============ TRACKS ============
   createTrack: async ({ request, locals }) => {
     const formData = await request.formData()
-    const name = formData.get('name') as string
-    const color = formData.get('color') as string
-    const editionId = formData.get('editionId') as string
-
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: 'Track name is required', action: 'createTrack' })
-    }
+    const trackRepo = createTrackRepository(locals.pb)
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageTracksUseCase(trackRepo, sessionRepo)
 
     try {
-      await locals.pb.collection('tracks').create({
-        editionId,
-        name: name.trim(),
-        color: color || '#6b7280',
-        order: 0
+      const result = await useCase.create({
+        editionId: formData.get('editionId') as string,
+        name: formData.get('name') as string,
+        color: (formData.get('color') as string) || undefined
       })
 
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'createTrack' })
+      }
       return { success: true, action: 'createTrack' }
     } catch (err) {
       console.error('Failed to create track:', err)
@@ -288,23 +260,20 @@ export const actions: Actions = {
 
   updateTrack: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-    const name = formData.get('name') as string
-    const color = formData.get('color') as string
-
-    if (!id) {
-      return fail(400, { error: 'Track ID is required', action: 'updateTrack' })
-    }
-    if (!name || name.trim().length === 0) {
-      return fail(400, { error: 'Track name is required', action: 'updateTrack' })
-    }
+    const trackRepo = createTrackRepository(locals.pb)
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageTracksUseCase(trackRepo, sessionRepo)
 
     try {
-      await locals.pb.collection('tracks').update(id, {
-        name: name.trim(),
-        color: color || '#6b7280'
+      const result = await useCase.update({
+        id: formData.get('id') as string,
+        name: formData.get('name') as string,
+        color: (formData.get('color') as string) || undefined
       })
 
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'updateTrack' })
+      }
       return { success: true, action: 'updateTrack' }
     } catch (err) {
       console.error('Failed to update track:', err)
@@ -314,26 +283,15 @@ export const actions: Actions = {
 
   deleteTrack: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-
-    if (!id) {
-      return fail(400, { error: 'Track ID is required', action: 'deleteTrack' })
-    }
+    const trackRepo = createTrackRepository(locals.pb)
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageTracksUseCase(trackRepo, sessionRepo)
 
     try {
-      // Check if track has sessions
-      const sessions = await locals.pb.collection('sessions').getList(1, 1, {
-        filter: `trackId = "${id}"`
-      })
-
-      if (sessions.items.length > 0) {
-        return fail(400, {
-          error: 'Cannot delete track with existing sessions. Remove track from sessions first.',
-          action: 'deleteTrack'
-        })
+      const result = await useCase.delete(formData.get('id') as string)
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'deleteTrack' })
       }
-
-      await locals.pb.collection('tracks').delete(id)
       return { success: true, action: 'deleteTrack' }
     } catch (err) {
       console.error('Failed to delete track:', err)
@@ -344,53 +302,22 @@ export const actions: Actions = {
   // ============ SLOTS ============
   createSlot: async ({ request, locals }) => {
     const formData = await request.formData()
-    const roomId = formData.get('roomId') as string
-    const date = formData.get('date') as string
-    const startTime = formData.get('startTime') as string
-    const endTime = formData.get('endTime') as string
-    const editionId = formData.get('editionId') as string
-
-    if (!roomId) {
-      return fail(400, { error: 'Room is required', action: 'createSlot' })
-    }
-    if (!date) {
-      return fail(400, { error: 'Date is required', action: 'createSlot' })
-    }
-    if (!startTime) {
-      return fail(400, { error: 'Start time is required', action: 'createSlot' })
-    }
-    if (!endTime) {
-      return fail(400, { error: 'End time is required', action: 'createSlot' })
-    }
-    if (startTime >= endTime) {
-      return fail(400, { error: 'End time must be after start time', action: 'createSlot' })
-    }
+    const slotRepo = createSlotRepository(locals.pb)
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageSlotsUseCase(slotRepo, sessionRepo)
 
     try {
-      // Check for overlapping slots
-      const existingSlots = await locals.pb.collection('slots').getFullList({
-        filter: `roomId = "${roomId}" && date ~ "${date}"`
+      const result = await useCase.create({
+        editionId: formData.get('editionId') as string,
+        roomId: formData.get('roomId') as string,
+        date: formData.get('date') as string,
+        startTime: formData.get('startTime') as string,
+        endTime: formData.get('endTime') as string
       })
 
-      for (const existing of existingSlots) {
-        const existingStart = existing.startTime as string
-        const existingEnd = existing.endTime as string
-        if (startTime < existingEnd && endTime > existingStart) {
-          return fail(400, {
-            error: `Slot overlaps with existing slot (${existingStart} - ${existingEnd})`,
-            action: 'createSlot'
-          })
-        }
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'createSlot' })
       }
-
-      await locals.pb.collection('slots').create({
-        editionId,
-        roomId,
-        date: new Date(date).toISOString(),
-        startTime,
-        endTime
-      })
-
       return { success: true, action: 'createSlot' }
     } catch (err) {
       console.error('Failed to create slot:', err)
@@ -400,55 +327,22 @@ export const actions: Actions = {
 
   updateSlot: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-    const roomId = formData.get('roomId') as string
-    const date = formData.get('date') as string
-    const startTime = formData.get('startTime') as string
-    const endTime = formData.get('endTime') as string
-
-    if (!id) {
-      return fail(400, { error: 'Slot ID is required', action: 'updateSlot' })
-    }
-    if (!roomId) {
-      return fail(400, { error: 'Room is required', action: 'updateSlot' })
-    }
-    if (!date) {
-      return fail(400, { error: 'Date is required', action: 'updateSlot' })
-    }
-    if (!startTime) {
-      return fail(400, { error: 'Start time is required', action: 'updateSlot' })
-    }
-    if (!endTime) {
-      return fail(400, { error: 'End time is required', action: 'updateSlot' })
-    }
-    if (startTime >= endTime) {
-      return fail(400, { error: 'End time must be after start time', action: 'updateSlot' })
-    }
+    const slotRepo = createSlotRepository(locals.pb)
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageSlotsUseCase(slotRepo, sessionRepo)
 
     try {
-      // Check for overlapping slots (excluding self)
-      const existingSlots = await locals.pb.collection('slots').getFullList({
-        filter: `roomId = "${roomId}" && date ~ "${date}" && id != "${id}"`
+      const result = await useCase.update({
+        id: formData.get('id') as string,
+        roomId: formData.get('roomId') as string,
+        date: formData.get('date') as string,
+        startTime: formData.get('startTime') as string,
+        endTime: formData.get('endTime') as string
       })
 
-      for (const existing of existingSlots) {
-        const existingStart = existing.startTime as string
-        const existingEnd = existing.endTime as string
-        if (startTime < existingEnd && endTime > existingStart) {
-          return fail(400, {
-            error: `Slot overlaps with existing slot (${existingStart} - ${existingEnd})`,
-            action: 'updateSlot'
-          })
-        }
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'updateSlot' })
       }
-
-      await locals.pb.collection('slots').update(id, {
-        roomId,
-        date: new Date(date).toISOString(),
-        startTime,
-        endTime
-      })
-
       return { success: true, action: 'updateSlot' }
     } catch (err) {
       console.error('Failed to update slot:', err)
@@ -458,26 +352,15 @@ export const actions: Actions = {
 
   deleteSlot: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-
-    if (!id) {
-      return fail(400, { error: 'Slot ID is required', action: 'deleteSlot' })
-    }
+    const slotRepo = createSlotRepository(locals.pb)
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageSlotsUseCase(slotRepo, sessionRepo)
 
     try {
-      // Check if slot has sessions
-      const sessions = await locals.pb.collection('sessions').getList(1, 1, {
-        filter: `slotId = "${id}"`
-      })
-
-      if (sessions.items.length > 0) {
-        return fail(400, {
-          error: 'Cannot delete slot with existing session. Remove session first.',
-          action: 'deleteSlot'
-        })
+      const result = await useCase.delete(formData.get('id') as string)
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'deleteSlot' })
       }
-
-      await locals.pb.collection('slots').delete(id)
       return { success: true, action: 'deleteSlot' }
     } catch (err) {
       console.error('Failed to delete slot:', err)
@@ -488,82 +371,23 @@ export const actions: Actions = {
   // ============ SESSIONS ============
   createSession: async ({ request, locals }) => {
     const formData = await request.formData()
-    const editionId = formData.get('editionId') as string
-    const slotId = formData.get('slotId') as string
-    const title = formData.get('title') as string
-    const type = formData.get('type') as string
-    const talkId = formData.get('talkId') as string | null
-    const trackId = formData.get('trackId') as string | null
-    const description = formData.get('description') as string | null
-
-    // Validate required fields
-    if (!editionId) {
-      return fail(400, { error: 'Edition ID is required', action: 'createSession' })
-    }
-    if (!slotId) {
-      return fail(400, { error: 'Slot is required', action: 'createSession' })
-    }
-    if (!title || title.trim().length === 0) {
-      return fail(400, { error: 'Session title is required', action: 'createSession' })
-    }
-    if (!type) {
-      return fail(400, { error: 'Session type is required', action: 'createSession' })
-    }
-
-    // Validate session type
-    const validTypes = [
-      'talk',
-      'workshop',
-      'keynote',
-      'panel',
-      'break',
-      'lunch',
-      'networking',
-      'registration',
-      'other'
-    ]
-    if (!validTypes.includes(type)) {
-      return fail(400, { error: 'Invalid session type', action: 'createSession' })
-    }
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageSessionsUseCase(sessionRepo)
 
     try {
-      // Check if slot already has a session
-      const existingSessions = await locals.pb.collection('sessions').getList(1, 1, {
-        filter: `slotId = "${slotId}"`
+      const result = await useCase.create({
+        editionId: formData.get('editionId') as string,
+        slotId: formData.get('slotId') as string,
+        title: formData.get('title') as string,
+        type: formData.get('type') as string,
+        talkId: (formData.get('talkId') as string) || null,
+        trackId: (formData.get('trackId') as string) || null,
+        description: (formData.get('description') as string) || null
       })
 
-      if (existingSessions.items.length > 0) {
-        return fail(400, {
-          error: 'This slot already has a session assigned. Delete the existing session first.',
-          action: 'createSession'
-        })
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'createSession' })
       }
-
-      // If a talk is being assigned, check if it's already scheduled elsewhere
-      if (talkId) {
-        const talkSessions = await locals.pb.collection('sessions').getList(1, 1, {
-          filter: `talkId = "${talkId}"`
-        })
-
-        if (talkSessions.items.length > 0) {
-          return fail(400, {
-            error: 'This talk is already scheduled in another session.',
-            action: 'createSession'
-          })
-        }
-      }
-
-      // Create the session
-      await locals.pb.collection('sessions').create({
-        editionId,
-        slotId,
-        title: title.trim(),
-        type,
-        talkId: talkId || null,
-        trackId: trackId || null,
-        description: description?.trim() || null
-      })
-
       return { success: true, action: 'createSession' }
     } catch (err) {
       console.error('Failed to create session:', err)
@@ -573,67 +397,22 @@ export const actions: Actions = {
 
   updateSession: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-    const title = formData.get('title') as string
-    const type = formData.get('type') as string
-    const talkId = formData.get('talkId') as string | null
-    const trackId = formData.get('trackId') as string | null
-    const description = formData.get('description') as string | null
-
-    // Validate required fields
-    if (!id) {
-      return fail(400, { error: 'Session ID is required', action: 'updateSession' })
-    }
-    if (!title || title.trim().length === 0) {
-      return fail(400, { error: 'Session title is required', action: 'updateSession' })
-    }
-    if (!type) {
-      return fail(400, { error: 'Session type is required', action: 'updateSession' })
-    }
-
-    // Validate session type
-    const validTypes = [
-      'talk',
-      'workshop',
-      'keynote',
-      'panel',
-      'break',
-      'lunch',
-      'networking',
-      'registration',
-      'other'
-    ]
-    if (!validTypes.includes(type)) {
-      return fail(400, { error: 'Invalid session type', action: 'updateSession' })
-    }
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageSessionsUseCase(sessionRepo)
 
     try {
-      // Get the current session to check for existing talk assignment
-      const currentSession = await locals.pb.collection('sessions').getOne(id)
-
-      // If assigning a new talk, check if it's already scheduled elsewhere
-      if (talkId && talkId !== currentSession.talkId) {
-        const talkSessions = await locals.pb.collection('sessions').getList(1, 1, {
-          filter: `talkId = "${talkId}" && id != "${id}"`
-        })
-
-        if (talkSessions.items.length > 0) {
-          return fail(400, {
-            error: 'This talk is already scheduled in another session.',
-            action: 'updateSession'
-          })
-        }
-      }
-
-      // Update the session
-      await locals.pb.collection('sessions').update(id, {
-        title: title.trim(),
-        type,
-        talkId: talkId || null,
-        trackId: trackId || null,
-        description: description?.trim() || null
+      const result = await useCase.update({
+        id: formData.get('id') as string,
+        title: formData.get('title') as string,
+        type: formData.get('type') as string,
+        talkId: (formData.get('talkId') as string) || null,
+        trackId: (formData.get('trackId') as string) || null,
+        description: (formData.get('description') as string) || null
       })
 
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'updateSession' })
+      }
       return { success: true, action: 'updateSession' }
     } catch (err) {
       console.error('Failed to update session:', err)
@@ -643,14 +422,14 @@ export const actions: Actions = {
 
   deleteSession: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-
-    if (!id) {
-      return fail(400, { error: 'Session ID is required', action: 'deleteSession' })
-    }
+    const sessionRepo = createSessionRepository(locals.pb)
+    const useCase = createManageSessionsUseCase(sessionRepo)
 
     try {
-      await locals.pb.collection('sessions').delete(id)
+      const result = await useCase.delete(formData.get('id') as string)
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'deleteSession' })
+      }
       return { success: true, action: 'deleteSession' }
     } catch (err) {
       console.error('Failed to delete session:', err)
@@ -661,35 +440,23 @@ export const actions: Actions = {
   // ============ ROOM ASSIGNMENTS ============
   createRoomAssignment: async ({ request, locals }) => {
     const formData = await request.formData()
-    const editionId = formData.get('editionId') as string
-    const roomId = formData.get('roomId') as string
-    const memberId = formData.get('memberId') as string
-    const date = formData.get('date') as string | null
-    const startTime = formData.get('startTime') as string | null
-    const endTime = formData.get('endTime') as string | null
-    const notes = formData.get('notes') as string | null
-
-    if (!editionId) {
-      return fail(400, { error: 'Edition ID is required', action: 'createRoomAssignment' })
-    }
-    if (!roomId) {
-      return fail(400, { error: 'Room is required', action: 'createRoomAssignment' })
-    }
-    if (!memberId) {
-      return fail(400, { error: 'Team member is required', action: 'createRoomAssignment' })
-    }
+    const roomAssignmentRepo = createRoomAssignmentRepository(locals.pb)
+    const useCase = createManageRoomAssignmentsUseCase(roomAssignmentRepo)
 
     try {
-      await locals.pb.collection('room_assignments').create({
-        editionId,
-        roomId,
-        memberId,
-        date: date ? new Date(date).toISOString() : null,
-        startTime: startTime || null,
-        endTime: endTime || null,
-        notes: notes?.trim() || null
+      const result = await useCase.create({
+        editionId: formData.get('editionId') as string,
+        roomId: formData.get('roomId') as string,
+        memberId: formData.get('memberId') as string,
+        date: (formData.get('date') as string) || null,
+        startTime: (formData.get('startTime') as string) || null,
+        endTime: (formData.get('endTime') as string) || null,
+        notes: (formData.get('notes') as string) || null
       })
 
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'createRoomAssignment' })
+      }
       return { success: true, action: 'createRoomAssignment' }
     } catch (err) {
       console.error('Failed to create room assignment:', err)
@@ -702,29 +469,22 @@ export const actions: Actions = {
 
   updateRoomAssignment: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-    const memberId = formData.get('memberId') as string
-    const date = formData.get('date') as string | null
-    const startTime = formData.get('startTime') as string | null
-    const endTime = formData.get('endTime') as string | null
-    const notes = formData.get('notes') as string | null
-
-    if (!id) {
-      return fail(400, { error: 'Assignment ID is required', action: 'updateRoomAssignment' })
-    }
-    if (!memberId) {
-      return fail(400, { error: 'Team member is required', action: 'updateRoomAssignment' })
-    }
+    const roomAssignmentRepo = createRoomAssignmentRepository(locals.pb)
+    const useCase = createManageRoomAssignmentsUseCase(roomAssignmentRepo)
 
     try {
-      await locals.pb.collection('room_assignments').update(id, {
-        memberId,
-        date: date ? new Date(date).toISOString() : null,
-        startTime: startTime || null,
-        endTime: endTime || null,
-        notes: notes?.trim() || null
+      const result = await useCase.update({
+        id: formData.get('id') as string,
+        memberId: formData.get('memberId') as string,
+        date: (formData.get('date') as string) || null,
+        startTime: (formData.get('startTime') as string) || null,
+        endTime: (formData.get('endTime') as string) || null,
+        notes: (formData.get('notes') as string) || null
       })
 
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'updateRoomAssignment' })
+      }
       return { success: true, action: 'updateRoomAssignment' }
     } catch (err) {
       console.error('Failed to update room assignment:', err)
@@ -737,14 +497,14 @@ export const actions: Actions = {
 
   deleteRoomAssignment: async ({ request, locals }) => {
     const formData = await request.formData()
-    const id = formData.get('id') as string
-
-    if (!id) {
-      return fail(400, { error: 'Assignment ID is required', action: 'deleteRoomAssignment' })
-    }
+    const roomAssignmentRepo = createRoomAssignmentRepository(locals.pb)
+    const useCase = createManageRoomAssignmentsUseCase(roomAssignmentRepo)
 
     try {
-      await locals.pb.collection('room_assignments').delete(id)
+      const result = await useCase.delete(formData.get('id') as string)
+      if (!result.success) {
+        return fail(400, { error: result.error, action: 'deleteRoomAssignment' })
+      }
       return { success: true, action: 'deleteRoomAssignment' }
     } catch (err) {
       console.error('Failed to delete room assignment:', err)
