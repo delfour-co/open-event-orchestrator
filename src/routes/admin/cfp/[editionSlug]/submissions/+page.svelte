@@ -2,6 +2,7 @@
 import { enhance } from '$app/forms'
 import { goto } from '$app/navigation'
 import { page } from '$app/stores'
+import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Checkbox } from '$lib/components/ui/checkbox'
@@ -9,7 +10,6 @@ import { Input } from '$lib/components/ui/input'
 import { Select } from '$lib/components/ui/select'
 import * as Table from '$lib/components/ui/table'
 import { talkStatusSchema } from '$lib/features/cfp/domain'
-import { StatusBadge } from '$lib/features/cfp/ui'
 import {
   ArrowLeft,
   Check,

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
+import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Checkbox } from '$lib/components/ui/checkbox'
@@ -27,19 +28,6 @@ function formatDateForInput(date: Date | null): string {
 }
 
 const statuses = ['draft', 'published', 'archived'] as const
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'published':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    case 'draft':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    case 'archived':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-  }
-}
 </script>
 
 <svelte:head>
@@ -85,11 +73,7 @@ const getStatusColor = (status: string) => {
     <Card.Content>
       <div class="flex items-center gap-4">
         <span class="text-sm text-muted-foreground">Current status:</span>
-        <span
-          class="rounded-full px-3 py-1 text-sm font-medium {getStatusColor(data.edition.status)}"
-        >
-          {data.edition.status}
-        </span>
+        <StatusBadge status={data.edition.status} />
       </div>
       <div class="mt-4 flex items-center gap-2">
         <span class="mr-2 text-sm text-muted-foreground">Change to:</span>

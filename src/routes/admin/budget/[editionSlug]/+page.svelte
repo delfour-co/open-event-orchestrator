@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
@@ -80,38 +81,6 @@ function cancelTransactionForm() {
   editingTransaction = null
 }
 
-const getBudgetStatusColor = (status: string) => {
-  switch (status) {
-    case 'approved':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    case 'draft':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    case 'closed':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-  }
-}
-
-const getTransactionStatusColor = (status: string) => {
-  switch (status) {
-    case 'paid':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    case 'cancelled':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-  }
-}
-
-const getTypeColor = (type: string) => {
-  return type === 'income'
-    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-    : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-}
-
 // Close forms on successful submission
 $effect(() => {
   if (form?.success) {
@@ -163,9 +132,7 @@ $effect(() => {
 					</Button>
 				</form>
 			{:else}
-				<span class="rounded-full px-2 py-0.5 text-xs font-medium {getBudgetStatusColor(data.budget.status)}">
-					{data.budget.status}
-				</span>
+				<StatusBadge status={data.budget.status} size="sm" />
 				<a href="/admin/budget/{data.edition.slug}/settings">
 					<Button variant="ghost" size="icon">
 						<Settings class="h-5 w-5" />
@@ -447,14 +414,10 @@ $effect(() => {
 											{tx.type === 'income' ? '+' : '-'}{formatAmount(tx.amount, currency)}
 										</td>
 										<td class="px-4 py-3">
-											<span class="rounded-full px-2 py-0.5 text-xs font-medium {getTypeColor(tx.type)}">
-												{tx.type}
-											</span>
+											<StatusBadge status={tx.type} size="sm" />
 										</td>
 										<td class="px-4 py-3">
-											<span class="rounded-full px-2 py-0.5 text-xs font-medium {getTransactionStatusColor(tx.status)}">
-												{tx.status}
-											</span>
+											<StatusBadge status={tx.status} size="sm" />
 										</td>
 										<td class="px-4 py-3">
 											<div class="flex gap-1">

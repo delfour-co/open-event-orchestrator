@@ -1,10 +1,11 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Textarea } from '$lib/components/ui/textarea'
 import { talkStatusSchema } from '$lib/features/cfp/domain'
-import { RatingDisplay, RatingInput, StatusBadge } from '$lib/features/cfp/ui'
+import { RatingDisplay, RatingInput } from '$lib/features/cfp/ui'
 import {
   ArrowLeft,
   Check,

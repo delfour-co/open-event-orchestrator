@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -44,23 +45,6 @@ const formatDate = (date: Date) => {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date)
-}
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'paid':
-    case 'valid':
-      return 'bg-green-100 text-green-800'
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800'
-    case 'used':
-      return 'bg-blue-100 text-blue-800'
-    case 'cancelled':
-    case 'refunded':
-      return 'bg-gray-100 text-gray-800'
-    default:
-      return 'bg-gray-100 text-gray-800'
-  }
 }
 
 const filteredOrders = $derived(() => {
@@ -297,11 +281,7 @@ const getTicketTypeName = (ticketTypeId: string) => {
 									</div>
 								</td>
 								<td class="p-3">
-									<span
-										class="rounded-full px-2 py-0.5 text-xs font-medium {getStatusColor(order.status)}"
-									>
-										{order.status}
-									</span>
+									<StatusBadge status={order.status} size="sm" />
 								</td>
 								<td class="p-3 text-right font-medium">
 									{formatPrice(order.totalAmount, order.currency)}
@@ -432,11 +412,7 @@ const getTicketTypeName = (ticketTypeId: string) => {
 									{getTicketTypeName(ticket.ticketTypeId)}
 								</td>
 								<td class="p-3">
-									<span
-										class="rounded-full px-2 py-0.5 text-xs font-medium {getStatusColor(ticket.status)}"
-									>
-										{ticket.status}
-									</span>
+									<StatusBadge status={ticket.status} size="sm" />
 									{#if ticket.checkedInAt}
 										<div class="mt-1 text-xs text-muted-foreground">
 											{formatDate(ticket.checkedInAt)}
