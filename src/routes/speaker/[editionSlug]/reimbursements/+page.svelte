@@ -47,18 +47,6 @@ const formatDate = (date: Date) => {
   }).format(date)
 }
 
-const getStatusLabel = (status: string) => {
-  const labels: Record<string, string> = {
-    draft: 'Draft',
-    submitted: 'Submitted',
-    under_review: 'Under Review',
-    approved: 'Approved',
-    rejected: 'Rejected',
-    paid: 'Paid'
-  }
-  return labels[status] || status
-}
-
 const getExpenseTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
     transport: 'Transport',

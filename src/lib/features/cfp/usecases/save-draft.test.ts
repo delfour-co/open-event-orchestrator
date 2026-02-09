@@ -32,6 +32,7 @@ describe('SaveDraftUseCase', () => {
     editionId: 'edition-1',
     speakerIds: ['speaker-1'],
     status: 'draft',
+    language: 'en',
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -72,7 +73,8 @@ describe('SaveDraftUseCase', () => {
         speaker: mockSpeakerInput,
         talk: {
           title: 'My Talk',
-          abstract: 'My abstract'
+          abstract: 'My abstract',
+          language: 'en'
         }
       })
 
@@ -100,7 +102,8 @@ describe('SaveDraftUseCase', () => {
         speaker: { ...mockSpeakerInput, bio: 'Updated bio' },
         talk: {
           title: 'My Talk',
-          abstract: 'My abstract'
+          abstract: 'My abstract',
+          language: 'en'
         }
       })
 
@@ -128,7 +131,8 @@ describe('SaveDraftUseCase', () => {
         speaker: mockSpeakerInput,
         talk: {
           title: 'Updated Title',
-          abstract: 'My abstract'
+          abstract: 'My abstract',
+          language: 'en'
         },
         talkId: 'talk-1'
       })
@@ -166,7 +170,7 @@ describe('SaveDraftUseCase', () => {
     await saveDraft({
       editionId: 'edition-1',
       speaker: fullSpeakerInput,
-      talk: { title: 'Talk', abstract: 'Abstract' }
+      talk: { title: 'Talk', abstract: 'Abstract', language: 'en' }
     })
 
     expect(speakerRepository.update).toHaveBeenCalledWith('speaker-1', {

@@ -26,6 +26,7 @@ describe('GetSpeakerSubmissionsUseCase', () => {
       editionId: 'edition-1',
       speakerIds: ['speaker-1'],
       status: 'submitted',
+      language: 'en',
       createdAt: new Date(),
       updatedAt: new Date()
     },
@@ -36,6 +37,7 @@ describe('GetSpeakerSubmissionsUseCase', () => {
       editionId: 'edition-2',
       speakerIds: ['speaker-1'],
       status: 'accepted',
+      language: 'en',
       createdAt: new Date(),
       updatedAt: new Date()
     }

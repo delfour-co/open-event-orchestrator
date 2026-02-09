@@ -28,6 +28,7 @@ describe('SendNotificationUseCase', () => {
     editionId: 'edition-1',
     speakerIds: ['speaker-1'],
     status: 'accepted',
+    language: 'en',
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -41,7 +42,7 @@ describe('SendNotificationUseCase', () => {
     to: 'jane@example.com',
     subject: 'Your talk has been accepted',
     status: 'pending' as const,
-    createdAt: new Date()
+    sentAt: new Date()
   }
 
   beforeEach(() => {

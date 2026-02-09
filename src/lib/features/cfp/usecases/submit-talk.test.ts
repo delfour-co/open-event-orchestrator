@@ -32,6 +32,7 @@ describe('SubmitTalkUseCase', () => {
     editionId: 'edition-1',
     speakerIds: ['speaker-1'],
     status: 'draft',
+    language: 'en',
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -79,7 +80,8 @@ describe('SubmitTalkUseCase', () => {
         speaker: mockSpeakerInput,
         talk: {
           title: 'My Talk',
-          abstract: 'My abstract'
+          abstract: 'My abstract',
+          language: 'en'
         }
       })
 
@@ -109,7 +111,8 @@ describe('SubmitTalkUseCase', () => {
         speaker: { ...mockSpeakerInput, bio: 'Updated bio' },
         talk: {
           title: 'My Talk',
-          abstract: 'My abstract'
+          abstract: 'My abstract',
+          language: 'en'
         }
       })
 
@@ -134,7 +137,7 @@ describe('SubmitTalkUseCase', () => {
     const result = await submitTalk({
       editionId: 'edition-1',
       speaker: mockSpeakerInput,
-      talk: { title: 'Talk', abstract: 'Abstract' }
+      talk: { title: 'Talk', abstract: 'Abstract', language: 'en' }
     })
 
     expect(result.talk.status).toBe('submitted')
@@ -198,7 +201,7 @@ describe('SubmitTalkUseCase', () => {
     await submitTalk({
       editionId: 'edition-1',
       speaker: fullSpeakerInput,
-      talk: { title: 'Talk', abstract: 'Abstract' }
+      talk: { title: 'Talk', abstract: 'Abstract', language: 'en' }
     })
 
     expect(speakerRepository.update).toHaveBeenCalledWith('speaker-1', {
