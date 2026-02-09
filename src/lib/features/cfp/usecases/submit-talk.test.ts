@@ -91,6 +91,7 @@ describe('SubmitTalkUseCase', () => {
       expect(talkRepository.create).toHaveBeenCalledWith({
         title: 'My Talk',
         abstract: 'My abstract',
+        language: 'en',
         editionId: 'edition-1',
         speakerIds: ['speaker-1']
       })

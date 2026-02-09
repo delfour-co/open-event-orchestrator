@@ -84,6 +84,7 @@ describe('SaveDraftUseCase', () => {
       expect(talkRepository.create).toHaveBeenCalledWith({
         title: 'My Talk',
         abstract: 'My abstract',
+        language: 'en',
         editionId: 'edition-1',
         speakerIds: ['speaker-1']
       })
@@ -141,6 +142,7 @@ describe('SaveDraftUseCase', () => {
       expect(talkRepository.update).toHaveBeenCalledWith('talk-1', {
         title: 'Updated Title',
         abstract: 'My abstract',
+        language: 'en',
         speakerIds: ['speaker-1']
       })
       expect(talkRepository.create).not.toHaveBeenCalled()
