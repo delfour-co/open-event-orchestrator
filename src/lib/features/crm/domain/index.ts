@@ -273,3 +273,27 @@ export {
   LOYALTY_LEVEL_LABELS,
   LOYALTY_LEVEL_COLORS
 } from './contact-history'
+
+export {
+  templateCategorySchema,
+  templateVariableSchema,
+  libraryTemplateSchema,
+  type TemplateCategory,
+  type TemplateVariable,
+  type LibraryTemplate,
+  type CreateLibraryTemplate,
+  type UpdateLibraryTemplate,
+  type TemplateSearchOptions,
+  TEMPLATE_CATEGORY_LABELS,
+  TEMPLATE_CATEGORY_ICONS,
+  LIBRARY_TEMPLATE_VARIABLES,
+  getVariablesByCategory,
+  getVariableCategories,
+  extractUsedVariables,
+  validateTemplateVariables,
+  interpolateWithExamples,
+  buildVariableInsert,
+  generateCloneName,
+  matchesSearchCriteria,
+  sortTemplates
+} from './template-library'

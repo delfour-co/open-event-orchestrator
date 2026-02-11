@@ -44,3 +44,6 @@ export type {
   ContactHistoryService,
   RecordParticipationInput
 } from './contact-history-service'
+
+export { createTemplateLibraryService } from './template-library-service'
+export type { TemplateLibraryService } from './template-library-service'
