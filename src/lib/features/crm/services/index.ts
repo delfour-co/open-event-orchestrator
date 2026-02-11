@@ -18,3 +18,11 @@ export type {
   ContactEngagement,
   TimeSeriesDataPoint
 } from './campaign-analytics-service'
+
+export { createGdprComplianceService } from './gdpr-compliance-service'
+export type {
+  GdprComplianceService,
+  DoubleOptInResult,
+  ConfirmationResult,
+  DataDeletionResult
+} from './gdpr-compliance-service'
