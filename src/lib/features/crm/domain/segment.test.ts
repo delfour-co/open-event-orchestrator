@@ -54,15 +54,30 @@ describe('Segment', () => {
   describe('RULE_FIELD_LABELS', () => {
     it('should have all field labels', () => {
       const expectedFields = [
+        // Contact profile
         'source',
         'tags',
         'company',
         'city',
         'country',
+        // Edition-related
         'edition_role',
         'edition_id',
         'consent_marketing',
-        'has_checked_in'
+        'has_checked_in',
+        // Email behavior
+        'email_opened',
+        'email_clicked',
+        'email_opened_any',
+        'email_clicked_any',
+        // Purchase history
+        'has_purchased',
+        'purchase_total_gte',
+        'purchased_ticket_type',
+        // CFP engagement
+        'cfp_submitted',
+        'cfp_accepted',
+        'cfp_rejected'
       ]
       expect(Object.keys(RULE_FIELD_LABELS)).toHaveLength(expectedFields.length)
       for (const field of expectedFields) {
@@ -75,6 +90,10 @@ describe('Segment', () => {
       expect(RULE_FIELD_LABELS.tags).toBe('Tags')
       expect(RULE_FIELD_LABELS.edition_role).toBe('Edition Role')
       expect(RULE_FIELD_LABELS.has_checked_in).toBe('Has Checked In')
+      // New fields
+      expect(RULE_FIELD_LABELS.email_opened).toBe('Opened Campaign')
+      expect(RULE_FIELD_LABELS.has_purchased).toBe('Has Purchased')
+      expect(RULE_FIELD_LABELS.cfp_submitted).toBe('Submitted Talk')
     })
   })
 

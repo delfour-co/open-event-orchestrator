@@ -92,3 +92,14 @@ export {
   isHardBounce,
   shouldSuppressContact
 } from './email-event'
+
+export {
+  segmentMembershipSchema,
+  type SegmentMembership,
+  type CreateSegmentMembership,
+  type MembershipChange,
+  type MembershipChangeType,
+  type SegmentMembershipStats,
+  calculateMembershipChanges,
+  calculateMembershipStats
+} from './segment-membership'
