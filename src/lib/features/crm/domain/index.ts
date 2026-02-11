@@ -178,3 +178,48 @@ export {
   buildListUnsubscribeHeader,
   buildListUnsubscribePostHeader
 } from './gdpr-compliance'
+
+export {
+  customFieldTypeSchema,
+  customFieldOptionsSchema,
+  customFieldSchema,
+  contactCustomValueSchema,
+  type CustomFieldType,
+  type CustomFieldOptions,
+  type CustomField,
+  type CreateCustomField,
+  type UpdateCustomField,
+  type ContactCustomValue,
+  FIELD_TYPE_LABELS,
+  FIELD_TYPE_ICONS,
+  generateFieldKey,
+  validateFieldValue,
+  formatFieldValue,
+  parseFieldValue,
+  buildTemplateVariable
+} from './custom-field'
+
+export {
+  scoringActionSchema,
+  leadScoreLevelSchema,
+  leadScoringRuleSchema,
+  leadScoreHistorySchema,
+  type ScoringAction,
+  type LeadScoreLevel,
+  type LeadScoringRule,
+  type CreateLeadScoringRule,
+  type UpdateLeadScoringRule,
+  type LeadScoreHistory,
+  SCORING_ACTION_LABELS,
+  LEAD_LEVEL_LABELS,
+  LEAD_LEVEL_COLORS,
+  DEFAULT_SCORE_THRESHOLDS,
+  DEFAULT_SCORING_RULES,
+  calculateLeadLevel,
+  findApplicableRule,
+  applyScoreChange,
+  formatScoreChange,
+  calculateInactivityDays,
+  shouldApplyInactivityPenalty,
+  buildScoreHistoryEntry
+} from './lead-scoring'

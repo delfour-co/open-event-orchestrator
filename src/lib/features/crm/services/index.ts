@@ -26,3 +26,9 @@ export type {
   ConfirmationResult,
   DataDeletionResult
 } from './gdpr-compliance-service'
+
+export { createCustomFieldService } from './custom-field-service'
+export type { CustomFieldService } from './custom-field-service'
+
+export { createLeadScoringService } from './lead-scoring-service'
+export type { LeadScoringService, ScoreUpdateResult } from './lead-scoring-service'
