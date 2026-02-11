@@ -223,3 +223,53 @@ export {
   shouldApplyInactivityPenalty,
   buildScoreHistoryEntry
 } from './lead-scoring'
+
+export {
+  duplicateMatchTypeSchema,
+  duplicateStatusSchema,
+  mergeFieldSourceSchema,
+  duplicatePairSchema,
+  type DuplicateMatchType,
+  type DuplicateStatus,
+  type MergeFieldSource,
+  type DuplicatePair,
+  type MergeDecision,
+  type MergeResult,
+  type ContactComparison,
+  type ContactFieldComparison,
+  MATCH_TYPE_LABELS,
+  DUPLICATE_STATUS_LABELS,
+  CONFIDENCE_THRESHOLDS,
+  normalizeString,
+  levenshteinDistance,
+  calculateStringSimilarity,
+  calculateNameSimilarity,
+  calculateDuplicateConfidence,
+  isPotentialDuplicate,
+  getConfidenceLevel,
+  suggestFieldSource,
+  mergeArrays,
+  buildContactComparison,
+  CONTACT_COMPARE_FIELDS
+} from './contact-deduplication'
+
+export {
+  eventParticipationTypeSchema,
+  contactEventParticipationSchema,
+  type EventParticipationType,
+  type ContactEventParticipation,
+  type ContactTimelineEntry,
+  type ContactCrossEventSummary,
+  PARTICIPATION_TYPE_LABELS,
+  PARTICIPATION_TYPE_ICONS,
+  PARTICIPATION_WEIGHTS,
+  calculateLoyaltyScore,
+  getParticipationTypes,
+  buildParticipationDescription,
+  groupParticipationsByEdition,
+  sortParticipationsByDate,
+  buildCrossEventSummary,
+  getLoyaltyLevel,
+  LOYALTY_LEVEL_LABELS,
+  LOYALTY_LEVEL_COLORS
+} from './contact-history'

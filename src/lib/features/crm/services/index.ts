@@ -32,3 +32,15 @@ export type { CustomFieldService } from './custom-field-service'
 
 export { createLeadScoringService } from './lead-scoring-service'
 export type { LeadScoringService, ScoreUpdateResult } from './lead-scoring-service'
+
+export { createContactDeduplicationService } from './contact-deduplication-service'
+export type {
+  ContactDeduplicationService,
+  DuplicateScanResult
+} from './contact-deduplication-service'
+
+export { createContactHistoryService } from './contact-history-service'
+export type {
+  ContactHistoryService,
+  RecordParticipationInput
+} from './contact-history-service'
