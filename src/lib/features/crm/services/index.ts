@@ -9,3 +9,12 @@ export type { SuppressionListService } from './suppression-list-service'
 
 export { createContactActivityService } from './contact-activity-service'
 export type { ContactActivityService } from './contact-activity-service'
+
+export { createCampaignAnalyticsService } from './campaign-analytics-service'
+export type {
+  CampaignAnalyticsService,
+  CampaignAnalytics,
+  CampaignComparisonStats,
+  ContactEngagement,
+  TimeSeriesDataPoint
+} from './campaign-analytics-service'
