@@ -121,3 +121,22 @@ export {
   parseSuppressionCsv,
   formatSuppressionCsv
 } from './suppression-list'
+
+export {
+  activityTypeSchema,
+  contactActivitySchema,
+  type ActivityType,
+  type ContactActivity,
+  type CreateContactActivity,
+  type ActivityFilterOptions,
+  type EngagementScore,
+  type ActivityCategory,
+  ACTIVITY_TYPE_LABELS,
+  ACTIVITY_TYPE_ICONS,
+  ACTIVITY_CATEGORIES,
+  ACTIVITY_CATEGORY_LABELS,
+  ENGAGEMENT_CONFIG,
+  calculateEngagementScore,
+  filterActivitiesByCategory,
+  groupActivitiesByDate
+} from './contact-activity'

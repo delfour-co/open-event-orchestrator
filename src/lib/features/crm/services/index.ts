@@ -6,3 +6,6 @@ export type { SegmentSyncService, SegmentSyncResult } from './segment-sync-servi
 
 export { createSuppressionListService } from './suppression-list-service'
 export type { SuppressionListService } from './suppression-list-service'
+
+export { createContactActivityService } from './contact-activity-service'
+export type { ContactActivityService } from './contact-activity-service'
