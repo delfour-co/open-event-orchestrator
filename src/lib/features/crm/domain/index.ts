@@ -103,3 +103,21 @@ export {
   calculateMembershipChanges,
   calculateMembershipStats
 } from './segment-membership'
+
+export {
+  suppressionReasonSchema,
+  suppressionEntrySchema,
+  type SuppressionReason,
+  type SuppressionEntry,
+  type CreateSuppressionEntry,
+  type BounceStats,
+  type SuppressionCheckResult,
+  type SuppressionImportResult,
+  SUPPRESSION_CONFIG,
+  SUPPRESSION_REASON_LABELS,
+  shouldSuppress,
+  isValidSuppressionEmail,
+  normalizeEmail,
+  parseSuppressionCsv,
+  formatSuppressionCsv
+} from './suppression-list'
