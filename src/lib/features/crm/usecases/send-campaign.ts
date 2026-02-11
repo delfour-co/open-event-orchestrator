@@ -4,6 +4,7 @@ import { getEmailService } from '$lib/server/app-settings'
 import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import { interpolateTemplate } from '../domain'
+import { createEmailTrackingService } from '../services'
 
 export interface SendCampaignResult {
   totalRecipients: number
@@ -83,9 +84,21 @@ export const createSendCampaignUseCase = (pb: PocketBase) => {
             '{{unsubscribeUrl}}': unsubscribeUrl
           }
 
-          const html = interpolateTemplate(campaign.bodyHtml as string, variables)
-          const text = interpolateTemplate(campaign.bodyText as string, variables)
+          let html = interpolateTemplate(campaign.bodyHtml as string, variables)
+          let text = interpolateTemplate(campaign.bodyText as string, variables)
           const subject = interpolateTemplate(campaign.subject as string, variables)
+
+          // Add email tracking if enabled
+          const trackingService = createEmailTrackingService()
+          const tracked = trackingService.addTracking(html, text, {
+            baseUrl,
+            campaignId,
+            contactId: contact.id as string,
+            enableOpenTracking: campaign.enableOpenTracking !== false,
+            enableClickTracking: campaign.enableClickTracking !== false
+          })
+          html = tracked.html
+          text = tracked.text
 
           const sendResult = await emailService.send({
             to: contact.email as string,

@@ -77,3 +77,18 @@ export {
   isCampaignComplete,
   campaignSuccessRate
 } from './email-campaign'
+
+export {
+  type EmailEvent,
+  type EmailEventType,
+  type BounceType,
+  type CreateEmailEvent,
+  type EmailEventStats,
+  type LinkClickStats,
+  generateTrackingId,
+  parseTrackingId,
+  calculateEventStats,
+  calculateLinkStats,
+  isHardBounce,
+  shouldSuppressContact
+} from './email-event'

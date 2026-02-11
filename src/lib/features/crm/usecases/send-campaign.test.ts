@@ -332,6 +332,82 @@ describe('createSendCampaignUseCase', () => {
     expect(updateCalls[1]).toEqual(['camp1', { status: 'draft' }])
   })
 
+  it('adds email tracking when enabled', async () => {
+    pb.collection('email_campaigns').getOne.mockResolvedValue({
+      id: 'camp1',
+      status: 'draft',
+      eventId: 'event1',
+      subject: 'Hi',
+      bodyHtml: '<html><body><p>Hi</p><a href="https://example.com">Link</a></body></html>',
+      bodyText: 'Hi https://example.com',
+      enableOpenTracking: true,
+      enableClickTracking: true
+    })
+
+    pb.collection('events').getOne.mockResolvedValue({ id: 'event1', name: 'Event' })
+    pb.collection('contacts').getFullList.mockResolvedValue([
+      {
+        id: 'contact123',
+        email: 'test@test.com',
+        firstName: 'Test',
+        lastName: 'User',
+        company: '',
+        unsubscribeToken: 'tok1'
+      }
+    ])
+
+    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent' }] })
+    pb.collection('email_campaigns').update.mockResolvedValue({})
+
+    await sendCampaign('camp1')
+
+    const sentEmail = mockEmailService.send.mock.calls[0][0]
+    // Should contain tracking pixel
+    expect(sentEmail.html).toContain('/api/tracking/open/')
+    expect(sentEmail.html).toContain('width="1" height="1"')
+    // Should have rewritten links
+    expect(sentEmail.html).toContain('/api/tracking/click/')
+    expect(sentEmail.text).toContain('/api/tracking/click/')
+  })
+
+  it('disables tracking when campaign settings are false', async () => {
+    pb.collection('email_campaigns').getOne.mockResolvedValue({
+      id: 'camp1',
+      status: 'draft',
+      eventId: 'event1',
+      subject: 'Hi',
+      bodyHtml: '<html><body><p>Hi</p><a href="https://example.com">Link</a></body></html>',
+      bodyText: 'Hi https://example.com',
+      enableOpenTracking: false,
+      enableClickTracking: false
+    })
+
+    pb.collection('events').getOne.mockResolvedValue({ id: 'event1', name: 'Event' })
+    pb.collection('contacts').getFullList.mockResolvedValue([
+      {
+        id: 'contact123',
+        email: 'test@test.com',
+        firstName: 'Test',
+        lastName: 'User',
+        company: '',
+        unsubscribeToken: 'tok1'
+      }
+    ])
+
+    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent' }] })
+    pb.collection('email_campaigns').update.mockResolvedValue({})
+
+    await sendCampaign('camp1')
+
+    const sentEmail = mockEmailService.send.mock.calls[0][0]
+    // Should NOT contain tracking pixel
+    expect(sentEmail.html).not.toContain('/api/tracking/open/')
+    // Should NOT rewrite links
+    expect(sentEmail.html).toContain('href="https://example.com"')
+    expect(sentEmail.text).toContain('https://example.com')
+    expect(sentEmail.text).not.toContain('/api/tracking/click/')
+  })
+
   it('handles individual email failures gracefully and continues sending', async () => {
     pb.collection('email_campaigns').getOne.mockResolvedValue({
       id: 'camp1',

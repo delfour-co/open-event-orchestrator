@@ -49,10 +49,15 @@ test.describe('Speaker Reimbursements', () => {
       await page.goto(reimbursementsUrl)
 
       await page.getByRole('button', { name: /New Request/ }).click()
-      await expect(page.getByRole('heading', { name: /New Reimbursement Request/i })).toBeVisible()
+      // Wait for dialog to open with animation
+      await expect(page.getByRole('heading', { name: /New Reimbursement Request/i })).toBeVisible({
+        timeout: 10000
+      })
 
-      // Select currency
-      await page.locator('#rb-currency').selectOption('EUR')
+      // Wait for dialog animation to complete
+      const currencySelect = page.locator('#rb-currency')
+      await expect(currencySelect).toBeVisible({ timeout: 5000 })
+      await currencySelect.selectOption('EUR')
 
       // Add notes
       await page.locator('#rb-notes').fill('E2E test request')
@@ -80,7 +85,8 @@ test.describe('Speaker Reimbursements', () => {
       const requestBtn = page.locator('button').filter({ hasText: /RB-/ }).first()
       if (await requestBtn.isVisible()) {
         await requestBtn.click()
-        await expect(page.locator('text=Expense Items')).toBeVisible()
+        // Wait for expansion animation
+        await expect(page.locator('text=Expense Items')).toBeVisible({ timeout: 10000 })
       }
     })
 

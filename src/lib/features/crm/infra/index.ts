@@ -29,3 +29,8 @@ export {
   type EmailCampaignRepository,
   type CampaignStatusUpdate
 } from './email-campaign-repository'
+
+export {
+  createEmailEventRepository,
+  type EmailEventRepository
+} from './email-event-repository'
