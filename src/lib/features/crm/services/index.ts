@@ -56,3 +56,6 @@ export type { AutomationService } from './automation-service'
 
 export { createEngagementMetricsService } from './engagement-metrics-service'
 export type { EngagementMetricsService } from './engagement-metrics-service'
+
+export { createEmailPreviewService } from './email-preview-service'
+export type { EmailPreviewService } from './email-preview-service'
