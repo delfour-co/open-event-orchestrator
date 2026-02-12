@@ -23,6 +23,9 @@ function mapToCfpSettings(record: Record<string, unknown>): CfpSettings {
     cfpCloseDate: record.cfpCloseDate ? new Date(record.cfpCloseDate as string) : undefined,
     introText: (record.introText as string) || undefined,
     maxSubmissionsPerSpeaker: (record.maxSubmissionsPerSpeaker as number) || 3,
+    maxSubmissionsPerCoSpeaker: (record.maxSubmissionsPerCoSpeaker as number) || undefined,
+    limitReachedMessage: (record.limitReachedMessage as string) || undefined,
+    allowLimitExceptionRequest: record.allowLimitExceptionRequest === true,
     requireAbstract: record.requireAbstract !== false,
     requireDescription: record.requireDescription === true,
     allowCoSpeakers: record.allowCoSpeakers !== false,
@@ -54,6 +57,9 @@ export function createCfpSettingsRepository(pb: PocketBase): CfpSettingsReposito
         cfpCloseDate: settings.cfpCloseDate?.toISOString() || null,
         introText: settings.introText || null,
         maxSubmissionsPerSpeaker: settings.maxSubmissionsPerSpeaker,
+        maxSubmissionsPerCoSpeaker: settings.maxSubmissionsPerCoSpeaker || null,
+        limitReachedMessage: settings.limitReachedMessage || null,
+        allowLimitExceptionRequest: settings.allowLimitExceptionRequest ?? false,
         requireAbstract: settings.requireAbstract,
         requireDescription: settings.requireDescription,
         allowCoSpeakers: settings.allowCoSpeakers,
@@ -78,6 +84,15 @@ export function createCfpSettingsRepository(pb: PocketBase): CfpSettingsReposito
       }
       if (settings.maxSubmissionsPerSpeaker !== undefined) {
         data.maxSubmissionsPerSpeaker = settings.maxSubmissionsPerSpeaker
+      }
+      if (settings.maxSubmissionsPerCoSpeaker !== undefined) {
+        data.maxSubmissionsPerCoSpeaker = settings.maxSubmissionsPerCoSpeaker || null
+      }
+      if (settings.limitReachedMessage !== undefined) {
+        data.limitReachedMessage = settings.limitReachedMessage || null
+      }
+      if (settings.allowLimitExceptionRequest !== undefined) {
+        data.allowLimitExceptionRequest = settings.allowLimitExceptionRequest
       }
       if (settings.requireAbstract !== undefined) {
         data.requireAbstract = settings.requireAbstract
@@ -112,6 +127,9 @@ export function createCfpSettingsRepository(pb: PocketBase): CfpSettingsReposito
       return this.create({
         editionId,
         maxSubmissionsPerSpeaker: settings.maxSubmissionsPerSpeaker ?? 3,
+        maxSubmissionsPerCoSpeaker: settings.maxSubmissionsPerCoSpeaker,
+        limitReachedMessage: settings.limitReachedMessage,
+        allowLimitExceptionRequest: settings.allowLimitExceptionRequest ?? false,
         requireAbstract: settings.requireAbstract ?? true,
         requireDescription: settings.requireDescription ?? false,
         allowCoSpeakers: settings.allowCoSpeakers ?? true,

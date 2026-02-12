@@ -21,6 +21,9 @@ export const cfpSettingsSchema = z.object({
   cfpCloseDate: z.date().optional(),
   introText: z.string().max(5000).optional(),
   maxSubmissionsPerSpeaker: z.number().int().min(1).max(50).default(3),
+  maxSubmissionsPerCoSpeaker: z.number().int().min(1).max(50).optional(),
+  limitReachedMessage: z.string().max(1000).optional(),
+  allowLimitExceptionRequest: z.boolean().default(false),
   requireAbstract: z.boolean().default(true),
   requireDescription: z.boolean().default(false),
   allowCoSpeakers: z.boolean().default(true),
@@ -54,6 +57,9 @@ export const DEFAULT_CFP_SETTINGS: Omit<CreateCfpSettings, 'editionId'> = {
   introText:
     'We are looking for speakers to share their knowledge and experience at our conference.',
   maxSubmissionsPerSpeaker: 3,
+  maxSubmissionsPerCoSpeaker: undefined,
+  limitReachedMessage: undefined,
+  allowLimitExceptionRequest: false,
   requireAbstract: true,
   requireDescription: false,
   allowCoSpeakers: true,
@@ -61,6 +67,12 @@ export const DEFAULT_CFP_SETTINGS: Omit<CreateCfpSettings, 'editionId'> = {
   revealSpeakersAfterDecision: true,
   reviewMode: 'stars' as ReviewMode
 }
+
+/**
+ * Default message when submission limit is reached
+ */
+export const DEFAULT_LIMIT_REACHED_MESSAGE =
+  'You have reached the maximum number of submissions allowed. Please contact the organizers if you need an exception.'
 
 /**
  * User roles for CFP access
@@ -261,4 +273,134 @@ export function getRemainingSubmissions(
   maxSubmissions: number
 ): number {
   return Math.max(0, maxSubmissions - currentSubmissions)
+}
+
+/**
+ * Submission limit validation result
+ */
+export interface SubmissionLimitValidation {
+  canSubmit: boolean
+  remainingAsSpeaker: number
+  remainingAsCoSpeaker: number | null
+  canRequestException: boolean
+  message?: string
+}
+
+/**
+ * Validate submission limits for a speaker
+ *
+ * @param settings - CFP settings
+ * @param talksAsSpeaker - Number of talks where user is the main speaker
+ * @param talksAsCoSpeaker - Number of talks where user is a co-speaker
+ * @returns Validation result with remaining submissions and message
+ */
+export function validateSubmissionLimits(
+  settings: Pick<
+    CfpSettings,
+    | 'maxSubmissionsPerSpeaker'
+    | 'maxSubmissionsPerCoSpeaker'
+    | 'limitReachedMessage'
+    | 'allowLimitExceptionRequest'
+  > | null,
+  talksAsSpeaker: number,
+  talksAsCoSpeaker: number
+): SubmissionLimitValidation {
+  if (!settings) {
+    return {
+      canSubmit: true,
+      remainingAsSpeaker: Number.POSITIVE_INFINITY,
+      remainingAsCoSpeaker: null,
+      canRequestException: false
+    }
+  }
+
+  const maxSpeaker = settings.maxSubmissionsPerSpeaker
+  const maxCoSpeaker = settings.maxSubmissionsPerCoSpeaker
+
+  const remainingAsSpeaker = getRemainingSubmissions(talksAsSpeaker, maxSpeaker)
+  const remainingAsCoSpeaker = maxCoSpeaker
+    ? getRemainingSubmissions(talksAsCoSpeaker, maxCoSpeaker)
+    : null
+
+  // Speaker can submit if they have remaining speaker submissions
+  // Co-speaker limit doesn't prevent new submissions, only being added as co-speaker
+  const canSubmit = remainingAsSpeaker > 0
+
+  // Determine if message should be shown
+  const message = !canSubmit
+    ? settings.limitReachedMessage || DEFAULT_LIMIT_REACHED_MESSAGE
+    : undefined
+
+  return {
+    canSubmit,
+    remainingAsSpeaker,
+    remainingAsCoSpeaker,
+    canRequestException: settings.allowLimitExceptionRequest && !canSubmit,
+    message
+  }
+}
+
+/**
+ * Check if a user can be added as co-speaker to a talk
+ */
+export function canBeAddedAsCoSpeaker(
+  settings: Pick<CfpSettings, 'maxSubmissionsPerCoSpeaker' | 'allowCoSpeakers'> | null,
+  currentCoSpeakerTalks: number
+): boolean {
+  if (!settings) {
+    return true
+  }
+
+  if (!settings.allowCoSpeakers) {
+    return false
+  }
+
+  if (!settings.maxSubmissionsPerCoSpeaker) {
+    return true
+  }
+
+  return currentCoSpeakerTalks < settings.maxSubmissionsPerCoSpeaker
+}
+
+/**
+ * Get message explaining co-speaker limit
+ */
+export function getCoSpeakerLimitMessage(
+  settings: Pick<CfpSettings, 'maxSubmissionsPerCoSpeaker'> | null,
+  currentCoSpeakerTalks: number
+): string | null {
+  if (!settings?.maxSubmissionsPerCoSpeaker) {
+    return null
+  }
+
+  if (currentCoSpeakerTalks >= settings.maxSubmissionsPerCoSpeaker) {
+    return `This speaker has reached the maximum of ${settings.maxSubmissionsPerCoSpeaker} talks as co-speaker.`
+  }
+
+  return null
+}
+
+/**
+ * Format submission count for display
+ */
+export function formatSubmissionCount(
+  settings: Pick<CfpSettings, 'maxSubmissionsPerSpeaker' | 'maxSubmissionsPerCoSpeaker'> | null,
+  talksAsSpeaker: number,
+  talksAsCoSpeaker: number
+): { asSpeaker: string; asCoSpeaker: string | null } {
+  if (!settings) {
+    return {
+      asSpeaker: `${talksAsSpeaker} submissions`,
+      asCoSpeaker: talksAsCoSpeaker > 0 ? `${talksAsCoSpeaker} as co-speaker` : null
+    }
+  }
+
+  const asSpeaker = `${talksAsSpeaker}/${settings.maxSubmissionsPerSpeaker} submissions`
+  const asCoSpeaker = settings.maxSubmissionsPerCoSpeaker
+    ? `${talksAsCoSpeaker}/${settings.maxSubmissionsPerCoSpeaker} as co-speaker`
+    : talksAsCoSpeaker > 0
+      ? `${talksAsCoSpeaker} as co-speaker`
+      : null
+
+  return { asSpeaker, asCoSpeaker }
 }

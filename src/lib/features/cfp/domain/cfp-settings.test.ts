@@ -6,15 +6,20 @@ import { describe, expect, it } from 'vitest'
 import {
   type CfpSettings,
   type CfpUserRole,
+  DEFAULT_LIMIT_REACHED_MESSAGE,
+  canBeAddedAsCoSpeaker,
   canViewSpeakerInfo,
+  formatSubmissionCount,
   getAnonymousReviewMessage,
   getCfpStatus,
   getCfpStatusDisplay,
+  getCoSpeakerLimitMessage,
   getRemainingSubmissions,
   hasReachedSubmissionLimit,
   isCfpOpen,
   isFinalStatus,
-  validateCfpDates
+  validateCfpDates,
+  validateSubmissionLimits
 } from './cfp-settings'
 
 // Test fixtures
@@ -342,5 +347,247 @@ describe('getRemainingSubmissions', () => {
 
   it('should return max when no submissions', () => {
     expect(getRemainingSubmissions(0, 3)).toBe(3)
+  })
+})
+
+describe('validateSubmissionLimits', () => {
+  const createLimitSettings = (
+    overrides?: Partial<
+      Pick<
+        CfpSettings,
+        | 'maxSubmissionsPerSpeaker'
+        | 'maxSubmissionsPerCoSpeaker'
+        | 'limitReachedMessage'
+        | 'allowLimitExceptionRequest'
+      >
+    >
+  ) => ({
+    maxSubmissionsPerSpeaker: 3,
+    maxSubmissionsPerCoSpeaker: undefined,
+    limitReachedMessage: undefined,
+    allowLimitExceptionRequest: false,
+    ...overrides
+  })
+
+  describe('when settings is null', () => {
+    it('should allow unlimited submissions', () => {
+      const result = validateSubmissionLimits(null, 10, 10)
+
+      expect(result.canSubmit).toBe(true)
+      expect(result.remainingAsSpeaker).toBe(Number.POSITIVE_INFINITY)
+      expect(result.remainingAsCoSpeaker).toBeNull()
+      expect(result.canRequestException).toBe(false)
+    })
+  })
+
+  describe('speaker submissions', () => {
+    it('should allow submission when under limit', () => {
+      const settings = createLimitSettings()
+      const result = validateSubmissionLimits(settings, 2, 0)
+
+      expect(result.canSubmit).toBe(true)
+      expect(result.remainingAsSpeaker).toBe(1)
+      expect(result.message).toBeUndefined()
+    })
+
+    it('should block submission when at limit', () => {
+      const settings = createLimitSettings()
+      const result = validateSubmissionLimits(settings, 3, 0)
+
+      expect(result.canSubmit).toBe(false)
+      expect(result.remainingAsSpeaker).toBe(0)
+      expect(result.message).toBe(DEFAULT_LIMIT_REACHED_MESSAGE)
+    })
+
+    it('should use custom message when provided', () => {
+      const settings = createLimitSettings({
+        limitReachedMessage: 'Custom limit message'
+      })
+      const result = validateSubmissionLimits(settings, 3, 0)
+
+      expect(result.canSubmit).toBe(false)
+      expect(result.message).toBe('Custom limit message')
+    })
+  })
+
+  describe('co-speaker submissions', () => {
+    it('should return null for co-speaker remaining when no limit set', () => {
+      const settings = createLimitSettings()
+      const result = validateSubmissionLimits(settings, 0, 5)
+
+      expect(result.remainingAsCoSpeaker).toBeNull()
+    })
+
+    it('should track co-speaker remaining when limit set', () => {
+      const settings = createLimitSettings({
+        maxSubmissionsPerCoSpeaker: 5
+      })
+      const result = validateSubmissionLimits(settings, 0, 3)
+
+      expect(result.remainingAsCoSpeaker).toBe(2)
+    })
+
+    it('should allow speaker submission even when co-speaker limit reached', () => {
+      const settings = createLimitSettings({
+        maxSubmissionsPerCoSpeaker: 2
+      })
+      const result = validateSubmissionLimits(settings, 1, 5)
+
+      expect(result.canSubmit).toBe(true)
+      expect(result.remainingAsSpeaker).toBe(2)
+      expect(result.remainingAsCoSpeaker).toBe(0)
+    })
+  })
+
+  describe('exception requests', () => {
+    it('should not allow exception request when enabled but can still submit', () => {
+      const settings = createLimitSettings({
+        allowLimitExceptionRequest: true
+      })
+      const result = validateSubmissionLimits(settings, 2, 0)
+
+      expect(result.canSubmit).toBe(true)
+      expect(result.canRequestException).toBe(false)
+    })
+
+    it('should allow exception request when enabled and limit reached', () => {
+      const settings = createLimitSettings({
+        allowLimitExceptionRequest: true
+      })
+      const result = validateSubmissionLimits(settings, 3, 0)
+
+      expect(result.canSubmit).toBe(false)
+      expect(result.canRequestException).toBe(true)
+    })
+
+    it('should not allow exception request when disabled', () => {
+      const settings = createLimitSettings({
+        allowLimitExceptionRequest: false
+      })
+      const result = validateSubmissionLimits(settings, 3, 0)
+
+      expect(result.canSubmit).toBe(false)
+      expect(result.canRequestException).toBe(false)
+    })
+  })
+})
+
+describe('canBeAddedAsCoSpeaker', () => {
+  it('should return true when settings is null', () => {
+    expect(canBeAddedAsCoSpeaker(null, 5)).toBe(true)
+  })
+
+  it('should return false when co-speakers not allowed', () => {
+    const settings = { allowCoSpeakers: false, maxSubmissionsPerCoSpeaker: undefined }
+    expect(canBeAddedAsCoSpeaker(settings, 0)).toBe(false)
+  })
+
+  it('should return true when no co-speaker limit set', () => {
+    const settings = { allowCoSpeakers: true, maxSubmissionsPerCoSpeaker: undefined }
+    expect(canBeAddedAsCoSpeaker(settings, 100)).toBe(true)
+  })
+
+  it('should return true when under co-speaker limit', () => {
+    const settings = { allowCoSpeakers: true, maxSubmissionsPerCoSpeaker: 5 }
+    expect(canBeAddedAsCoSpeaker(settings, 3)).toBe(true)
+  })
+
+  it('should return false when at co-speaker limit', () => {
+    const settings = { allowCoSpeakers: true, maxSubmissionsPerCoSpeaker: 5 }
+    expect(canBeAddedAsCoSpeaker(settings, 5)).toBe(false)
+  })
+
+  it('should return false when over co-speaker limit', () => {
+    const settings = { allowCoSpeakers: true, maxSubmissionsPerCoSpeaker: 5 }
+    expect(canBeAddedAsCoSpeaker(settings, 7)).toBe(false)
+  })
+})
+
+describe('getCoSpeakerLimitMessage', () => {
+  it('should return null when settings is null', () => {
+    expect(getCoSpeakerLimitMessage(null, 5)).toBeNull()
+  })
+
+  it('should return null when no co-speaker limit', () => {
+    const settings = { maxSubmissionsPerCoSpeaker: undefined }
+    expect(getCoSpeakerLimitMessage(settings, 5)).toBeNull()
+  })
+
+  it('should return null when under limit', () => {
+    const settings = { maxSubmissionsPerCoSpeaker: 5 }
+    expect(getCoSpeakerLimitMessage(settings, 3)).toBeNull()
+  })
+
+  it('should return message when at limit', () => {
+    const settings = { maxSubmissionsPerCoSpeaker: 5 }
+    const message = getCoSpeakerLimitMessage(settings, 5)
+
+    expect(message).toContain('maximum of 5 talks')
+    expect(message).toContain('co-speaker')
+  })
+
+  it('should return message when over limit', () => {
+    const settings = { maxSubmissionsPerCoSpeaker: 3 }
+    const message = getCoSpeakerLimitMessage(settings, 5)
+
+    expect(message).toContain('maximum of 3 talks')
+  })
+})
+
+describe('formatSubmissionCount', () => {
+  it('should format without settings', () => {
+    const result = formatSubmissionCount(null, 2, 1)
+
+    expect(result.asSpeaker).toBe('2 submissions')
+    expect(result.asCoSpeaker).toBe('1 as co-speaker')
+  })
+
+  it('should format without settings and no co-speaker talks', () => {
+    const result = formatSubmissionCount(null, 2, 0)
+
+    expect(result.asSpeaker).toBe('2 submissions')
+    expect(result.asCoSpeaker).toBeNull()
+  })
+
+  it('should format with speaker limit only', () => {
+    const settings = {
+      maxSubmissionsPerSpeaker: 5,
+      maxSubmissionsPerCoSpeaker: undefined
+    }
+    const result = formatSubmissionCount(settings, 2, 1)
+
+    expect(result.asSpeaker).toBe('2/5 submissions')
+    expect(result.asCoSpeaker).toBe('1 as co-speaker')
+  })
+
+  it('should format with both limits', () => {
+    const settings = {
+      maxSubmissionsPerSpeaker: 5,
+      maxSubmissionsPerCoSpeaker: 3
+    }
+    const result = formatSubmissionCount(settings, 2, 1)
+
+    expect(result.asSpeaker).toBe('2/5 submissions')
+    expect(result.asCoSpeaker).toBe('1/3 as co-speaker')
+  })
+
+  it('should return null for co-speaker when no talks and no limit', () => {
+    const settings = {
+      maxSubmissionsPerSpeaker: 5,
+      maxSubmissionsPerCoSpeaker: undefined
+    }
+    const result = formatSubmissionCount(settings, 2, 0)
+
+    expect(result.asCoSpeaker).toBeNull()
+  })
+
+  it('should format with limit when no co-speaker talks but limit set', () => {
+    const settings = {
+      maxSubmissionsPerSpeaker: 5,
+      maxSubmissionsPerCoSpeaker: 3
+    }
+    const result = formatSubmissionCount(settings, 2, 0)
+
+    expect(result.asCoSpeaker).toBe('0/3 as co-speaker')
   })
 })
