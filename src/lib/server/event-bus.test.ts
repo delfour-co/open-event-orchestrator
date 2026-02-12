@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   APP_EVENT_TYPES,
   type AppEvent,
-  type AppEventType,
   EventBus,
   type OrderCreatedPayload,
   type TalkSubmittedPayload,
@@ -160,9 +159,27 @@ describe('EventBus', () => {
     it('should execute handlers by priority', async () => {
       const order: string[] = []
 
-      bus.subscribe('order.created', async () => order.push('low'), { priority: 0 })
-      bus.subscribe('order.created', async () => order.push('high'), { priority: 10 })
-      bus.subscribe('order.created', async () => order.push('medium'), { priority: 5 })
+      bus.subscribe(
+        'order.created',
+        async () => {
+          order.push('low')
+        },
+        { priority: 0 }
+      )
+      bus.subscribe(
+        'order.created',
+        async () => {
+          order.push('high')
+        },
+        { priority: 10 }
+      )
+      bus.subscribe(
+        'order.created',
+        async () => {
+          order.push('medium')
+        },
+        { priority: 5 }
+      )
 
       const payload: OrderCreatedPayload = {
         orderId: 'order_123',

@@ -63,9 +63,7 @@ export const createFeedbackTemplateSchema = feedbackTemplateSchema.omit({
 
 export type CreateFeedbackTemplate = z.infer<typeof createFeedbackTemplateSchema>
 
-export const updateFeedbackTemplateSchema = createFeedbackTemplateSchema.partial().extend({
-  id: z.string()
-})
+export const updateFeedbackTemplateSchema = createFeedbackTemplateSchema.partial()
 
 export type UpdateFeedbackTemplate = z.infer<typeof updateFeedbackTemplateSchema>
 
@@ -97,9 +95,7 @@ export const createSpeakerFeedbackSchema = speakerFeedbackSchema.omit({
 
 export type CreateSpeakerFeedback = z.infer<typeof createSpeakerFeedbackSchema>
 
-export const updateSpeakerFeedbackSchema = createSpeakerFeedbackSchema.partial().extend({
-  id: z.string()
-})
+export const updateSpeakerFeedbackSchema = createSpeakerFeedbackSchema.partial()
 
 export type UpdateSpeakerFeedback = z.infer<typeof updateSpeakerFeedbackSchema>
 

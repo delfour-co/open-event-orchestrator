@@ -4,10 +4,7 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-  type ExportFilter,
   type ExportSpeakerInfo,
-  type ImageFormat,
-  type ImageSize,
   type PhotoExportEntry,
   type PhotoExportOptions,
   createExportEntry,

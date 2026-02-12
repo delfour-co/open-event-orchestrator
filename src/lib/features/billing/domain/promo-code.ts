@@ -168,7 +168,7 @@ export function isPromoCodeValid(code: PromoCode): boolean {
 export function validatePromoCode(
   code: PromoCode | null,
   orderAmount: number,
-  email: string,
+  _email: string,
   ticketTypeIds: string[],
   userUsageCount: number
 ): PromoCodeValidation {
@@ -253,7 +253,7 @@ export function calculateDiscount(
 export function calculateOrderDiscount(
   code: PromoCode,
   orderAmount: number,
-  ticketTypeIds: string[],
+  _ticketTypeIds: string[],
   ticketAmounts: Record<string, number>
 ): DiscountCalculation {
   let applicableAmount = orderAmount

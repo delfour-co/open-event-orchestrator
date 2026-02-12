@@ -147,7 +147,7 @@ export function getParticipationTypes(
  */
 export function buildParticipationDescription(
   participation: ContactEventParticipation,
-  eventName: string,
+  _eventName: string,
   editionName: string
 ): string {
   const baseLabel = PARTICIPATION_TYPE_LABELS[participation.participationType]

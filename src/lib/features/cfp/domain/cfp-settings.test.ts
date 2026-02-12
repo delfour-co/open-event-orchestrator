@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   type CfpSettings,
-  type CfpUserRole,
   DEFAULT_LIMIT_REACHED_MESSAGE,
   canBeAddedAsCoSpeaker,
   canViewSpeakerInfo,

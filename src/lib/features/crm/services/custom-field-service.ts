@@ -7,7 +7,6 @@
 import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import {
-  type ContactCustomValue,
   type CreateCustomField,
   type CustomField,
   type CustomFieldOptions,
@@ -160,7 +159,6 @@ export function createCustomFieldService(pb: PocketBase): CustomFieldService {
     },
 
     async setValues(contactId: string, values: Record<string, string>): Promise<void> {
-      const existingValues = await this.getValues(contactId)
       const existingRecords = await pb.collection('contact_custom_values').getFullList({
         filter: safeFilter`contactId = ${contactId}`
       })

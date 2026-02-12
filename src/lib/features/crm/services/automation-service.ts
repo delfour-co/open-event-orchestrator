@@ -23,7 +23,6 @@ import {
   type UpdateAutomation,
   type UpdateAutomationStep,
   type WaitConfig,
-  buildStepSequence,
   calculateWaitEndTime,
   canActivateAutomation,
   doesTriggerMatch,
@@ -459,7 +458,7 @@ export function createAutomationService(pb: PocketBase): AutomationService {
       return getStepRecords(automationId)
     },
 
-    async reorderSteps(automationId: string, stepIds: string[]): Promise<void> {
+    async reorderSteps(_automationId: string, stepIds: string[]): Promise<void> {
       await Promise.all(
         stepIds.map((id, index) =>
           pb.collection('automation_steps').update(id, { position: index })

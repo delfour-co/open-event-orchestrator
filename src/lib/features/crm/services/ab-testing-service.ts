@@ -15,7 +15,6 @@ import {
   type CreateAbTestVariant,
   type UpdateAbTestVariant,
   type VariantName,
-  type VariantStats,
   type WinnerCriteria,
   buildVariantStats,
   canStartTest,

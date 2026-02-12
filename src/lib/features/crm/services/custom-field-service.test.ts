@@ -78,7 +78,7 @@ describe('CustomFieldService', () => {
 
   describe('updateField', () => {
     it('should update a custom field', async () => {
-      const result = await service.updateField('field-1', {
+      await service.updateField('field-1', {
         name: 'Updated Name',
         isRequired: false
       })

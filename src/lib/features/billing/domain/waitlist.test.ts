@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   type WaitlistEntry,
-  type WaitlistStatus,
   buildNotificationContext,
   calculatePurchaseWindowEnd,
   calculateWaitlistStats,

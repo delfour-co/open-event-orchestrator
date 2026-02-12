@@ -4,7 +4,6 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-  type CalendarMethod,
   type SessionCalendarInfo,
   type SpeakerCalendarInfo,
   buildEventDescription,

@@ -74,9 +74,9 @@ describe('CalendarInviteService', () => {
           created: '2025-06-01T10:00:00Z',
           updated: '2025-06-01T10:00:00Z'
         }),
-        update: vi.fn().mockImplementation((id, data) =>
+        update: vi.fn().mockImplementation((_id, data) =>
           Promise.resolve({
-            id,
+            id: 'invite-001',
             sessionId: 'session-123',
             speakerId: 'speaker-789',
             speakerEmail: 'john@example.com',
@@ -126,7 +126,7 @@ describe('CalendarInviteService', () => {
       mockPb = {
         collection: vi.fn(() => ({
           getFirstListItem: vi.fn().mockResolvedValue(existingRecord),
-          update: vi.fn().mockImplementation((id, data) =>
+          update: vi.fn().mockImplementation((_id, data) =>
             Promise.resolve({
               ...existingRecord,
               method: data.method,
@@ -166,7 +166,7 @@ describe('CalendarInviteService', () => {
       mockPb = {
         collection: vi.fn(() => ({
           getFirstListItem: vi.fn().mockResolvedValue(existingRecord),
-          update: vi.fn().mockImplementation((id, data) =>
+          update: vi.fn().mockImplementation((_id, data) =>
             Promise.resolve({
               ...existingRecord,
               method: data.method,
@@ -369,9 +369,9 @@ describe('CalendarInviteService', () => {
             created: '2025-06-01T10:00:00Z',
             updated: '2025-06-01T10:00:00Z'
           }),
-          update: vi.fn().mockImplementation((id, data) =>
+          update: vi.fn().mockImplementation((_id, data) =>
             Promise.resolve({
-              id,
+              id: 'invite-001',
               sessionId: 'session-123',
               speakerId: 'speaker-789',
               speakerEmail: 'john@example.com',

@@ -215,22 +215,25 @@ describe('contact-deduplication', () => {
     })
 
     it('should respect custom threshold', () => {
+      // With very different names and different email domains, default threshold should return false
       const resultDefault = isPotentialDuplicate(
-        'john@company1.com',
-        'john@company2.com',
-        'John',
-        'Smith',
-        'Jon',
-        'Smyth'
+        'alice@company1.com',
+        'bob@company2.com',
+        'Alice',
+        'Jones',
+        'Bob',
+        'Williams'
       )
+      expect(resultDefault).toBe(false)
 
+      // With similar email local parts and similar names, a low threshold should return true
       const resultLowThreshold = isPotentialDuplicate(
-        'john@company1.com',
-        'john@company2.com',
-        'John',
-        'Smith',
-        'Jon',
-        'Smyth',
+        'alice@company1.com',
+        'alice@company2.com',
+        'Alice',
+        'Jones',
+        'Alicia',
+        'Johnson',
         30
       )
 

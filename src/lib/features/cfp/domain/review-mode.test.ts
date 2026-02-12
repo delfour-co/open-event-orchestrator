@@ -4,10 +4,7 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-  type ComparativeRank,
   type MultiModeReview,
-  type ReviewMode,
-  type StarRating,
   calculateAverageComparativeRank,
   calculateAverageStarRating,
   calculateUnifiedScore,

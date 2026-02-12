@@ -206,7 +206,7 @@ export function isPotentialDuplicate(
   lastName1: string,
   firstName2: string,
   lastName2: string,
-  threshold = CONFIDENCE_THRESHOLDS.medium
+  threshold: number = CONFIDENCE_THRESHOLDS.medium
 ): boolean {
   const { score } = calculateDuplicateConfidence(
     email1,

@@ -12,8 +12,7 @@ import {
   type ContactTimelineEntry,
   type EventParticipationType,
   buildCrossEventSummary,
-  buildParticipationDescription,
-  sortParticipationsByDate
+  buildParticipationDescription
 } from '../domain/contact-history'
 
 export interface ContactHistoryService {

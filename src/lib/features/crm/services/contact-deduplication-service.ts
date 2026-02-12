@@ -292,7 +292,6 @@ export function createContactDeduplicationService(pb: PocketBase): ContactDedupl
         }
 
         const mergedData = history.mergedData as Record<string, unknown>
-        const originalId = history.mergedContactId as string
 
         const recreatedContact = await pb.collection('contacts').create({
           ...mergedData,

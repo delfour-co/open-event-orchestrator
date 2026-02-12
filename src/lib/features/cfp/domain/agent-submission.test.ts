@@ -5,8 +5,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   type AgentSubmission,
-  type AgentValidationStatus,
-  type SubmissionOrigin,
   buildAgentNotificationContext,
   calculateAgentSubmissionStats,
   calculateValidationExpiry,

@@ -196,7 +196,7 @@ describe('AutomationService', () => {
         service.createStep({
           automationId: 'auto-1',
           type: 'send_email',
-          config: {}, // Missing templateId
+          config: {} as never, // Missing templateId - intentionally invalid for test
           position: 0
         })
       ).rejects.toThrow('Template ID is required')
@@ -207,7 +207,7 @@ describe('AutomationService', () => {
         service.createStep({
           automationId: 'auto-1',
           type: 'wait',
-          config: { duration: 5 }, // Missing unit
+          config: { duration: 5 } as never, // Missing unit - intentionally invalid for test
           position: 0
         })
       ).rejects.toThrow('Duration and unit are required')

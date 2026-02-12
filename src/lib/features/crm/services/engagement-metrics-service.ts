@@ -24,8 +24,7 @@ import {
   calculateEngagementRate,
   calculateGrowthRate,
   calculateSourceDistribution,
-  getDateRangeForPeriod,
-  getPreviousPeriod
+  getDateRangeForPeriod
 } from '../domain/engagement-metrics'
 
 export interface EngagementMetricsService {
@@ -87,7 +86,6 @@ export function createEngagementMetricsService(pb: PocketBase): EngagementMetric
       let previousEmailMetrics: EmailMetrics | undefined
 
       if (period !== 'all_time') {
-        const previousRange = getPreviousPeriod(period)
         ;[previousKpis, previousEmailMetrics] = await Promise.all([
           this.getKpis(eventId, period),
           this.getEmailMetrics(eventId, period)
@@ -111,7 +109,6 @@ export function createEngagementMetricsService(pb: PocketBase): EngagementMetric
 
     async getKpis(eventId: string, period: MetricPeriod): Promise<DashboardKpi> {
       const { start, end } = getDateRangeForPeriod(period)
-      const previousRange = getPreviousPeriod(period)
 
       const totalContacts = await countContacts(eventId)
       const previousTotal = await countContacts(
@@ -168,7 +165,6 @@ export function createEngagementMetricsService(pb: PocketBase): EngagementMetric
       }
 
       let currentDate = new Date(start)
-      let previousTotal = 0
 
       while (currentDate <= end) {
         const nextDate = new Date(currentDate)
@@ -191,7 +187,6 @@ export function createEngagementMetricsService(pb: PocketBase): EngagementMetric
           removedContacts: 0
         })
 
-        previousTotal = totalAtDate
         currentDate = nextDate
       }
 

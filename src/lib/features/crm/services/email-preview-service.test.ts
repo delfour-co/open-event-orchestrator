@@ -1,4 +1,5 @@
 import type PocketBase from 'pocketbase'
+import type { RecordModel } from 'pocketbase'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createEmailPreviewService } from './email-preview-service'
 
@@ -74,13 +75,16 @@ describe('email-preview-service', () => {
         email: 'john@example.com'
       }
 
-      vi.mocked(mockPb.collection).mockImplementation((name) => ({
-        getOne: vi.fn().mockImplementation(() => {
-          if (name === 'email_campaigns') return Promise.resolve(mockCampaign)
-          if (name === 'contacts') return Promise.resolve(mockContact)
-          return Promise.reject(new Error('Unknown collection'))
-        })
-      })) as never
+      vi.mocked(mockPb.collection).mockImplementation(
+        (name) =>
+          ({
+            getOne: vi.fn().mockImplementation(() => {
+              if (name === 'email_campaigns') return Promise.resolve(mockCampaign)
+              if (name === 'contacts') return Promise.resolve(mockContact)
+              return Promise.reject(new Error('Unknown collection'))
+            })
+          }) as never
+      )
 
       const service = createEmailPreviewService(mockPb)
       const preview = await service.buildCampaignPreview('campaign-1', 'contact-1')
@@ -113,13 +117,16 @@ describe('email-preview-service', () => {
   describe('buildContactData', () => {
     it('should extract contact fields', () => {
       const contact = {
+        id: 'contact-1',
+        collectionId: 'contacts',
+        collectionName: 'contacts',
         firstName: 'Jane',
         lastName: 'Smith',
         email: 'jane@example.com',
         company: 'Acme Inc',
         jobTitle: 'Developer',
         phone: '+1234567890'
-      }
+      } as RecordModel
 
       const service = createEmailPreviewService(mockPb)
       const data = service.buildContactData(contact)
@@ -134,8 +141,11 @@ describe('email-preview-service', () => {
 
     it('should handle missing fields', () => {
       const contact = {
+        id: 'contact-2',
+        collectionId: 'contacts',
+        collectionName: 'contacts',
         email: 'test@example.com'
-      }
+      } as RecordModel
 
       const service = createEmailPreviewService(mockPb)
       const data = service.buildContactData(contact)
@@ -160,10 +170,13 @@ describe('email-preview-service', () => {
 
       const memberships = { totalItems: 100, items: [] }
 
-      vi.mocked(mockPb.collection).mockImplementation((name) => ({
-        getOne: vi.fn().mockResolvedValue(mockCampaign),
-        getList: vi.fn().mockResolvedValue(memberships)
-      })) as never
+      vi.mocked(mockPb.collection).mockImplementation(
+        (_name) =>
+          ({
+            getOne: vi.fn().mockResolvedValue(mockCampaign),
+            getList: vi.fn().mockResolvedValue(memberships)
+          }) as never
+      )
 
       const service = createEmailPreviewService(mockPb)
       const result = await service.validateCampaign('campaign-1')
@@ -324,13 +337,16 @@ describe('email-preview-service', () => {
         ]
       }
 
-      vi.mocked(mockPb.collection).mockImplementation((name) => ({
-        getList: vi.fn().mockImplementation(() => {
-          if (name === 'segment_memberships') return Promise.resolve(mockMemberships)
-          if (name === 'contacts') return Promise.resolve(mockContacts)
-          return Promise.reject(new Error('Unknown'))
-        })
-      })) as never
+      vi.mocked(mockPb.collection).mockImplementation(
+        (name) =>
+          ({
+            getList: vi.fn().mockImplementation(() => {
+              if (name === 'segment_memberships') return Promise.resolve(mockMemberships)
+              if (name === 'contacts') return Promise.resolve(mockContacts)
+              return Promise.reject(new Error('Unknown'))
+            })
+          }) as never
+      )
 
       const service = createEmailPreviewService(mockPb)
       const contacts = await service.getSampleContacts('segment-1', 5)
@@ -365,18 +381,21 @@ describe('email-preview-service', () => {
 
       let campaignFetched = false
 
-      vi.mocked(mockPb.collection).mockImplementation((name) => ({
-        getOne: vi.fn().mockImplementation((id: string) => {
-          if (name === 'email_campaigns' && !campaignFetched) {
-            campaignFetched = true
-            return Promise.resolve(mockCampaign)
-          }
-          if (name === 'contacts') {
-            return Promise.resolve(contacts.find((c) => c.id === id))
-          }
-          return Promise.reject(new Error('Unknown'))
-        })
-      })) as never
+      vi.mocked(mockPb.collection).mockImplementation(
+        (name) =>
+          ({
+            getOne: vi.fn().mockImplementation((id: string) => {
+              if (name === 'email_campaigns' && !campaignFetched) {
+                campaignFetched = true
+                return Promise.resolve(mockCampaign)
+              }
+              if (name === 'contacts') {
+                return Promise.resolve(contacts.find((c) => c.id === id))
+              }
+              return Promise.reject(new Error('Unknown'))
+            })
+          }) as never
+      )
 
       const service = createEmailPreviewService(mockPb)
       const previews = await service.buildMultiContactPreview('campaign-1', ['c1', 'c2'])

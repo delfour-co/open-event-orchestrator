@@ -410,7 +410,7 @@ export function validatePreSend(
   const textToImageRatio = calculateTextToImageRatio(htmlContent || '')
   const deliverabilityScore = calculateDeliverabilityScore(
     !!subject?.trim(),
-    hasUnsubscribe,
+    !!hasUnsubscribe,
     !!textContent?.trim(),
     unresolvedVariables,
     spamTriggers.length,

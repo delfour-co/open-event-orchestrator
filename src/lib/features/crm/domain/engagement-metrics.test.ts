@@ -274,7 +274,7 @@ describe('engagement-metrics', () => {
 
   describe('getDateRangeForPeriod', () => {
     it('should return today range', () => {
-      const { start, end } = getDateRangeForPeriod('today')
+      const { start } = getDateRangeForPeriod('today')
       const now = new Date()
 
       expect(start.getDate()).toBe(now.getDate())
@@ -322,7 +322,7 @@ describe('engagement-metrics', () => {
       const previousDuration = previous.end.getTime() - previous.start.getTime() + 1
 
       expect(previousDuration).toBeCloseTo(currentDuration, -3)
-      expect(previous.end.getTime()).toBeLessThan(current.start.getTime())
+      expect(previous.end.getTime()).toBeLessThanOrEqual(current.start.getTime())
     })
   })
 

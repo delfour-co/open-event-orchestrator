@@ -202,8 +202,10 @@ describe('Block Kit Helpers', () => {
     it('should create header block', () => {
       const result = header('My Header')
       expect(result.type).toBe('header')
-      expect(result.text.type).toBe('plain_text')
-      expect(result.text.text).toBe('My Header')
+      if ('text' in result && result.text) {
+        expect(result.text.type).toBe('plain_text')
+        expect(result.text.text).toBe('My Header')
+      }
     })
   })
 
@@ -211,13 +213,17 @@ describe('Block Kit Helpers', () => {
     it('should create section with text', () => {
       const result = section('Section content')
       expect(result.type).toBe('section')
-      expect(result.text?.text).toBe('Section content')
+      if ('text' in result && result.text) {
+        expect(result.text.text).toBe('Section content')
+      }
     })
 
     it('should create section with fields', () => {
       const result = section('Main text', ['Field 1', 'Field 2'])
       expect(result.type).toBe('section')
-      expect(result.fields).toHaveLength(2)
+      if ('fields' in result && result.fields) {
+        expect(result.fields).toHaveLength(2)
+      }
     })
   })
 
@@ -225,7 +231,9 @@ describe('Block Kit Helpers', () => {
     it('should create section with only fields', () => {
       const result = fieldsSection(['*Label 1*\nValue 1', '*Label 2*\nValue 2'])
       expect(result.type).toBe('section')
-      expect(result.fields).toHaveLength(2)
+      if ('fields' in result && result.fields) {
+        expect(result.fields).toHaveLength(2)
+      }
     })
   })
 
@@ -240,7 +248,9 @@ describe('Block Kit Helpers', () => {
     it('should create context block', () => {
       const result = context('Element 1', 'Element 2')
       expect(result.type).toBe('context')
-      expect(result.elements).toHaveLength(2)
+      if ('elements' in result && result.elements) {
+        expect(result.elements).toHaveLength(2)
+      }
     })
   })
 

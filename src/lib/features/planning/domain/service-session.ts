@@ -74,9 +74,7 @@ export const createServiceSessionSchema = serviceSessionSchema.omit({
 
 export type CreateServiceSession = z.infer<typeof createServiceSessionSchema>
 
-export const updateServiceSessionSchema = createServiceSessionSchema.partial().extend({
-  id: z.string()
-})
+export const updateServiceSessionSchema = createServiceSessionSchema.partial()
 
 export type UpdateServiceSession = z.infer<typeof updateServiceSessionSchema>
 

@@ -6,8 +6,6 @@
 
 import type PocketBase from 'pocketbase'
 import type { RecordModel } from 'pocketbase'
-import type { Contact } from '../domain/contact'
-import type { EmailCampaign } from '../domain/email-campaign'
 import {
   type EmailPreviewData,
   type PreSendValidation,
@@ -26,12 +24,6 @@ interface SendTestEmailOptions {
   contactId?: string
   subject?: string
   htmlContent?: string
-}
-
-interface PreviewContext {
-  campaign?: EmailCampaign
-  contact?: Contact
-  customData?: Record<string, string>
 }
 
 export const createEmailPreviewService = (

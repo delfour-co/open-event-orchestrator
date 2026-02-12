@@ -154,17 +154,6 @@ export const createConflictDetectionService = (pb: PocketBase): ConflictDetectio
     return expandedSessions
   }
 
-  /**
-   * Fetch a single expanded session
-   */
-  async function fetchExpandedSession(
-    editionId: string,
-    sessionId: string
-  ): Promise<ExpandedSession | null> {
-    const sessions = await fetchExpandedSessions(editionId)
-    return sessions.find((s) => s.id === sessionId) || null
-  }
-
   return {
     async scanEdition(
       editionId: string,

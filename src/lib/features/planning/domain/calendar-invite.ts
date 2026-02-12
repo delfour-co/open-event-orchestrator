@@ -155,7 +155,7 @@ export function buildLocationString(
  */
 export function buildEventDescription(
   session: SessionCalendarInfo,
-  speaker: SpeakerCalendarInfo
+  _speaker: SpeakerCalendarInfo
 ): string {
   const lines: string[] = []
 

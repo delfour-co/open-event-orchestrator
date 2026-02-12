@@ -6,9 +6,7 @@ import { describe, expect, it } from 'vitest'
 import {
   type ParticipantStreamingLink,
   type SessionFormat,
-  type StreamingAccessLevel,
   type StreamingConfig,
-  type StreamingPlatform,
   canAccessStream,
   createStreamingConfigFromUrl,
   detectPlatformFromUrl,
