@@ -93,3 +93,40 @@ export {
   type ConflictScanResult,
   type ConflictScanOptions
 } from './schedule-conflict'
+
+// Service Session
+export {
+  serviceSessionTypeSchema,
+  serviceSessionIconSchema,
+  serviceSessionSchema,
+  createServiceSessionSchema,
+  updateServiceSessionSchema,
+  SERVICE_SESSION_TEMPLATES,
+  validateServiceSession,
+  createServiceSession as createServiceSessionData,
+  getServiceSessionTemplate,
+  createFromTemplate,
+  calculateEndTime,
+  calculateDuration,
+  isGlobalSession,
+  isPublicSession,
+  getServiceSessionTypeLabel,
+  getServiceSessionIcon,
+  getServiceSessionColor,
+  serviceSessionsOverlap,
+  sessionOverlapsTimeRange,
+  filterPublicSessions,
+  filterGlobalSessions,
+  filterSessionsByRoom,
+  sortServiceSessions,
+  groupSessionsByDate,
+  getAvailableServiceTypes,
+  formatTimeRange,
+  formatDuration,
+  type ServiceSessionType,
+  type ServiceSessionIcon,
+  type ServiceSession,
+  type CreateServiceSession,
+  type UpdateServiceSession,
+  type ServiceSessionTemplate
+} from './service-session'
