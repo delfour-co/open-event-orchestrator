@@ -53,3 +53,6 @@ export type { AbTestingService } from './ab-testing-service'
 
 export { createAutomationService } from './automation-service'
 export type { AutomationService } from './automation-service'
+
+export { createEngagementMetricsService } from './engagement-metrics-service'
+export type { EngagementMetricsService } from './engagement-metrics-service'
