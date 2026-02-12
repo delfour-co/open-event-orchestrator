@@ -158,3 +158,42 @@ export {
   type CalendarInviteRecord,
   type CreateCalendarInviteRecord
 } from './calendar-invite'
+
+// iCal Export (Public Schedule)
+export {
+  icalExportFormatSchema,
+  formatIcalDateTimeWithTz,
+  formatIcalDateTimeUtc,
+  formatIcalDateOnly,
+  escapeIcalText,
+  foldIcalLine,
+  generateSessionUid,
+  buildIcalLocation,
+  buildSessionDescription,
+  generateSessionEvent,
+  generateTimezoneComponent,
+  generateIcalCalendar,
+  exportFullSchedule,
+  exportTrackSchedule,
+  exportDaySchedule,
+  exportSingleSession,
+  exportFilteredSchedule,
+  buildScheduleCalendarUrl,
+  buildTrackCalendarUrl,
+  buildDayCalendarUrl,
+  buildWebcalUrl,
+  buildGoogleCalendarUrl,
+  buildOutlookCalendarUrl,
+  isValidIcalContent,
+  getIcalMimeType,
+  getIcalContentDisposition,
+  parseIcalDate,
+  sortSessionsByDateTime,
+  getUniqueDates,
+  getUniqueTracks,
+  type IcalExportFormat,
+  type IcalExportFilter,
+  type IcalSession,
+  type IcalEventInfo,
+  type IcalExportResult
+} from './ical-export'
