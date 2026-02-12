@@ -84,3 +84,38 @@ export {
   type CreateReview,
   type UpdateReview
 } from './review'
+
+export {
+  feedbackTemplateTypeSchema,
+  feedbackTemplateSchema,
+  createFeedbackTemplateSchema,
+  updateFeedbackTemplateSchema,
+  speakerFeedbackSchema,
+  createSpeakerFeedbackSchema,
+  updateSpeakerFeedbackSchema,
+  FEEDBACK_TEMPLATE_VARIABLES,
+  DEFAULT_ACCEPTED_TEMPLATE,
+  DEFAULT_REJECTED_TEMPLATE,
+  DEFAULT_WAITLISTED_TEMPLATE,
+  getAvailableVariables,
+  renderTemplate,
+  validateTemplate,
+  extractVariables,
+  getDefaultTemplate,
+  getTemplateTypeForStatus,
+  anonymizeComments,
+  formatReviewerComments,
+  canSendFeedback,
+  isFeedbackSent,
+  getFeedbackStatusLabel,
+  getFeedbackStatusColor,
+  type FeedbackTemplateType,
+  type FeedbackTemplate,
+  type CreateFeedbackTemplate,
+  type UpdateFeedbackTemplate,
+  type SpeakerFeedback,
+  type CreateSpeakerFeedback,
+  type UpdateSpeakerFeedback,
+  type FeedbackVariableContext,
+  type FeedbackTemplateVariable
+} from './speaker-feedback'
