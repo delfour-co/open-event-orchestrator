@@ -4,7 +4,15 @@ import { invalidateAll } from '$app/navigation'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
-import { ArrowLeft, Camera, CheckCircle, Keyboard, Loader2, XCircle } from 'lucide-svelte'
+import {
+  ArrowLeft,
+  BarChart3,
+  Camera,
+  CheckCircle,
+  Keyboard,
+  Loader2,
+  XCircle
+} from 'lucide-svelte'
 import { onMount } from 'svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -111,16 +119,24 @@ onMount(() => {
 </svelte:head>
 
 <div class="mx-auto max-w-xl space-y-6">
-	<div class="flex items-center gap-4">
-		<a href="/admin/billing/{data.edition.slug}">
-			<Button variant="ghost" size="icon">
-				<ArrowLeft class="h-5 w-5" />
+	<div class="flex items-center justify-between">
+		<div class="flex items-center gap-4">
+			<a href="/admin/billing/{data.edition.slug}">
+				<Button variant="ghost" size="icon">
+					<ArrowLeft class="h-5 w-5" />
+				</Button>
+			</a>
+			<div>
+				<h2 class="text-3xl font-bold tracking-tight">Check-in</h2>
+				<p class="text-muted-foreground">{data.edition.name}</p>
+			</div>
+		</div>
+		<a href="/admin/billing/{data.edition.slug}/checkin/stats">
+			<Button variant="outline" size="sm" class="gap-2">
+				<BarChart3 class="h-4 w-4" />
+				Stats
 			</Button>
 		</a>
-		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Check-in</h2>
-			<p class="text-muted-foreground">{data.edition.name}</p>
-		</div>
 	</div>
 
 	<!-- Stats -->
