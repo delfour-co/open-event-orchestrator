@@ -4,7 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { Check, Eye, EyeOff, Mail, Send, Server } from 'lucide-svelte'
+import { ArrowRight, Check, Eye, EyeOff, Mail, Plug, Send, Server } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -24,9 +24,18 @@ let smtpEnabled = $state(data.smtp.smtpEnabled)
 </svelte:head>
 
 <div class="space-y-6">
-  <div>
-    <h2 class="text-3xl font-bold tracking-tight">Settings</h2>
-    <p class="text-muted-foreground">Global application configuration</p>
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-3xl font-bold tracking-tight">Settings</h2>
+      <p class="text-muted-foreground">Global application configuration</p>
+    </div>
+<a href="/admin/settings/integrations">
+      <Button variant="outline">
+        <Plug class="mr-2 h-4 w-4" />
+        View Integrations
+        <ArrowRight class="ml-2 h-4 w-4" />
+      </Button>
+    </a>
   </div>
 
   {#if form?.success && form?.action === 'saveSmtp'}
