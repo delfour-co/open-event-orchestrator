@@ -11,6 +11,7 @@ The billing module provides:
 - **Ticket Generation**: QR codes for digital tickets
 - **Check-in System**: Validate and scan tickets at the event
 - **Email Notifications**: Order confirmations and refund notifications
+- **Waitlist**: Allow attendees to join a waitlist when tickets are sold out
 
 ## Architecture
 
@@ -21,6 +22,8 @@ billing/
 │   ├── order.ts              # Order with status workflow
 │   ├── order-item.ts         # Line items in order
 │   ├── ticket.ts             # Individual ticket with QR
+│   ├── waitlist.ts           # Waitlist for sold-out tickets
+│   ├── promo-code.ts         # Promotional codes
 │   └── index.ts              # Domain exports
 ├── usecases/                  # Application logic
 │   ├── create-order.ts       # Order creation workflow
@@ -139,6 +142,45 @@ type Ticket = {
   updatedAt: Date
 }
 ```
+
+### Waitlist Entry
+
+Represents a person waiting for tickets when sold out.
+
+```typescript
+type WaitlistEntry = {
+  id: string
+  editionId: string
+  ticketTypeId: string
+  email: string
+  firstName: string
+  lastName: string
+  status: 'waiting' | 'notified' | 'converted' | 'expired'
+  position: number                // Queue position
+  notifiedAt?: Date
+  notificationExpiresAt?: Date
+  convertedOrderId?: string
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+**Status Flow:**
+- `waiting` → `notified` (when tickets become available)
+- `notified` → `converted` (when attendee purchases)
+- `notified` → `expired` (notification window expires)
+
+**Features:**
+- Automatic position tracking in queue
+- Configurable notification window (default 48h)
+- Email notifications when tickets available
+- Priority access link for notified attendees
+
+**Helper Functions:**
+- `isWaitlistOpen(ticketType)`: Check if waitlist is enabled for sold-out ticket
+- `getNextInQueue(entries)`: Get next waiting entry
+- `hasExpiredNotification(entry)`: Check if notification window passed
+- `buildNotificationContext(entry, ticketType)`: Build email template context
 
 ## Use Cases
 
@@ -386,6 +428,8 @@ Staff scans QR code / enters ticket number
 | `orders` | Customer orders |
 | `order_items` | Line items per order |
 | `billing_tickets` | Individual tickets with QR |
+| `waitlist_entries` | Waitlist for sold-out tickets |
+| `promo_codes` | Promotional discount codes |
 
 ## Environment Variables
 

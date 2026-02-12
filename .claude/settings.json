@@ -59,5 +59,17 @@
     "noMentionClaude": true,
     "titleFormat": "[#{issue}] {type}({scope}): {description}",
     "requireLinkedIssue": true
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude - Open Event Orchestrator' 'Tâche terminée ✓\nClaude attend tes instructions ❇️' -i info"
+          }
+        ]
+      }
+    ]
   }
 }

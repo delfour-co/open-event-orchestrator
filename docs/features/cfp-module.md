@@ -9,6 +9,7 @@ The CFP module enables:
 - **Speakers** to submit talks, manage submissions, and respond to acceptance decisions
 - **Reviewers** to evaluate submissions with ratings and comments
 - **Organizers** to manage the entire CFP lifecycle, from opening to final selection
+- **Agents** (speaker bureaus, agencies) to submit talks on behalf of speakers
 
 ## Architecture
 
@@ -21,7 +22,10 @@ src/lib/features/cfp/
 │   ├── format.ts     # Talk formats (duration types)
 │   ├── review.ts     # Review ratings
 │   ├── comment.ts    # Internal comments
-│   └── notification.ts # Email notification types
+│   ├── notification.ts # Email notification types
+│   ├── secret-link.ts  # Secure submission links
+│   ├── agent-submission.ts # Agent/proxy submissions
+│   └── speaker-feedback.ts # Personalized feedback
 ├── usecases/         # Application logic
 │   ├── submit-talk.ts
 │   ├── get-speaker-submissions.ts
@@ -207,6 +211,57 @@ Define session types with durations:
 - Duration in minutes
 - Description (optional)
 
+## Agent Submissions
+
+The agent submission feature allows speaker bureaus, agencies, or representatives to submit talks on behalf of speakers.
+
+### How It Works
+
+1. **Agent Registration**: Organizers can create agent accounts with submission tokens
+2. **Proxy Submission**: Agents submit talks with speaker information
+3. **Speaker Validation**: Speakers receive email to confirm or reject submissions
+4. **Status Tracking**: Organizers can track which submissions came from agents
+
+### Agent Submission Entity
+
+```typescript
+type AgentSubmission = {
+  id: string
+  editionId: string
+  agentId: string              // Agent identifier
+  agentEmail: string           // Agent contact
+  agentName: string            // Agent/agency name
+  speakerEmail: string         // Actual speaker email
+  talkId: string               // Linked talk
+  submissionToken: string      // Secure access token
+  validationStatus: 'pending' | 'validated' | 'rejected'
+  validatedAt?: Date
+  rejectedAt?: Date
+  rejectionReason?: string
+  notificationSentAt?: Date
+  reminderSentAt?: Date
+  origin: 'api' | 'form' | 'import'
+  metadata?: Record<string, unknown>
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Features
+
+- **Token-based access**: Agents use secure tokens to submit
+- **Speaker validation workflow**: Speakers must confirm submissions
+- **Automatic notifications**: Email to speaker when submission made
+- **Reminder system**: Automatic reminders for pending validations
+- **Audit trail**: Track submission origin and agent information
+
+### Helper Functions
+
+- `isValidAgentToken(token)`: Validate agent submission token
+- `needsSpeakerValidation(submission)`: Check if pending validation
+- `getSubmissionsNeedingAction(submissions)`: Filter submissions needing notification/reminder
+- `buildAgentNotificationContext(submission)`: Build email template context
+
 ## Database Collections
 
 | Collection | Description |
@@ -220,6 +275,8 @@ Define session types with durations:
 | `cfp_settings` | CFP configuration (per edition) |
 | `cospeaker_invitations` | Pending co-speaker invitations |
 | `speaker_tokens` | Secure access tokens for speaker submissions |
+| `agent_submissions` | Proxy submissions from agents/bureaus |
+| `feedback_templates` | Personalized speaker feedback templates |
 
 ## Testing
 
