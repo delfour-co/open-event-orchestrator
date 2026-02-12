@@ -50,3 +50,6 @@ export type { TemplateLibraryService } from './template-library-service'
 
 export { createAbTestingService } from './ab-testing-service'
 export type { AbTestingService } from './ab-testing-service'
+
+export { createAutomationService } from './automation-service'
+export type { AutomationService } from './automation-service'
