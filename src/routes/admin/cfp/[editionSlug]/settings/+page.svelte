@@ -222,6 +222,60 @@ const statuses = ['draft', 'published', 'archived'] as const
           </div>
         </div>
 
+        <!-- Review Mode -->
+        <div class="space-y-4">
+          <h4 class="text-sm font-medium">Review Mode</h4>
+          <div class="space-y-3">
+            <label class="flex items-start gap-3">
+              <input
+                type="radio"
+                name="reviewMode"
+                value="stars"
+                checked={data.settings.reviewMode === 'stars'}
+                class="mt-1"
+              />
+              <div>
+                <span class="text-sm font-medium">Star Rating (1-5)</span>
+                <p class="text-xs text-muted-foreground">
+                  Classic rating scale from 1 to 5 stars
+                </p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3">
+              <input
+                type="radio"
+                name="reviewMode"
+                value="yes_no"
+                checked={data.settings.reviewMode === 'yes_no'}
+                class="mt-1"
+              />
+              <div>
+                <span class="text-sm font-medium">Yes / No</span>
+                <p class="text-xs text-muted-foreground">
+                  Simple binary decision - accept or reject
+                </p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3">
+              <input
+                type="radio"
+                name="reviewMode"
+                value="comparative"
+                checked={data.settings.reviewMode === 'comparative'}
+                class="mt-1"
+              />
+              <div>
+                <span class="text-sm font-medium">Comparative Ranking (1-100)</span>
+                <p class="text-xs text-muted-foreground">
+                  Rank talks relative to each other on a 0-100 scale
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <div class="flex justify-end">
           <Button type="submit" disabled={isSubmitting}>
             {#if isSubmitting}

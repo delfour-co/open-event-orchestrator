@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod'
+import { type ReviewMode, reviewModeSchema } from './review-mode'
 import type { TalkStatus } from './talk'
 
 /**
@@ -25,6 +26,7 @@ export const cfpSettingsSchema = z.object({
   allowCoSpeakers: z.boolean().default(true),
   anonymousReview: z.boolean().default(false),
   revealSpeakersAfterDecision: z.boolean().default(true),
+  reviewMode: reviewModeSchema.default('stars'),
   createdAt: z.date(),
   updatedAt: z.date()
 })
@@ -56,7 +58,8 @@ export const DEFAULT_CFP_SETTINGS: Omit<CreateCfpSettings, 'editionId'> = {
   requireDescription: false,
   allowCoSpeakers: true,
   anonymousReview: false,
-  revealSpeakersAfterDecision: true
+  revealSpeakersAfterDecision: true,
+  reviewMode: 'stars' as ReviewMode
 }
 
 /**

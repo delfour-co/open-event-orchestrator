@@ -140,3 +140,36 @@ export {
   type UpdateCfpSettings,
   type CfpUserRole
 } from './cfp-settings'
+
+export {
+  reviewModeSchema,
+  starRatingSchema,
+  yesNoValueSchema,
+  comparativeRankSchema,
+  reviewValueSchema,
+  multiModeReviewSchema,
+  createMultiModeReviewSchema,
+  REVIEW_MODE_CONFIG,
+  getReviewModeLabel,
+  getReviewModeDescription,
+  getAvailableReviewModes,
+  getStarRatingLabel,
+  calculateAverageStarRating,
+  getYesNoLabel,
+  calculateYesNoSummary,
+  getComparativeRankLabel,
+  calculateAverageComparativeRank,
+  normalizeReviewValue,
+  calculateUnifiedScore,
+  getReviewDisplayValue,
+  getReviewSummary,
+  isValidReviewValue,
+  createReviewFromModeAndValue,
+  type ReviewMode,
+  type StarRating,
+  type YesNoValue,
+  type ComparativeRank,
+  type ReviewValue,
+  type MultiModeReview,
+  type CreateMultiModeReview
+} from './review-mode'

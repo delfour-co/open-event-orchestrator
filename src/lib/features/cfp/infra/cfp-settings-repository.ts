@@ -6,6 +6,7 @@
 
 import type PocketBase from 'pocketbase'
 import type { CfpSettings, CreateCfpSettings, UpdateCfpSettings } from '../domain/cfp-settings'
+import type { ReviewMode } from '../domain/review-mode'
 
 export interface CfpSettingsRepository {
   findByEdition(editionId: string): Promise<CfpSettings | null>
@@ -27,6 +28,7 @@ function mapToCfpSettings(record: Record<string, unknown>): CfpSettings {
     allowCoSpeakers: record.allowCoSpeakers !== false,
     anonymousReview: record.anonymousReview === true,
     revealSpeakersAfterDecision: record.revealSpeakersAfterDecision !== false,
+    reviewMode: (record.reviewMode as ReviewMode) || 'stars',
     createdAt: new Date(record.created as string),
     updatedAt: new Date(record.updated as string)
   }
@@ -56,7 +58,8 @@ export function createCfpSettingsRepository(pb: PocketBase): CfpSettingsReposito
         requireDescription: settings.requireDescription,
         allowCoSpeakers: settings.allowCoSpeakers,
         anonymousReview: settings.anonymousReview,
-        revealSpeakersAfterDecision: settings.revealSpeakersAfterDecision
+        revealSpeakersAfterDecision: settings.revealSpeakersAfterDecision,
+        reviewMode: settings.reviewMode || 'stars'
       })
       return mapToCfpSettings(record)
     },
@@ -91,6 +94,9 @@ export function createCfpSettingsRepository(pb: PocketBase): CfpSettingsReposito
       if (settings.revealSpeakersAfterDecision !== undefined) {
         data.revealSpeakersAfterDecision = settings.revealSpeakersAfterDecision
       }
+      if (settings.reviewMode !== undefined) {
+        data.reviewMode = settings.reviewMode
+      }
 
       const record = await pb.collection('cfp_settings').update(settings.id, data)
       return mapToCfpSettings(record)
@@ -111,6 +117,7 @@ export function createCfpSettingsRepository(pb: PocketBase): CfpSettingsReposito
         allowCoSpeakers: settings.allowCoSpeakers ?? true,
         anonymousReview: settings.anonymousReview ?? false,
         revealSpeakersAfterDecision: settings.revealSpeakersAfterDecision ?? true,
+        reviewMode: settings.reviewMode ?? 'stars',
         ...settings
       })
     }

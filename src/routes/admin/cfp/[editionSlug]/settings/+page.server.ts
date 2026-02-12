@@ -12,7 +12,8 @@ const DEFAULT_SETTINGS = {
   requireDescription: false,
   allowCoSpeakers: true,
   anonymousReview: false,
-  revealSpeakersAfterDecision: true
+  revealSpeakersAfterDecision: true,
+  reviewMode: 'stars' as const
 }
 
 export const load: PageServerLoad = async ({ parent, locals }) => {
@@ -80,7 +81,10 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
           revealSpeakersAfterDecision:
             cfpSettings.revealSpeakersAfterDecision !== undefined
               ? (cfpSettings.revealSpeakersAfterDecision as boolean)
-              : DEFAULT_SETTINGS.revealSpeakersAfterDecision
+              : DEFAULT_SETTINGS.revealSpeakersAfterDecision,
+          reviewMode:
+            (cfpSettings.reviewMode as 'stars' | 'yes_no' | 'comparative') ||
+            DEFAULT_SETTINGS.reviewMode
         }
       : {
           id: null as string | null,
@@ -92,7 +96,8 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
           requireDescription: DEFAULT_SETTINGS.requireDescription,
           allowCoSpeakers: DEFAULT_SETTINGS.allowCoSpeakers,
           anonymousReview: DEFAULT_SETTINGS.anonymousReview,
-          revealSpeakersAfterDecision: DEFAULT_SETTINGS.revealSpeakersAfterDecision
+          revealSpeakersAfterDecision: DEFAULT_SETTINGS.revealSpeakersAfterDecision,
+          reviewMode: DEFAULT_SETTINGS.reviewMode
         },
     categories: categories.map((c) => ({
       id: c.id as string,
@@ -133,6 +138,7 @@ export const actions: Actions = {
     const allowCoSpeakers = formData.has('allowCoSpeakers')
     const anonymousReview = formData.has('anonymousReview')
     const revealSpeakersAfterDecision = formData.has('revealSpeakersAfterDecision')
+    const reviewMode = (formData.get('reviewMode') as string) || 'stars'
 
     // Validate dates
     if (cfpOpenDate && cfpCloseDate) {
@@ -172,7 +178,8 @@ export const actions: Actions = {
         requireDescription,
         allowCoSpeakers,
         anonymousReview,
-        revealSpeakersAfterDecision
+        revealSpeakersAfterDecision,
+        reviewMode
       }
 
       if (existingSettings) {

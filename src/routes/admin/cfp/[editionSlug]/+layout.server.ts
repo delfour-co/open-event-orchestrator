@@ -88,14 +88,16 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
           revealSpeakersAfterDecision: cfpSettings.revealSpeakersAfterDecision,
           allowCoSpeakers: cfpSettings.allowCoSpeakers,
           cfpOpenDate: cfpSettings.cfpOpenDate || null,
-          cfpCloseDate: cfpSettings.cfpCloseDate || null
+          cfpCloseDate: cfpSettings.cfpCloseDate || null,
+          reviewMode: cfpSettings.reviewMode
         }
       : {
           anonymousReview: false,
           revealSpeakersAfterDecision: true,
           allowCoSpeakers: true,
           cfpOpenDate: null,
-          cfpCloseDate: null
+          cfpCloseDate: null,
+          reviewMode: 'stars' as const
         },
     userRole,
     canSeeSpeakerInfo: canSeeSpeakerInfoBase
