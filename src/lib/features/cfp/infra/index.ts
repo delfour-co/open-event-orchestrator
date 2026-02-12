@@ -9,6 +9,10 @@ export { createFormatRepository, type FormatRepository } from './format-reposito
 export { createReviewRepository, type ReviewRepository } from './review-repository'
 export { createSpeakerRepository, type SpeakerRepository } from './speaker-repository'
 export {
+  createSecretLinkRepository,
+  type SecretLinkRepository
+} from './secret-link-repository'
+export {
   createTalkRepository,
   type TalkRepository,
   type TalkFilters,

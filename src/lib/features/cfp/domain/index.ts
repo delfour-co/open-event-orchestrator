@@ -173,3 +173,29 @@ export {
   type MultiModeReview,
   type CreateMultiModeReview
 } from './review-mode'
+
+export {
+  secretLinkSchema,
+  createSecretLinkSchema,
+  updateSecretLinkSchema,
+  SECRET_LINK_PREFIX,
+  SECRET_LINK_TOKEN_LENGTH,
+  generateSecretToken,
+  isValidTokenFormat,
+  isSecretLinkExpired,
+  hasReachedSubmissionLimit,
+  getRemainingSubmissions,
+  validateSecretLink,
+  getSecretLinkErrorMessage,
+  getSecretLinkStatus,
+  getSecretLinkStatusLabel,
+  getSecretLinkStatusColor,
+  buildSecretLinkUrl,
+  formatExpiryDate,
+  formatSubmissionLimit,
+  type SecretLink,
+  type CreateSecretLink,
+  type UpdateSecretLink,
+  type SecretLinkValidation,
+  type SecretLinkValidationError
+} from './secret-link'
