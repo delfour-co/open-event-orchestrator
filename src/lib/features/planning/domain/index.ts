@@ -130,3 +130,31 @@ export {
   type UpdateServiceSession,
   type ServiceSessionTemplate
 } from './service-session'
+
+// Calendar Invite
+export {
+  calendarMethodSchema,
+  calendarInviteStatusSchema,
+  calendarInviteRecordSchema,
+  createCalendarInviteRecordSchema,
+  formatIcalDateTime,
+  formatIcalDate,
+  escapeIcal,
+  generateEventUid,
+  buildLocationString,
+  buildEventDescription,
+  generateIcalInvite,
+  calculateSessionDuration,
+  formatSessionDuration,
+  shouldSendCalendarInvite,
+  needsCalendarUpdate,
+  getCalendarInviteSubject,
+  getCalendarInviteEmailHtml,
+  getCalendarInviteEmailText,
+  type CalendarMethod,
+  type CalendarInviteStatus,
+  type SessionCalendarInfo,
+  type SpeakerCalendarInfo,
+  type CalendarInviteRecord,
+  type CreateCalendarInviteRecord
+} from './calendar-invite'

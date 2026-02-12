@@ -14,3 +14,12 @@ export {
   type UpdateServiceSession,
   type ServiceSessionType
 } from './service-session-service'
+
+export {
+  createCalendarInviteService,
+  type CalendarInviteService,
+  type CalendarInviteRecord,
+  type SessionCalendarInfo,
+  type SpeakerCalendarInfo,
+  type SmtpConfig
+} from './calendar-invite-service'
