@@ -63,3 +63,33 @@ export {
   type RoomAssignment,
   type CreateRoomAssignment
 } from './room-assignment'
+
+// Schedule Conflict
+export {
+  conflictTypeSchema,
+  conflictSeveritySchema,
+  scheduleConflictSchema,
+  timeRangesOverlap,
+  sessionsOverlap,
+  getOverlapTimeRange,
+  generateConflictId,
+  detectSpeakerConflicts,
+  detectRoomConflicts,
+  detectTrackConflicts,
+  scanForConflicts,
+  getConflictTypeLabel,
+  getConflictSeverity,
+  getConflictSeverityColor,
+  canPublishSchedule,
+  formatConflict,
+  sessionHasConflicts,
+  getConflictsForSession,
+  speakerHasConflicts,
+  getConflictsForSpeaker,
+  type ConflictType,
+  type ConflictSeverity,
+  type ScheduleConflict,
+  type ExpandedSession,
+  type ConflictScanResult,
+  type ConflictScanOptions
+} from './schedule-conflict'
