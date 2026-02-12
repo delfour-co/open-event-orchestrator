@@ -11,7 +11,8 @@ const DEFAULT_SETTINGS = {
   requireAbstract: true,
   requireDescription: false,
   allowCoSpeakers: true,
-  anonymousReview: false
+  anonymousReview: false,
+  revealSpeakersAfterDecision: true
 }
 
 export const load: PageServerLoad = async ({ parent, locals }) => {
@@ -75,7 +76,11 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
           anonymousReview:
             cfpSettings.anonymousReview !== undefined
               ? (cfpSettings.anonymousReview as boolean)
-              : DEFAULT_SETTINGS.anonymousReview
+              : DEFAULT_SETTINGS.anonymousReview,
+          revealSpeakersAfterDecision:
+            cfpSettings.revealSpeakersAfterDecision !== undefined
+              ? (cfpSettings.revealSpeakersAfterDecision as boolean)
+              : DEFAULT_SETTINGS.revealSpeakersAfterDecision
         }
       : {
           id: null as string | null,
@@ -86,7 +91,8 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
           requireAbstract: DEFAULT_SETTINGS.requireAbstract,
           requireDescription: DEFAULT_SETTINGS.requireDescription,
           allowCoSpeakers: DEFAULT_SETTINGS.allowCoSpeakers,
-          anonymousReview: DEFAULT_SETTINGS.anonymousReview
+          anonymousReview: DEFAULT_SETTINGS.anonymousReview,
+          revealSpeakersAfterDecision: DEFAULT_SETTINGS.revealSpeakersAfterDecision
         },
     categories: categories.map((c) => ({
       id: c.id as string,
@@ -126,6 +132,7 @@ export const actions: Actions = {
     const requireDescription = formData.has('requireDescription')
     const allowCoSpeakers = formData.has('allowCoSpeakers')
     const anonymousReview = formData.has('anonymousReview')
+    const revealSpeakersAfterDecision = formData.has('revealSpeakersAfterDecision')
 
     // Validate dates
     if (cfpOpenDate && cfpCloseDate) {
@@ -164,7 +171,8 @@ export const actions: Actions = {
         requireAbstract,
         requireDescription,
         allowCoSpeakers,
-        anonymousReview
+        anonymousReview,
+        revealSpeakersAfterDecision
       }
 
       if (existingSettings) {

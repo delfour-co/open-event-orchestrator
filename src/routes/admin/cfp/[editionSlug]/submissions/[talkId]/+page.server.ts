@@ -1,4 +1,4 @@
-import type { TalkStatus } from '$lib/features/cfp/domain'
+import { type TalkStatus, canViewSpeakerInfo } from '$lib/features/cfp/domain'
 import {
   createCommentRepository,
   createReviewRepository,
@@ -11,7 +11,7 @@ import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent, params, locals }) => {
-  const { edition, categories, formats, cfpSettings, canSeeSpeakerInfo } = await parent()
+  const { edition, categories, formats, cfpSettings, userRole } = await parent()
 
   const talkRepo = createTalkRepository(locals.pb)
   const speakerRepo = createSpeakerRepository(locals.pb)
@@ -54,7 +54,19 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
   )
   const userMap = new Map(users.map((u) => [u.id, u]))
 
-  const userRole = locals.user?.role as string | undefined
+  const permissionRole = locals.user?.role as string | undefined
+
+  // Calculate speaker visibility using talk status for reveal-after-decision feature
+  const canSeeSpeakerInfo = canViewSpeakerInfo(
+    cfpSettings
+      ? {
+          anonymousReview: cfpSettings.anonymousReview,
+          revealSpeakersAfterDecision: cfpSettings.revealSpeakersAfterDecision
+        }
+      : null,
+    userRole,
+    talk.status
+  )
 
   return {
     edition,
@@ -62,6 +74,7 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
     formats,
     cfpSettings,
     canSeeSpeakerInfo,
+    userRole,
     talk: {
       ...talk,
       category: categories.find((c) => c.id === talk.categoryId),
@@ -80,8 +93,8 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
     })),
     currentUserId: userId,
     permissions: {
-      canChangeStatus: canChangeTalkStatus(userRole),
-      canDelete: canDeleteTalks(userRole)
+      canChangeStatus: canChangeTalkStatus(permissionRole),
+      canDelete: canDeleteTalks(permissionRole)
     }
   }
 }

@@ -1,4 +1,8 @@
 export { createCategoryRepository, type CategoryRepository } from './category-repository'
+export {
+  createCfpSettingsRepository,
+  type CfpSettingsRepository
+} from './cfp-settings-repository'
 export { createCommentRepository, type CommentRepository } from './comment-repository'
 export { createEmailLogRepository, type EmailLogRepository } from './email-log-repository'
 export { createFormatRepository, type FormatRepository } from './format-repository'

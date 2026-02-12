@@ -1,10 +1,16 @@
-import { createCategoryRepository, createFormatRepository } from '$lib/features/cfp/infra'
+import { type CfpUserRole, canViewSpeakerInfo } from '$lib/features/cfp/domain'
+import {
+  createCategoryRepository,
+  createCfpSettingsRepository,
+  createFormatRepository
+} from '$lib/features/cfp/infra'
 import { error } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
   const categoryRepo = createCategoryRepository(locals.pb)
   const formatRepo = createFormatRepository(locals.pb)
+  const cfpSettingsRepo = createCfpSettingsRepository(locals.pb)
 
   // Find edition by slug
   const editions = await locals.pb.collection('editions').getList(1, 1, {
@@ -34,18 +40,11 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
   const categories = await categoryRepo.findByEdition(edition.id)
   const formats = await formatRepo.findByEdition(edition.id)
 
-  // Load CFP settings
-  let cfpSettings = null
-  try {
-    cfpSettings = await locals.pb
-      .collection('cfp_settings')
-      .getFirstListItem(`editionId="${edition.id}"`)
-  } catch {
-    // No settings exist yet
-  }
+  // Load CFP settings using repository
+  const cfpSettings = await cfpSettingsRepo.findByEdition(edition.id)
 
   // Get user's role in the organization to determine if they can see speaker info in anonymous mode
-  let userRole: string | null = null
+  let userRole: CfpUserRole = null
   if (locals.user) {
     try {
       // Get organization from event
@@ -61,12 +60,23 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
         const membership = await locals.pb
           .collection('organization_members')
           .getFirstListItem(`organizationId="${orgId}" && userId="${locals.user.id}"`)
-        userRole = membership.role as string
+        userRole = membership.role as CfpUserRole
       }
     } catch {
       // User is not a member
     }
   }
+
+  // Use domain function to determine speaker visibility (without talk status at layout level)
+  const canSeeSpeakerInfoBase = canViewSpeakerInfo(
+    cfpSettings
+      ? {
+          anonymousReview: cfpSettings.anonymousReview,
+          revealSpeakersAfterDecision: cfpSettings.revealSpeakersAfterDecision
+        }
+      : null,
+    userRole
+  )
 
   return {
     edition,
@@ -74,20 +84,20 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
     formats,
     cfpSettings: cfpSettings
       ? {
-          anonymousReview: cfpSettings.anonymousReview as boolean,
-          allowCoSpeakers: cfpSettings.allowCoSpeakers as boolean,
-          cfpOpenDate: cfpSettings.cfpOpenDate ? new Date(cfpSettings.cfpOpenDate as string) : null,
-          cfpCloseDate: cfpSettings.cfpCloseDate
-            ? new Date(cfpSettings.cfpCloseDate as string)
-            : null
+          anonymousReview: cfpSettings.anonymousReview,
+          revealSpeakersAfterDecision: cfpSettings.revealSpeakersAfterDecision,
+          allowCoSpeakers: cfpSettings.allowCoSpeakers,
+          cfpOpenDate: cfpSettings.cfpOpenDate || null,
+          cfpCloseDate: cfpSettings.cfpCloseDate || null
         }
       : {
           anonymousReview: false,
+          revealSpeakersAfterDecision: true,
           allowCoSpeakers: true,
           cfpOpenDate: null,
           cfpCloseDate: null
         },
     userRole,
-    canSeeSpeakerInfo: !cfpSettings?.anonymousReview || userRole === 'owner' || userRole === 'admin'
+    canSeeSpeakerInfo: canSeeSpeakerInfoBase
   }
 }

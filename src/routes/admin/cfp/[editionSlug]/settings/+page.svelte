@@ -206,6 +206,19 @@ const statuses = ['draft', 'published', 'archived'] as const
               <Checkbox checked={data.settings.anonymousReview} name="anonymousReview" />
               <span class="text-sm">Anonymous review (hide speaker names from reviewers)</span>
             </label>
+
+            {#if data.settings.anonymousReview}
+              <label class="ml-6 flex items-center gap-3">
+                <Checkbox
+                  checked={data.settings.revealSpeakersAfterDecision}
+                  name="revealSpeakersAfterDecision"
+                />
+                <span class="text-sm">Reveal speaker names after decision is made</span>
+              </label>
+              <p class="ml-6 text-xs text-muted-foreground">
+                When enabled, reviewers will see speaker information once a talk is accepted or rejected
+              </p>
+            {/if}
           </div>
         </div>
 

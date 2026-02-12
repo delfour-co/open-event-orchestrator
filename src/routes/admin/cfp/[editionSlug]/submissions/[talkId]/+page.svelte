@@ -203,7 +203,11 @@ $effect(() => {
                 Speaker information is hidden during anonymous review.
               </p>
               <p class="mt-1 text-xs text-muted-foreground">
-                Only admins and owners can see speaker details.
+                {#if data.cfpSettings.revealSpeakersAfterDecision}
+                  Speaker details will be revealed after a decision is made on this talk.
+                {:else}
+                  Only admins and owners can see speaker details.
+                {/if}
               </p>
             </div>
           {:else}

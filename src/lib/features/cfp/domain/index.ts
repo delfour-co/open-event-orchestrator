@@ -119,3 +119,24 @@ export {
   type FeedbackVariableContext,
   type FeedbackTemplateVariable
 } from './speaker-feedback'
+
+export {
+  cfpSettingsSchema,
+  createCfpSettingsSchema,
+  updateCfpSettingsSchema,
+  DEFAULT_CFP_SETTINGS,
+  FINAL_TALK_STATUSES,
+  isFinalStatus,
+  canViewSpeakerInfo,
+  getAnonymousReviewMessage,
+  isCfpOpen,
+  getCfpStatus,
+  getCfpStatusDisplay,
+  validateCfpDates,
+  hasReachedSubmissionLimit,
+  getRemainingSubmissions,
+  type CfpSettings,
+  type CreateCfpSettings,
+  type UpdateCfpSettings,
+  type CfpUserRole
+} from './cfp-settings'
