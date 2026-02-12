@@ -199,3 +199,38 @@ export {
   type SecretLinkValidation,
   type SecretLinkValidationError
 } from './secret-link'
+
+export {
+  evaluationPlanSchema,
+  createEvaluationPlanSchema,
+  updateEvaluationPlanSchema,
+  planMemberSchema,
+  addPlanMemberSchema,
+  isPlanMember,
+  isPlanLead,
+  isCategoryInPlan,
+  getPlansForCategory,
+  getPlansForReviewer,
+  getReviewerCategories,
+  canReviewerAccessCategory,
+  calculatePlanCompletionRate,
+  getPlanProgressStatus,
+  getPlanProgressLabel,
+  getPlanProgressColor,
+  getMemberRoleLabel,
+  getMemberRoleColor,
+  formatPlanSummary,
+  sortPlansByName,
+  sortPlansByActivity,
+  filterActivePlans,
+  hasEvaluationPlans,
+  getUncoveredCategories,
+  getUnassignedReviewers,
+  type EvaluationPlan,
+  type CreateEvaluationPlan,
+  type UpdateEvaluationPlan,
+  type PlanMember,
+  type AddPlanMember,
+  type EvaluationPlanStats,
+  type ReviewerWorkload
+} from './evaluation-plan'
