@@ -513,5 +513,76 @@ export const actions: Actions = {
         action: 'deleteRoomAssignment'
       })
     }
+  },
+
+  // ============ DRAG & DROP ============
+  moveSession: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const sessionId = formData.get('sessionId') as string
+    const targetSlotId = formData.get('targetSlotId') as string
+    const sessionRepo = createSessionRepository(locals.pb)
+
+    try {
+      // Check if target slot already has a session
+      const existingSession = await sessionRepo.findBySlot(targetSlotId)
+      if (existingSession) {
+        return fail(400, {
+          error: 'Target slot is already occupied. Remove the existing session first.',
+          action: 'moveSession'
+        })
+      }
+
+      // Get the session to move
+      const session = await sessionRepo.findById(sessionId)
+      if (!session) {
+        return fail(404, { error: 'Session not found', action: 'moveSession' })
+      }
+
+      // Update the session's slot
+      await locals.pb.collection('sessions').update(sessionId, {
+        slotId: targetSlotId
+      })
+
+      return { success: true, action: 'moveSession' }
+    } catch (err) {
+      console.error('Failed to move session:', err)
+      return fail(500, { error: 'Failed to move session', action: 'moveSession' })
+    }
+  },
+
+  swapSessions: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const sessionId = formData.get('sessionId') as string
+    const targetSlotId = formData.get('targetSlotId') as string
+    const sessionRepo = createSessionRepository(locals.pb)
+
+    try {
+      // Get the session being dragged
+      const draggedSession = await sessionRepo.findById(sessionId)
+      if (!draggedSession) {
+        return fail(404, { error: 'Dragged session not found', action: 'swapSessions' })
+      }
+
+      // Get the session in target slot (if any)
+      const targetSession = await sessionRepo.findBySlot(targetSlotId)
+
+      if (targetSession) {
+        // Swap: move target session to dragged session's slot
+        const originalSlotId = draggedSession.slotId
+        await locals.pb.collection('sessions').update(targetSession.id, {
+          slotId: originalSlotId
+        })
+      }
+
+      // Move dragged session to target slot
+      await locals.pb.collection('sessions').update(sessionId, {
+        slotId: targetSlotId
+      })
+
+      return { success: true, action: 'swapSessions' }
+    } catch (err) {
+      console.error('Failed to swap sessions:', err)
+      return fail(500, { error: 'Failed to swap sessions', action: 'swapSessions' })
+    }
   }
 }

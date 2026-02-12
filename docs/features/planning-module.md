@@ -246,8 +246,51 @@ RFC 5545 compliant calendar:
 2. **Create Tracks** (optional): Set up thematic categories
 3. **Create Time Slots**: Define time windows in rooms
 4. **Import/Create Sessions**: Link CFP talks or create custom sessions
-5. **Assign Staff** (optional): Assign team members to rooms
-6. **Publish Edition**: Make schedule public
+5. **Drag & Drop**: Rearrange sessions by dragging between slots
+6. **Assign Staff** (optional): Assign team members to rooms
+7. **Publish Edition**: Make schedule public
+
+## Drag & Drop
+
+The schedule grid supports drag & drop for easy session rearrangement.
+
+### Features
+
+- **Drag Sessions**: Sessions can be dragged from their current slot to another slot
+- **Move to Empty Slot**: Drop a session on an empty slot to move it
+- **Swap Sessions**: Drop a session on an occupied slot to swap the two sessions
+- **Visual Feedback**: Drag handles and drop indicators show valid targets
+- **Keyboard Accessible**: Sessions can also be edited via click/Enter key
+
+### Implementation
+
+The drag & drop uses native HTML5 Drag & Drop API:
+
+```svelte
+<div
+  draggable={session ? 'true' : 'false'}
+  ondragstart={(e) => handleDragStart(e, session.id, slot.id)}
+  ondragend={handleDragEnd}
+  ondragover={(e) => handleDragOver(e, slot.id)}
+  ondrop={(e) => handleDrop(e, slot.id)}
+>
+  <!-- Session content -->
+</div>
+```
+
+### Server Actions
+
+| Action | Description |
+|--------|-------------|
+| `moveSession` | Move session to an empty slot |
+| `swapSessions` | Swap two sessions between slots |
+
+### Visual Indicators
+
+- **Grip Handle**: `GripVertical` icon indicates draggable sessions
+- **Drop Zone**: Empty slots highlight when a valid drop target
+- **Swap Indicator**: Occupied slots show "Swap" label when hovering
+- **Opacity**: Dragged session becomes semi-transparent during drag
 
 ## UI Components
 

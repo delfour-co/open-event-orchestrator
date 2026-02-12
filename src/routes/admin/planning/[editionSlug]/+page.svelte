@@ -14,6 +14,7 @@ import {
   Copy,
   DoorOpen,
   ExternalLink,
+  GripVertical,
   Layers,
   Loader2,
   Mic,
@@ -421,6 +422,71 @@ const roomsWithoutAssignments = $derived(() => {
   const roomsWithAssignments = new Set(data.roomAssignments.map((a) => a.roomId))
   return data.rooms.filter((r) => !roomsWithAssignments.has(r.id))
 })
+
+// Drag and drop states
+let draggedSessionId = $state<string | null>(null)
+let draggedFromSlotId = $state<string | null>(null)
+let dragOverSlotId = $state<string | null>(null)
+let isDragging = $state(false)
+
+// Drag and drop handlers
+function handleDragStart(event: DragEvent, sessionId: string, slotId: string) {
+  if (!event.dataTransfer) return
+  draggedSessionId = sessionId
+  draggedFromSlotId = slotId
+  isDragging = true
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', sessionId)
+}
+
+function handleDragEnd() {
+  draggedSessionId = null
+  draggedFromSlotId = null
+  dragOverSlotId = null
+  isDragging = false
+}
+
+function handleDragOver(event: DragEvent, slotId: string) {
+  event.preventDefault()
+  if (!event.dataTransfer) return
+  // Don't allow dropping on the same slot
+  if (slotId === draggedFromSlotId) {
+    event.dataTransfer.dropEffect = 'none'
+    return
+  }
+  event.dataTransfer.dropEffect = 'move'
+  dragOverSlotId = slotId
+}
+
+function handleDragLeave() {
+  dragOverSlotId = null
+}
+
+function handleDrop(event: DragEvent, targetSlotId: string) {
+  event.preventDefault()
+  if (!draggedSessionId || targetSlotId === draggedFromSlotId) {
+    handleDragEnd()
+    return
+  }
+
+  const targetSession = getSessionForSlot(targetSlotId)
+  const formEl = targetSession ? swapFormRef : moveFormRef
+
+  if (formEl) {
+    const sessionInput = formEl.querySelector('input[name="sessionId"]') as HTMLInputElement
+    const slotInput = formEl.querySelector('input[name="targetSlotId"]') as HTMLInputElement
+    if (sessionInput && slotInput) {
+      sessionInput.value = draggedSessionId
+      slotInput.value = targetSlotId
+      formEl.requestSubmit()
+    }
+  }
+
+  handleDragEnd()
+}
+
+let moveFormRef = $state<HTMLFormElement | null>(null)
+let swapFormRef = $state<HTMLFormElement | null>(null)
 </script>
 
 <svelte:head>
@@ -597,29 +663,55 @@ const roomsWithoutAssignments = $derived(() => {
                     <div class="flex flex-col gap-1">
                       {#each slotsByRoomAndDate()[room.id][dateStr] || [] as slot}
                         {@const session = getSessionForSlot(slot.id)}
-                        <button
-                          type="button"
-                          onclick={() => openSessionFormForSlot(slot.id)}
-                          class="w-full cursor-pointer rounded p-1 text-left text-xs transition-all hover:ring-2 hover:ring-primary hover:ring-offset-1"
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        <div
+                          class="relative w-full cursor-pointer rounded p-1 text-left text-xs transition-all {dragOverSlotId === slot.id && draggedFromSlotId !== slot.id ? 'ring-2 ring-primary ring-offset-1' : ''} {isDragging && draggedFromSlotId !== slot.id ? 'hover:ring-2 hover:ring-dashed hover:ring-primary/50' : 'hover:ring-2 hover:ring-primary hover:ring-offset-1'}"
                           style="background-color: {session
                             ? getTrackColor(session.trackId)
                             : '#f3f4f6'}20; border-left: 3px solid {session
                             ? getTrackColor(session.trackId)
-                            : '#d1d5db'}"
+                            : '#d1d5db'}; {isDragging && draggedSessionId === session?.id ? 'opacity: 0.5;' : ''}"
+                          role="button"
+                          tabindex="0"
+                          draggable={session ? 'true' : 'false'}
+                          ondragstart={(e) => session && handleDragStart(e, session.id, slot.id)}
+                          ondragend={handleDragEnd}
+                          ondragover={(e) => handleDragOver(e, slot.id)}
+                          ondragleave={handleDragLeave}
+                          ondrop={(e) => handleDrop(e, slot.id)}
+                          onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
+                          onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
                         >
-                          <div class="font-medium">
-                            {slot.startTime} - {slot.endTime}
+                          <div class="flex items-center justify-between font-medium">
+                            <span>{slot.startTime} - {slot.endTime}</span>
+                            {#if session}
+                              <GripVertical class="h-3 w-3 cursor-grab text-muted-foreground" />
+                            {/if}
                           </div>
                           {#if session}
                             <div class="truncate">{session.title}</div>
                             <div class="text-muted-foreground">{getSessionTypeLabel(session.type)}</div>
+                            {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
+                              <div class="absolute inset-0 flex items-center justify-center rounded bg-primary/10">
+                                <span class="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
+                                  Swap
+                                </span>
+                              </div>
+                            {/if}
                           {:else}
-                            <div class="flex items-center gap-1 italic text-muted-foreground">
-                              <Plus class="h-3 w-3" />
-                              Click to add session
-                            </div>
+                            {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
+                              <div class="flex items-center gap-1 text-primary">
+                                <Plus class="h-3 w-3" />
+                                Drop here
+                              </div>
+                            {:else}
+                              <div class="flex items-center gap-1 italic text-muted-foreground">
+                                <Plus class="h-3 w-3" />
+                                {isDragging ? 'Drop here' : 'Click to add session'}
+                              </div>
+                            {/if}
                           {/if}
-                        </button>
+                        </div>
                       {/each}
                     </div>
                   </td>
@@ -656,10 +748,16 @@ const roomsWithoutAssignments = $derived(() => {
                       {:else}
                         <div class="space-y-2">
                           {#each trackSessions as { session, slot, room }}
-                            <button
-                              type="button"
-                              class="w-full rounded-md border p-2 text-left transition-colors hover:bg-muted"
-                              onclick={() => openSessionFormForSlot(slot.id)}
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                            <div
+                              class="w-full cursor-grab rounded-md border p-2 text-left transition-colors hover:bg-muted {isDragging && draggedSessionId === session.id ? 'opacity-50' : ''}"
+                              role="button"
+                              tabindex="0"
+                              draggable="true"
+                              ondragstart={(e) => handleDragStart(e, session.id, slot.id)}
+                              ondragend={handleDragEnd}
+                              onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
+                              onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
                             >
                               <div class="flex items-center justify-between">
                                 <span class="font-mono text-xs text-muted-foreground">
@@ -673,7 +771,7 @@ const roomsWithoutAssignments = $derived(() => {
                               <div class="text-xs text-muted-foreground">
                                 {getSessionTypeLabel(session.type)}
                               </div>
-                            </button>
+                            </div>
                           {/each}
                         </div>
                       {/if}
@@ -694,10 +792,16 @@ const roomsWithoutAssignments = $derived(() => {
                     <Card.Content>
                       <div class="space-y-2">
                         {#each noTrackSessions as { session, slot, room }}
-                          <button
-                            type="button"
-                            class="w-full rounded-md border p-2 text-left transition-colors hover:bg-muted"
-                            onclick={() => openSessionFormForSlot(slot.id)}
+                          <!-- svelte-ignore a11y_no_static_element_interactions -->
+                          <div
+                            class="w-full cursor-grab rounded-md border p-2 text-left transition-colors hover:bg-muted {isDragging && draggedSessionId === session.id ? 'opacity-50' : ''}"
+                            role="button"
+                            tabindex="0"
+                            draggable="true"
+                            ondragstart={(e) => handleDragStart(e, session.id, slot.id)}
+                            ondragend={handleDragEnd}
+                            onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
+                            onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
                           >
                             <div class="flex items-center justify-between">
                               <span class="font-mono text-xs text-muted-foreground">
@@ -711,7 +815,7 @@ const roomsWithoutAssignments = $derived(() => {
                             <div class="text-xs text-muted-foreground">
                               {getSessionTypeLabel(session.type)}
                             </div>
-                          </button>
+                          </div>
                         {/each}
                       </div>
                     </Card.Content>
@@ -1695,3 +1799,32 @@ const roomsWithoutAssignments = $derived(() => {
     {form.error}
   </div>
 {/if}
+
+{#if form?.error && (form?.action === 'moveSession' || form?.action === 'swapSessions')}
+  <div class="fixed bottom-4 right-4 rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive shadow-lg">
+    {form.error}
+  </div>
+{/if}
+
+<!-- Hidden forms for drag and drop -->
+<form
+  bind:this={moveFormRef}
+  method="POST"
+  action="?/moveSession"
+  use:enhance
+  class="hidden"
+>
+  <input type="hidden" name="sessionId" value="" />
+  <input type="hidden" name="targetSlotId" value="" />
+</form>
+
+<form
+  bind:this={swapFormRef}
+  method="POST"
+  action="?/swapSessions"
+  use:enhance
+  class="hidden"
+>
+  <input type="hidden" name="sessionId" value="" />
+  <input type="hidden" name="targetSlotId" value="" />
+</form>
