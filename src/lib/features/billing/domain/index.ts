@@ -50,3 +50,36 @@ export {
   type TicketStatus,
   type CreateTicket
 } from './ticket'
+
+export {
+  discountTypeSchema,
+  promoCodeSchema,
+  createPromoCodeSchema,
+  updatePromoCodeSchema,
+  promoCodeUsageSchema,
+  promoCodeValidationErrorCodes,
+  getPromoCodeStatus,
+  isPromoCodeValid,
+  validatePromoCode,
+  calculateDiscount,
+  calculateOrderDiscount,
+  generatePromoCode,
+  generateBulkPromoCodes,
+  normalizePromoCode,
+  formatDiscount,
+  isApplicableToTicketType,
+  getRemainingUses,
+  isWithinValidityPeriod,
+  calculatePromoCodeStats,
+  type DiscountType,
+  type PromoCode,
+  type CreatePromoCode,
+  type UpdatePromoCode,
+  type PromoCodeUsage,
+  type PromoCodeValidation,
+  type PromoCodeValidationErrorCode,
+  type PromoCodeStatus,
+  type DiscountCalculation,
+  type BulkGenerationResult,
+  type PromoCodeStats
+} from './promo-code'

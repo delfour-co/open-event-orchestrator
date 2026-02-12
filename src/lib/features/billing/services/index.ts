@@ -16,3 +16,10 @@ export {
   type OrderConfirmationData,
   type OrderRefundData
 } from './ticket-email-service'
+
+export {
+  createPromoCodeService,
+  type PromoCodeService,
+  type ApplyPromoCodeResult,
+  type BulkCreateResult
+} from './promo-code-service'
