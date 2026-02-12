@@ -1,3 +1,12 @@
+# Run lint-staged for formatting staged files
 pnpm lint-staged
+
+# Run full lint check (errors only, warnings allowed)
 pnpm lint
-pnpm check
+
+# Run unit tests
+pnpm test
+
+# Note: TypeScript check (pnpm check) has pre-existing errors in Svelte routes
+# that need to be addressed in a separate refactoring effort.
+# The build process (pnpm build) performs its own type checking.

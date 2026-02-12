@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  type ContactEventParticipation,
+  PARTICIPATION_WEIGHTS,
   buildCrossEventSummary,
   buildParticipationDescription,
   calculateLoyaltyScore,
-  type ContactEventParticipation,
   getLoyaltyLevel,
   getParticipationTypes,
   groupParticipationsByEdition,
-  PARTICIPATION_WEIGHTS,
   sortParticipationsByDate
 } from './contact-history'
 

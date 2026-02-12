@@ -7,9 +7,9 @@ import {
   estimateSendDuration,
   extractVariables,
   formatTestSubject,
+  getDefaultFallbacks,
   getDeliverabilityColor,
   getDeliverabilityLabel,
-  getDefaultFallbacks,
   resolveVariables,
   validatePreSend,
   validateTestAddresses

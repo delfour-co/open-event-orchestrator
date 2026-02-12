@@ -415,6 +415,8 @@ export function getDateRangeForPeriod(period: MetricPeriod): { start: Date; end:
       start = new Date(now.getFullYear(), 0, 1)
       break
     case 'all_time':
+      start = new Date(0)
+      break
     default:
       start = new Date(0)
       break
@@ -445,7 +447,6 @@ export function formatMetricValue(value: number, type: 'number' | 'percentage' |
     case 'rate':
       return `${value.toFixed(1)}%`
     case 'number':
-    default:
       if (value >= 1000000) {
         return `${(value / 1000000).toFixed(1)}M`
       }

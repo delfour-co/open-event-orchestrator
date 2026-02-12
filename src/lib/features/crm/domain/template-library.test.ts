@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
+  LIBRARY_TEMPLATE_VARIABLES,
+  type LibraryTemplate,
   buildVariableInsert,
   extractUsedVariables,
   generateCloneName,
   getVariableCategories,
   getVariablesByCategory,
   interpolateWithExamples,
-  type LibraryTemplate,
   matchesSearchCriteria,
   sortTemplates,
-  LIBRARY_TEMPLATE_VARIABLES,
   validateTemplateVariables
 } from './template-library'
 
@@ -147,7 +147,8 @@ describe('template-library', () => {
 
   describe('buildVariableInsert', () => {
     it('should build variable insertion string', () => {
-      const variable = LIBRARY_TEMPLATE_VARIABLES.find((v) => v.key === 'contact.firstName')!
+      const variable = LIBRARY_TEMPLATE_VARIABLES.find((v) => v.key === 'contact.firstName')
+      if (!variable) throw new Error('Variable not found')
       const result = buildVariableInsert(variable)
 
       expect(result).toBe('{{contact.firstName}}')

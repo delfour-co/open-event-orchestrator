@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CONFIDENCE_THRESHOLDS,
   buildContactComparison,
   calculateDuplicateConfidence,
   calculateNameSimilarity,
   calculateStringSimilarity,
-  CONFIDENCE_THRESHOLDS,
   getConfidenceLevel,
   isPotentialDuplicate,
   levenshteinDistance,

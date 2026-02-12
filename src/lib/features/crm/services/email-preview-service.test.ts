@@ -1,6 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { createEmailPreviewService } from './email-preview-service'
 import type PocketBase from 'pocketbase'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createEmailPreviewService } from './email-preview-service'
 
 describe('email-preview-service', () => {
   let mockPb: PocketBase

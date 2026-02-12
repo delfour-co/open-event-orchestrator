@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   type AbTestCampaign,
   type AbTestVariant,
+  type VariantStats,
   buildVariantStats,
   calculateBounceRate,
   calculateClickRate,
@@ -15,8 +16,7 @@ import {
   getRemainingRecipients,
   getRemainingTestTime,
   isTestDurationElapsed,
-  splitRecipients,
-  type VariantStats
+  splitRecipients
 } from './ab-testing'
 
 describe('ab-testing', () => {
