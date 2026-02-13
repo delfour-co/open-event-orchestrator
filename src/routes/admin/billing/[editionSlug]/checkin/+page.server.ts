@@ -15,18 +15,68 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const edition = editions.items[0]
   const editionId = edition.id as string
 
-  // Get check-in stats
+  // Get all tickets for stats
   const tickets = await locals.pb.collection('billing_tickets').getFullList({
     filter: `editionId = "${editionId}"`,
-    fields: 'status'
+    fields: 'status,checkedInBy,checkedInAt'
   })
 
   let total = 0
   let checkedIn = 0
+  const scannerStats = new Map<string, { count: number; lastActivity: string }>()
+
   for (const ticket of tickets) {
     if (ticket.status !== 'cancelled') total++
-    if (ticket.status === 'used') checkedIn++
+    if (ticket.status === 'used') {
+      checkedIn++
+      const scannerId = ticket.checkedInBy as string
+      if (scannerId) {
+        const existing = scannerStats.get(scannerId)
+        const checkedInAt = ticket.checkedInAt as string
+        if (existing) {
+          existing.count++
+          if (checkedInAt > existing.lastActivity) {
+            existing.lastActivity = checkedInAt
+          }
+        } else {
+          scannerStats.set(scannerId, { count: 1, lastActivity: checkedInAt })
+        }
+      }
+    }
   }
+
+  // Get recent check-ins
+  const recentCheckIns = await locals.pb.collection('billing_tickets').getList(1, 15, {
+    filter: `editionId = "${editionId}" && status = "used"`,
+    sort: '-checkedInAt',
+    fields: 'attendeeFirstName,attendeeLastName,ticketNumber,checkedInAt,checkedInBy'
+  })
+
+  // Get scanner user names
+  const scannerIds = [...scannerStats.keys()]
+  const scannerNames = new Map<string, string>()
+  if (scannerIds.length > 0) {
+    try {
+      const users = await locals.pb.collection('users').getFullList({
+        filter: scannerIds.map((id) => `id = "${id}"`).join(' || '),
+        fields: 'id,name,email'
+      })
+      for (const user of users) {
+        scannerNames.set(user.id, (user.name as string) || (user.email as string) || user.id)
+      }
+    } catch {
+      // If we can't fetch users, use IDs
+    }
+  }
+
+  // Build scanner list with names
+  const scanners = Array.from(scannerStats.entries()).map(([id, stats]) => ({
+    id,
+    name: scannerNames.get(id) || id.slice(0, 8),
+    count: stats.count,
+    lastActivity: stats.lastActivity
+  }))
+  scanners.sort((a, b) => b.count - a.count)
 
   return {
     edition: {
@@ -37,7 +87,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     stats: {
       total,
       checkedIn
-    }
+    },
+    scanners,
+    recentCheckIns: recentCheckIns.items.map((t) => ({
+      name: `${t.attendeeFirstName} ${t.attendeeLastName}`,
+      ticketNumber: t.ticketNumber as string,
+      checkedInAt: t.checkedInAt as string,
+      checkedInBy:
+        scannerNames.get(t.checkedInBy as string) ||
+        (t.checkedInBy as string)?.slice(0, 8) ||
+        'Unknown'
+    }))
   }
 }
 
