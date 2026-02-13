@@ -79,8 +79,10 @@ export const handle: Handle = async ({ event, resolve }) => {
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-  // Allow camera on scanner pages, block on others
-  if (event.url.pathname.startsWith('/scan')) {
+  // Allow camera on scanner and checkin pages, block on others
+  const needsCamera =
+    event.url.pathname.startsWith('/scan') || event.url.pathname.includes('/checkin')
+  if (needsCamera) {
     response.headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()')
   } else {
     response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
