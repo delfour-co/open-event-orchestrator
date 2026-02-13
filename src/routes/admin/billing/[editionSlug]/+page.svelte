@@ -118,69 +118,65 @@ $effect(() => {
 				</p>
 			</div>
 		</div>
-		<div class="flex flex-col items-end gap-2">
-			<!-- URLs -->
-			<div class="flex flex-wrap items-center gap-2">
-				<!-- Public Tickets URL -->
-				<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-					<span class="text-xs text-muted-foreground">Tickets:</span>
-					<code class="text-xs">/tickets/{data.edition.slug}</code>
-					<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyPublicUrl}>
-						{#if copiedPublic}
-							<Check class="h-3 w-3 text-green-500" />
-						{:else}
-							<Copy class="h-3 w-3" />
-						{/if}
+		<!-- Actions & URLs -->
+		<div class="flex flex-wrap items-center gap-2">
+			<!-- Public Tickets URL -->
+			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
+				<span class="text-xs text-muted-foreground">Tickets:</span>
+				<code class="text-xs">/tickets/{data.edition.slug}</code>
+				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyPublicUrl}>
+					{#if copiedPublic}
+						<Check class="h-3 w-3 text-green-500" />
+					{:else}
+						<Copy class="h-3 w-3" />
+					{/if}
+				</Button>
+				<a href="/tickets/{data.edition.slug}" target="_blank" rel="noopener noreferrer">
+					<Button variant="ghost" size="icon" class="h-6 w-6">
+						<ExternalLink class="h-3 w-3" />
 					</Button>
-					<a href="/tickets/{data.edition.slug}" target="_blank" rel="noopener noreferrer">
-						<Button variant="ghost" size="icon" class="h-6 w-6">
-							<ExternalLink class="h-3 w-3" />
-						</Button>
-					</a>
-				</div>
-				<!-- Scanner URL -->
-				<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-					<span class="text-xs text-muted-foreground">Scanner:</span>
-					<code class="text-xs">/scan/{data.edition.id}</code>
-					<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyScannerUrl}>
-						{#if copiedScanner}
-							<Check class="h-3 w-3 text-green-500" />
-						{:else}
-							<Copy class="h-3 w-3" />
-						{/if}
-					</Button>
-					<a href="/scan/{data.edition.id}" target="_blank" rel="noopener noreferrer">
-						<Button variant="ghost" size="icon" class="h-6 w-6">
-							<ExternalLink class="h-3 w-3" />
-						</Button>
-					</a>
-				</div>
+				</a>
 			</div>
-			<!-- Actions -->
-			<div class="flex gap-2">
-				<a href="/admin/billing/{data.edition.slug}/checkin">
-					<Button variant="outline" class="gap-2">
-						<QrCode class="h-4 w-4" />
-						Check-in
-					</Button>
-				</a>
-				<a href="/admin/billing/{data.edition.slug}/participants">
-					<Button variant="outline" class="gap-2">
-						<Users class="h-4 w-4" />
-						Participants
-					</Button>
-				</a>
-				<a href="/admin/billing/{data.edition.slug}/design" title="Ticket Design">
-					<Button variant="ghost" size="icon">
-						<Palette class="h-4 w-4" />
-					</Button>
-				</a>
-				<a href="/admin/billing/{data.edition.slug}/settings" title="Billing Settings">
-					<Button variant="ghost" size="icon">
-						<Settings class="h-4 w-4" />
+			<!-- Scanner URL -->
+			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
+				<span class="text-xs text-muted-foreground">Scanner:</span>
+				<code class="text-xs">/scan/{data.edition.id}</code>
+				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyScannerUrl}>
+					{#if copiedScanner}
+						<Check class="h-3 w-3 text-green-500" />
+					{:else}
+						<Copy class="h-3 w-3" />
+					{/if}
+				</Button>
+				<a href="/scan/{data.edition.id}" target="_blank" rel="noopener noreferrer">
+					<Button variant="ghost" size="icon" class="h-6 w-6">
+						<ExternalLink class="h-3 w-3" />
 					</Button>
 				</a>
 			</div>
+			<!-- Actions -->
+			<a href="/admin/billing/{data.edition.slug}/checkin">
+				<Button variant="outline" class="gap-2">
+					<QrCode class="h-4 w-4" />
+					Check-in
+				</Button>
+			</a>
+			<a href="/admin/billing/{data.edition.slug}/participants">
+				<Button variant="outline" class="gap-2">
+					<Users class="h-4 w-4" />
+					Participants
+				</Button>
+			</a>
+			<a href="/admin/billing/{data.edition.slug}/design" title="Ticket Design">
+				<Button variant="ghost" size="icon">
+					<Palette class="h-4 w-4" />
+				</Button>
+			</a>
+			<a href="/admin/billing/{data.edition.slug}/settings" title="Billing Settings">
+				<Button variant="ghost" size="icon">
+					<Settings class="h-4 w-4" />
+				</Button>
+			</a>
 		</div>
 	</div>
 
