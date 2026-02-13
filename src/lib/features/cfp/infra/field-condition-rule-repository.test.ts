@@ -1,4 +1,4 @@
-import type { FieldCondition, FieldConditionRule } from '$lib/features/cfp/domain/conditional-field'
+import type { FieldCondition } from '$lib/features/cfp/domain/conditional-field'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createFieldConditionRuleRepository } from './field-condition-rule-repository'
 
