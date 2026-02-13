@@ -182,6 +182,40 @@ export const offlineSyncService = {
   },
 
   /**
+   * Fetch ticket status updates from server (tickets checked in by others)
+   */
+  async fetchTicketUpdates(editionId: string, apiUrl: string): Promise<{ updated: number }> {
+    if (!this.isOnline()) {
+      return { updated: 0 }
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/api/scan/tickets/updates?editionId=${editionId}`)
+
+      if (!response.ok) {
+        return { updated: 0 }
+      }
+
+      const data = (await response.json()) as {
+        tickets: Array<{ ticketNumber: string; status: 'valid' | 'used' | 'cancelled' }>
+      }
+
+      let updated = 0
+      for (const ticket of data.tickets) {
+        const cached = await ticketCacheService.getTicket(ticket.ticketNumber)
+        if (cached && cached.status !== ticket.status) {
+          await ticketCacheService.updateTicketStatus(ticket.ticketNumber, ticket.status)
+          updated++
+        }
+      }
+
+      return { updated }
+    } catch {
+      return { updated: 0 }
+    }
+  },
+
+  /**
    * Register service worker for background sync
    */
   async registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {

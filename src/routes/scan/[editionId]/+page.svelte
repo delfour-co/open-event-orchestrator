@@ -1,8 +1,8 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
 import { offlineSyncService } from '$lib/features/billing/services/offline-sync-service'
 import { ticketCacheService } from '$lib/features/billing/services/ticket-cache-service'
-import { onMount } from 'svelte'
 import type { PageData } from './$types'
 
 interface Props {
@@ -40,21 +40,34 @@ let downloadError = $state<string | null>(null)
 let scanHistory = $state<Array<{ time: Date; result: ScanResult }>>([])
 const MAX_HISTORY = 10
 
+// Session statistics (only user actions in this session)
+let sessionScanned = $state(0)
+let sessionErrors = $state(0)
+
 // Check online status
 let isOnline = $state(true)
 let cleanupConnectivity: (() => void) | undefined
+let hasInitialized = false
 
-onMount(() => {
-  console.log('[Scanner] onMount called, edition:', data.edition?.name)
+// Background sync state
+let syncInterval: ReturnType<typeof setInterval> | null = null
+let pendingCount = $state(0)
+let isSyncing = $state(false)
+const SYNC_INTERVAL_MS = 15000 // 15 seconds
+
+// Use $effect for initialization - runs when component is mounted in browser
+$effect(() => {
+  if (!browser) return
+  if (hasInitialized) return
+
+  hasInitialized = true
 
   if (!data.edition) {
-    console.log('[Scanner] No edition, redirecting to /scan')
     goto('/scan')
     return
   }
 
   isOnline = navigator.onLine
-  console.log('[Scanner] Online status:', isOnline)
 
   cleanupConnectivity = offlineSyncService.setupConnectivityListeners(
     () => {
@@ -66,16 +79,20 @@ onMount(() => {
   )
 
   // Load cache stats and start scanner
-  console.log('[Scanner] Loading cache stats...')
-  updateCacheStats().then(() => {
-    console.log('[Scanner] Cache stats loaded, starting scanner...')
-    startScanner()
-  })
+  updateCacheStats()
+    .then(() => {
+      startScanner()
+      startBackgroundSync()
+    })
+    .catch(() => {
+      startScanner()
+      startBackgroundSync()
+    })
 
-  // Cleanup on unmount
+  // Cleanup function - called when effect is destroyed
   return () => {
-    console.log('[Scanner] Cleanup called')
     stopScanner()
+    stopBackgroundSync()
     cleanupConnectivity?.()
   }
 })
@@ -83,6 +100,54 @@ onMount(() => {
 async function updateCacheStats() {
   if (!data.edition) return
   cacheStats = await ticketCacheService.getCacheStats(data.edition.id)
+}
+
+async function backgroundSync() {
+  if (!data.edition || !isOnline || isSyncing) return
+
+  isSyncing = true
+
+  try {
+    // 1. Sync pending check-ins to server
+    const syncResult = await offlineSyncService.syncPendingCheckIns(window.location.origin)
+
+    // 2. Fetch ticket updates from others
+    const updateResult = await offlineSyncService.fetchTicketUpdates(
+      data.edition.id,
+      window.location.origin
+    )
+
+    // 3. Update pending count
+    pendingCount = await offlineSyncService.getPendingCount()
+
+    // Log sync results for debugging
+    if (syncResult.synced > 0 || updateResult.updated > 0) {
+      console.log(
+        `[Sync] Synced: ${syncResult.synced}, Updated from others: ${updateResult.updated}`
+      )
+    }
+  } catch (err) {
+    console.error('[Sync] Background sync failed:', err)
+  } finally {
+    isSyncing = false
+  }
+}
+
+function startBackgroundSync() {
+  if (syncInterval) return
+
+  // Initial sync
+  backgroundSync()
+
+  // Start periodic sync
+  syncInterval = setInterval(backgroundSync, SYNC_INTERVAL_MS)
+}
+
+function stopBackgroundSync() {
+  if (syncInterval) {
+    clearInterval(syncInterval)
+    syncInterval = null
+  }
 }
 
 async function downloadTickets() {
@@ -94,6 +159,12 @@ async function downloadTickets() {
   try {
     await offlineSyncService.downloadTickets(data.edition.id, window.location.origin)
     await updateCacheStats()
+
+    // Reset session counters when downloading fresh data
+    sessionScanned = 0
+    sessionErrors = 0
+    scanHistory = []
+
     downloadError = null
   } catch (err) {
     downloadError = err instanceof Error ? err.message : 'Download failed'
@@ -103,34 +174,24 @@ async function downloadTickets() {
 }
 
 async function startScanner() {
-  console.log('[Scanner] startScanner called, isScanning:', isScanning)
-  if (isScanning) {
-    console.log('[Scanner] Already scanning, skipping')
-    return
-  }
+  if (isScanning) return
 
   isInitializing = true
   scanError = null
-  console.log('[Scanner] Starting initialization...')
 
   // Wait a tick for the DOM to update and container to be ready
   await new Promise((resolve) => setTimeout(resolve, 100))
 
   try {
-    console.log('[Scanner] Importing html5-qrcode...')
     const { Html5Qrcode } = await import('html5-qrcode')
-    console.log('[Scanner] html5-qrcode imported successfully')
 
     // Get available cameras first
-    console.log('[Scanner] Getting available cameras...')
     const devices = await Html5Qrcode.getCameras()
-    console.log('[Scanner] Cameras found:', devices.length, devices)
 
     if (!devices || devices.length === 0) {
       throw new Error('No cameras found on this device')
     }
 
-    console.log('[Scanner] Creating Html5Qrcode instance...')
     html5QrCode = new Html5Qrcode('qr-scanner')
 
     // Try to find back camera, fallback to first available
@@ -141,21 +202,14 @@ async function startScanner() {
         d.label.toLowerCase().includes('environment')
     )
     const cameraId = backCamera?.id || devices[0].id
-    console.log(
-      '[Scanner] Selected camera:',
-      cameraId,
-      backCamera ? '(back camera)' : '(first available)'
-    )
 
     // Add timeout to prevent hanging
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
-        console.log('[Scanner] Timeout reached!')
         reject(new Error('Camera initialization timed out'))
       }, 10000)
     })
 
-    console.log('[Scanner] Starting camera with ID:', cameraId)
     const startPromise = (
       html5QrCode as {
         start: (
@@ -169,7 +223,7 @@ async function startScanner() {
       cameraId,
       {
         fps: 10,
-        qrbox: { width: 280, height: 280 },
+        qrbox: { width: 240, height: 240 },
         aspectRatio: 1.0
       },
       handleScan,
@@ -180,13 +234,28 @@ async function startScanner() {
 
     await Promise.race([startPromise, timeoutPromise])
 
-    console.log('[Scanner] Camera started successfully!')
     isScanning = true
     isInitializing = false
     scanError = null
   } catch (err) {
     console.error('[Scanner] Failed to start scanner:', err)
-    scanError = err instanceof Error ? err.message : 'Camera access denied or not available'
+    const errorMessage = err instanceof Error ? err.message : String(err)
+
+    // Provide user-friendly error messages
+    if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
+      scanError =
+        'Camera access denied. Please allow camera access in your browser settings and reload the page.'
+    } else if (errorMessage.includes('not allowed in this document')) {
+      scanError =
+        'Camera blocked by browser policy. Try accessing the page directly (not in an iframe) or use HTTPS.'
+    } else if (errorMessage.includes('No cameras found')) {
+      scanError = 'No camera found on this device.'
+    } else if (errorMessage.includes('timed out')) {
+      scanError = 'Camera initialization timed out. Please try again.'
+    } else {
+      scanError = errorMessage
+    }
+
     isScanning = false
     isInitializing = false
   }
@@ -281,6 +350,13 @@ async function performCheckIn(ticketNumber: string) {
   lastResult = result
   showResult = true
 
+  // Update statistics
+  if (result.success) {
+    sessionScanned++
+  } else {
+    sessionErrors++
+  }
+
   // Add to history
   scanHistory = [{ time: new Date(), result }, ...scanHistory.slice(0, MAX_HISTORY - 1)]
 
@@ -347,8 +423,17 @@ function formatTime(date: Date): string {
       </a>
       <div>
         <h1 class="font-semibold">{data.edition?.name || 'Unknown'}</h1>
-        <p class="text-xs text-muted-foreground">
-          {cacheStats.total} tickets cached
+        <p class="text-xs text-muted-foreground flex items-center gap-2">
+          <span>{cacheStats.total} tickets</span>
+          {#if pendingCount > 0}
+            <span class="text-orange-500">({pendingCount} pending)</span>
+          {/if}
+          {#if isSyncing}
+            <svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+          {/if}
         </p>
       </div>
     </div>
@@ -396,19 +481,13 @@ function formatTime(date: Date): string {
   {/if}
 
   <!-- Scanner area -->
-  <div class="relative flex-1 bg-black" style="min-height: 400px;">
+  <div class="relative flex-1 bg-black flex items-center justify-center" style="min-height: 350px;">
     <!-- Always render scanner container so it's available for html5-qrcode -->
     <div
       id="qr-scanner"
-      class="h-full w-full"
+      class="h-full w-full max-w-md"
     ></div>
 
-    <!-- Scan overlay when scanning -->
-    {#if isScanning && !scanError}
-      <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div class="h-72 w-72 rounded-2xl border-4 border-white/50"></div>
-      </div>
-    {/if}
 
     <!-- Error overlay -->
     {#if scanError}
@@ -472,6 +551,22 @@ function formatTime(date: Date): string {
         </div>
       </div>
     {/if}
+  </div>
+
+  <!-- Statistics bar -->
+  <div class="grid grid-cols-3 border-t bg-muted/30">
+    <div class="flex flex-col items-center py-3 border-r">
+      <span class="text-2xl font-bold">{cacheStats.total}</span>
+      <span class="text-xs text-muted-foreground">Expected</span>
+    </div>
+    <div class="flex flex-col items-center py-3 border-r">
+      <span class="text-2xl font-bold text-green-600">{sessionScanned}</span>
+      <span class="text-xs text-muted-foreground">Scanned</span>
+    </div>
+    <div class="flex flex-col items-center py-3">
+      <span class="text-2xl font-bold text-red-600">{sessionErrors}</span>
+      <span class="text-xs text-muted-foreground">Errors</span>
+    </div>
   </div>
 
   <!-- Recent scans -->

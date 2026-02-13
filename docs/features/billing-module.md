@@ -466,9 +466,12 @@ A Progressive Web App for scanning tickets with offline support.
 ### Features
 
 - **PWA installable**: Works on mobile devices as a standalone app
-- **QR scanning**: Uses html5-qrcode for camera scanning
+- **QR scanning**: Uses html5-qrcode for automatic camera scanning
 - **Offline mode**: Cache tickets locally for scanning without internet
-- **Sync queue**: Pending check-ins sync when connection restored
+- **Background sync**: Automatic bidirectional sync every 15 seconds
+  - Upload pending check-ins to server
+  - Download ticket status updates from other scanners
+- **Real-time stats**: Expected tickets, scanned count, errors
 - **Visual feedback**: Green/red indicators for valid/invalid tickets
 
 ### Routes
@@ -483,6 +486,7 @@ A Progressive Web App for scanning tickets with offline support.
 | Route | Method | Description |
 |-------|--------|-------------|
 | `/api/scan/tickets` | GET | Download tickets for offline cache |
+| `/api/scan/tickets/updates` | GET | Get ticket status updates (for sync) |
 | `/api/scan/checkin` | POST | Check in a ticket |
 
 ### Architecture
@@ -507,7 +511,10 @@ static/
 1. Staff downloads tickets for caching (requires online)
 2. Scans tickets offline - stored in IndexedDB
 3. Pending check-ins queued for sync
-4. When online: automatic sync of pending check-ins
+4. Background sync every 15 seconds (when online):
+   - Uploads pending check-ins to server
+   - Fetches ticket status updates from other scanners
+   - Updates local cache to avoid duplicate check-ins
 
 ### Usage
 
@@ -529,8 +536,11 @@ await ticketCacheService.addPendingCheckIn({
   checkedInBy: userId
 })
 
-// Sync pending check-ins
+// Sync pending check-ins to server
 await offlineSyncService.syncPendingCheckIns(origin)
+
+// Fetch ticket updates from other scanners
+await offlineSyncService.fetchTicketUpdates(editionId, origin)
 ```
 
 ## Related Documentation
