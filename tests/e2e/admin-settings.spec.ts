@@ -111,11 +111,20 @@ test.describe('Admin Settings Module', () => {
       await expect(stripeCard.getByRole('button', { name: 'Configure' })).toBeVisible()
     })
 
-    test('should show coming soon for Discord', async ({ page }) => {
+    test('should have configure button for Discord', async ({ page }) => {
       await page.goto('/admin/settings/integrations')
 
       const discordCard = page.locator('[class*="card"]').filter({ hasText: 'Discord' })
-      await expect(discordCard.getByText('Coming soon')).toBeVisible()
+      await expect(discordCard.getByRole('button', { name: 'Configure' })).toBeVisible()
+    })
+
+    test('should navigate to Discord settings when clicking configure', async ({ page }) => {
+      await page.goto('/admin/settings/integrations')
+
+      const discordCard = page.locator('[class*="card"]').filter({ hasText: 'Discord' })
+      await discordCard.getByRole('button', { name: 'Configure' }).click()
+
+      await expect(page).toHaveURL('/admin/settings/discord')
     })
 
     test('should navigate to SMTP settings when clicking configure', async ({ page }) => {
@@ -281,6 +290,115 @@ test.describe('Admin Settings Module', () => {
     })
   })
 
+  test.describe('Discord Settings', () => {
+    test('should display Discord settings page', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      await expect(page.getByRole('heading', { name: 'Discord Configuration' })).toBeVisible()
+      await expect(page.getByText('Configure Discord webhook notifications')).toBeVisible()
+    })
+
+    test('should have back link to integrations', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      const backLink = page.locator('a[href="/admin/settings/integrations"]')
+      await expect(backLink).toBeVisible()
+      await expect(page.getByText('Back to Integrations')).toBeVisible()
+    })
+
+    test('should display configuration status', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      // Should show either Configured or Not configured badge
+      const configured = page.getByText('Configured')
+      const notConfigured = page.getByText('Not configured')
+      await expect(configured.or(notConfigured).first()).toBeVisible()
+    })
+
+    test('should display webhook settings form', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      await expect(page.getByText('Webhook Settings')).toBeVisible()
+      await expect(page.getByLabel('Webhook URL')).toBeVisible()
+      await expect(page.getByLabel('Bot Username (optional)')).toBeVisible()
+    })
+
+    test('should display enable Discord toggle', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      await expect(page.getByText('Enable Discord')).toBeVisible()
+      await expect(
+        page.getByText('When disabled, Discord notifications will not be sent')
+      ).toBeVisible()
+    })
+
+    test('should have save settings button', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      await expect(page.getByRole('button', { name: 'Save Settings' })).toBeVisible()
+    })
+
+    test('should display test connection section', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      await expect(page.getByText('Test Connection')).toBeVisible()
+      await expect(
+        page.getByText('Send a test message to verify your Discord webhook')
+      ).toBeVisible()
+    })
+
+    test('should display setup instructions', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      await expect(page.getByText('How to Create a Discord Webhook')).toBeVisible()
+      await expect(page.getByText('Server Settings')).toBeVisible()
+      await expect(page.getByText('Integrations')).toBeVisible()
+    })
+
+    test('should show webhook URL format hint', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      await expect(page.getByText('https://discord.com/api/webhooks/ID/TOKEN')).toBeVisible()
+    })
+
+    test('should have password visibility toggle for webhook URL', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      // Should have a toggle button for the webhook URL field
+      const toggleButtons = page.locator('[type="button"]').filter({
+        has: page.locator('svg')
+      })
+
+      // Wait for the page to load
+      await page.waitForLoadState('networkidle')
+      expect(await toggleButtons.count()).toBeGreaterThanOrEqual(1)
+    })
+
+    test('should validate webhook URL format on save', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      // Enter invalid webhook URL
+      await page.getByLabel('Webhook URL').fill('invalid_url')
+      await page.getByRole('button', { name: 'Save Settings' }).click()
+
+      // Should show error
+      await expect(page.getByText(/Invalid Discord webhook URL/)).toBeVisible()
+    })
+
+    test('should accept valid webhook URL format', async ({ page }) => {
+      await page.goto('/admin/settings/discord')
+
+      // Enter valid webhook URL
+      await page
+        .getByLabel('Webhook URL')
+        .fill('https://discord.com/api/webhooks/123456789/abcdefghijk')
+      await page.getByRole('button', { name: 'Save Settings' }).click()
+
+      // Should show success message
+      await expect(page.getByText('Discord settings saved successfully')).toBeVisible()
+    })
+  })
+
   test.describe('Access Control', () => {
     test('should require authentication for settings', async ({ page }) => {
       await page.context().clearCookies()
@@ -299,6 +417,13 @@ test.describe('Admin Settings Module', () => {
     test('should require authentication for Stripe settings', async ({ page }) => {
       await page.context().clearCookies()
       await page.goto('/admin/settings/stripe')
+
+      await expect(page).toHaveURL(/\/auth\/login/)
+    })
+
+    test('should require authentication for Discord settings', async ({ page }) => {
+      await page.context().clearCookies()
+      await page.goto('/admin/settings/discord')
 
       await expect(page).toHaveURL(/\/auth\/login/)
     })

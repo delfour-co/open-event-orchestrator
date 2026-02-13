@@ -73,6 +73,8 @@ function getConfigPath(integration: IntegrationEntry): string | null {
       return '/admin/settings/stripe'
     case 'slack':
       return '/admin/settings/slack'
+    case 'discord':
+      return '/admin/settings/discord'
     case 'webhooks':
       return '/admin/settings/webhooks'
     default:

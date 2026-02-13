@@ -171,11 +171,59 @@ describe('integration-service', () => {
     })
 
     describe('discord', () => {
-      it('should return not_configured (not yet implemented)', async () => {
+      it('should return connected when Discord is configured', async () => {
+        vi.mocked(mockPb.collection).mockReturnValue({
+          getList: vi.fn().mockResolvedValue({
+            items: [
+              {
+                discordWebhookUrl: 'https://discord.com/api/webhooks/123/abc',
+                discordEnabled: true,
+                discordUsername: 'My Bot'
+              }
+            ]
+          })
+        } as never)
+
+        const result = await checkIntegrationStatus(mockPb, 'discord')
+
+        expect(result.status.status).toBe('connected')
+        expect(result.status.message).toContain('My Bot')
+      })
+
+      it('should return not_configured when disabled', async () => {
+        vi.mocked(mockPb.collection).mockReturnValue({
+          getList: vi.fn().mockResolvedValue({
+            items: [
+              {
+                discordWebhookUrl: 'https://discord.com/api/webhooks/123/abc',
+                discordEnabled: false
+              }
+            ]
+          })
+        } as never)
+
         const result = await checkIntegrationStatus(mockPb, 'discord')
 
         expect(result.status.status).toBe('not_configured')
-        expect(result.status.message).toBe('Coming soon')
+        expect(result.status.message).toBe('Discord is disabled')
+      })
+
+      it('should return not_configured when webhook URL is missing', async () => {
+        vi.mocked(mockPb.collection).mockReturnValue({
+          getList: vi.fn().mockResolvedValue({
+            items: [
+              {
+                discordWebhookUrl: '',
+                discordEnabled: true
+              }
+            ]
+          })
+        } as never)
+
+        const result = await checkIntegrationStatus(mockPb, 'discord')
+
+        expect(result.status.status).toBe('not_configured')
+        expect(result.status.message).toBe('Discord webhook not configured')
       })
     })
 

@@ -340,3 +340,73 @@ export async function saveSlackSettings(
     await pb.collection('app_settings').create(data)
   }
 }
+
+// =============================================================================
+// Discord Settings
+// =============================================================================
+
+export interface DiscordSettings {
+  discordWebhookUrl: string
+  discordEnabled: boolean
+  discordUsername: string
+}
+
+const DEFAULT_DISCORD: DiscordSettings = {
+  discordWebhookUrl: '',
+  discordEnabled: false,
+  discordUsername: 'Open Event Orchestrator'
+}
+
+/**
+ * Check if Discord is properly configured
+ */
+export function isDiscordConfigured(settings: DiscordSettings): boolean {
+  return !!(settings.discordEnabled && settings.discordWebhookUrl)
+}
+
+/**
+ * Get Discord settings from database
+ */
+export async function getDiscordSettings(pb: PocketBase): Promise<DiscordSettings> {
+  try {
+    const records = await pb.collection('app_settings').getList(1, 1)
+    if (records.items.length === 0) {
+      return DEFAULT_DISCORD
+    }
+    const record = records.items[0]
+    return {
+      discordWebhookUrl: (record.discordWebhookUrl as string) || '',
+      discordEnabled: record.discordEnabled === true,
+      discordUsername: (record.discordUsername as string) || DEFAULT_DISCORD.discordUsername
+    }
+  } catch {
+    return DEFAULT_DISCORD
+  }
+}
+
+/**
+ * Save Discord settings to database
+ */
+export async function saveDiscordSettings(
+  pb: PocketBase,
+  settings: Partial<DiscordSettings>
+): Promise<void> {
+  const records = await pb.collection('app_settings').getList(1, 1)
+  const data: Record<string, unknown> = {}
+
+  if (settings.discordWebhookUrl !== undefined) {
+    data.discordWebhookUrl = settings.discordWebhookUrl
+  }
+  if (settings.discordEnabled !== undefined) {
+    data.discordEnabled = settings.discordEnabled
+  }
+  if (settings.discordUsername !== undefined) {
+    data.discordUsername = settings.discordUsername
+  }
+
+  if (records.items.length > 0) {
+    await pb.collection('app_settings').update(records.items[0].id, data)
+  } else {
+    await pb.collection('app_settings').create(data)
+  }
+}

@@ -1,8 +1,10 @@
 import type PocketBase from 'pocketbase'
 import {
+  getDiscordSettings,
   getSlackSettings,
   getSmtpSettings,
   getStripeSettings,
+  isDiscordConfigured,
   isSlackConfigured,
   isStripeConfigured
 } from './app-settings'
@@ -97,11 +99,35 @@ async function checkSlackStatus(pb: PocketBase): Promise<IntegrationEntry> {
 }
 
 /**
- * Check Discord integration status (placeholder for future implementation)
+ * Check Discord integration status
  */
-async function checkDiscordStatus(_pb: PocketBase): Promise<IntegrationEntry> {
-  // Discord integration not yet implemented
-  return buildIntegrationEntry('discord', 'not_configured', 'Coming soon')
+async function checkDiscordStatus(pb: PocketBase): Promise<IntegrationEntry> {
+  try {
+    const settings = await getDiscordSettings(pb)
+
+    if (!settings.discordEnabled) {
+      return buildIntegrationEntry('discord', 'not_configured', 'Discord is disabled')
+    }
+
+    if (!isDiscordConfigured(settings)) {
+      return buildIntegrationEntry('discord', 'not_configured', 'Discord webhook not configured')
+    }
+
+    return buildIntegrationEntry(
+      'discord',
+      'connected',
+      `Bot: ${settings.discordUsername || 'Open Event Orchestrator'}`,
+      {
+        username: settings.discordUsername
+      }
+    )
+  } catch (error) {
+    return buildIntegrationEntry(
+      'discord',
+      'error',
+      error instanceof Error ? error.message : 'Failed to check Discord status'
+    )
+  }
 }
 
 /**
