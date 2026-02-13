@@ -99,7 +99,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               <Label class="text-[10px] text-muted-foreground">Top</Label>
               <Input
                 type="number"
-                value={block.padding.top}
+                value={String(block.padding.top)}
                 onchange={(e) => updatePadding('top', Number((e.target as HTMLInputElement).value))}
                 min="0"
                 max="100"
@@ -110,7 +110,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               <Label class="text-[10px] text-muted-foreground">Right</Label>
               <Input
                 type="number"
-                value={block.padding.right}
+                value={String(block.padding.right)}
                 onchange={(e) =>
                   updatePadding('right', Number((e.target as HTMLInputElement).value))}
                 min="0"
@@ -122,7 +122,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               <Label class="text-[10px] text-muted-foreground">Bottom</Label>
               <Input
                 type="number"
-                value={block.padding.bottom}
+                value={String(block.padding.bottom)}
                 onchange={(e) =>
                   updatePadding('bottom', Number((e.target as HTMLInputElement).value))}
                 min="0"
@@ -134,7 +134,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               <Label class="text-[10px] text-muted-foreground">Left</Label>
               <Input
                 type="number"
-                value={block.padding.left}
+                value={String(block.padding.left)}
                 onchange={(e) => updatePadding('left', Number((e.target as HTMLInputElement).value))}
                 min="0"
                 max="100"
@@ -162,7 +162,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               <Label class="text-xs font-medium">Font Size</Label>
               <Input
                 type="number"
-                value={textBlock.fontSize}
+                value={String(textBlock.fontSize)}
                 onchange={(e) =>
                   onUpdate({ fontSize: Number((e.target as HTMLInputElement).value) })}
                 min="10"
@@ -369,7 +369,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               <Label class="text-xs font-medium">Border Radius</Label>
               <Input
                 type="number"
-                value={buttonBlock.borderRadius}
+                value={String(buttonBlock.borderRadius)}
                 onchange={(e) =>
                   onUpdate({ borderRadius: Number((e.target as HTMLInputElement).value) })}
                 min="0"
@@ -440,7 +440,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               <Label class="text-xs font-medium">Thickness</Label>
               <Input
                 type="number"
-                value={dividerBlock.thickness}
+                value={String(dividerBlock.thickness)}
                 onchange={(e) =>
                   onUpdate({ thickness: Number((e.target as HTMLInputElement).value) })}
                 min="1"
@@ -471,7 +471,7 @@ function handleLayoutChange(layout: ColumnLayout) {
             <Label class="text-xs font-medium">Column Gap (px)</Label>
             <Input
               type="number"
-              value={columnsBlock.gap}
+              value={String(columnsBlock.gap)}
               onchange={(e) => onUpdate({ gap: Number((e.target as HTMLInputElement).value) })}
               min="0"
               max="40"

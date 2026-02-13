@@ -2,7 +2,7 @@
 import * as Card from '$lib/components/ui/card'
 import type { BlockType } from '$lib/features/crm/domain/email-editor'
 import { BLOCK_TYPE_LABELS } from '$lib/features/crm/domain/email-editor'
-import { Columns, Image, Minus, MousePointerSquare, Type } from 'lucide-svelte'
+import { Columns, Image, Minus, MousePointer2, Type } from 'lucide-svelte'
 
 interface Props {
   onAddBlock?: (type: BlockType) => void
@@ -13,7 +13,7 @@ const { onAddBlock }: Props = $props()
 const blockTypes: { type: BlockType; icon: typeof Type; description: string }[] = [
   { type: 'text', icon: Type, description: 'Add formatted text' },
   { type: 'image', icon: Image, description: 'Add an image' },
-  { type: 'button', icon: MousePointerSquare, description: 'Add a call-to-action button' },
+  { type: 'button', icon: MousePointer2, description: 'Add a call-to-action button' },
   { type: 'divider', icon: Minus, description: 'Add a horizontal divider' },
   { type: 'columns', icon: Columns, description: 'Add a multi-column layout' }
 ]

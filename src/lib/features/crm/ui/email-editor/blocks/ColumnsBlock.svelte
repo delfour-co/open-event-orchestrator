@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { ColumnsBlock, EmailBlock } from '$lib/features/crm/domain/email-editor'
+import type { ColumnsBlock } from '$lib/features/crm/domain/email-editor'
 import { getColumnWidths } from '$lib/features/crm/domain/email-editor'
 import BlockRenderer from '../BlockRenderer.svelte'
 

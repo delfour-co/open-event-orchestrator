@@ -99,11 +99,8 @@ function handleSave() {
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (
-      selectedBlockId &&
-      document.activeElement?.tagName !== 'INPUT' &&
-      document.activeElement?.tagName !== 'TEXTAREA'
-    ) {
+    const activeEl = globalThis.document?.activeElement
+    if (selectedBlockId && activeEl?.tagName !== 'INPUT' && activeEl?.tagName !== 'TEXTAREA') {
       handleDeleteBlock()
     }
   }

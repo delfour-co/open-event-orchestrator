@@ -84,20 +84,40 @@ export const dividerBlockSchema = baseBlockSchema.extend({
 })
 export type DividerBlock = z.infer<typeof dividerBlockSchema>
 
-// Column content (nested blocks)
-export const columnContentSchema = z.object({
-  blocks: z.array(z.lazy(() => emailBlockSchema)).default([])
-})
-export type ColumnContent = z.infer<typeof columnContentSchema>
+// Column content type (for nested blocks in columns)
+export interface ColumnContent {
+  blocks: Array<TextBlock | ImageBlock | ButtonBlock | DividerBlock>
+}
 
-// Columns block
+// Columns block interface
+export interface ColumnsBlock {
+  id: string
+  type: 'columns'
+  padding: { top: number; right: number; bottom: number; left: number }
+  backgroundColor: string
+  layout: ColumnLayout
+  gap: number
+  columns: ColumnContent[]
+}
+
+// Simple block schema for column content (no nesting to avoid circular refs)
+const simpleBlockSchema = z.discriminatedUnion('type', [
+  textBlockSchema,
+  imageBlockSchema,
+  buttonBlockSchema,
+  dividerBlockSchema
+])
+
+export const columnContentSchema = z.object({
+  blocks: z.array(simpleBlockSchema).default([])
+})
+
 export const columnsBlockSchema = baseBlockSchema.extend({
   type: z.literal('columns'),
   layout: columnLayoutSchema.default('50-50'),
   gap: z.number().min(0).max(40).default(20),
   columns: z.array(columnContentSchema).default([{ blocks: [] }, { blocks: [] }])
 })
-export type ColumnsBlock = z.infer<typeof columnsBlockSchema>
 
 // Union of all block types
 export const emailBlockSchema = z.discriminatedUnion('type', [
@@ -288,7 +308,7 @@ export function cloneBlock(block: EmailBlock): EmailBlock {
 
   if (cloned.type === 'columns') {
     cloned.columns = cloned.columns.map((col) => ({
-      blocks: col.blocks.map((b) => cloneBlock(b))
+      blocks: col.blocks.map((b) => cloneBlock(b as EmailBlock))
     }))
   }
 
@@ -347,7 +367,7 @@ export function deleteBlockById(blocks: EmailBlock[], id: string): EmailBlock[] 
 
     if (block.type === 'columns') {
       const newColumns = block.columns.map((col) => ({
-        blocks: deleteBlockById(col.blocks, id)
+        blocks: deleteBlockById(col.blocks as EmailBlock[], id)
       }))
       newBlocks.push({ ...block, columns: newColumns })
     } else {
@@ -375,7 +395,7 @@ export function updateBlockById(
       return {
         ...block,
         columns: block.columns.map((col) => ({
-          blocks: updateBlockById(col.blocks, id, updates)
+          blocks: updateBlockById(col.blocks as EmailBlock[], id, updates)
         }))
       }
     }

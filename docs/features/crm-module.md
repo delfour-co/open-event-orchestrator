@@ -379,6 +379,72 @@ const result = await importContacts('event-id', rows, 'merge')
 // result: { total: 100, created: 80, updated: 15, skipped: 5, errors: [] }
 ```
 
+## Visual Email Editor
+
+The CRM module includes a drag-and-drop visual email editor for creating responsive HTML emails.
+
+### Block Types
+
+| Block | Description |
+|-------|-------------|
+| `text` | Rich text content with formatting |
+| `image` | Image with alt text, sizing, and optional link |
+| `button` | Call-to-action button with customizable style |
+| `divider` | Horizontal separator line |
+| `columns` | Multi-column layout (2 or 3 columns) |
+
+### Editor Features
+
+- **Drag-and-drop**: Add blocks by dragging from palette
+- **Block properties**: Customize each block's appearance
+- **Preview modes**: Desktop, tablet, and mobile previews
+- **Code view**: View and export generated HTML
+- **Keyboard shortcuts**: Ctrl+S (save), Ctrl+D (duplicate), Delete (remove)
+
+### Architecture
+
+```
+src/lib/features/crm/
+├── domain/
+│   └── email-editor.ts         # Block schemas and utilities
+├── services/
+│   └── email-export-service.ts # HTML export with responsive tables
+└── ui/email-editor/
+    ├── EmailEditor.svelte      # Main editor component
+    ├── EditorCanvas.svelte     # Drag-drop canvas
+    ├── BlockPalette.svelte     # Block type selection
+    ├── BlockProperties.svelte  # Property editing panel
+    ├── PreviewPanel.svelte     # Responsive preview
+    └── blocks/                 # Individual block renderers
+```
+
+### Usage
+
+```svelte
+<script>
+import { EmailEditor } from '$lib/features/crm/ui/email-editor'
+import { createEmptyDocument } from '$lib/features/crm/domain/email-editor'
+
+let document = createEmptyDocument()
+
+function handleSave(doc, html, text) {
+  // Save HTML to campaign
+}
+</script>
+
+<EmailEditor
+  initialDocument={document}
+  onSave={handleSave}
+/>
+```
+
+### Export
+
+The email export service generates responsive HTML with:
+- VML fallbacks for Outlook
+- Mobile-responsive tables
+- Inline CSS for email client compatibility
+
 ## Related Documentation
 
 - [Database Seeding](../development/database-seeding.md) - Test data setup

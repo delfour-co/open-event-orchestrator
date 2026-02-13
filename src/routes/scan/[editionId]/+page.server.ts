@@ -1,7 +1,7 @@
-import type { PageLoad } from './$types'
+import type { PageServerLoad } from './$types'
 
-export const load: PageLoad = async ({ params, parent }) => {
-  const { pb } = await parent()
+export const load: PageServerLoad = async ({ params, locals }) => {
+  const pb = locals.pb
   const { editionId } = params
 
   const user = pb.authStore.record

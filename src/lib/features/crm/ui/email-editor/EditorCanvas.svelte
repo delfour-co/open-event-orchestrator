@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { BlockType, EmailBlock, EmailDocument } from '$lib/features/crm/domain/email-editor'
+import type { BlockType, EmailDocument } from '$lib/features/crm/domain/email-editor'
 import { createDefaultBlock, moveBlock } from '$lib/features/crm/domain/email-editor'
 import BlockRenderer from './BlockRenderer.svelte'
 

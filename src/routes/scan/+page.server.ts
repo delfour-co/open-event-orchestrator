@@ -1,7 +1,7 @@
-import type { PageLoad } from './$types'
+import type { PageServerLoad } from './$types'
 
-export const load: PageLoad = async ({ parent }) => {
-  const { pb } = await parent()
+export const load: PageServerLoad = async ({ locals }) => {
+  const pb = locals.pb
 
   const user = pb.authStore.record
 
@@ -20,7 +20,7 @@ export const load: PageLoad = async ({ parent }) => {
     })
 
     const editions = records.map((record) => ({
-      id: record.id as string,
+      id: record.id,
       name: record.name as string,
       slug: record.slug as string
     }))

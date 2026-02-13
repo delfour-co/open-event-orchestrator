@@ -197,6 +197,33 @@ Email service supports:
 | `allowCoSpeakers` | Enable co-speaker feature | false |
 | `anonymousReview` | Hide speaker info from reviewers | false |
 
+### Conditional Field Rules
+
+The CFP form supports dynamic field visibility based on category or format selection.
+
+**Rule Structure:**
+```typescript
+type FieldConditionRule = {
+  id: string
+  editionId: string
+  targetField: 'description' | 'level' | 'language' | 'notes'
+  conditionType: 'category' | 'format'
+  conditionValue: string      // Category or format ID
+  action: 'show' | 'hide' | 'require'
+}
+```
+
+**Examples:**
+- Show "notes" field only for Workshop format
+- Require "description" for Keynote category
+- Hide "level" field for Lightning Talks
+
+**Configuration:**
+Admins configure rules in `/admin/cfp/[editionSlug]/settings` under "Conditional Fields".
+
+**Implementation:**
+The `TalkForm` component evaluates rules using `shouldShowField()` to dynamically show/hide fields based on the current category and format selection.
+
 ### Categories
 
 Define talk topics (e.g., "Web Development", "Mobile", "AI/ML"):

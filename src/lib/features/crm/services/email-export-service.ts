@@ -254,9 +254,9 @@ function renderColumnsBlock(
   const widths = getColumnWidths(block.layout)
 
   const columnsHtml = block.columns
-    .map((col, index) => {
+    .map((col: { blocks: EmailBlock[] }, index: number) => {
       const colWidth = widths[index]
-      const blocksHtml = col.blocks.map((b) => renderBlock(b, globalStyles)).join('\n')
+      const blocksHtml = col.blocks.map((b: EmailBlock) => renderBlock(b, globalStyles)).join('\n')
 
       return `              <!--[if mso]>
               <td width="${Math.round(colWidth)}%" valign="top" class="mobile-stack">

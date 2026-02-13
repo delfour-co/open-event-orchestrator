@@ -459,6 +459,80 @@ pnpm test                    # Unit tests
 pnpm test:e2e tests/e2e/billing*.spec.ts  # E2E tests
 ```
 
+## Mobile Scan App (PWA)
+
+A Progressive Web App for scanning tickets with offline support.
+
+### Features
+
+- **PWA installable**: Works on mobile devices as a standalone app
+- **QR scanning**: Uses html5-qrcode for camera scanning
+- **Offline mode**: Cache tickets locally for scanning without internet
+- **Sync queue**: Pending check-ins sync when connection restored
+- **Visual feedback**: Green/red indicators for valid/invalid tickets
+
+### Routes
+
+| Route | Description |
+|-------|-------------|
+| `/scan` | Edition selector |
+| `/scan/[editionId]` | QR scanner interface |
+
+### API Endpoints
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/scan/tickets` | GET | Download tickets for offline cache |
+| `/api/scan/checkin` | POST | Check in a ticket |
+
+### Architecture
+
+```
+src/lib/features/billing/services/
+├── ticket-cache-service.ts    # IndexedDB ticket cache
+└── offline-sync-service.ts    # Sync queue management
+
+src/routes/scan/
+├── +layout.svelte             # PWA layout with online/offline status
+├── +page.svelte               # Edition selector
+└── [editionId]/+page.svelte   # Scanner interface
+
+static/
+├── manifest.json              # PWA manifest
+└── sw.js                      # Service worker
+```
+
+### Offline Flow
+
+1. Staff downloads tickets for caching (requires online)
+2. Scans tickets offline - stored in IndexedDB
+3. Pending check-ins queued for sync
+4. When online: automatic sync of pending check-ins
+
+### Usage
+
+```typescript
+import { ticketCacheService } from '$lib/features/billing/services/ticket-cache-service'
+import { offlineSyncService } from '$lib/features/billing/services/offline-sync-service'
+
+// Download tickets for offline
+await offlineSyncService.downloadTickets(editionId, origin)
+
+// Check ticket locally
+const ticket = await ticketCacheService.getTicket(ticketNumber)
+
+// Add pending check-in
+await ticketCacheService.addPendingCheckIn({
+  ticketNumber,
+  editionId,
+  checkedInAt: new Date().toISOString(),
+  checkedInBy: userId
+})
+
+// Sync pending check-ins
+await offlineSyncService.syncPendingCheckIns(origin)
+```
+
 ## Related Documentation
 
 - [Architecture Overview](../architecture.md)

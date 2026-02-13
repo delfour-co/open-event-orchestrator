@@ -1,10 +1,7 @@
 <script lang="ts">
 import { goto } from '$app/navigation'
 import { offlineSyncService } from '$lib/features/billing/services/offline-sync-service'
-import {
-  type CachedTicket,
-  ticketCacheService
-} from '$lib/features/billing/services/ticket-cache-service'
+import { ticketCacheService } from '$lib/features/billing/services/ticket-cache-service'
 import { onDestroy, onMount } from 'svelte'
 import type { PageData } from './$types'
 
@@ -85,7 +82,7 @@ async function downloadTickets() {
   downloadError = null
 
   try {
-    const result = await offlineSyncService.downloadTickets(data.edition.id, window.location.origin)
+    await offlineSyncService.downloadTickets(data.edition.id, window.location.origin)
     await updateCacheStats()
     downloadError = null
   } catch (err) {
@@ -281,7 +278,7 @@ function formatTime(date: Date): string {
   <!-- Header -->
   <div class="flex items-center justify-between border-b px-4 py-3">
     <div class="flex items-center gap-3">
-      <a href="/scan" class="rounded-lg p-2 hover:bg-muted">
+      <a href="/scan" class="rounded-lg p-2 hover:bg-muted" aria-label="Back to edition selection">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m15 18-6-6 6-6"/>
         </svg>
