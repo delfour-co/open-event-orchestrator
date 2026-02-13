@@ -335,3 +335,23 @@ export {
   type SpeakerValidationInput,
   type AgentSubmissionStats
 } from './agent-submission'
+
+export {
+  conditionOperatorSchema,
+  fieldConditionSchema,
+  fieldConditionRuleSchema,
+  CFP_FORM_FIELDS,
+  CONDITION_OPERATOR_LABELS,
+  NO_VALUE_OPERATORS,
+  evaluateCondition,
+  evaluateRule,
+  shouldShowField,
+  getVisibleFields,
+  validateVisibleFields,
+  type ConditionOperator,
+  type FieldCondition,
+  type FieldConditionRule,
+  type CreateFieldConditionRule,
+  type UpdateFieldConditionRule,
+  type CfpFormFieldId
+} from './conditional-field'
