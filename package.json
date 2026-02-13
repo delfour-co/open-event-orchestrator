@@ -69,6 +69,7 @@
     "html5-qrcode": "^2.3.8",
     "lucide-svelte": "^0.563.0",
     "nodemailer": "^8.0.0",
+    "pdf-lib": "^1.17.1",
     "pocketbase": "^0.25.0",
     "qrcode": "^1.5.4",
     "stripe": "^20.3.0",

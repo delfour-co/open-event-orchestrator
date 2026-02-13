@@ -137,3 +137,16 @@ export {
   type WaitlistNotification,
   type WaitlistStats
 } from './waitlist'
+
+export {
+  ticketTemplateSchema,
+  createTicketTemplateSchema,
+  updateTicketTemplateSchema,
+  DEFAULT_TICKET_TEMPLATE,
+  hexToRgb,
+  isValidHexColor,
+  getContrastColor,
+  type TicketTemplate,
+  type CreateTicketTemplate,
+  type UpdateTicketTemplate
+} from './ticket-template'

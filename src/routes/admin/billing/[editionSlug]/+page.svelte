@@ -14,6 +14,7 @@ import {
   DollarSign,
   ExternalLink,
   Loader2,
+  Palette,
   Pencil,
   Plus,
   QrCode,
@@ -168,6 +169,11 @@ $effect(() => {
 					<Button variant="outline" class="gap-2">
 						<Users class="h-4 w-4" />
 						Participants
+					</Button>
+				</a>
+				<a href="/admin/billing/{data.edition.slug}/design" title="Ticket Design">
+					<Button variant="ghost" size="icon">
+						<Palette class="h-4 w-4" />
 					</Button>
 				</a>
 				<a href="/admin/billing/{data.edition.slug}/settings" title="Billing Settings">

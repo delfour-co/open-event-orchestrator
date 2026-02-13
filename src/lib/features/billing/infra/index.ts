@@ -18,3 +18,8 @@ export {
   createTicketRepository,
   type TicketRepository
 } from './ticket-repository'
+
+export {
+  createTicketTemplateRepository,
+  type TicketTemplateRepository
+} from './ticket-template-repository'

@@ -14,7 +14,8 @@ export {
   generateOrderRefundHtml,
   generateOrderRefundText,
   type OrderConfirmationData,
-  type OrderRefundData
+  type OrderRefundData,
+  type TicketTemplateColors
 } from './ticket-email-service'
 
 export {
@@ -23,3 +24,10 @@ export {
   type ApplyPromoCodeResult,
   type BulkCreateResult
 } from './promo-code-service'
+
+export {
+  generateTicketPdf,
+  generateMultipleTicketsPdf,
+  type TicketPdfData,
+  type GeneratePdfOptions
+} from './pdf-ticket-service'
