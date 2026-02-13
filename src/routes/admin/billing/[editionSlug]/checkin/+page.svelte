@@ -202,39 +202,60 @@ onMount(() => {
 		</Card.Root>
 	{/if}
 
-	<!-- Manual Entry Form -->
-	<Card.Root>
-		<Card.Content class="p-6">
-			<form
-				id="checkin-form"
-				method="POST"
-				action="?/checkIn"
-				use:enhance={() => {
-					isSubmitting = true
-					return async ({ update }) => {
-						isSubmitting = false
-						await update()
-					}
-				}}
-				class="flex gap-2"
-			>
-				<Input
-					name="ticketInput"
-					placeholder="Enter ticket number or scan QR..."
-					bind:value={ticketInput}
-					class="flex-1"
-					autofocus
-				/>
-				<Button type="submit" disabled={isSubmitting || !ticketInput.trim()}>
-					{#if isSubmitting}
-						<Loader2 class="h-4 w-4 animate-spin" />
-					{:else}
-						Check In
-					{/if}
-				</Button>
-			</form>
-		</Card.Content>
-	</Card.Root>
+	<!-- Manual Entry Form (hidden in scanner mode) -->
+	{#if mode === 'manual'}
+		<Card.Root>
+			<Card.Content class="p-6">
+				<form
+					id="checkin-form"
+					method="POST"
+					action="?/checkIn"
+					use:enhance={() => {
+						isSubmitting = true
+						return async ({ update }) => {
+							isSubmitting = false
+							await update()
+						}
+					}}
+					class="flex gap-2"
+				>
+					<Input
+						name="ticketInput"
+						placeholder="Enter ticket number..."
+						bind:value={ticketInput}
+						class="flex-1"
+						autofocus
+					/>
+					<Button type="submit" disabled={isSubmitting || !ticketInput.trim()}>
+						{#if isSubmitting}
+							<Loader2 class="h-4 w-4 animate-spin" />
+						{:else}
+							Check In
+						{/if}
+					</Button>
+				</form>
+			</Card.Content>
+		</Card.Root>
+	{/if}
+
+	<!-- Hidden form for scanner auto-submit -->
+	{#if mode === 'scanner'}
+		<form
+			id="checkin-form"
+			method="POST"
+			action="?/checkIn"
+			use:enhance={() => {
+				isSubmitting = true
+				return async ({ update }) => {
+					isSubmitting = false
+					await update()
+				}
+			}}
+			class="hidden"
+		>
+			<input type="hidden" name="ticketInput" bind:value={ticketInput} />
+		</form>
+	{/if}
 
 	<!-- Result -->
 	{#if showResult && form}
