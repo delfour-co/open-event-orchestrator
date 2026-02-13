@@ -1,0 +1,21 @@
+{
+  "name": "OEO Scanner",
+  "short_name": "Scanner",
+  "description": "Ticket scanner for Open Event Orchestrator",
+  "start_url": "/scan",
+  "scope": "/scan",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "en"
+}
