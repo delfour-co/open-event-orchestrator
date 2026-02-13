@@ -12,7 +12,6 @@ interface Props {
 const { data }: Props = $props()
 
 // Scanner state
-let scannerContainer = $state<HTMLDivElement | null>(null)
 let html5QrCode: unknown = null
 let isScanning = $state(false)
 let isInitializing = $state(true)
@@ -99,25 +98,47 @@ async function startScanner() {
   if (isScanning) return
 
   isInitializing = true
+  scanError = null
 
   // Wait a tick for the DOM to update and container to be ready
-  await new Promise((resolve) => setTimeout(resolve, 50))
+  await new Promise((resolve) => setTimeout(resolve, 100))
 
   try {
     const { Html5Qrcode } = await import('html5-qrcode')
+
+    // Get available cameras first
+    const devices = await Html5Qrcode.getCameras()
+    if (!devices || devices.length === 0) {
+      throw new Error('No cameras found on this device')
+    }
+
     html5QrCode = new Html5Qrcode('qr-scanner')
 
-    await (
+    // Try to find back camera, fallback to first available
+    const backCamera = devices.find(
+      (d) =>
+        d.label.toLowerCase().includes('back') ||
+        d.label.toLowerCase().includes('rear') ||
+        d.label.toLowerCase().includes('environment')
+    )
+    const cameraId = backCamera?.id || devices[0].id
+
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Camera initialization timed out')), 10000)
+    })
+
+    const startPromise = (
       html5QrCode as {
         start: (
-          facingMode: { facingMode: string },
+          cameraId: string,
           config: { fps: number; qrbox: { width: number; height: number }; aspectRatio: number },
           onSuccess: (text: string) => void,
           onFailure: () => void
         ) => Promise<void>
       }
     ).start(
-      { facingMode: 'environment' },
+      cameraId,
       {
         fps: 10,
         qrbox: { width: 280, height: 280 },
@@ -128,6 +149,8 @@ async function startScanner() {
         /* ignore scan errors */
       }
     )
+
+    await Promise.race([startPromise, timeoutPromise])
 
     isScanning = true
     isInitializing = false
@@ -348,7 +371,6 @@ function formatTime(date: Date): string {
     <!-- Always render scanner container so it's available for html5-qrcode -->
     <div
       id="qr-scanner"
-      bind:this={scannerContainer}
       class="h-full w-full"
     ></div>
 
