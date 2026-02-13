@@ -362,10 +362,47 @@ const html = generateOrderConfirmationHtml({
 
 | Route | Description |
 |-------|-------------|
-| `/admin/billing/[editionSlug]` | Dashboard with stats |
+| `/admin/billing/[editionSlug]` | Dashboard with stats, URLs for tickets and scanner |
 | `/admin/billing/[editionSlug]/participants` | Order list |
-| `/admin/billing/[editionSlug]/checkin` | Check-in interface |
+| `/admin/billing/[editionSlug]/checkin` | Check-in Control Tower |
+| `/admin/billing/[editionSlug]/checkin/stats` | Detailed check-in statistics |
 | `/admin/billing/[editionSlug]/settings` | Ticket type management |
+
+### Billing Dashboard
+
+The billing dashboard (`/admin/billing/[editionSlug]`) displays:
+- Revenue and order statistics
+- Ticket types with stock levels
+- **Quick access URLs** with copy buttons:
+  - Public tickets page: `/tickets/[slug]`
+  - Scanner PWA: `/scan/[editionId]`
+
+### Check-in Control Tower
+
+The check-in page (`/admin/billing/[editionSlug]/checkin`) serves as a control center for event check-in operations:
+
+**Left Column - Scanner Station:**
+- Mode toggle: Manual entry or QR scanner
+- Manual ticket number input
+- QR code scanning with camera
+- Success/error feedback
+
+**Right Column - Live Dashboard:**
+- **Global Stats**: Total checked in, active scanners count, progress percentage
+- **Field Scanners**: List of staff members scanning tickets with:
+  - Name
+  - Number of scans
+  - Last activity time
+- **Recent Activity**: Live feed of the last 15 check-ins with:
+  - Attendee name
+  - Ticket number
+  - Check-in time
+  - Scanner name
+
+**Features:**
+- Auto-refresh every 10 seconds
+- Manual refresh button
+- Real-time monitoring of field staff activity
 
 ### API Routes
 
@@ -452,11 +489,14 @@ E2E tests cover:
 - Free ticket checkout flow
 - Paid ticket checkout flow (mocked Stripe)
 - Order management (cancel, refund)
-- Check-in functionality
+- Check-in Control Tower functionality
+- Scanner PWA functionality
 
 ```bash
-pnpm test                    # Unit tests
-pnpm test:e2e tests/e2e/billing*.spec.ts  # E2E tests
+pnpm test                              # Unit tests
+pnpm test:e2e tests/e2e/billing*.spec.ts  # Billing E2E tests
+pnpm test:e2e tests/e2e/checkin.spec.ts   # Check-in Control Tower tests
+pnpm test:e2e tests/e2e/scan.spec.ts      # Scanner PWA tests
 ```
 
 ## Mobile Scan App (PWA)
