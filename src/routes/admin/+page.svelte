@@ -159,9 +159,15 @@ const getOrderStatusColor = (status: string) => {
             onchange={handleEditionChange}
           >
             <option value="">All editions</option>
-            {#each data.editions as edition}
+            {#each data.editions.filter((e) => e.status !== 'archived') as edition}
               <option value={edition.id}>{edition.name}</option>
             {/each}
+            {#if data.editions.some((e) => e.status === 'archived')}
+              <option disabled>── Archived ──</option>
+              {#each data.editions.filter((e) => e.status === 'archived') as edition}
+                <option value={edition.id}>{edition.name}</option>
+              {/each}
+            {/if}
           </select>
         </div>
       {/if}

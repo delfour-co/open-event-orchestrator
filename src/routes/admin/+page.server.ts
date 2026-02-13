@@ -23,10 +23,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   // Get talks count per edition
   const talks = await locals.pb.collection('talks').getFullList()
 
-  // Get recent submissions (last 5)
+  // Get recent submissions (last 5), filtered by edition if selected
+  const recentTalksFilter = selectedEditionId ? `editionId = "${selectedEditionId}"` : ''
   const recentTalks = await locals.pb.collection('talks').getList(1, 5, {
     sort: '-created',
-    expand: 'speakerId'
+    expand: 'speakerId',
+    filter: recentTalksFilter || undefined
   })
 
   // Calculate stats
