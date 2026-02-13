@@ -15,6 +15,7 @@ const { data }: Props = $props()
 let scannerContainer = $state<HTMLDivElement | null>(null)
 let html5QrCode: unknown = null
 let isScanning = $state(false)
+let isInitializing = $state(true)
 let scanError = $state<string | null>(null)
 
 // Result state
@@ -95,7 +96,12 @@ async function downloadTickets() {
 }
 
 async function startScanner() {
-  if (!scannerContainer || isScanning) return
+  if (isScanning) return
+
+  isInitializing = true
+
+  // Wait a tick for the DOM to update and container to be ready
+  await new Promise((resolve) => setTimeout(resolve, 50))
 
   try {
     const { Html5Qrcode } = await import('html5-qrcode')
@@ -124,11 +130,13 @@ async function startScanner() {
     )
 
     isScanning = true
+    isInitializing = false
     scanError = null
   } catch (err) {
     console.error('Failed to start scanner:', err)
-    scanError = 'Camera access denied or not available'
+    scanError = err instanceof Error ? err.message : 'Camera access denied or not available'
     isScanning = false
+    isInitializing = false
   }
 }
 
@@ -292,26 +300,41 @@ function formatTime(date: Date): string {
         </p>
       </div>
     </div>
-    <button
-      onclick={downloadTickets}
-      disabled={isDownloading || !isOnline}
-      class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm hover:bg-muted/80 disabled:opacity-50"
-    >
-      {#if isDownloading}
-        <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>Downloading...</span>
-      {:else}
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" x2="12" y1="15" y2="3"/>
-        </svg>
-        <span>Download offline</span>
-      {/if}
-    </button>
+    <div class="flex items-center gap-2">
+      <button
+        onclick={downloadTickets}
+        disabled={isDownloading || !isOnline}
+        class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm hover:bg-muted/80 disabled:opacity-50"
+      >
+        {#if isDownloading}
+          <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Downloading...</span>
+        {:else}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" x2="12" y1="15" y2="3"/>
+          </svg>
+          <span>Download offline</span>
+        {/if}
+      </button>
+      <form method="POST" action="/auth/logout">
+        <button
+          type="submit"
+          class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm hover:bg-muted/80"
+          title="Logout"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" x2="9" y1="12" y2="12"/>
+          </svg>
+        </button>
+      </form>
+    </div>
   </div>
 
   {#if downloadError}
@@ -321,9 +344,24 @@ function formatTime(date: Date): string {
   {/if}
 
   <!-- Scanner area -->
-  <div class="relative flex-1">
+  <div class="relative flex-1 bg-black" style="min-height: 400px;">
+    <!-- Always render scanner container so it's available for html5-qrcode -->
+    <div
+      id="qr-scanner"
+      bind:this={scannerContainer}
+      class="h-full w-full"
+    ></div>
+
+    <!-- Scan overlay when scanning -->
+    {#if isScanning && !scanError}
+      <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div class="h-72 w-72 rounded-2xl border-4 border-white/50"></div>
+      </div>
+    {/if}
+
+    <!-- Error overlay -->
     {#if scanError}
-      <div class="flex h-full flex-col items-center justify-center p-6 text-center">
+      <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-background">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24"/>
           <path d="m1 9 3-3 3 3"/>
@@ -332,22 +370,20 @@ function formatTime(date: Date): string {
         </svg>
         <p class="mt-4 text-lg font-medium">{scanError}</p>
         <button
-          onclick={startScanner}
+          onclick={() => { isInitializing = true; scanError = null; startScanner(); }}
           class="mt-4 rounded-lg bg-primary px-6 py-3 text-primary-foreground"
         >
           Try Again
         </button>
       </div>
-    {:else}
-      <div
-        id="qr-scanner"
-        bind:this={scannerContainer}
-        class="h-full w-full"
-      ></div>
-
-      <!-- Scan overlay -->
-      <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div class="h-72 w-72 rounded-2xl border-4 border-white/50"></div>
+    {:else if isInitializing && !isScanning}
+      <!-- Loading overlay -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-background">
+        <svg class="h-12 w-12 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-4 text-muted-foreground">Initializing camera...</p>
       </div>
     {/if}
 

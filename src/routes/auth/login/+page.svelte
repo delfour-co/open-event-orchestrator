@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { page } from '$app/stores'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -9,6 +10,9 @@ type Props = {
 }
 
 const { form }: Props = $props()
+
+// Get redirect URL from query params
+const redirectUrl = $derived($page.url.searchParams.get('redirect'))
 </script>
 
 <svelte:head>
@@ -23,6 +27,9 @@ const { form }: Props = $props()
     </Card.Header>
     <Card.Content>
       <form method="POST" use:enhance class="space-y-4">
+        {#if redirectUrl}
+          <input type="hidden" name="redirect" value={redirectUrl} />
+        {/if}
         {#if form?.error}
           <div class="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
             {form.error}
