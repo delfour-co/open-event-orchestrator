@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-467%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-533%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 [![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 <p align="center">
@@ -18,10 +18,13 @@ Open Event Orchestrator is an **all-in-one open-source platform** for managing c
 - **Call for Papers (CFP)** — Manage speaker submissions, reviews, and notifications
 - **Planning** — Build your schedule with drag-and-drop simplicity
 - **Ticketing** — Sell tickets, manage registrations, and check-in attendees
+- **Scanner PWA** — Mobile app for ticket scanning with offline support
+- **Attendee PWA** — Mobile app for attendees with personal agenda
 - **CRM** — Keep track of your community across all events
 - **Budget** — Track expenses, income, quotes, invoices, and speaker reimbursements
 - **Sponsoring** — Manage sponsors, packages, pipeline, and sponsor portal
 - **API** — Headless API for custom integrations and websites
+- **Integrations** — Slack, Discord, webhooks for notifications
 
 ## Quick Start
 
@@ -156,9 +159,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 1181 | 98% statements |
-| E2E tests | 467 | Chromium |
-| **Total** | **1648+** | **98%** |
+| Unit tests | 3345 | 98% statements |
+| E2E tests | 533 | Chromium |
+| **Total** | **3878+** | **98%** |
 
 ```bash
 pnpm test              # Run unit tests
@@ -274,9 +277,18 @@ Scopes: `cfp`, `planning`, `billing`, `crm`, `budget`, `api`, `core`, `ui`
 - [x] Outgoing webhooks with HMAC signing
 - [x] Embeddable widgets (schedule, speakers, tickets)
 - [x] Admin UI for API keys and webhooks
-- [x] E2E tests (467 tests passing)
+- [x] E2E tests
 
-### Phase 8.5 — Stabilisation & Design System 🚧
+### Phase 9 — Additional Features ✅
+
+- [x] Quick Setup Wizard (Organization → Event → Edition in one flow)
+- [x] Visual Ticket Customization (colors, logo, PDF export)
+- [x] Discord Integration (webhook notifications)
+- [x] Attendee Mobile PWA (personal agenda, favorites)
+- [x] Scanner PWA improvements (offline sync, control tower)
+- [x] Check-in Control Tower (real-time field staff monitoring)
+
+### Phase 9.5 — Stabilisation & Design System 🚧
 
 **Security** (10 issues)
 - [ ] Remove AWS credentials from .env file (#94)

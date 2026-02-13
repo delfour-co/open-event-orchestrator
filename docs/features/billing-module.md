@@ -477,6 +477,73 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 ```
 
+## Visual Ticket Customization
+
+Customize the appearance of digital tickets with colors, logo, and display options.
+
+### Admin Route
+
+| Route | Description |
+|-------|-------------|
+| `/admin/billing/[editionSlug]/design` | Ticket design customization |
+
+### Ticket Template Entity
+
+```typescript
+type TicketTemplate = {
+  id: string
+  editionId: string
+  primaryColor: string      // Hex color (default: #3B82F6)
+  backgroundColor: string   // Hex color (default: #FFFFFF)
+  textColor: string         // Hex color (default: #1F2937)
+  accentColor: string       // Hex color (default: #10B981)
+  logoUrl?: string          // External logo URL
+  logoFile?: string         // Uploaded logo file
+  showVenue: boolean        // Show venue on ticket
+  showDate: boolean         // Show date on ticket
+  showQrCode: boolean       // Show QR code on ticket
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Features
+
+- **Color Customization**: Primary, background, text, and accent colors
+- **Logo Upload**: Custom logo displayed on tickets
+- **Display Options**: Toggle venue, date, and QR code visibility
+- **Live Preview**: Real-time preview of ticket design
+- **PDF Export**: Download tickets as PDF with custom design
+
+### PDF Ticket Generation
+
+```typescript
+import { generatePdfTicket } from '$lib/features/billing/services/pdf-ticket-service'
+
+const pdfBytes = await generatePdfTicket({
+  ticket,
+  ticketType,
+  template,
+  eventName: 'DevFest',
+  editionName: '2025',
+  venue: 'Paris Convention Center',
+  startDate: '2025-03-15',
+  logoDataUrl: 'data:image/png;base64,...'
+})
+```
+
+### API Endpoint
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/tickets/[ticketId]/pdf` | GET | Download ticket as PDF |
+
+### Components
+
+- **TicketPreview**: Svelte component for real-time ticket preview
+- **ColorPicker**: Input for selecting hex colors
+- **LogoUpload**: File upload with preview
+
 ## Testing
 
 Unit tests cover:
@@ -491,12 +558,14 @@ E2E tests cover:
 - Order management (cancel, refund)
 - Check-in Control Tower functionality
 - Scanner PWA functionality
+- Visual ticket customization
 
 ```bash
-pnpm test                              # Unit tests
-pnpm test:e2e tests/e2e/billing*.spec.ts  # Billing E2E tests
-pnpm test:e2e tests/e2e/checkin.spec.ts   # Check-in Control Tower tests
-pnpm test:e2e tests/e2e/scan.spec.ts      # Scanner PWA tests
+pnpm test                                    # Unit tests
+pnpm test:e2e tests/e2e/billing*.spec.ts     # Billing E2E tests
+pnpm test:e2e tests/e2e/checkin.spec.ts      # Check-in Control Tower tests
+pnpm test:e2e tests/e2e/scan.spec.ts         # Scanner PWA tests
+pnpm test:e2e tests/e2e/billing-ticket-design.spec.ts  # Ticket design tests
 ```
 
 ## Mobile Scan App (PWA)

@@ -215,11 +215,50 @@ interface TeamMemberRepository {
 
 | Route | Description |
 |-------|-------------|
+| `/admin` | Dashboard with Quick Setup button |
 | `/admin/organizations` | Organization list |
 | `/admin/organizations/[orgSlug]` | Organization settings |
 | `/admin/events/[eventSlug]` | Event settings |
 | `/admin/editions/[editionSlug]` | Edition settings |
 | `/admin/editions/[editionSlug]/team` | Team members |
+
+## Quick Setup Wizard
+
+A streamlined wizard for creating Organization → Event → Edition in one flow.
+
+### Features
+
+- **Step 1**: Create or select existing organization
+- **Step 2**: Create new event under the organization
+- **Step 3**: Create edition with dates, venue, and city
+- **Auto Slug**: Automatic slug generation from names
+- **Validation**: Form validation at each step
+- **Redirect**: Redirects to edition settings on completion
+
+### Access
+
+The Quick Setup button is available on the `/admin` dashboard.
+
+### Component
+
+```typescript
+import { QuickSetupWizard } from '$lib/features/core/ui'
+
+<QuickSetupWizard
+  organizations={existingOrganizations}
+  onComplete={(editionSlug) => goto(`/admin/editions/${editionSlug}/settings`)}
+/>
+```
+
+### Workflow
+
+```
+Dashboard → Click "Quick Setup"
+         → Step 1: Organization (new or existing)
+         → Step 2: Event (name, description)
+         → Step 3: Edition (year, dates, venue)
+         → Redirect to edition settings
+```
 
 ## Integration with Other Modules
 
@@ -261,8 +300,16 @@ Unit tests validate:
 - Social icon mapping
 - Boundary conditions
 
+E2E tests cover:
+- Quick Setup Wizard flow
+- Organization CRUD
+- Event CRUD
+- Edition CRUD
+- Team member management
+
 ```bash
 pnpm test src/lib/features/core/domain/*.test.ts
+pnpm test:e2e tests/e2e/quick-setup-wizard.spec.ts
 ```
 
 ## Related Documentation

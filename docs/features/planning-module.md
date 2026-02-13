@@ -385,6 +385,67 @@ The planning module integrates with CFP:
 3. **Speaker Display**: Shows speaker info in schedule
 4. **Talk Status**: Scheduling a talk may update its status
 
+## Attendee Mobile PWA
+
+A Progressive Web App for attendees to view the schedule and manage their personal agenda.
+
+### Features
+
+- **PWA Installable**: Works on mobile devices as standalone app
+- **Offline Support**: View cached schedule without internet
+- **Personal Agenda**: Favorite sessions to build your own schedule
+- **Track Filter**: Filter sessions by track
+- **Day Selector**: Navigate between event days
+
+### Routes
+
+| Route | Description |
+|-------|-------------|
+| `/app/[editionSlug]` | Attendee schedule view |
+
+### Architecture
+
+```
+src/lib/features/planning/services/
+├── schedule-cache-service.ts    # IndexedDB cache for schedule
+└── schedule-cache-service.test.ts
+
+src/routes/app/[editionSlug]/
+├── +layout.svelte              # PWA layout with online/offline indicator
+├── +page.server.ts             # Server-side data loading
+└── +page.svelte                # Mobile-first schedule view
+
+static/
+├── manifest-app.json           # PWA manifest for attendee app
+└── sw-app.js                   # Service worker
+```
+
+### Schedule Cache Service
+
+```typescript
+import { scheduleCacheService } from '$lib/features/planning/services'
+
+// Cache schedule for offline
+await scheduleCacheService.cacheSchedule(editionId, scheduleData)
+
+// Get cached schedule
+const schedule = await scheduleCacheService.getSchedule(editionId)
+
+// Manage favorites
+await scheduleCacheService.addFavorite(editionId, sessionId)
+await scheduleCacheService.removeFavorite(editionId, sessionId)
+const favorites = await scheduleCacheService.getFavorites(editionId)
+```
+
+### UI Features
+
+- **Day Tabs**: Switch between event days
+- **Track Pills**: Filter by track (colored badges)
+- **Session Cards**: Title, time, room, speakers
+- **Favorite Button**: Heart icon to save sessions
+- **My Agenda View**: Show only favorited sessions
+- **Offline Banner**: Indicator when viewing cached data
+
 ## Testing
 
 E2E tests cover:
@@ -394,9 +455,12 @@ E2E tests cover:
 - Session assignment
 - Public schedule display
 - Export functionality
+- Attendee PWA schedule view
+- Favorites management
 
 ```bash
 pnpm test:e2e tests/e2e/planning.spec.ts
+pnpm test:e2e tests/e2e/attendee-app.spec.ts
 ```
 
 ## Related Documentation

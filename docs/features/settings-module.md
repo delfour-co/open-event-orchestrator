@@ -50,7 +50,7 @@ The integrations dashboard provides a unified view of all third-party service co
 | SMTP | Email delivery | Available |
 | Stripe | Payment processing | Available |
 | Slack | Team notifications | Available |
-| Discord | Team notifications | Coming soon |
+| Discord | Team notifications | Available |
 | Webhooks | External notifications | Available |
 
 ### Integration Status Types
@@ -155,6 +155,49 @@ Team notification settings for Slack workspace integration.
 1. Create an incoming webhook in Slack
 2. Copy the webhook URL
 3. Paste in settings and enable
+
+## Discord Configuration
+
+Team notification settings for Discord server integration.
+
+### Settings
+
+| Field | Description | Default |
+|-------|-------------|---------|
+| `discordWebhookUrl` | Discord webhook URL | (empty) |
+| `discordEnabled` | Enable/disable notifications | false |
+| `discordBotUsername` | Bot display name | Open Event Orchestrator |
+
+### Supported Notifications
+
+| Event | Description |
+|-------|-------------|
+| `order.paid` | New ticket order completed |
+| `order.refunded` | Order refunded |
+| `ticket.checked_in` | Attendee checked in |
+| `talk.submitted` | New CFP submission |
+| `talk.status_changed` | Talk accepted/rejected |
+| `member.invited` | Team member invited |
+| `member.joined` | Team member joined |
+| `sponsor.confirmed` | Sponsor confirmed |
+| `schedule.published` | Schedule published |
+| `campaign.sent` | Email campaign sent |
+
+### Setup
+
+1. Create a webhook in your Discord server (Server Settings > Integrations > Webhooks)
+2. Copy the webhook URL
+3. Paste in settings at `/admin/settings/discord`
+4. Optionally customize the bot username
+5. Test connection and enable
+
+### Discord Embeds
+
+Notifications use Discord rich embeds with:
+- Color-coded by event type (green for success, red for errors)
+- Event details in fields
+- Timestamps
+- Links to relevant admin pages
 
 ## API Reference
 
@@ -268,8 +311,9 @@ Single record containing all application settings.
 | slackWebhookUrl | url | Slack webhook URL |
 | slackEnabled | bool | Slack enabled flag |
 | slackDefaultChannel | text | Default Slack channel |
-| discordWebhookUrl | url | Discord webhook (future) |
-| discordEnabled | bool | Discord enabled (future) |
+| discordWebhookUrl | url | Discord webhook URL |
+| discordEnabled | bool | Discord enabled flag |
+| discordBotUsername | text | Discord bot display name |
 
 ## Admin Routes
 
@@ -278,6 +322,7 @@ Single record containing all application settings.
 | `/admin/settings` | SMTP configuration |
 | `/admin/settings/integrations` | Integrations dashboard |
 | `/admin/settings/stripe` | Stripe configuration |
+| `/admin/settings/discord` | Discord configuration |
 | `/admin/settings/slack` | Slack configuration (future) |
 | `/admin/settings/webhooks` | Webhooks configuration (future) |
 
