@@ -1,3 +1,5 @@
+import type { FieldCondition } from '$lib/features/cfp/domain/conditional-field'
+import { createFieldConditionRuleRepository } from '$lib/features/cfp/infra'
 import { canManageCfpSettings } from '$lib/server/permissions'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -16,6 +18,7 @@ const DEFAULT_SETTINGS = {
   reviewMode: 'stars' as const
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: load function handles settings with many fallback defaults
 export const load: PageServerLoad = async ({ parent, locals }) => {
   // Check permission - reviewers cannot access CFP settings
   const userRole = locals.user?.role as string | undefined
@@ -46,6 +49,10 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
     filter: `editionId="${edition.id}"`,
     sort: 'order'
   })
+
+  // Get conditional field rules for this edition
+  const ruleRepo = createFieldConditionRuleRepository(locals.pb)
+  const fieldConditionRules = await ruleRepo.findByEdition(edition.id)
 
   return {
     edition,
@@ -112,6 +119,17 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
       description: (f.description as string) || '',
       duration: f.duration as number,
       order: (f.order as number) || 0
+    })),
+    fieldConditionRules: fieldConditionRules.map((r) => ({
+      id: r.id,
+      editionId: r.editionId,
+      targetFieldId: r.targetFieldId,
+      name: r.name,
+      description: r.description || '',
+      conditions: r.conditions,
+      conditionLogic: r.conditionLogic,
+      isActive: r.isActive,
+      order: r.order
     }))
   }
 }
@@ -318,6 +336,148 @@ export const actions: Actions = {
     } catch (e) {
       console.error('Failed to delete format:', e)
       return fail(500, { error: 'Failed to delete format' })
+    }
+  },
+
+  addConditionRule: async ({ request, locals, params }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage conditional fields' })
+    }
+
+    const formData = await request.formData()
+    const name = formData.get('name') as string
+    const targetFieldId = formData.get('targetFieldId') as string
+    const conditionsJson = formData.get('conditions') as string
+    const conditionLogic = (formData.get('conditionLogic') as string) || 'AND'
+    const isActive = formData.has('isActive')
+
+    if (!name || !targetFieldId) {
+      return fail(400, { error: 'Rule name and target field are required' })
+    }
+
+    let conditions: FieldCondition[]
+    try {
+      conditions = JSON.parse(conditionsJson) as FieldCondition[]
+      if (!Array.isArray(conditions) || conditions.length === 0) {
+        return fail(400, { error: 'At least one condition is required' })
+      }
+    } catch {
+      return fail(400, { error: 'Invalid conditions format' })
+    }
+
+    try {
+      const edition = await locals.pb
+        .collection('editions')
+        .getFirstListItem(`slug="${params.editionSlug}"`)
+
+      const ruleRepo = createFieldConditionRuleRepository(locals.pb)
+      const existingRules = await ruleRepo.findByEdition(edition.id)
+      const maxOrder =
+        existingRules.length > 0 ? Math.max(...existingRules.map((r) => r.order)) + 1 : 0
+
+      await ruleRepo.create({
+        editionId: edition.id,
+        targetFieldId,
+        name,
+        conditions,
+        conditionLogic: conditionLogic as 'AND' | 'OR',
+        isActive,
+        order: maxOrder
+      })
+
+      return { success: true, message: 'Conditional field rule added' }
+    } catch (e) {
+      console.error('Failed to add condition rule:', e)
+      return fail(500, { error: 'Failed to add rule' })
+    }
+  },
+
+  updateConditionRule: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage conditional fields' })
+    }
+
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+    const name = formData.get('name') as string
+    const targetFieldId = formData.get('targetFieldId') as string
+    const conditionsJson = formData.get('conditions') as string
+    const conditionLogic = (formData.get('conditionLogic') as string) || 'AND'
+    const isActive = formData.has('isActive')
+
+    if (!id || !name || !targetFieldId) {
+      return fail(400, { error: 'Rule ID, name, and target field are required' })
+    }
+
+    let conditions: FieldCondition[]
+    try {
+      conditions = JSON.parse(conditionsJson) as FieldCondition[]
+      if (!Array.isArray(conditions) || conditions.length === 0) {
+        return fail(400, { error: 'At least one condition is required' })
+      }
+    } catch {
+      return fail(400, { error: 'Invalid conditions format' })
+    }
+
+    try {
+      const ruleRepo = createFieldConditionRuleRepository(locals.pb)
+      await ruleRepo.update(id, {
+        targetFieldId,
+        name,
+        conditions,
+        conditionLogic: conditionLogic as 'AND' | 'OR',
+        isActive
+      })
+
+      return { success: true, message: 'Conditional field rule updated' }
+    } catch (e) {
+      console.error('Failed to update condition rule:', e)
+      return fail(500, { error: 'Failed to update rule' })
+    }
+  },
+
+  deleteConditionRule: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage conditional fields' })
+    }
+
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+
+    try {
+      const ruleRepo = createFieldConditionRuleRepository(locals.pb)
+      await ruleRepo.delete(id)
+      return { success: true, message: 'Conditional field rule deleted' }
+    } catch (e) {
+      console.error('Failed to delete condition rule:', e)
+      return fail(500, { error: 'Failed to delete rule' })
+    }
+  },
+
+  toggleConditionRule: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageCfpSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to manage conditional fields' })
+    }
+
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+    const isActive = formData.get('isActive') === 'true'
+
+    try {
+      const ruleRepo = createFieldConditionRuleRepository(locals.pb)
+      await ruleRepo.update(id, { isActive: !isActive })
+      return { success: true, message: `Rule ${isActive ? 'disabled' : 'enabled'}` }
+    } catch (e) {
+      console.error('Failed to toggle condition rule:', e)
+      return fail(500, { error: 'Failed to toggle rule' })
     }
   }
 }

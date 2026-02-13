@@ -8,7 +8,14 @@ import { Checkbox } from '$lib/components/ui/checkbox'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
-import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-svelte'
+import {
+  CFP_FORM_FIELDS,
+  type CfpFormFieldId,
+  type FieldCondition,
+  type FieldConditionRule
+} from '$lib/features/cfp/domain/conditional-field'
+import { FieldConditionRuleBuilder } from '$lib/features/cfp/ui'
+import { ArrowLeft, ChevronDown, ChevronUp, Edit2, Loader2, Plus, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -21,10 +28,51 @@ const { data, form }: Props = $props()
 let isSubmitting = $state(false)
 let showNewCategory = $state(false)
 let showNewFormat = $state(false)
+let showNewConditionRule = $state(false)
+let editingRuleId = $state<string | null>(null)
+
+// Current rule being edited or created
+let currentRule = $state<Omit<FieldConditionRule, 'id' | 'createdAt' | 'updatedAt'>>({
+  editionId: data.edition.id,
+  targetFieldId: 'duration',
+  name: '',
+  conditions: [{ fieldId: 'formatId', operator: 'equals', value: '' }],
+  conditionLogic: 'AND',
+  isActive: true,
+  order: 0
+})
 
 function formatDateForInput(date: Date | null): string {
   if (!date) return ''
   return date.toISOString().split('T')[0]
+}
+
+function resetRuleForm() {
+  currentRule = {
+    editionId: data.edition.id,
+    targetFieldId: 'duration',
+    name: '',
+    conditions: [{ fieldId: 'formatId', operator: 'equals', value: '' }],
+    conditionLogic: 'AND',
+    isActive: true,
+    order: 0
+  }
+  editingRuleId = null
+  showNewConditionRule = false
+}
+
+function startEditRule(rule: (typeof data.fieldConditionRules)[0]) {
+  currentRule = {
+    editionId: rule.editionId,
+    targetFieldId: rule.targetFieldId,
+    name: rule.name,
+    conditions: rule.conditions as FieldCondition[],
+    conditionLogic: rule.conditionLogic as 'AND' | 'OR',
+    isActive: rule.isActive,
+    order: rule.order
+  }
+  editingRuleId = rule.id
+  showNewConditionRule = true
 }
 
 const statuses = ['draft', 'published', 'archived'] as const
@@ -482,6 +530,151 @@ const statuses = ['draft', 'published', 'archived'] as const
                   <Trash2 class="h-4 w-4" />
                 </Button>
               </form>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Conditional Fields Card -->
+  <Card.Root>
+    <Card.Header>
+      <div class="flex items-center justify-between">
+        <div>
+          <Card.Title>Conditional Fields</Card.Title>
+          <Card.Description>
+            Show or hide form fields based on speaker selections
+          </Card.Description>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onclick={() => {
+            resetRuleForm()
+            showNewConditionRule = !showNewConditionRule
+          }}
+        >
+          <Plus class="mr-2 h-4 w-4" />
+          Add Rule
+        </Button>
+      </div>
+    </Card.Header>
+    <Card.Content>
+      {#if showNewConditionRule}
+        <form
+          method="POST"
+          action={editingRuleId ? '?/updateConditionRule' : '?/addConditionRule'}
+          use:enhance={() => {
+            return async ({ update }) => {
+              await update()
+              resetRuleForm()
+            }
+          }}
+          class="mb-4 rounded-md border bg-muted/50 p-4"
+        >
+          {#if editingRuleId}
+            <input type="hidden" name="id" value={editingRuleId} />
+          {/if}
+          <input type="hidden" name="conditions" value={JSON.stringify(currentRule.conditions)} />
+          <input type="hidden" name="conditionLogic" value={currentRule.conditionLogic} />
+          {#if currentRule.isActive}
+            <input type="hidden" name="isActive" value="true" />
+          {/if}
+
+          <FieldConditionRuleBuilder
+            rule={currentRule}
+            onUpdate={(r) => (currentRule = r)}
+          />
+
+          <!-- Hidden inputs for form submission -->
+          <input type="hidden" name="name" value={currentRule.name} />
+          <input type="hidden" name="targetFieldId" value={currentRule.targetFieldId} />
+
+          <div class="mt-4 flex gap-2">
+            <Button type="submit" size="sm">
+              {editingRuleId ? 'Update Rule' : 'Add Rule'}
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onclick={resetRuleForm}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      {/if}
+
+      {#if data.fieldConditionRules.length === 0}
+        <p class="text-sm text-muted-foreground">
+          No conditional field rules yet. Add rules to show or hide fields based on the speaker's
+          selections (e.g., show "Duration" only when format is "Workshop").
+        </p>
+      {:else}
+        <div class="space-y-2">
+          {#each data.fieldConditionRules as rule}
+            <div
+              class="flex items-center justify-between rounded-md border bg-background p-3"
+              class:opacity-50={!rule.isActive}
+            >
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <p class="font-medium">{rule.name}</p>
+                  {#if !rule.isActive}
+                    <span class="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      Disabled
+                    </span>
+                  {/if}
+                </div>
+                <p class="text-sm text-muted-foreground">
+                  Show "{CFP_FORM_FIELDS[rule.targetFieldId as CfpFormFieldId]?.label || rule.targetFieldId}"
+                  when {rule.conditionLogic === 'AND' ? 'all' : 'any'} of {rule.conditions.length}
+                  condition{rule.conditions.length !== 1 ? 's' : ''} {rule.conditions.length !== 1 ? 'are' : 'is'} met
+                </p>
+              </div>
+              <div class="flex items-center gap-1">
+                <!-- Toggle Active -->
+                <form method="POST" action="?/toggleConditionRule" use:enhance>
+                  <input type="hidden" name="id" value={rule.id} />
+                  <input type="hidden" name="isActive" value={String(rule.isActive)} />
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8"
+                    title={rule.isActive ? 'Disable rule' : 'Enable rule'}
+                  >
+                    {#if rule.isActive}
+                      <ChevronDown class="h-4 w-4" />
+                    {:else}
+                      <ChevronUp class="h-4 w-4" />
+                    {/if}
+                  </Button>
+                </form>
+                <!-- Edit -->
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="h-8 w-8"
+                  onclick={() => startEditRule(rule)}
+                >
+                  <Edit2 class="h-4 w-4" />
+                </Button>
+                <!-- Delete -->
+                <form method="POST" action="?/deleteConditionRule" use:enhance>
+                  <input type="hidden" name="id" value={rule.id} />
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8 text-destructive hover:text-destructive"
+                    onclick={(e) => {
+                      if (!confirm('Delete this rule?')) {
+                        e.preventDefault()
+                      }
+                    }}
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </Button>
+                </form>
+              </div>
             </div>
           {/each}
         </div>
