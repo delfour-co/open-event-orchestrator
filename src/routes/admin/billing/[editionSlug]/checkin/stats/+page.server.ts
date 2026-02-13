@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   })) as TicketWithDetails[]
 
   // Get ticket types for names
-  const ticketTypes = (await locals.pb.collection('billing_ticket_types').getFullList({
+  const ticketTypes = (await locals.pb.collection('ticket_types').getFullList({
     filter: safeFilter`editionId = ${editionId}`,
     fields: 'id,name'
   })) as TicketTypeInfo[]

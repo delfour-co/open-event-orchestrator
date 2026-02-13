@@ -32,13 +32,22 @@ interface Props {
 const { data, form }: Props = $props()
 
 let showTicketTypeForm = $state(false)
-let copied = $state(false)
+let copiedPublic = $state(false)
+let copiedScanner = $state(false)
 
 function copyPublicUrl() {
   navigator.clipboard.writeText(data.publicUrl)
-  copied = true
+  copiedPublic = true
   setTimeout(() => {
-    copied = false
+    copiedPublic = false
+  }, 2000)
+}
+
+function copyScannerUrl() {
+  navigator.clipboard.writeText(data.scannerUrl)
+  copiedScanner = true
+  setTimeout(() => {
+    copiedScanner = false
   }, 2000)
 }
 let editingTicketType = $state<(typeof data.ticketTypes)[0] | null>(null)
@@ -108,26 +117,42 @@ $effect(() => {
 				</p>
 			</div>
 		</div>
-		<div class="flex items-center gap-4">
+		<div class="flex flex-col items-end gap-2">
 			<!-- Public URL -->
 			<div class="flex items-center gap-2">
 				<div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-					<span class="text-sm text-muted-foreground">Public URL:</span>
+					<span class="text-sm text-muted-foreground">Tickets:</span>
 					<code class="text-sm">/tickets/{data.edition.slug}</code>
 				</div>
 				<Button variant="outline" size="sm" onclick={copyPublicUrl} class="gap-2">
-					{#if copied}
+					{#if copiedPublic}
 						<Check class="h-4 w-4 text-green-500" />
-						Copied
 					{:else}
 						<Copy class="h-4 w-4" />
-						Copy
 					{/if}
 				</Button>
 				<a href="/tickets/{data.edition.slug}" target="_blank" rel="noopener noreferrer">
 					<Button variant="outline" size="sm" class="gap-2">
 						<ExternalLink class="h-4 w-4" />
-						Open
+					</Button>
+				</a>
+			</div>
+			<!-- Scanner URL -->
+			<div class="flex items-center gap-2">
+				<div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
+					<span class="text-sm text-muted-foreground">Scanner:</span>
+					<code class="text-sm">/scan/{data.edition.id}</code>
+				</div>
+				<Button variant="outline" size="sm" onclick={copyScannerUrl} class="gap-2">
+					{#if copiedScanner}
+						<Check class="h-4 w-4 text-green-500" />
+					{:else}
+						<Copy class="h-4 w-4" />
+					{/if}
+				</Button>
+				<a href="/scan/{data.edition.id}" target="_blank" rel="noopener noreferrer">
+					<Button variant="outline" size="sm" class="gap-2">
+						<ExternalLink class="h-4 w-4" />
 					</Button>
 				</a>
 			</div>

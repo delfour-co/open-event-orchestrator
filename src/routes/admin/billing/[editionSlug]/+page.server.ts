@@ -48,6 +48,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
   }
 
   const publicUrl = `${url.origin}/tickets/${edition.slug}`
+  const scannerUrl = `${url.origin}/scan/${editionId}`
 
   return {
     edition: {
@@ -58,6 +59,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
       endDate: new Date(edition.endDate as string)
     },
     publicUrl,
+    scannerUrl,
     ticketTypes: ticketTypes.map((tt) => ({
       id: tt.id as string,
       name: tt.name as string,
