@@ -7,7 +7,7 @@ import type { Actions, PageServerLoad } from './$types'
 const EDITABLE_STATUSES = ['draft', 'submitted']
 
 export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
-  const { edition, categories, formats, cfpStatus } = await parent()
+  const { edition, categories, formats, fieldConditionRules, cfpStatus } = await parent()
   const token = url.searchParams.get('token')
 
   if (cfpStatus !== 'open') {
@@ -40,7 +40,7 @@ export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
     throw error(403, 'You are not authorized to edit this talk')
   }
 
-  return { edition, categories, formats, talk, speaker, token }
+  return { edition, categories, formats, fieldConditionRules, talk, speaker, token }
 }
 
 function parseSpeakerFormData(formData: FormData) {

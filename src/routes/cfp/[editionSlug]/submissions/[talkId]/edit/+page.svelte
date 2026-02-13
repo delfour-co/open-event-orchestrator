@@ -130,6 +130,7 @@ $effect(() => {
             bind:talk
             categories={data.categories}
             formats={data.formats}
+            fieldConditionRules={data.fieldConditionRules}
             errors={form?.talkErrors}
           />
         </CardContent>

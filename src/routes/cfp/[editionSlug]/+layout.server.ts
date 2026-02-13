@@ -1,4 +1,8 @@
-import { createCategoryRepository, createFormatRepository } from '$lib/features/cfp/infra'
+import {
+  createCategoryRepository,
+  createFieldConditionRuleRepository,
+  createFormatRepository
+} from '$lib/features/cfp/infra'
 import { error } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
 
@@ -7,6 +11,7 @@ export type CfpStatus = 'not_open_yet' | 'open' | 'closed'
 export const load: LayoutServerLoad = async ({ params, locals }) => {
   const categoryRepo = createCategoryRepository(locals.pb)
   const formatRepo = createFormatRepository(locals.pb)
+  const fieldConditionRuleRepo = createFieldConditionRuleRepository(locals.pb)
 
   // Find edition by slug
   const editions = await locals.pb.collection('editions').getList(1, 1, {
@@ -40,6 +45,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 
   const categories = await categoryRepo.findByEdition(edition.id)
   const formats = await formatRepo.findByEdition(edition.id)
+  const fieldConditionRules = await fieldConditionRuleRepo.findByEdition(edition.id)
 
   // Load CFP settings for timeline
   let cfpSettings = null
@@ -69,6 +75,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
     edition,
     categories,
     formats,
+    fieldConditionRules,
     cfpOpenDate,
     cfpCloseDate,
     cfpStatus,

@@ -15,7 +15,16 @@ import {
   type FieldConditionRule
 } from '$lib/features/cfp/domain/conditional-field'
 import { FieldConditionRuleBuilder } from '$lib/features/cfp/ui'
-import { ArrowLeft, ChevronDown, ChevronUp, Edit2, Loader2, Plus, Trash2 } from 'lucide-svelte'
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Edit2,
+  ExternalLink,
+  Loader2,
+  Plus,
+  Trash2
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -547,17 +556,25 @@ const statuses = ['draft', 'published', 'archived'] as const
             Show or hide form fields based on speaker selections
           </Card.Description>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onclick={() => {
-            resetRuleForm()
-            showNewConditionRule = !showNewConditionRule
-          }}
-        >
-          <Plus class="mr-2 h-4 w-4" />
-          Add Rule
-        </Button>
+        <div class="flex gap-2">
+          <a href="/cfp/{data.edition.slug}/submit" target="_blank" rel="noopener">
+            <Button size="sm" variant="ghost">
+              <ExternalLink class="mr-2 h-4 w-4" />
+              Preview Form
+            </Button>
+          </a>
+          <Button
+            size="sm"
+            variant="outline"
+            onclick={() => {
+              resetRuleForm()
+              showNewConditionRule = !showNewConditionRule
+            }}
+          >
+            <Plus class="mr-2 h-4 w-4" />
+            Add Rule
+          </Button>
+        </div>
       </div>
     </Card.Header>
     <Card.Content>

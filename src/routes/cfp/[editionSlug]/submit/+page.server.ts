@@ -8,7 +8,8 @@ import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ parent }) => {
-  const { edition, categories, formats, cfpStatus, allowCoSpeakers } = await parent()
+  const { edition, categories, formats, fieldConditionRules, cfpStatus, allowCoSpeakers } =
+    await parent()
 
   // Block access if CFP is not open
   if (cfpStatus !== 'open') {
@@ -20,7 +21,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     )
   }
 
-  return { edition, categories, formats, allowCoSpeakers }
+  return { edition, categories, formats, fieldConditionRules, allowCoSpeakers }
 }
 
 export const actions: Actions = {
