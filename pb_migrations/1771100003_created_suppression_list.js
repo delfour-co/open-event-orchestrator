@@ -74,7 +74,7 @@ migrate(
         },
         {
           cascadeDelete: false,
-          collectionId: 'pbc_organizations',
+          collectionId: 'pbc_2873630990',
           hidden: false,
           id: 'organizationId',
           maxSelect: 1,
@@ -87,7 +87,7 @@ migrate(
         },
         {
           cascadeDelete: false,
-          collectionId: 'pbc_events',
+          collectionId: 'pbc_1687431684',
           hidden: false,
           id: 'eventId',
           maxSelect: 1,

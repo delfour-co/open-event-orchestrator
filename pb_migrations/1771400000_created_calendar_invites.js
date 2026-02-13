@@ -24,7 +24,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'pbc_3611325497',
+          collectionId: 'pbc_3660498186',
           hidden: false,
           id: 'sessionId',
           maxSelect: 1,
@@ -37,7 +37,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'pbc_speakers',
+          collectionId: 'pbc_1636713223',
           hidden: false,
           id: 'speakerId',
           maxSelect: 1,

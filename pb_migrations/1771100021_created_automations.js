@@ -2,173 +2,210 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'automations',
-      name: 'automations',
-      type: 'base',
-      system: false,
-      schema: [
+      createRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""',
+      listRule: '@request.auth.id != ""',
+      updateRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      fields: [
         {
-          system: false,
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
+          required: true,
+          system: true,
+          type: 'text'
+        },
+        {
+          cascadeDelete: true,
+          collectionId: 'pbc_1687431684',
+          hidden: false,
           id: 'eventId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'eventId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'events',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: ['name']
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          cascadeDelete: true,
+          collectionId: 'pbc_3605007359',
+          hidden: false,
           id: 'editionId',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'editionId',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'editions',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: ['name']
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'name',
+          max: 200,
+          min: 1,
           name: 'name',
-          type: 'text',
+          pattern: '',
+          presentable: true,
+          primaryKey: false,
           required: true,
-          options: {
-            min: 1,
-            max: 200,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'description',
+          max: 2000,
+          min: 0,
           name: 'description',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 2000,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          hidden: false,
           id: 'triggerType',
+          maxSelect: 1,
           name: 'triggerType',
-          type: 'select',
+          presentable: false,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: [
-              'contact_created',
-              'ticket_purchased',
-              'checked_in',
-              'tag_added',
-              'consent_given',
-              'scheduled_date',
-              'talk_submitted',
-              'talk_accepted',
-              'talk_rejected'
-            ]
-          }
+          system: false,
+          type: 'select',
+          values: [
+            'contact_created',
+            'ticket_purchased',
+            'checked_in',
+            'tag_added',
+            'consent_given',
+            'scheduled_date',
+            'talk_submitted',
+            'talk_accepted',
+            'talk_rejected'
+          ]
         },
         {
-          system: false,
+          hidden: false,
           id: 'triggerConfig',
+          maxSize: 65536,
           name: 'triggerConfig',
-          type: 'json',
+          presentable: false,
           required: true,
-          options: {
-            maxSize: 65536
-          }
+          system: false,
+          type: 'json'
         },
         {
-          system: false,
+          hidden: false,
           id: 'status',
+          maxSelect: 1,
           name: 'status',
-          type: 'select',
+          presentable: true,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: ['draft', 'active', 'paused']
-          }
+          system: false,
+          type: 'select',
+          values: ['draft', 'active', 'paused']
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'startStepId',
+          max: 50,
+          min: 0,
           name: 'startStepId',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 50,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          hidden: false,
           id: 'enrollmentCount',
+          max: null,
+          min: 0,
           name: 'enrollmentCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
+          hidden: false,
           id: 'completedCount',
+          max: null,
+          min: 0,
           name: 'completedCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
+          cascadeDelete: false,
+          collectionId: '_pb_users_auth_',
+          hidden: false,
           id: 'createdBy',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'createdBy',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: '_pb_users_auth_',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: ['email']
-          }
+          system: false,
+          type: 'relation'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
+      id: 'pbc_automations',
       indexes: [
         'CREATE INDEX idx_automations_eventId ON automations (eventId)',
         'CREATE INDEX idx_automations_editionId ON automations (editionId)',
         'CREATE INDEX idx_automations_status ON automations (status)',
         'CREATE INDEX idx_automations_triggerType ON automations (triggerType)'
       ],
-      listRule: '@request.auth.id != ""',
-      viewRule: '@request.auth.id != ""',
-      createRule: '@request.auth.id != ""',
-      updateRule: '@request.auth.id != ""',
-      deleteRule: '@request.auth.id != ""'
+      name: 'automations',
+      system: false,
+      type: 'base'
     })
 
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('automations')
+    const collection = app.findCollectionByNameOrId('pbc_automations')
     return app.delete(collection)
   }
 )

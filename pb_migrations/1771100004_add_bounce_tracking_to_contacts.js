@@ -1,7 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate(
   (app) => {
-    const collection = app.findCollectionByNameOrId('pbc_contacts')
+    const collection = app.findCollectionByNameOrId('contacts')
 
     // Add hard bounce count field
     collection.fields.add(
@@ -66,7 +66,7 @@ migrate(
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('pbc_contacts')
+    const collection = app.findCollectionByNameOrId('contacts')
 
     collection.fields.removeById('hardBounceCount')
     collection.fields.removeById('softBounceCount')

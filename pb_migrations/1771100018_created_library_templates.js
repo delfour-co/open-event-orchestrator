@@ -2,200 +2,244 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'library_templates',
-      name: 'library_templates',
-      type: 'base',
-      system: false,
-      schema: [
+      createRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""',
+      listRule: '@request.auth.id != ""',
+      updateRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      fields: [
         {
-          system: false,
-          id: 'eventid',
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
+          required: true,
+          system: true,
+          type: 'text'
+        },
+        {
+          cascadeDelete: true,
+          collectionId: 'pbc_1687431684',
+          hidden: false,
+          id: 'eventId',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'eventId',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'events',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'name',
+          max: 100,
+          min: 1,
           name: 'name',
-          type: 'text',
+          pattern: '',
+          presentable: true,
+          primaryKey: false,
           required: true,
-          options: {
-            min: 1,
-            max: 100,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'description',
+          max: 500,
+          min: 0,
           name: 'description',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 500,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          hidden: false,
           id: 'category',
+          maxSelect: 1,
           name: 'category',
+          presentable: true,
+          required: true,
+          system: false,
           type: 'select',
-          required: true,
-          options: {
-            maxSelect: 1,
-            values: [
-              'invitation',
-              'confirmation',
-              'reminder',
-              'thank_you',
-              'newsletter',
-              'cfp',
-              'speaker',
-              'sponsor',
-              'custom'
-            ]
-          }
+          values: [
+            'invitation',
+            'confirmation',
+            'reminder',
+            'thank_you',
+            'newsletter',
+            'cfp',
+            'speaker',
+            'sponsor',
+            'custom'
+          ]
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'subject',
+          max: 200,
+          min: 1,
           name: 'subject',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: true,
-          options: {
-            min: 1,
-            max: 200,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'htmlcontent',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'htmlContent',
+          max: 500000,
+          min: 0,
           name: 'htmlContent',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: true,
-          options: {
-            min: null,
-            max: 500000,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'textcontent',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'textContent',
+          max: 100000,
+          min: 0,
           name: 'textContent',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 100000,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          hidden: false,
           id: 'tags',
+          maxSize: 5000,
           name: 'tags',
-          type: 'json',
+          presentable: false,
           required: false,
-          options: {
-            maxSize: 5000
-          }
+          system: false,
+          type: 'json'
         },
         {
-          system: false,
+          hidden: false,
           id: 'thumbnail',
+          maxSelect: 1,
+          maxSize: 1048576,
+          mimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
           name: 'thumbnail',
-          type: 'file',
+          presentable: false,
+          protected: false,
           required: false,
-          options: {
-            mimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
-            thumbs: ['200x150'],
-            maxSelect: 1,
-            maxSize: 1048576,
-            protected: false
-          }
+          system: false,
+          thumbs: ['200x150'],
+          type: 'file'
         },
         {
-          system: false,
-          id: 'isglobal',
+          hidden: false,
+          id: 'isGlobal',
           name: 'isGlobal',
-          type: 'bool',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'bool'
         },
         {
-          system: false,
-          id: 'isfavorite',
+          hidden: false,
+          id: 'isFavorite',
           name: 'isFavorite',
-          type: 'bool',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'bool'
         },
         {
-          system: false,
-          id: 'ispinned',
+          hidden: false,
+          id: 'isPinned',
           name: 'isPinned',
-          type: 'bool',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'bool'
         },
         {
-          system: false,
-          id: 'usagecount',
+          hidden: false,
+          id: 'usageCount',
+          max: null,
+          min: 0,
           name: 'usageCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'createdby',
+          cascadeDelete: false,
+          collectionId: '_pb_users_auth_',
+          hidden: false,
+          id: 'createdBy',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'createdBy',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'users',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
+      id: 'pbc_library_templates',
       indexes: [
-        'CREATE INDEX `idx_library_templates_event` ON `library_templates` (`eventId`)',
-        'CREATE INDEX `idx_library_templates_category` ON `library_templates` (`category`)',
-        'CREATE INDEX `idx_library_templates_global` ON `library_templates` (`isGlobal`)',
-        'CREATE INDEX `idx_library_templates_favorite` ON `library_templates` (`isFavorite`)',
-        'CREATE INDEX `idx_library_templates_pinned` ON `library_templates` (`isPinned`)'
+        'CREATE INDEX idx_library_templates_event ON library_templates (eventId)',
+        'CREATE INDEX idx_library_templates_category ON library_templates (category)',
+        'CREATE INDEX idx_library_templates_global ON library_templates (isGlobal)',
+        'CREATE INDEX idx_library_templates_favorite ON library_templates (isFavorite)',
+        'CREATE INDEX idx_library_templates_pinned ON library_templates (isPinned)'
       ],
-      listRule: '@request.auth.id != ""',
-      viewRule: '@request.auth.id != ""',
-      createRule: '@request.auth.id != ""',
-      updateRule: '@request.auth.id != ""',
-      deleteRule: '@request.auth.id != ""',
-      options: {}
+      name: 'library_templates',
+      system: false,
+      type: 'base'
     })
 
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('library_templates')
+    const collection = app.findCollectionByNameOrId('pbc_library_templates')
     return app.delete(collection)
   }
 )

@@ -19,7 +19,7 @@ migrate(
     const collection = app.findCollectionByNameOrId('pbc_3660498186')
 
     // Add format field (in_person, online, hybrid)
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         hidden: false,
         id: 'format',
@@ -34,7 +34,7 @@ migrate(
     )
 
     // Add streaming platform field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         hidden: false,
         id: 'streamingPlatform',
@@ -49,7 +49,7 @@ migrate(
     )
 
     // Add streaming URL field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         autogeneratePattern: '',
         hidden: false,
@@ -67,7 +67,7 @@ migrate(
     )
 
     // Add streaming access level field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         hidden: false,
         id: 'streamingAccessLevel',
@@ -82,7 +82,7 @@ migrate(
     )
 
     // Add streaming password field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         autogeneratePattern: '',
         hidden: false,
@@ -100,7 +100,7 @@ migrate(
     )
 
     // Add streaming allow embed field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         hidden: false,
         id: 'streamingAllowEmbed',
@@ -113,7 +113,7 @@ migrate(
     )
 
     // Add streaming scheduled start field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         hidden: false,
         id: 'streamingScheduledStart',
@@ -128,7 +128,7 @@ migrate(
     )
 
     // Add streaming meeting ID field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         autogeneratePattern: '',
         hidden: false,
@@ -146,7 +146,7 @@ migrate(
     )
 
     // Add streaming passcode field
-    collection.fields.push(
+    collection.fields.add(
       new Field({
         autogeneratePattern: '',
         hidden: false,

@@ -2,144 +2,179 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'contact_merge_history',
-      name: 'contact_merge_history',
-      type: 'base',
-      system: false,
-      schema: [
+      createRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""',
+      listRule: '@request.auth.id != ""',
+      updateRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      fields: [
         {
-          system: false,
-          id: 'eventid',
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
+          required: true,
+          system: true,
+          type: 'text'
+        },
+        {
+          cascadeDelete: true,
+          collectionId: 'pbc_1687431684',
+          hidden: false,
+          id: 'eventId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'eventId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'events',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'survivorcontactid',
+          cascadeDelete: false,
+          collectionId: 'pbc_1930317162',
+          hidden: false,
+          id: 'survivorContactId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'survivorContactId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'contacts',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'mergedcontactid',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'mergedContactId',
+          max: 50,
+          min: 1,
           name: 'mergedContactId',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: true,
-          options: {
-            min: 1,
-            max: 50,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'survivordata',
+          hidden: false,
+          id: 'survivorData',
+          maxSize: 50000,
           name: 'survivorData',
-          type: 'json',
+          presentable: false,
           required: true,
-          options: {
-            maxSize: 50000
-          }
+          system: false,
+          type: 'json'
         },
         {
-          system: false,
-          id: 'mergeddata',
+          hidden: false,
+          id: 'mergedData',
+          maxSize: 50000,
           name: 'mergedData',
-          type: 'json',
+          presentable: false,
           required: true,
-          options: {
-            maxSize: 50000
-          }
+          system: false,
+          type: 'json'
         },
         {
-          system: false,
-          id: 'mergedecisions',
+          hidden: false,
+          id: 'mergeDecisions',
+          maxSize: 10000,
           name: 'mergeDecisions',
-          type: 'json',
+          presentable: false,
           required: true,
-          options: {
-            maxSize: 10000
-          }
+          system: false,
+          type: 'json'
         },
         {
-          system: false,
-          id: 'mergedby',
+          cascadeDelete: false,
+          collectionId: '_pb_users_auth_',
+          hidden: false,
+          id: 'mergedBy',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'mergedBy',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'users',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          hidden: false,
           id: 'undone',
           name: 'undone',
-          type: 'bool',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'bool'
         },
         {
-          system: false,
-          id: 'undoneat',
+          hidden: false,
+          id: 'undoneAt',
+          max: '',
+          min: '',
           name: 'undoneAt',
-          type: 'date',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'date'
         },
         {
-          system: false,
-          id: 'undoneby',
+          cascadeDelete: false,
+          collectionId: '_pb_users_auth_',
+          hidden: false,
+          id: 'undoneBy',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'undoneBy',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'users',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
+      id: 'pbc_contact_merge_history',
       indexes: [
-        'CREATE INDEX `idx_cmh_event` ON `contact_merge_history` (`eventId`)',
-        'CREATE INDEX `idx_cmh_survivor` ON `contact_merge_history` (`survivorContactId`)',
-        'CREATE INDEX `idx_cmh_merged` ON `contact_merge_history` (`mergedContactId`)',
-        'CREATE INDEX `idx_cmh_created` ON `contact_merge_history` (`created`)'
+        'CREATE INDEX idx_cmh_event ON contact_merge_history (eventId)',
+        'CREATE INDEX idx_cmh_survivor ON contact_merge_history (survivorContactId)',
+        'CREATE INDEX idx_cmh_merged ON contact_merge_history (mergedContactId)',
+        'CREATE INDEX idx_cmh_created ON contact_merge_history (created)'
       ],
-      listRule: '@request.auth.id != ""',
-      viewRule: '@request.auth.id != ""',
-      createRule: '@request.auth.id != ""',
-      updateRule: '@request.auth.id != ""',
-      deleteRule: '@request.auth.id != ""',
-      options: {}
+      name: 'contact_merge_history',
+      system: false,
+      type: 'base'
     })
 
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('contact_merge_history')
+    const collection = app.findCollectionByNameOrId('pbc_contact_merge_history')
     return app.delete(collection)
   }
 )

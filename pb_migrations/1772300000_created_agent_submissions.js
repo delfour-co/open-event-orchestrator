@@ -41,7 +41,7 @@ migrate(
         },
         {
           cascadeDelete: false,
-          collectionId: 'pbc_speakers', // speakers
+          collectionId: 'pbc_1636713223', // speakers
           hidden: false,
           id: 'speakerId',
           maxSelect: 1,

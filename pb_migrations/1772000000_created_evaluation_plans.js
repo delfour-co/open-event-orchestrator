@@ -62,7 +62,7 @@ migrate(
         },
         {
           cascadeDelete: false,
-          collectionId: 'pbc_2548323271',
+          collectionId: 'pbc_3292755704',
           hidden: false,
           id: 'categoryIds',
           maxSelect: 100,

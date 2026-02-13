@@ -2,202 +2,244 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'ab_test_campaigns',
-      name: 'ab_test_campaigns',
-      type: 'base',
-      system: false,
-      schema: [
+      createRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""',
+      listRule: '@request.auth.id != ""',
+      updateRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      fields: [
         {
-          system: false,
-          id: 'eventid',
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
+          required: true,
+          system: true,
+          type: 'text'
+        },
+        {
+          cascadeDelete: true,
+          collectionId: 'pbc_1687431684',
+          hidden: false,
+          id: 'eventId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'eventId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'events',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'editionid',
+          cascadeDelete: true,
+          collectionId: 'pbc_3605007359',
+          hidden: false,
+          id: 'editionId',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'editionId',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'editions',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'name',
+          max: 200,
+          min: 1,
           name: 'name',
-          type: 'text',
+          pattern: '',
+          presentable: true,
+          primaryKey: false,
           required: true,
-          options: {
-            min: 1,
-            max: 200,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'segmentid',
+          cascadeDelete: false,
+          collectionId: 'pbc_1719698224',
+          hidden: false,
+          id: 'segmentId',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'segmentId',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'segments',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'testvariable',
+          hidden: false,
+          id: 'testVariable',
+          maxSelect: 1,
           name: 'testVariable',
-          type: 'select',
+          presentable: false,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: ['subject', 'content', 'sender_name', 'send_time']
-          }
+          system: false,
+          type: 'select',
+          values: ['subject', 'content', 'sender_name', 'send_time']
         },
         {
-          system: false,
-          id: 'winnercriteria',
+          hidden: false,
+          id: 'winnerCriteria',
+          maxSelect: 1,
           name: 'winnerCriteria',
-          type: 'select',
+          presentable: false,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: ['open_rate', 'click_rate']
-          }
+          system: false,
+          type: 'select',
+          values: ['open_rate', 'click_rate']
         },
         {
-          system: false,
-          id: 'testpercentage',
+          hidden: false,
+          id: 'testPercentage',
+          max: 50,
+          min: 10,
           name: 'testPercentage',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: true,
-          options: {
-            min: 10,
-            max: 50,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'testdurationhours',
+          hidden: false,
+          id: 'testDurationHours',
+          max: 168,
+          min: 1,
           name: 'testDurationHours',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: true,
-          options: {
-            min: 1,
-            max: 168,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
+          hidden: false,
           id: 'status',
+          maxSelect: 1,
           name: 'status',
-          type: 'select',
+          presentable: true,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: ['draft', 'testing', 'winner_selected', 'completed', 'cancelled']
-          }
+          system: false,
+          type: 'select',
+          values: ['draft', 'testing', 'winner_selected', 'completed', 'cancelled']
         },
         {
-          system: false,
-          id: 'winnervariantid',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'winnerVariantId',
+          max: 50,
+          min: 0,
           name: 'winnerVariantId',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 50,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'winnerselectedat',
+          hidden: false,
+          id: 'winnerSelectedAt',
+          max: '',
+          min: '',
           name: 'winnerSelectedAt',
-          type: 'date',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'date'
         },
         {
-          system: false,
-          id: 'teststartedat',
+          hidden: false,
+          id: 'testStartedAt',
+          max: '',
+          min: '',
           name: 'testStartedAt',
-          type: 'date',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'date'
         },
         {
-          system: false,
-          id: 'testendedat',
+          hidden: false,
+          id: 'testEndedAt',
+          max: '',
+          min: '',
           name: 'testEndedAt',
-          type: 'date',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'date'
         },
         {
-          system: false,
-          id: 'totalrecipients',
+          hidden: false,
+          id: 'totalRecipients',
+          max: null,
+          min: 0,
           name: 'totalRecipients',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'createdby',
+          cascadeDelete: false,
+          collectionId: '_pb_users_auth_',
+          hidden: false,
+          id: 'createdBy',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'createdBy',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'users',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
+      id: 'pbc_ab_test_campaigns',
       indexes: [
-        'CREATE INDEX `idx_ab_tests_event` ON `ab_test_campaigns` (`eventId`)',
-        'CREATE INDEX `idx_ab_tests_edition` ON `ab_test_campaigns` (`editionId`)',
-        'CREATE INDEX `idx_ab_tests_status` ON `ab_test_campaigns` (`status`)'
+        'CREATE INDEX idx_ab_tests_event ON ab_test_campaigns (eventId)',
+        'CREATE INDEX idx_ab_tests_edition ON ab_test_campaigns (editionId)',
+        'CREATE INDEX idx_ab_tests_status ON ab_test_campaigns (status)'
       ],
-      listRule: '@request.auth.id != ""',
-      viewRule: '@request.auth.id != ""',
-      createRule: '@request.auth.id != ""',
-      updateRule: '@request.auth.id != ""',
-      deleteRule: '@request.auth.id != ""',
-      options: {}
+      name: 'ab_test_campaigns',
+      system: false,
+      type: 'base'
     })
 
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('ab_test_campaigns')
+    const collection = app.findCollectionByNameOrId('pbc_ab_test_campaigns')
     return app.delete(collection)
   }
 )

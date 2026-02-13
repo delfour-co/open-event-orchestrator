@@ -21,7 +21,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'pbc_contacts',
+          collectionId: 'pbc_1930317162',
           hidden: false,
           id: 'contactId',
           maxSelect: 1,
@@ -34,7 +34,7 @@ migrate(
         },
         {
           cascadeDelete: false,
-          collectionId: 'pbc_events',
+          collectionId: 'pbc_1687431684',
           hidden: false,
           id: 'eventId',
           maxSelect: 1,
@@ -47,7 +47,7 @@ migrate(
         },
         {
           cascadeDelete: false,
-          collectionId: 'pbc_editions',
+          collectionId: 'pbc_3605007359',
           hidden: false,
           id: 'editionId',
           maxSelect: 1,

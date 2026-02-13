@@ -28,7 +28,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'pbc_3916675037', // editions
+          collectionId: 'pbc_3605007359', // editions
           hidden: false,
           id: 'editionId',
           maxSelect: 1,
@@ -41,7 +41,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'pbc_2958667911', // ticket_types
+          collectionId: 'pbc_647540413', // ticket_types
           hidden: false,
           id: 'ticketTypeId',
           maxSelect: 1,
@@ -178,7 +178,7 @@ migrate(
         },
         {
           cascadeDelete: false,
-          collectionId: 'pbc_2755897982', // orders
+          collectionId: 'pbc_3527180448', // orders
           hidden: false,
           id: 'orderId',
           maxSelect: 1,

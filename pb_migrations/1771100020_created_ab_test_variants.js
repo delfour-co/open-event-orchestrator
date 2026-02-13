@@ -2,189 +2,233 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'ab_test_variants',
-      name: 'ab_test_variants',
-      type: 'base',
-      system: false,
-      schema: [
+      createRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""',
+      listRule: '@request.auth.id != ""',
+      updateRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      fields: [
         {
-          system: false,
-          id: 'testid',
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
+          required: true,
+          system: true,
+          type: 'text'
+        },
+        {
+          cascadeDelete: true,
+          collectionId: 'pbc_ab_test_campaigns',
+          hidden: false,
+          id: 'testId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'testId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'ab_test_campaigns',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          hidden: false,
           id: 'name',
+          maxSelect: 1,
           name: 'name',
+          presentable: true,
+          required: true,
+          system: false,
           type: 'select',
-          required: true,
-          options: {
-            maxSelect: 1,
-            values: ['A', 'B', 'C']
-          }
+          values: ['A', 'B', 'C']
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'subject',
+          max: 200,
+          min: 1,
           name: 'subject',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: true,
-          options: {
-            min: 1,
-            max: 200,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'htmlcontent',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'htmlContent',
+          max: 500000,
+          min: 0,
           name: 'htmlContent',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: true,
-          options: {
-            min: null,
-            max: 500000,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'textcontent',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'textContent',
+          max: 100000,
+          min: 0,
           name: 'textContent',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 100000,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'sendername',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'senderName',
+          max: 100,
+          min: 0,
           name: 'senderName',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 100,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'scheduledat',
+          hidden: false,
+          id: 'scheduledAt',
+          max: '',
+          min: '',
           name: 'scheduledAt',
-          type: 'date',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'date'
         },
         {
-          system: false,
-          id: 'recipientcount',
+          hidden: false,
+          id: 'recipientCount',
+          max: null,
+          min: 0,
           name: 'recipientCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'sentcount',
+          hidden: false,
+          id: 'sentCount',
+          max: null,
+          min: 0,
           name: 'sentCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'deliveredcount',
+          hidden: false,
+          id: 'deliveredCount',
+          max: null,
+          min: 0,
           name: 'deliveredCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'openedcount',
+          hidden: false,
+          id: 'openedCount',
+          max: null,
+          min: 0,
           name: 'openedCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'clickedcount',
+          hidden: false,
+          id: 'clickedCount',
+          max: null,
+          min: 0,
           name: 'clickedCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'bouncedcount',
+          hidden: false,
+          id: 'bouncedCount',
+          max: null,
+          min: 0,
           name: 'bouncedCount',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: false,
-          options: {
-            min: 0,
-            max: null,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
-          id: 'iswinner',
+          hidden: false,
+          id: 'isWinner',
           name: 'isWinner',
-          type: 'bool',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'bool'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
+      id: 'pbc_ab_test_variants',
       indexes: [
-        'CREATE INDEX `idx_ab_variants_test` ON `ab_test_variants` (`testId`)',
-        'CREATE UNIQUE INDEX `idx_ab_variants_unique` ON `ab_test_variants` (`testId`, `name`)'
+        'CREATE INDEX idx_ab_variants_test ON ab_test_variants (testId)',
+        'CREATE UNIQUE INDEX idx_ab_variants_unique ON ab_test_variants (testId, name)'
       ],
-      listRule: '@request.auth.id != ""',
-      viewRule: '@request.auth.id != ""',
-      createRule: '@request.auth.id != ""',
-      updateRule: '@request.auth.id != ""',
-      deleteRule: '@request.auth.id != ""',
-      options: {}
+      name: 'ab_test_variants',
+      system: false,
+      type: 'base'
     })
 
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('ab_test_variants')
+    const collection = app.findCollectionByNameOrId('pbc_ab_test_variants')
     return app.delete(collection)
   }
 )

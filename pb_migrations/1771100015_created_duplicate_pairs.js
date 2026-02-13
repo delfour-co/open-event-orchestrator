@@ -2,143 +2,174 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'duplicate_pairs',
-      name: 'duplicate_pairs',
-      type: 'base',
-      system: false,
-      schema: [
+      createRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""',
+      listRule: '@request.auth.id != ""',
+      updateRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      fields: [
         {
-          system: false,
-          id: 'eventid',
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
+          required: true,
+          system: true,
+          type: 'text'
+        },
+        {
+          cascadeDelete: true,
+          collectionId: 'pbc_1687431684',
+          hidden: false,
+          id: 'eventId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'eventId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'events',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'contactid1',
+          cascadeDelete: true,
+          collectionId: 'pbc_1930317162',
+          hidden: false,
+          id: 'contactId1',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'contactId1',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'contacts',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'contactid2',
+          cascadeDelete: true,
+          collectionId: 'pbc_1930317162',
+          hidden: false,
+          id: 'contactId2',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'contactId2',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'contacts',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'matchtype',
+          hidden: false,
+          id: 'matchType',
+          maxSelect: 1,
           name: 'matchType',
-          type: 'select',
+          presentable: false,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: ['exact_email', 'similar_name', 'similar_combined']
-          }
+          system: false,
+          type: 'select',
+          values: ['exact_email', 'similar_name', 'similar_combined']
         },
         {
-          system: false,
-          id: 'confidencescore',
+          hidden: false,
+          id: 'confidenceScore',
+          max: 100,
+          min: 0,
           name: 'confidenceScore',
-          type: 'number',
+          onlyInt: true,
+          presentable: false,
           required: true,
-          options: {
-            min: 0,
-            max: 100,
-            noDecimal: true
-          }
+          system: false,
+          type: 'number'
         },
         {
-          system: false,
+          hidden: false,
           id: 'status',
+          maxSelect: 1,
           name: 'status',
-          type: 'select',
+          presentable: true,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: ['pending', 'merged', 'dismissed']
-          }
+          system: false,
+          type: 'select',
+          values: ['pending', 'merged', 'dismissed']
         },
         {
-          system: false,
-          id: 'mergedcontactid',
+          cascadeDelete: false,
+          collectionId: 'pbc_1930317162',
+          hidden: false,
+          id: 'mergedContactId',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'mergedContactId',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'contacts',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'dismissedby',
+          cascadeDelete: false,
+          collectionId: '_pb_users_auth_',
+          hidden: false,
+          id: 'dismissedBy',
+          maxSelect: 1,
+          minSelect: 0,
           name: 'dismissedBy',
-          type: 'relation',
+          presentable: false,
           required: false,
-          options: {
-            collectionId: 'users',
-            cascadeDelete: false,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: null
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
-          id: 'dismissedat',
+          hidden: false,
+          id: 'dismissedAt',
+          max: '',
+          min: '',
           name: 'dismissedAt',
-          type: 'date',
+          presentable: false,
           required: false,
-          options: {}
+          system: false,
+          type: 'date'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
+      id: 'pbc_duplicate_pairs',
       indexes: [
-        'CREATE INDEX `idx_duplicate_pairs_event` ON `duplicate_pairs` (`eventId`)',
-        'CREATE INDEX `idx_duplicate_pairs_contact1` ON `duplicate_pairs` (`contactId1`)',
-        'CREATE INDEX `idx_duplicate_pairs_contact2` ON `duplicate_pairs` (`contactId2`)',
-        'CREATE INDEX `idx_duplicate_pairs_status` ON `duplicate_pairs` (`status`)',
-        'CREATE UNIQUE INDEX `idx_duplicate_pairs_unique` ON `duplicate_pairs` (`contactId1`, `contactId2`)'
+        'CREATE INDEX idx_duplicate_pairs_event ON duplicate_pairs (eventId)',
+        'CREATE INDEX idx_duplicate_pairs_contact1 ON duplicate_pairs (contactId1)',
+        'CREATE INDEX idx_duplicate_pairs_contact2 ON duplicate_pairs (contactId2)',
+        'CREATE INDEX idx_duplicate_pairs_status ON duplicate_pairs (status)',
+        'CREATE UNIQUE INDEX idx_duplicate_pairs_unique ON duplicate_pairs (contactId1, contactId2)'
       ],
-      listRule: '@request.auth.id != ""',
-      viewRule: '@request.auth.id != ""',
-      createRule: '@request.auth.id != ""',
-      updateRule: '@request.auth.id != ""',
-      deleteRule: '@request.auth.id != ""',
-      options: {}
+      name: 'duplicate_pairs',
+      system: false,
+      type: 'base'
     })
 
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('duplicate_pairs')
+    const collection = app.findCollectionByNameOrId('pbc_duplicate_pairs')
     return app.delete(collection)
   }
 )

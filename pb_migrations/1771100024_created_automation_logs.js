@@ -2,136 +2,176 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'automation_logs',
-      name: 'automation_logs',
-      type: 'base',
-      system: false,
-      schema: [
+      createRule: '@request.auth.id != ""',
+      deleteRule: null,
+      listRule: '@request.auth.id != ""',
+      updateRule: null,
+      viewRule: '@request.auth.id != ""',
+      fields: [
         {
-          system: false,
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
+          required: true,
+          system: true,
+          type: 'text'
+        },
+        {
+          cascadeDelete: true,
+          collectionId: 'pbc_automations',
+          hidden: false,
           id: 'automationId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'automationId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'automations',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: ['name']
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          cascadeDelete: true,
+          collectionId: 'pbc_automation_enrollments',
+          hidden: false,
           id: 'enrollmentId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'enrollmentId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'automation_enrollments',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: []
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          cascadeDelete: true,
+          collectionId: 'pbc_1930317162',
+          hidden: false,
           id: 'contactId',
+          maxSelect: 1,
+          minSelect: 1,
           name: 'contactId',
-          type: 'relation',
+          presentable: false,
           required: true,
-          options: {
-            collectionId: 'contacts',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: ['email']
-          }
+          system: false,
+          type: 'relation'
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'stepId',
+          max: 50,
+          min: 1,
           name: 'stepId',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: true,
-          options: {
-            min: 1,
-            max: 50,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          hidden: false,
           id: 'stepType',
+          maxSelect: 1,
           name: 'stepType',
-          type: 'select',
+          presentable: true,
           required: true,
-          options: {
-            maxSelect: 1,
-            values: [
-              'send_email',
-              'wait',
-              'condition',
-              'add_tag',
-              'remove_tag',
-              'update_field',
-              'webhook'
-            ]
-          }
+          system: false,
+          type: 'select',
+          values: [
+            'send_email',
+            'wait',
+            'condition',
+            'add_tag',
+            'remove_tag',
+            'update_field',
+            'webhook'
+          ]
         },
         {
-          system: false,
+          hidden: false,
           id: 'status',
+          maxSelect: 1,
           name: 'status',
+          presentable: true,
+          required: true,
+          system: false,
           type: 'select',
-          required: true,
-          options: {
-            maxSelect: 1,
-            values: ['pending', 'executing', 'completed', 'failed', 'skipped']
-          }
+          values: ['pending', 'executing', 'completed', 'failed', 'skipped']
         },
         {
-          system: false,
+          hidden: false,
           id: 'input',
+          maxSize: 65536,
           name: 'input',
-          type: 'json',
+          presentable: false,
           required: false,
-          options: {
-            maxSize: 65536
-          }
+          system: false,
+          type: 'json'
         },
         {
-          system: false,
+          hidden: false,
           id: 'output',
+          maxSize: 65536,
           name: 'output',
-          type: 'json',
+          presentable: false,
           required: false,
-          options: {
-            maxSize: 65536
-          }
+          system: false,
+          type: 'json'
         },
         {
-          system: false,
+          autogeneratePattern: '',
+          hidden: false,
           id: 'error',
+          max: 2000,
+          min: 0,
           name: 'error',
-          type: 'text',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
           required: false,
-          options: {
-            min: null,
-            max: 2000,
-            pattern: ''
-          }
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
+          hidden: false,
           id: 'executedAt',
+          max: '',
+          min: '',
           name: 'executedAt',
-          type: 'date',
+          presentable: false,
           required: true,
-          options: {}
+          system: false,
+          type: 'date'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
+      id: 'pbc_automation_logs',
       indexes: [
         'CREATE INDEX idx_automation_logs_automationId ON automation_logs (automationId)',
         'CREATE INDEX idx_automation_logs_enrollmentId ON automation_logs (enrollmentId)',
@@ -139,17 +179,15 @@ migrate(
         'CREATE INDEX idx_automation_logs_status ON automation_logs (status)',
         'CREATE INDEX idx_automation_logs_executedAt ON automation_logs (executedAt)'
       ],
-      listRule: '@request.auth.id != ""',
-      viewRule: '@request.auth.id != ""',
-      createRule: '@request.auth.id != ""',
-      updateRule: null,
-      deleteRule: null
+      name: 'automation_logs',
+      system: false,
+      type: 'base'
     })
 
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('automation_logs')
+    const collection = app.findCollectionByNameOrId('pbc_automation_logs')
     return app.delete(collection)
   }
 )

@@ -27,7 +27,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'pbc_3916675037', // editions
+          collectionId: 'pbc_3605007359', // editions
           hidden: false,
           id: 'editionId',
           maxSelect: 1,
