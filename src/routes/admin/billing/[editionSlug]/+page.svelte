@@ -119,43 +119,42 @@ $effect(() => {
 			</div>
 		</div>
 		<div class="flex flex-col items-end gap-2">
-			<!-- Public URL -->
-			<div class="flex items-center gap-2">
-				<div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-					<span class="text-sm text-muted-foreground">Tickets:</span>
-					<code class="text-sm">/tickets/{data.edition.slug}</code>
-				</div>
-				<Button variant="outline" size="sm" onclick={copyPublicUrl} class="gap-2">
-					{#if copiedPublic}
-						<Check class="h-4 w-4 text-green-500" />
-					{:else}
-						<Copy class="h-4 w-4" />
-					{/if}
-				</Button>
-				<a href="/tickets/{data.edition.slug}" target="_blank" rel="noopener noreferrer">
-					<Button variant="outline" size="sm" class="gap-2">
-						<ExternalLink class="h-4 w-4" />
+			<!-- URLs -->
+			<div class="flex flex-wrap items-center gap-2">
+				<!-- Public Tickets URL -->
+				<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
+					<span class="text-xs text-muted-foreground">Tickets:</span>
+					<code class="text-xs">/tickets/{data.edition.slug}</code>
+					<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyPublicUrl}>
+						{#if copiedPublic}
+							<Check class="h-3 w-3 text-green-500" />
+						{:else}
+							<Copy class="h-3 w-3" />
+						{/if}
 					</Button>
-				</a>
-			</div>
-			<!-- Scanner URL -->
-			<div class="flex items-center gap-2">
-				<div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-					<span class="text-sm text-muted-foreground">Scanner:</span>
-					<code class="text-sm">/scan/{data.edition.id}</code>
+					<a href="/tickets/{data.edition.slug}" target="_blank" rel="noopener noreferrer">
+						<Button variant="ghost" size="icon" class="h-6 w-6">
+							<ExternalLink class="h-3 w-3" />
+						</Button>
+					</a>
 				</div>
-				<Button variant="outline" size="sm" onclick={copyScannerUrl} class="gap-2">
-					{#if copiedScanner}
-						<Check class="h-4 w-4 text-green-500" />
-					{:else}
-						<Copy class="h-4 w-4" />
-					{/if}
-				</Button>
-				<a href="/scan/{data.edition.id}" target="_blank" rel="noopener noreferrer">
-					<Button variant="outline" size="sm" class="gap-2">
-						<ExternalLink class="h-4 w-4" />
+				<!-- Scanner URL -->
+				<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
+					<span class="text-xs text-muted-foreground">Scanner:</span>
+					<code class="text-xs">/scan/{data.edition.id}</code>
+					<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyScannerUrl}>
+						{#if copiedScanner}
+							<Check class="h-3 w-3 text-green-500" />
+						{:else}
+							<Copy class="h-3 w-3" />
+						{/if}
 					</Button>
-				</a>
+					<a href="/scan/{data.edition.id}" target="_blank" rel="noopener noreferrer">
+						<Button variant="ghost" size="icon" class="h-6 w-6">
+							<ExternalLink class="h-3 w-3" />
+						</Button>
+					</a>
+				</div>
 			</div>
 			<!-- Actions -->
 			<div class="flex gap-2">
