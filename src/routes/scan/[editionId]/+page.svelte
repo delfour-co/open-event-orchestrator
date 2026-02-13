@@ -45,12 +45,17 @@ let isOnline = $state(true)
 let cleanupConnectivity: (() => void) | undefined
 
 onMount(() => {
+  console.log('[Scanner] onMount called, edition:', data.edition?.name)
+
   if (!data.edition) {
+    console.log('[Scanner] No edition, redirecting to /scan')
     goto('/scan')
     return
   }
 
   isOnline = navigator.onLine
+  console.log('[Scanner] Online status:', isOnline)
+
   cleanupConnectivity = offlineSyncService.setupConnectivityListeners(
     () => {
       isOnline = true
@@ -61,12 +66,15 @@ onMount(() => {
   )
 
   // Load cache stats and start scanner
+  console.log('[Scanner] Loading cache stats...')
   updateCacheStats().then(() => {
+    console.log('[Scanner] Cache stats loaded, starting scanner...')
     startScanner()
   })
 
   // Cleanup on unmount
   return () => {
+    console.log('[Scanner] Cleanup called')
     stopScanner()
     cleanupConnectivity?.()
   }
@@ -95,23 +103,34 @@ async function downloadTickets() {
 }
 
 async function startScanner() {
-  if (isScanning) return
+  console.log('[Scanner] startScanner called, isScanning:', isScanning)
+  if (isScanning) {
+    console.log('[Scanner] Already scanning, skipping')
+    return
+  }
 
   isInitializing = true
   scanError = null
+  console.log('[Scanner] Starting initialization...')
 
   // Wait a tick for the DOM to update and container to be ready
   await new Promise((resolve) => setTimeout(resolve, 100))
 
   try {
+    console.log('[Scanner] Importing html5-qrcode...')
     const { Html5Qrcode } = await import('html5-qrcode')
+    console.log('[Scanner] html5-qrcode imported successfully')
 
     // Get available cameras first
+    console.log('[Scanner] Getting available cameras...')
     const devices = await Html5Qrcode.getCameras()
+    console.log('[Scanner] Cameras found:', devices.length, devices)
+
     if (!devices || devices.length === 0) {
       throw new Error('No cameras found on this device')
     }
 
+    console.log('[Scanner] Creating Html5Qrcode instance...')
     html5QrCode = new Html5Qrcode('qr-scanner')
 
     // Try to find back camera, fallback to first available
@@ -122,12 +141,21 @@ async function startScanner() {
         d.label.toLowerCase().includes('environment')
     )
     const cameraId = backCamera?.id || devices[0].id
+    console.log(
+      '[Scanner] Selected camera:',
+      cameraId,
+      backCamera ? '(back camera)' : '(first available)'
+    )
 
     // Add timeout to prevent hanging
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Camera initialization timed out')), 10000)
+      setTimeout(() => {
+        console.log('[Scanner] Timeout reached!')
+        reject(new Error('Camera initialization timed out'))
+      }, 10000)
     })
 
+    console.log('[Scanner] Starting camera with ID:', cameraId)
     const startPromise = (
       html5QrCode as {
         start: (
@@ -152,11 +180,12 @@ async function startScanner() {
 
     await Promise.race([startPromise, timeoutPromise])
 
+    console.log('[Scanner] Camera started successfully!')
     isScanning = true
     isInitializing = false
     scanError = null
   } catch (err) {
-    console.error('Failed to start scanner:', err)
+    console.error('[Scanner] Failed to start scanner:', err)
     scanError = err instanceof Error ? err.message : 'Camera access denied or not available'
     isScanning = false
     isInitializing = false
