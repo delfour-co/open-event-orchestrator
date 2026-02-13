@@ -138,7 +138,7 @@ function resetToDefaults() {
                     id="primaryColor"
                     name="primaryColor"
                     bind:value={primaryColor}
-                    pattern="^#[0-9A-Fa-f]{6}$"
+                    placeholder="#000000"
                     class="font-mono"
                   />
                 </div>
@@ -157,7 +157,7 @@ function resetToDefaults() {
                     id="backgroundColor"
                     name="backgroundColor"
                     bind:value={backgroundColor}
-                    pattern="^#[0-9A-Fa-f]{6}$"
+                    placeholder="#ffffff"
                     class="font-mono"
                   />
                 </div>
@@ -176,7 +176,7 @@ function resetToDefaults() {
                     id="textColor"
                     name="textColor"
                     bind:value={textColor}
-                    pattern="^#[0-9A-Fa-f]{6}$"
+                    placeholder="#000000"
                     class="font-mono"
                   />
                 </div>
@@ -195,7 +195,7 @@ function resetToDefaults() {
                     id="accentColor"
                     name="accentColor"
                     bind:value={accentColor}
-                    pattern="^#[0-9A-Fa-f]{6}$"
+                    placeholder="#3b82f6"
                     class="font-mono"
                   />
                 </div>
