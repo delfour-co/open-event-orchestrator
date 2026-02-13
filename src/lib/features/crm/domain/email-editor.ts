@@ -101,12 +101,16 @@ export interface ColumnsBlock {
 }
 
 // Simple block schema for column content (no nesting to avoid circular refs)
-const simpleBlockSchema = z.discriminatedUnion('type', [
+export const simpleBlockSchema = z.discriminatedUnion('type', [
   textBlockSchema,
   imageBlockSchema,
   buttonBlockSchema,
   dividerBlockSchema
 ])
+export type SimpleBlock = z.infer<typeof simpleBlockSchema>
+
+// Simple block types (for column content)
+export type SimpleBlockType = 'text' | 'image' | 'button' | 'divider'
 
 export const columnContentSchema = z.object({
   blocks: z.array(simpleBlockSchema).default([])
@@ -204,6 +208,13 @@ export function getColumnWidths(layout: ColumnLayout): number[] {
 }
 
 /**
+ * Check if block type is a simple block type (can be nested in columns)
+ */
+export function isSimpleBlockType(type: BlockType): type is SimpleBlockType {
+  return type !== 'columns'
+}
+
+/**
  * Generate unique block ID
  */
 export function generateBlockId(): string {
@@ -211,9 +222,9 @@ export function generateBlockId(): string {
 }
 
 /**
- * Create default block by type
+ * Create a simple block (for use in columns)
  */
-export function createDefaultBlock(type: BlockType): EmailBlock {
+export function createSimpleBlock(type: SimpleBlockType): SimpleBlock {
   const id = generateBlockId()
   const basePadding = { top: 10, right: 10, bottom: 10, left: 10 }
 
@@ -268,18 +279,29 @@ export function createDefaultBlock(type: BlockType): EmailBlock {
         thickness: 1,
         width: 'full'
       }
-    case 'columns':
-      return {
-        id,
-        type: 'columns',
-        padding: basePadding,
-        backgroundColor: 'transparent',
-        layout: '50-50',
-        gap: 20,
-        columns: [{ blocks: [] }, { blocks: [] }]
-      }
-    default:
-      throw new Error(`Unknown block type: ${type}`)
+  }
+}
+
+/**
+ * Create default block by type
+ */
+export function createDefaultBlock(type: BlockType): EmailBlock {
+  if (isSimpleBlockType(type)) {
+    return createSimpleBlock(type)
+  }
+
+  const id = generateBlockId()
+  const basePadding = { top: 10, right: 10, bottom: 10, left: 10 }
+
+  // Only columns block remains
+  return {
+    id,
+    type: 'columns',
+    padding: basePadding,
+    backgroundColor: 'transparent',
+    layout: '50-50',
+    gap: 20,
+    columns: [{ blocks: [] }, { blocks: [] }]
   }
 }
 
@@ -300,6 +322,15 @@ export function createEmptyDocument(): EmailDocument {
 }
 
 /**
+ * Clone a simple block with new ID
+ */
+function cloneSimpleBlock(block: SimpleBlock): SimpleBlock {
+  const cloned = JSON.parse(JSON.stringify(block)) as SimpleBlock
+  cloned.id = generateBlockId()
+  return cloned
+}
+
+/**
  * Clone a block with new ID
  */
 export function cloneBlock(block: EmailBlock): EmailBlock {
@@ -308,7 +339,7 @@ export function cloneBlock(block: EmailBlock): EmailBlock {
 
   if (cloned.type === 'columns') {
     cloned.columns = cloned.columns.map((col) => ({
-      blocks: col.blocks.map((b) => cloneBlock(b as EmailBlock))
+      blocks: col.blocks.map((b) => cloneSimpleBlock(b))
     }))
   }
 
@@ -326,12 +357,27 @@ export function moveBlock(blocks: EmailBlock[], fromIndex: number, toIndex: numb
 }
 
 /**
+ * Find simple block by ID in column content
+ */
+function findSimpleBlockById(
+  blocks: SimpleBlock[],
+  id: string
+): { block: SimpleBlock; path: string[] } | null {
+  for (let i = 0; i < blocks.length; i++) {
+    if (blocks[i].id === id) {
+      return { block: blocks[i], path: [String(i)] }
+    }
+  }
+  return null
+}
+
+/**
  * Find block by ID in document (including nested blocks)
  */
 export function findBlockById(
   blocks: EmailBlock[],
   id: string
-): { block: EmailBlock; path: string[] } | null {
+): { block: EmailBlock | SimpleBlock; path: string[] } | null {
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i]
     if (block.id === id) {
@@ -340,7 +386,7 @@ export function findBlockById(
 
     if (block.type === 'columns') {
       for (let colIndex = 0; colIndex < block.columns.length; colIndex++) {
-        const result = findBlockById(block.columns[colIndex].blocks, id)
+        const result = findSimpleBlockById(block.columns[colIndex].blocks, id)
         if (result) {
           return {
             block: result.block,
@@ -352,6 +398,13 @@ export function findBlockById(
   }
 
   return null
+}
+
+/**
+ * Delete simple block by ID from column content
+ */
+function deleteSimpleBlockById(blocks: SimpleBlock[], id: string): SimpleBlock[] {
+  return blocks.filter((block) => block.id !== id)
 }
 
 /**
@@ -367,7 +420,7 @@ export function deleteBlockById(blocks: EmailBlock[], id: string): EmailBlock[] 
 
     if (block.type === 'columns') {
       const newColumns = block.columns.map((col) => ({
-        blocks: deleteBlockById(col.blocks as EmailBlock[], id)
+        blocks: deleteSimpleBlockById(col.blocks, id)
       }))
       newBlocks.push({ ...block, columns: newColumns })
     } else {
@@ -376,6 +429,22 @@ export function deleteBlockById(blocks: EmailBlock[], id: string): EmailBlock[] 
   }
 
   return newBlocks
+}
+
+/**
+ * Update simple block by ID in column content
+ */
+function updateSimpleBlockById(
+  blocks: SimpleBlock[],
+  id: string,
+  updates: Partial<SimpleBlock>
+): SimpleBlock[] {
+  return blocks.map((block) => {
+    if (block.id === id) {
+      return { ...block, ...updates } as SimpleBlock
+    }
+    return block
+  })
 }
 
 /**
@@ -395,7 +464,7 @@ export function updateBlockById(
       return {
         ...block,
         columns: block.columns.map((col) => ({
-          blocks: updateBlockById(col.blocks as EmailBlock[], id, updates)
+          blocks: updateSimpleBlockById(col.blocks, id, updates as Partial<SimpleBlock>)
         }))
       }
     }

@@ -5,6 +5,7 @@ import {
   cloneBlock,
   createDefaultBlock,
   createEmptyDocument,
+  createSimpleBlock,
   deleteBlockById,
   findBlockById,
   generateBlockId,
@@ -110,7 +111,7 @@ describe('email-editor domain', () => {
 
     it('should clone nested blocks in columns with new IDs', () => {
       const columnsBlock = createDefaultBlock('columns') as ColumnsBlock
-      const nestedText = createDefaultBlock('text')
+      const nestedText = createSimpleBlock('text')
       columnsBlock.columns[0].blocks.push(nestedText)
 
       const cloned = cloneBlock(columnsBlock) as ColumnsBlock
@@ -162,7 +163,7 @@ describe('email-editor domain', () => {
 
     it('should find a nested block in columns', () => {
       const columnsBlock = createDefaultBlock('columns') as ColumnsBlock
-      const nestedText = createDefaultBlock('text')
+      const nestedText = createSimpleBlock('text')
       columnsBlock.columns[1].blocks.push(nestedText)
 
       const result = findBlockById([columnsBlock], nestedText.id)
@@ -195,7 +196,7 @@ describe('email-editor domain', () => {
 
     it('should delete a nested block in columns', () => {
       const columnsBlock = createDefaultBlock('columns') as ColumnsBlock
-      const nestedText = createDefaultBlock('text')
+      const nestedText = createSimpleBlock('text')
       columnsBlock.columns[0].blocks.push(nestedText)
 
       const result = deleteBlockById([columnsBlock], nestedText.id)
@@ -216,7 +217,7 @@ describe('email-editor domain', () => {
 
     it('should update a nested block in columns', () => {
       const columnsBlock = createDefaultBlock('columns') as ColumnsBlock
-      const nestedText = createDefaultBlock('text')
+      const nestedText = createSimpleBlock('text')
       columnsBlock.columns[0].blocks.push(nestedText)
 
       const result = updateBlockById([columnsBlock], nestedText.id, { backgroundColor: '#00ff00' })

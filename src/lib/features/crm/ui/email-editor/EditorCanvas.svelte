@@ -1,6 +1,15 @@
 <script lang="ts">
-import type { BlockType, EmailDocument } from '$lib/features/crm/domain/email-editor'
-import { createDefaultBlock, moveBlock } from '$lib/features/crm/domain/email-editor'
+import type {
+  BlockType,
+  EmailDocument,
+  SimpleBlockType
+} from '$lib/features/crm/domain/email-editor'
+import {
+  createDefaultBlock,
+  createSimpleBlock,
+  isSimpleBlockType,
+  moveBlock
+} from '$lib/features/crm/domain/email-editor'
 import BlockRenderer from './BlockRenderer.svelte'
 
 interface Props {
@@ -78,7 +87,11 @@ function handleDropInColumn(blockId: string, columnIndex: number, blockType: str
   const block = document.blocks[blockIndex]
   if (block.type !== 'columns') return
 
-  const newBlock = createDefaultBlock(blockType as BlockType)
+  // Only allow simple blocks (not columns) inside columns
+  const parsedType = blockType as BlockType
+  if (!isSimpleBlockType(parsedType)) return
+
+  const newBlock = createSimpleBlock(parsedType as SimpleBlockType)
   const newColumns = block.columns.map((col, idx) => {
     if (idx === columnIndex) {
       return { blocks: [...col.blocks, newBlock] }
