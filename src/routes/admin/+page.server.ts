@@ -1,5 +1,6 @@
-import { redirect } from '@sveltejs/kit'
-import type { PageServerLoad } from './$types'
+import { canManageEvents } from '$lib/server/permissions'
+import { fail, redirect } from '@sveltejs/kit'
+import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals, url }) => {
   // Authentication check
@@ -8,6 +9,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   }
 
   const selectedEditionId = url.searchParams.get('edition') || ''
+
+  // Get all organizations for the quick setup wizard
+  const organizations = await locals.pb.collection('organizations').getFullList({
+    sort: 'name'
+  })
 
   // Get all editions
   const editions = await locals.pb.collection('editions').getFullList({
@@ -183,6 +189,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   }))
 
   return {
+    organizations: organizations.map((o) => ({
+      id: o.id as string,
+      name: o.name as string,
+      slug: o.slug as string
+    })),
     editions: editions.map((e) => ({
       id: e.id as string,
       name: e.name as string,
@@ -222,5 +233,151 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         startDate: new Date(e.startDate as string),
         status: e.status as string
       }))
+  }
+}
+
+export const actions: Actions = {
+  quickSetup: async ({ request, locals }) => {
+    // Check permission
+    const userRole = locals.user?.role as string | undefined
+    if (!canManageEvents(userRole)) {
+      return fail(403, { error: 'You do not have permission to create events' })
+    }
+
+    const data = await request.formData()
+
+    // Organization data
+    const createNewOrg = data.get('createNewOrg') === 'true'
+    const selectedOrgId = data.get('selectedOrgId') as string
+    const newOrgName = data.get('newOrgName') as string
+    const newOrgSlug = data.get('newOrgSlug') as string
+    const newOrgDescription = data.get('newOrgDescription') as string
+
+    // Event data
+    const eventName = data.get('eventName') as string
+    const eventSlug = data.get('eventSlug') as string
+    const eventDescription = data.get('eventDescription') as string
+
+    // Edition data
+    const editionName = data.get('editionName') as string
+    const editionSlug = data.get('editionSlug') as string
+    const editionYear = Number.parseInt(data.get('editionYear') as string)
+    const editionStartDate = data.get('editionStartDate') as string
+    const editionEndDate = data.get('editionEndDate') as string
+    const editionVenue = data.get('editionVenue') as string
+    const editionCity = data.get('editionCity') as string
+    const editionCountry = data.get('editionCountry') as string
+
+    // Validation
+    if (createNewOrg) {
+      if (!newOrgName || newOrgName.length < 2) {
+        return fail(400, { error: 'Organization name must be at least 2 characters' })
+      }
+      if (!newOrgSlug || newOrgSlug.length < 2) {
+        return fail(400, { error: 'Organization slug must be at least 2 characters' })
+      }
+    } else if (!selectedOrgId) {
+      return fail(400, { error: 'Please select an organization' })
+    }
+
+    if (!eventName || eventName.length < 2) {
+      return fail(400, { error: 'Event name must be at least 2 characters' })
+    }
+    if (!eventSlug || eventSlug.length < 2) {
+      return fail(400, { error: 'Event slug must be at least 2 characters' })
+    }
+
+    if (!editionName || editionName.length < 2) {
+      return fail(400, { error: 'Edition name must be at least 2 characters' })
+    }
+    if (!editionSlug || editionSlug.length < 2) {
+      return fail(400, { error: 'Edition slug must be at least 2 characters' })
+    }
+    if (!editionYear || editionYear < 2000 || editionYear > 2100) {
+      return fail(400, { error: 'Edition year must be between 2000 and 2100' })
+    }
+    if (!editionStartDate || !editionEndDate) {
+      return fail(400, { error: 'Start and end dates are required' })
+    }
+    if (new Date(editionStartDate) >= new Date(editionEndDate)) {
+      return fail(400, { error: 'End date must be after start date' })
+    }
+
+    try {
+      let organizationId = selectedOrgId
+
+      // Step 1: Create organization if needed
+      if (createNewOrg) {
+        // Check if slug already exists
+        try {
+          const existing = await locals.pb
+            .collection('organizations')
+            .getFirstListItem(`slug="${newOrgSlug}"`)
+          if (existing) {
+            return fail(400, { error: 'An organization with this slug already exists' })
+          }
+        } catch {
+          // No existing organization, continue
+        }
+
+        const org = await locals.pb.collection('organizations').create({
+          name: newOrgName,
+          slug: newOrgSlug,
+          description: newOrgDescription || undefined
+        })
+        organizationId = org.id
+      }
+
+      // Step 2: Create event
+      // Check if event slug already exists
+      try {
+        const existing = await locals.pb
+          .collection('events')
+          .getFirstListItem(`slug="${eventSlug}"`)
+        if (existing) {
+          return fail(400, { error: 'An event with this slug already exists' })
+        }
+      } catch {
+        // No existing event, continue
+      }
+
+      const event = await locals.pb.collection('events').create({
+        organizationId,
+        name: eventName,
+        slug: eventSlug,
+        description: eventDescription || undefined
+      })
+
+      // Step 3: Create edition
+      // Check if edition slug already exists
+      try {
+        const existing = await locals.pb
+          .collection('editions')
+          .getFirstListItem(`slug="${editionSlug}"`)
+        if (existing) {
+          return fail(400, { error: 'An edition with this slug already exists' })
+        }
+      } catch {
+        // No existing edition, continue
+      }
+
+      await locals.pb.collection('editions').create({
+        eventId: event.id,
+        name: editionName,
+        slug: editionSlug,
+        year: editionYear,
+        startDate: editionStartDate,
+        endDate: editionEndDate,
+        venue: editionVenue || undefined,
+        city: editionCity || undefined,
+        country: editionCountry || undefined,
+        status: 'draft'
+      })
+
+      return { success: true, editionSlug }
+    } catch (e) {
+      console.error('Failed to complete quick setup:', e)
+      return fail(500, { error: 'Failed to complete setup. Please try again.' })
+    }
   }
 }

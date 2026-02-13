@@ -1,6 +1,8 @@
 <script lang="ts">
 import { goto } from '$app/navigation'
+import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import { QuickSetupWizard } from '$lib/features/core/ui'
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -11,6 +13,7 @@ import {
   DollarSign,
   FileText,
   Handshake,
+  Rocket,
   Send,
   ShoppingCart,
   Ticket,
@@ -26,6 +29,12 @@ interface Props {
 }
 
 const { data }: Props = $props()
+
+let showWizard = $state(false)
+
+const handleWizardSuccess = (editionSlug: string) => {
+  goto(`/admin/editions/${editionSlug}/settings`)
+}
 
 let selectedEditionId = $state(data.selectedEditionId)
 
@@ -110,6 +119,15 @@ const getOrderStatusColor = (status: string) => {
   <title>Dashboard - Open Event Orchestrator</title>
 </svelte:head>
 
+<!-- Quick Setup Wizard -->
+{#if showWizard}
+  <QuickSetupWizard
+    organizations={data.organizations}
+    onClose={() => (showWizard = false)}
+    onSuccess={handleWizardSuccess}
+  />
+{/if}
+
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
@@ -123,23 +141,31 @@ const getOrderStatusColor = (status: string) => {
       </p>
     </div>
 
-    <!-- Edition Filter -->
-    {#if data.editions.length > 0}
-      <div class="flex items-center gap-2">
-        <label for="edition-filter" class="text-sm text-muted-foreground">Filter by edition:</label>
-        <select
-          id="edition-filter"
-          class="rounded-md border border-input bg-background px-3 py-2 text-sm"
-          value={selectedEditionId}
-          onchange={handleEditionChange}
-        >
-          <option value="">All editions</option>
-          {#each data.editions as edition}
-            <option value={edition.id}>{edition.name}</option>
-          {/each}
-        </select>
-      </div>
-    {/if}
+    <div class="flex items-center gap-4">
+      <!-- Quick Setup Button -->
+      <Button onclick={() => (showWizard = true)} data-testid="quick-setup-button">
+        <Rocket class="mr-2 h-4 w-4" />
+        Quick Setup
+      </Button>
+
+      <!-- Edition Filter -->
+      {#if data.editions.length > 0}
+        <div class="flex items-center gap-2">
+          <label for="edition-filter" class="text-sm text-muted-foreground">Filter by edition:</label>
+          <select
+            id="edition-filter"
+            class="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={selectedEditionId}
+            onchange={handleEditionChange}
+          >
+            <option value="">All editions</option>
+            {#each data.editions as edition}
+              <option value={edition.id}>{edition.name}</option>
+            {/each}
+          </select>
+        </div>
+      {/if}
+    </div>
   </div>
 
   <!-- CFP Stats -->
