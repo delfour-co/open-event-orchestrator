@@ -45,7 +45,7 @@ const templatePreview = $derived({
 
 function handleLogoChange(event: Event) {
   const input = event.target as HTMLInputElement
-  if (input.files && input.files[0]) {
+  if (input.files?.[0]) {
     logoFile = input.files[0]
     logoPreviewUrl = URL.createObjectURL(logoFile)
   }
