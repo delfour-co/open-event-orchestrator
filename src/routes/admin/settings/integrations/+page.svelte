@@ -76,7 +76,7 @@ function getConfigPath(integration: IntegrationEntry): string | null {
     case 'discord':
       return '/admin/settings/discord'
     case 'webhooks':
-      return '/admin/settings/webhooks'
+      return '/admin/api/webhooks'
     default:
       return null
   }
