@@ -703,9 +703,9 @@ test.describe('Session Drag & Drop', () => {
       })
 
       // Check that the session card changes opacity during drag
-      const sessionStyle = await sessionCard.getAttribute('style')
       // The style should contain opacity when dragging
       // This is a basic check - the actual visual feedback is tested by the presence of drag state
+      await sessionCard.getAttribute('style')
     }
   })
 

@@ -4,6 +4,8 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import type { SegmentCriteria } from '$lib/features/crm/domain/segment'
+import { SegmentCriteriaBuilder } from '$lib/features/crm/ui'
 import { Edit, Filter, Plus, RefreshCw, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -17,17 +19,67 @@ const { data, form }: Props = $props()
 let showForm = $state(false)
 let editingSegment = $state<(typeof data.segments)[0] | null>(null)
 let isSubmitting = $state(false)
+let previewCount = $state<number | null>(null)
+let isLoadingPreview = $state(false)
+
+// Initialize criteria state
+let criteria = $state<SegmentCriteria>({ match: 'all', rules: [] })
 
 const basePath = `/admin/crm/${data.eventSlug}`
 
 function startEdit(segment: (typeof data.segments)[0]) {
   editingSegment = segment
+  criteria = {
+    match: (segment.criteria.match as 'all' | 'any') || 'all',
+    rules: (segment.criteria.rules || []) as SegmentCriteria['rules']
+  }
+  previewCount = segment.contactCount
   showForm = true
 }
 
 function cancelForm() {
   showForm = false
   editingSegment = null
+  criteria = { match: 'all', rules: [] }
+  previewCount = null
+}
+
+function startCreate() {
+  editingSegment = null
+  criteria = { match: 'all', rules: [] }
+  previewCount = null
+  showForm = true
+}
+
+function handleCriteriaChange(newCriteria: SegmentCriteria) {
+  criteria = newCriteria
+  // Reset preview when criteria changes
+  previewCount = null
+}
+
+async function refreshPreview() {
+  if (criteria.rules.length === 0) {
+    previewCount = 0
+    return
+  }
+
+  isLoadingPreview = true
+  try {
+    const response = await fetch(`/admin/crm/${data.eventSlug}/segments?/previewCount`, {
+      method: 'POST',
+      body: new URLSearchParams({
+        criteria: JSON.stringify(criteria)
+      })
+    })
+    const result = await response.json()
+    if (result.type === 'success' && result.data) {
+      previewCount = result.data.count
+    }
+  } catch {
+    // Ignore preview errors
+  } finally {
+    isLoadingPreview = false
+  }
 }
 
 // Close form on success
@@ -55,7 +107,7 @@ $effect(() => {
 				</p>
 			</div>
 		</div>
-		<Button onclick={() => { editingSegment = null; showForm = !showForm }} class="gap-2">
+		<Button onclick={startCreate} class="gap-2">
 			<Plus class="h-4 w-4" />
 			Create Segment
 		</Button>
@@ -116,16 +168,14 @@ $effect(() => {
 					</div>
 
 					<div class="space-y-2">
-						<Label for="seg-criteria">Criteria (JSON)</Label>
-						<textarea
-							id="seg-criteria"
-							name="criteria"
-							class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							placeholder={'{"match": "all", "rules": [{"field": "source", "operator": "equals", "value": "speaker"}]}'}
-						>{editingSegment ? JSON.stringify(editingSegment.criteria, null, 2) : ''}</textarea>
-						<p class="text-xs text-muted-foreground">
-							Leave empty for an empty segment. Fields: source, tags, company, city, country. Operators: equals, not_equals, contains, not_contains, is_empty, is_not_empty, in, not_in.
-						</p>
+						<Label>Criteria</Label>
+						<SegmentCriteriaBuilder
+							{criteria}
+							onCriteriaChange={handleCriteriaChange}
+							{previewCount}
+							{isLoadingPreview}
+							onRefreshPreview={refreshPreview}
+						/>
 					</div>
 
 					<div class="flex items-center gap-2">

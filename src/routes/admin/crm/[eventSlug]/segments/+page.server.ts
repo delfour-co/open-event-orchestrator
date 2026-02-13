@@ -216,5 +216,53 @@ export const actions: Actions = {
       console.error('Failed to refresh segment count:', err)
       return fail(500, { error: 'Failed to refresh segment count', action: 'refreshCount' })
     }
+  },
+
+  previewCount: async ({ request, locals, params }) => {
+    const formData = await request.formData()
+    const criteriaJson = formData.get('criteria') as string
+
+    const events = await locals.pb.collection('events').getList(1, 1, {
+      filter: `slug = "${params.eventSlug}"`
+    })
+    if (events.items.length === 0) {
+      return fail(404, { error: 'Event not found', action: 'previewCount' })
+    }
+    const eventId = events.items[0].id as string
+
+    let criteria = { match: 'all' as const, rules: [] as unknown[] }
+    if (criteriaJson) {
+      try {
+        criteria = JSON.parse(criteriaJson)
+      } catch {
+        return fail(400, { error: 'Invalid criteria JSON', action: 'previewCount' })
+      }
+    }
+
+    if (!criteria.rules || criteria.rules.length === 0) {
+      return { success: true, action: 'previewCount', count: 0 }
+    }
+
+    try {
+      const evaluate = createEvaluateSegmentUseCase(locals.pb)
+      const contactIds = await evaluate({
+        id: 'preview',
+        eventId,
+        name: 'Preview',
+        criteria: {
+          match: (criteria.match as 'all' | 'any') || 'all',
+          rules: criteria.rules as []
+        },
+        isStatic: false,
+        contactCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+
+      return { success: true, action: 'previewCount', count: contactIds.length }
+    } catch (err) {
+      console.error('Failed to preview segment count:', err)
+      return fail(500, { error: 'Failed to calculate preview', action: 'previewCount' })
+    }
   }
 }
