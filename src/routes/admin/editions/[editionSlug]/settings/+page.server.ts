@@ -59,8 +59,8 @@ export const actions: Actions = {
     }
 
     // Validate dates
-    if (new Date(endDate) <= new Date(startDate)) {
-      return fail(400, { error: 'End date must be after start date' })
+    if (new Date(endDate) < new Date(startDate)) {
+      return fail(400, { error: 'End date must be on or after start date' })
     }
 
     try {

@@ -299,8 +299,8 @@ export const actions: Actions = {
     if (!editionStartDate || !editionEndDate) {
       return fail(400, { error: 'Start and end dates are required' })
     }
-    if (new Date(editionStartDate) >= new Date(editionEndDate)) {
-      return fail(400, { error: 'End date must be after start date' })
+    if (new Date(editionStartDate) > new Date(editionEndDate)) {
+      return fail(400, { error: 'End date must be on or after start date' })
     }
 
     try {
