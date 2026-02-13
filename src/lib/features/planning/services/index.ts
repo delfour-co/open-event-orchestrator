@@ -23,3 +23,9 @@ export {
   type SpeakerCalendarInfo,
   type SmtpConfig
 } from './calendar-invite-service'
+
+export {
+  scheduleCacheService,
+  type CachedSchedule,
+  type FavoriteSession
+} from './schedule-cache-service'
