@@ -1,5 +1,6 @@
 <script lang="ts">
 import { browser } from '$app/environment'
+import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import { Card } from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
@@ -542,12 +543,12 @@ const uniqueSpeakers = $derived(() => {
 
 function getTypeColor(type: string): string {
   const colors: Record<string, string> = {
-    talk: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    workshop: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-    keynote: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    panel: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    break: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
-    other: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400'
+    talk: 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400',
+    workshop: 'border-purple-500 text-purple-600 dark:border-purple-400 dark:text-purple-400',
+    keynote: 'border-orange-500 text-orange-600 dark:border-orange-400 dark:text-orange-400',
+    panel: 'border-green-500 text-green-600 dark:border-green-400 dark:text-green-400',
+    break: 'border-gray-400 text-gray-500 dark:border-gray-500 dark:text-gray-400',
+    other: 'border-gray-400 text-gray-500 dark:border-gray-500 dark:text-gray-400'
   }
   return colors[type] || colors.other
 }
@@ -769,9 +770,9 @@ function toggleTheme(): void {
 												</p>
 											{/if}
 										</div>
-										<span class="shrink-0 rounded-md px-2 py-1 text-xs font-medium {getTypeColor(session.type)}">
+										<Badge variant="outline" class="shrink-0 {getTypeColor(session.type)}">
 											{session.type}
-										</span>
+										</Badge>
 									</div>
 
 									<!-- Track & Feedback Row -->
@@ -929,9 +930,9 @@ function toggleTheme(): void {
 											<!-- Title & Type -->
 											<div class="flex items-start justify-between gap-2">
 												<h3 class="font-semibold">{session.title}</h3>
-												<span class="shrink-0 rounded-md px-2 py-1 text-xs font-medium {getTypeColor(session.type)}">
+												<Badge variant="outline" class="shrink-0 {getTypeColor(session.type)}">
 													{session.type}
-												</span>
+												</Badge>
 											</div>
 											{#if talk?.speakers && talk.speakers.length > 0}
 												<p class="mt-1 text-sm text-muted-foreground">
