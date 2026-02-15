@@ -23,11 +23,11 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'pbc_1587547591',
+          collectionId: 'editions',
           hidden: false,
           id: 'editionId',
           maxSelect: 1,
-          minSelect: 1,
+          minSelect: 0,
           name: 'editionId',
           presentable: false,
           required: true,
