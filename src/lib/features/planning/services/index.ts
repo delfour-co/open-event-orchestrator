@@ -29,3 +29,13 @@ export {
   type CachedSchedule,
   type FavoriteSession
 } from './schedule-cache-service'
+
+export {
+  createPlanningStatsService,
+  type PlanningStatsService,
+  type PlanningStats,
+  type SessionStats,
+  type RoomOccupancy,
+  type EmptySlot,
+  type ConflictStats
+} from './planning-stats-service'

@@ -31,3 +31,13 @@ export {
   type TicketPdfData,
   type GeneratePdfOptions
 } from './pdf-ticket-service'
+
+export {
+  createBillingStatsService,
+  type BillingStatsService,
+  type SalesStats,
+  type RevenueByTicketType,
+  type DailySales,
+  type SalesTrend,
+  type LowStockAlert
+} from './billing-stats-service'

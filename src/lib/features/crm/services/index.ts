@@ -59,3 +59,12 @@ export type { EngagementMetricsService } from './engagement-metrics-service'
 
 export { createEmailPreviewService } from './email-preview-service'
 export type { EmailPreviewService } from './email-preview-service'
+
+export { createCrmStatsService } from './crm-stats-service'
+export type {
+  CrmStatsService,
+  ContactStats,
+  CampaignStats,
+  RecentCampaign,
+  EngagementStats
+} from './crm-stats-service'

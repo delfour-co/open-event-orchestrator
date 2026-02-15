@@ -10,3 +10,14 @@ export {
   type SponsorEmailTemplateData,
   type SponsorEmailType
 } from './sponsor-email-service'
+
+export {
+  createSponsoringStatsService,
+  type SponsoringStatsService,
+  type SponsoringStats,
+  type SponsorStats,
+  type RevenueStats,
+  type PipelineStats,
+  type SponsorsByPackage,
+  type DeliverableSummary
+} from './sponsoring-stats-service'

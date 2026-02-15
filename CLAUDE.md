@@ -45,6 +45,11 @@ src/
 │   │   ├── budget/
 │   │   │   ├── domain/     # EditionBudget, BudgetCategory, BudgetTransaction
 │   │   │   └── infra/      # PocketBase repositories for budget entities
+│   │   ├── reporting/
+│   │   │   ├── domain/     # Metrics, AlertThreshold, ReportConfig, Dashboard
+│   │   │   ├── infra/      # PocketBase repositories for reporting entities
+│   │   │   ├── services/   # Stats aggregation, threshold evaluation, report scheduler
+│   │   │   └── ui/         # Dashboard components, charts, alert management
 │   │   └── core/           # Shared (Organization, Event, Edition)
 │   ├── components/         # Shared UI components
 │   ├── server/             # Server-only code (notifications, permissions, invitations)
@@ -217,7 +222,39 @@ PUBLIC_STRIPE_PUBLISHABLE_KEY=
 - `domain:billing` - Billetterie, payments
 - `domain:crm` - CRM, contacts, GDPR
 - `domain:budget` - Budget, finance, transactions
+- `domain:reporting` - Reporting, dashboards, alerts, KPIs
 - `domain:api` - Public API
+
+## Feature Modules
+
+### Reporting Module
+
+The reporting module provides comprehensive dashboards and analytics for event editions.
+
+**Routes:**
+- `/admin/reporting` - Edition selector
+- `/admin/reporting/[editionSlug]` - Dashboard with KPIs and charts
+- `/admin/reporting/[editionSlug]/alerts` - Alert thresholds configuration
+
+**Key Features:**
+- **Dashboard KPIs**: Revenue, tickets sold, check-in rate, submissions, speakers, sessions, sponsors, budget
+- **Distribution Charts**: Tickets by type, talks by category/format, sessions by track, sponsors by tier
+- **Alert System**: Configurable thresholds with email/in-app notifications
+- **Automated Reports**: Scheduled email reports (daily/weekly/monthly)
+
+**UI Components** (`src/lib/features/reporting/ui/`):
+- `MetricCard` - Single metric display with optional trend indicator
+- `ProgressCard` - Progress bar with current/total values
+- `DonutChart` - Pie/donut chart with legend
+- `HorizontalBarChart` - Bar chart for comparisons
+- `MiniProgressChart` - Circular progress indicator
+- `AlertThresholdConfig` - Alert configuration form
+- `AlertList` - Alert display and management
+
+**Services:**
+- Stats aggregation services per domain (billing, cfp, planning, etc.)
+- Threshold evaluation service
+- Report scheduler service
 
 ## Milestones & Issues Standard
 

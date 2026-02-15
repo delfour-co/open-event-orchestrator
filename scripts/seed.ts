@@ -702,6 +702,17 @@ function jsonField(name: string, required = false): Record<string, unknown> {
   }
 }
 
+function boolField(name: string, required = false): Record<string, unknown> {
+  return {
+    id: name,
+    name,
+    type: 'bool',
+    required,
+    hidden: false,
+    presentable: false
+  }
+}
+
 // Collection schemas WITHOUT relation fields (relations are added later)
 // Generate real random tokens for speaker access (32 bytes = 64 hex chars)
 function generateToken(): string {
@@ -1516,6 +1527,57 @@ const collectionSchemas: Array<{
       jsonField('newValue'),
       jsonField('metadata'),
       autodateField('created', true, false)
+    ]
+  },
+  {
+    name: 'alert_thresholds',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('name', true),
+      textField('description'),
+      textField('editionId', true),
+      textField('metricSource', true),
+      textField('operator', true),
+      numberField('thresholdValue', true),
+      textField('level', true),
+      boolField('enabled'),
+      boolField('notifyByEmail'),
+      boolField('notifyInApp'),
+      jsonField('emailRecipients'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
+  },
+  {
+    name: 'alerts',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: '',
+    updateRule: '',
+    deleteRule: '',
+    fields: [
+      textField('editionId', true),
+      textField('thresholdId'),
+      textField('title', true),
+      textField('message'),
+      textField('level', true),
+      textField('metricSource'),
+      numberField('currentValue'),
+      numberField('thresholdValue'),
+      textField('status'),
+      textField('acknowledgedBy'),
+      dateField('acknowledgedAt'),
+      dateField('resolvedAt'),
+      textField('dismissedBy'),
+      dateField('dismissedAt'),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
     ]
   }
 ]

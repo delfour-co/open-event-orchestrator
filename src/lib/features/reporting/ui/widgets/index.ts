@@ -1,0 +1,6 @@
+export { default as BillingStatsWidget } from './BillingStatsWidget.svelte'
+export { default as BudgetStatsWidget } from './BudgetStatsWidget.svelte'
+export { default as CfpStatsWidget } from './CfpStatsWidget.svelte'
+export { default as CrmStatsWidget } from './CrmStatsWidget.svelte'
+export { default as PlanningStatsWidget } from './PlanningStatsWidget.svelte'
+export { default as SponsoringStatsWidget } from './SponsoringStatsWidget.svelte'

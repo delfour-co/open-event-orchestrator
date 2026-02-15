@@ -16,3 +16,12 @@ export {
   type SpeakerFeedback,
   type FeedbackTemplateType
 } from './speaker-feedback-service'
+
+export {
+  createCfpStatsService,
+  type CfpStatsService,
+  type SubmissionStats,
+  type ReviewStats,
+  type AcceptanceRateStats,
+  type CategoryAcceptanceRate
+} from './cfp-stats-service'

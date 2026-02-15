@@ -2,12 +2,15 @@
 import { Button } from '$lib/components/ui/button'
 import {
   ArrowRight,
-  BarChart,
+  BarChart3,
   Calendar,
+  ChartPie,
   Code2,
   Handshake,
+  Smartphone,
   Ticket,
   Users,
+  Users2,
   Wallet
 } from 'lucide-svelte'
 
@@ -15,37 +18,52 @@ const features = [
   {
     icon: Calendar,
     title: 'Call for Papers',
-    description: 'Manage speaker submissions, reviews, and notifications'
+    description: 'Manage speaker submissions, reviews, and notifications with multi-step workflows'
   },
   {
     icon: Users,
     title: 'Planning',
-    description: 'Build your schedule with drag-and-drop simplicity'
+    description: 'Build your schedule with drag-and-drop, rooms, tracks, and speaker assignments'
   },
   {
     icon: Ticket,
     title: 'Ticketing',
-    description: 'Sell tickets, manage registrations, and check-in attendees'
+    description: 'Sell tickets via Stripe, manage registrations, and check-in attendees with QR codes'
   },
   {
-    icon: BarChart,
+    icon: BarChart3,
     title: 'CRM',
-    description: 'Keep track of your community across all events'
+    description: 'Keep track of contacts, consent management, segments, and email campaigns'
   },
   {
     icon: Wallet,
     title: 'Budget',
-    description: 'Track expenses, income, quotes, invoices, and speaker reimbursements'
+    description: 'Track expenses, quotes, invoices, speaker reimbursements, and audit trails'
   },
   {
     icon: Handshake,
     title: 'Sponsoring',
-    description: 'Manage sponsors, packages, pipeline, and sponsor portal'
+    description: 'Manage sponsors, packages, pipeline status, and self-service sponsor portal'
+  },
+  {
+    icon: ChartPie,
+    title: 'Reporting',
+    description: 'Real-time dashboards, KPIs, distribution charts, and configurable alerts'
+  },
+  {
+    icon: Smartphone,
+    title: 'Attendee App',
+    description: 'Mobile-friendly schedule with personal favorites and session details'
+  },
+  {
+    icon: Users2,
+    title: 'Team Management',
+    description: 'Manage staff, volunteers, and room assignments for your event'
   },
   {
     icon: Code2,
     title: 'API',
-    description: 'Headless API for custom integrations and websites'
+    description: 'Headless REST API for custom integrations, widgets, and websites'
   }
 ]
 </script>
@@ -105,7 +123,7 @@ const features = [
   <section class="border-t bg-muted/50 px-4 py-24">
     <div class="container mx-auto">
       <h2 class="mb-12 text-center text-3xl font-bold">Everything you need to run great events</h2>
-      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {#each features as feature}
           <div class="rounded-lg border bg-background p-6">
             <feature.icon class="mb-4 h-10 w-10 text-primary" />

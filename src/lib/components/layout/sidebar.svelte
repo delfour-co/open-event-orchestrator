@@ -1,6 +1,7 @@
 <script lang="ts">
 import { cn } from '$lib/utils'
 import {
+  BarChart3,
   Building2,
   Calendar,
   CalendarDays,
@@ -57,6 +58,7 @@ const allNavItems: NavItem[] = [
   { href: '/admin/budget', icon: Wallet, label: 'Budget', requiresOrganizerAccess: true },
   { href: '/admin/crm', icon: Users, label: 'CRM', requiresOrganizerAccess: true },
   { href: '/admin/emails', icon: Mail, label: 'Emails', requiresOrganizerAccess: true },
+  { href: '/admin/reporting', icon: BarChart3, label: 'Reporting', requiresOrganizerAccess: true },
   { href: '/admin/api', icon: Code2, label: 'API', requiresOrganizerAccess: true }
 ]
 
