@@ -2,143 +2,179 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      id: 'ticket_templates',
+      id: 'pbc_ticket_templates',
       name: 'ticket_templates',
       type: 'base',
       system: false,
-      schema: [
+      fields: [
         {
-          system: false,
-          id: 'edition_id',
-          name: 'editionId',
-          type: 'relation',
+          autogeneratePattern: '[a-z0-9]{15}',
+          hidden: false,
+          id: 'text3208210256',
+          max: 15,
+          min: 15,
+          name: 'id',
+          pattern: '^[a-z0-9]+$',
+          presentable: false,
+          primaryKey: true,
           required: true,
-          presentable: false,
-          options: {
-            collectionId: 'editions',
-            cascadeDelete: true,
-            minSelect: null,
-            maxSelect: 1,
-            displayFields: ['name']
-          }
+          system: true,
+          type: 'text'
         },
         {
+          cascadeDelete: true,
+          collectionId: 'pbc_1587547591',
+          hidden: false,
+          id: 'editionId',
+          maxSelect: 1,
+          minSelect: 1,
+          name: 'editionId',
+          presentable: false,
+          required: true,
           system: false,
-          id: 'primary_color',
+          type: 'relation'
+        },
+        {
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'primaryColor',
+          max: 7,
+          min: 0,
           name: 'primaryColor',
-          type: 'text',
-          required: false,
+          pattern: '^#[0-9A-Fa-f]{6}$',
           presentable: false,
-          options: {
-            min: null,
-            max: 7,
-            pattern: '^#[0-9A-Fa-f]{6}$'
-          }
+          primaryKey: false,
+          required: false,
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'background_color',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'backgroundColor',
+          max: 7,
+          min: 0,
           name: 'backgroundColor',
-          type: 'text',
-          required: false,
+          pattern: '^#[0-9A-Fa-f]{6}$',
           presentable: false,
-          options: {
-            min: null,
-            max: 7,
-            pattern: '^#[0-9A-Fa-f]{6}$'
-          }
+          primaryKey: false,
+          required: false,
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'text_color',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'textColor',
+          max: 7,
+          min: 0,
           name: 'textColor',
-          type: 'text',
-          required: false,
+          pattern: '^#[0-9A-Fa-f]{6}$',
           presentable: false,
-          options: {
-            min: null,
-            max: 7,
-            pattern: '^#[0-9A-Fa-f]{6}$'
-          }
+          primaryKey: false,
+          required: false,
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'accent_color',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'accentColor',
+          max: 7,
+          min: 0,
           name: 'accentColor',
-          type: 'text',
-          required: false,
+          pattern: '^#[0-9A-Fa-f]{6}$',
           presentable: false,
-          options: {
-            min: null,
-            max: 7,
-            pattern: '^#[0-9A-Fa-f]{6}$'
-          }
+          primaryKey: false,
+          required: false,
+          system: false,
+          type: 'text'
         },
         {
-          system: false,
-          id: 'logo_url',
+          exceptDomains: [],
+          hidden: false,
+          id: 'logoUrl',
           name: 'logoUrl',
-          type: 'url',
-          required: false,
+          onlyDomains: [],
           presentable: false,
-          options: {
-            exceptDomains: [],
-            onlyDomains: []
-          }
+          required: false,
+          system: false,
+          type: 'url'
         },
         {
-          system: false,
-          id: 'logo_file',
+          hidden: false,
+          id: 'logoFile',
+          maxSelect: 1,
+          maxSize: 2097152,
+          mimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
           name: 'logoFile',
-          type: 'file',
-          required: false,
           presentable: false,
-          options: {
-            mimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
-            thumbs: ['300x0'],
-            maxSelect: 1,
-            maxSize: 2097152
-          }
+          protected: false,
+          required: false,
+          system: false,
+          thumbs: ['300x0'],
+          type: 'file'
         },
         {
-          system: false,
-          id: 'show_venue',
+          hidden: false,
+          id: 'showVenue',
           name: 'showVenue',
-          type: 'bool',
-          required: false,
           presentable: false,
-          options: {}
+          required: false,
+          system: false,
+          type: 'bool'
         },
         {
-          system: false,
-          id: 'show_date',
+          hidden: false,
+          id: 'showDate',
           name: 'showDate',
-          type: 'bool',
-          required: false,
           presentable: false,
-          options: {}
+          required: false,
+          system: false,
+          type: 'bool'
         },
         {
-          system: false,
-          id: 'show_qr_code',
+          hidden: false,
+          id: 'showQrCode',
           name: 'showQrCode',
-          type: 'bool',
-          required: false,
           presentable: false,
-          options: {}
+          required: false,
+          system: false,
+          type: 'bool'
         },
         {
-          system: false,
-          id: 'custom_footer_text',
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'customFooterText',
+          max: 200,
+          min: 0,
           name: 'customFooterText',
-          type: 'text',
-          required: false,
+          pattern: '',
           presentable: false,
-          options: {
-            min: null,
-            max: 200,
-            pattern: ''
-          }
+          primaryKey: false,
+          required: false,
+          system: false,
+          type: 'text'
+        },
+        {
+          hidden: false,
+          id: 'created',
+          name: 'created',
+          onCreate: true,
+          onUpdate: false,
+          presentable: false,
+          system: false,
+          type: 'autodate'
+        },
+        {
+          hidden: false,
+          id: 'updated',
+          name: 'updated',
+          onCreate: true,
+          onUpdate: true,
+          presentable: false,
+          system: false,
+          type: 'autodate'
         }
       ],
       indexes: ['CREATE UNIQUE INDEX idx_ticket_templates_edition ON ticket_templates (editionId)'],
@@ -152,7 +188,7 @@ migrate(
     return app.save(collection)
   },
   (app) => {
-    const collection = app.findCollectionByNameOrId('ticket_templates')
+    const collection = app.findCollectionByNameOrId('pbc_ticket_templates')
     return app.delete(collection)
   }
 )

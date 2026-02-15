@@ -2,8 +2,10 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      createRule: '@request.auth.id != "" && @request.data.userId = @request.auth.id',
-      deleteRule: '@request.auth.id = userId',
+      id: 'pbc_session_feedback',
+      name: 'session_feedback',
+      type: 'base',
+      system: false,
       fields: [
         {
           autogeneratePattern: '[a-z0-9]{15}',
@@ -20,7 +22,7 @@ migrate(
           type: 'text'
         },
         {
-          cascadeDelete: false,
+          cascadeDelete: true,
           collectionId: 'pbc_3660498186',
           hidden: false,
           id: 'sessionId',
@@ -33,17 +35,31 @@ migrate(
           type: 'relation'
         },
         {
-          cascadeDelete: false,
-          collectionId: '_pb_users_auth_',
+          cascadeDelete: true,
+          collectionId: 'pbc_1587547591',
           hidden: false,
-          id: 'userId',
+          id: 'editionId',
           maxSelect: 1,
           minSelect: 1,
-          name: 'userId',
+          name: 'editionId',
           presentable: false,
           required: true,
           system: false,
           type: 'relation'
+        },
+        {
+          autogeneratePattern: '',
+          hidden: false,
+          id: 'userId',
+          max: 100,
+          min: 1,
+          name: 'userId',
+          pattern: '',
+          presentable: false,
+          primaryKey: false,
+          required: true,
+          system: false,
+          type: 'text'
         },
         {
           hidden: false,
@@ -59,12 +75,12 @@ migrate(
         {
           hidden: false,
           id: 'numericValue',
-          max: null,
-          min: null,
+          max: 10,
+          min: 0,
           name: 'numericValue',
           onlyInt: true,
           presentable: false,
-          required: false,
+          required: true,
           system: false,
           type: 'number'
         },
@@ -103,21 +119,18 @@ migrate(
           type: 'autodate'
         }
       ],
-      id: 'pbc_session_feedback',
       indexes: ['CREATE UNIQUE INDEX idx_session_user ON session_feedback (sessionId, userId)'],
-      listRule: '',
-      name: 'session_feedback',
-      system: false,
-      type: 'base',
-      updateRule: '@request.auth.id = userId',
-      viewRule: ''
+      listRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      createRule: '',
+      updateRule: null,
+      deleteRule: '@request.auth.id != ""'
     })
 
     return app.save(collection)
   },
   (app) => {
     const collection = app.findCollectionByNameOrId('pbc_session_feedback')
-
     return app.delete(collection)
   }
 )

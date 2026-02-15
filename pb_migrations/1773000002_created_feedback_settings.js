@@ -2,8 +2,10 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      createRule: null,
-      deleteRule: null,
+      id: 'pbc_feedback_settings',
+      name: 'feedback_settings',
+      type: 'base',
+      system: false,
       fields: [
         {
           autogeneratePattern: '[a-z0-9]{15}',
@@ -20,8 +22,8 @@ migrate(
           type: 'text'
         },
         {
-          cascadeDelete: false,
-          collectionId: 'pbc_editions',
+          cascadeDelete: true,
+          collectionId: 'pbc_1587547591',
           hidden: false,
           id: 'editionId',
           maxSelect: 1,
@@ -105,21 +107,18 @@ migrate(
           type: 'autodate'
         }
       ],
-      id: 'pbc_feedback_settings',
-      indexes: ['CREATE UNIQUE INDEX idx_edition ON feedback_settings (editionId)'],
+      indexes: ['CREATE UNIQUE INDEX idx_feedback_settings_edition ON feedback_settings (editionId)'],
       listRule: '',
-      name: 'feedback_settings',
-      system: false,
-      type: 'base',
-      updateRule: null,
-      viewRule: ''
+      viewRule: '',
+      createRule: '@request.auth.id != ""',
+      updateRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""'
     })
 
     return app.save(collection)
   },
   (app) => {
     const collection = app.findCollectionByNameOrId('pbc_feedback_settings')
-
     return app.delete(collection)
   }
 )

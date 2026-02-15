@@ -2,8 +2,10 @@
 migrate(
   (app) => {
     const collection = new Collection({
-      createRule: '@request.auth.id != "" && @request.data.userId = @request.auth.id',
-      deleteRule: '@request.auth.id = userId',
+      id: 'pbc_event_feedback',
+      name: 'event_feedback',
+      type: 'base',
+      system: false,
       fields: [
         {
           autogeneratePattern: '[a-z0-9]{15}',
@@ -20,8 +22,8 @@ migrate(
           type: 'text'
         },
         {
-          cascadeDelete: false,
-          collectionId: 'pbc_editions',
+          cascadeDelete: true,
+          collectionId: 'pbc_1587547591',
           hidden: false,
           id: 'editionId',
           maxSelect: 1,
@@ -33,17 +35,18 @@ migrate(
           type: 'relation'
         },
         {
-          cascadeDelete: false,
-          collectionId: '_pb_users_auth_',
+          autogeneratePattern: '',
           hidden: false,
           id: 'userId',
-          maxSelect: 1,
-          minSelect: 1,
+          max: 100,
+          min: 1,
           name: 'userId',
+          pattern: '',
           presentable: false,
+          primaryKey: false,
           required: true,
           system: false,
-          type: 'relation'
+          type: 'text'
         },
         {
           hidden: false,
@@ -61,7 +64,7 @@ migrate(
           hidden: false,
           id: 'subject',
           max: 200,
-          min: 1,
+          min: 0,
           name: 'subject',
           pattern: '',
           presentable: false,
@@ -90,7 +93,7 @@ migrate(
           maxSelect: 1,
           name: 'status',
           presentable: false,
-          required: true,
+          required: false,
           system: false,
           type: 'select',
           values: ['open', 'acknowledged', 'resolved', 'closed']
@@ -116,21 +119,18 @@ migrate(
           type: 'autodate'
         }
       ],
-      id: 'pbc_event_feedback',
       indexes: [],
-      listRule: '',
-      name: 'event_feedback',
-      system: false,
-      type: 'base',
-      updateRule: '@request.auth.id = userId',
-      viewRule: ''
+      listRule: '@request.auth.id != ""',
+      viewRule: '@request.auth.id != ""',
+      createRule: '',
+      updateRule: '@request.auth.id != ""',
+      deleteRule: '@request.auth.id != ""'
     })
 
     return app.save(collection)
   },
   (app) => {
     const collection = app.findCollectionByNameOrId('pbc_event_feedback')
-
     return app.delete(collection)
   }
 )
