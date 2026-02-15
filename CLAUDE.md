@@ -238,7 +238,7 @@ Examples:
 
 Each issue must follow this format:
 
-**Title**: Short, descriptive title (action-oriented)
+**Title**: Titre court et descriptif en français (sans préfixes comme feat(), fix(), etc. - ces informations sont portées par les labels)
 
 **Labels** (required):
 - Type: `enhancement`, `bug`, `documentation`
@@ -277,16 +277,16 @@ Permettre de chercher dans les sessions, speakers et sponsors depuis n'importe q
 
 ## Acceptance Criteria
 
-- [ ] Search bar in header/navigation
-- [ ] Instant results as user types
-- [ ] Filters by category (sessions, speakers, sponsors)
-- [ ] Keyboard accessible (Ctrl+K shortcut)
-- [ ] Highlight matching text in results
-- [ ] Recent searches history
+- [ ] Barre de recherche dans le header/navigation
+- [ ] Résultats instantanés pendant la saisie
+- [ ] Filtres par catégorie (sessions, speakers, sponsors)
+- [ ] Accessible au clavier (raccourci Ctrl+K)
+- [ ] Mise en surbrillance du texte correspondant
+- [ ] Historique des recherches récentes
 
 ## Technical Notes
 
-- Use Command component from shadcn-svelte
-- Implement debounced search (300ms)
-- Consider using Fuse.js for fuzzy matching
+- Utiliser le composant Command de shadcn-svelte
+- Implémenter une recherche debounced (300ms)
+- Considérer Fuse.js pour le matching flou
 ```
