@@ -1,6 +1,9 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate(
   (app) => {
+    // Find existing collections
+    const editionsCollection = app.findCollectionByNameOrId('editions')
+
     const collection = new Collection({
       id: 'pbc_ticket_templates',
       name: 'ticket_templates',
@@ -23,7 +26,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'editions',
+          collectionId: editionsCollection.id,
           hidden: false,
           id: 'editionId',
           maxSelect: 1,

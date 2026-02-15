@@ -1,6 +1,10 @@
 /// <reference path="../pb_data/types.d.ts" />
 migrate(
   (app) => {
+    // Find existing collections
+    const sessionsCollection = app.findCollectionByNameOrId('sessions')
+    const editionsCollection = app.findCollectionByNameOrId('editions')
+
     const collection = new Collection({
       id: 'pbc_session_feedback',
       name: 'session_feedback',
@@ -23,7 +27,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'sessions',
+          collectionId: sessionsCollection.id,
           hidden: false,
           id: 'sessionId',
           maxSelect: 1,
@@ -36,7 +40,7 @@ migrate(
         },
         {
           cascadeDelete: true,
-          collectionId: 'editions',
+          collectionId: editionsCollection.id,
           hidden: false,
           id: 'editionId',
           maxSelect: 1,
