@@ -33,11 +33,8 @@ const AVAILABLE_VARIABLES = [
   { key: '{{unsubscribeUrl}}', description: 'Unsubscribe link' }
 ]
 
-const previewHtml = $derived(() => {
-  if (!htmlContent)
-    return '<p style="color: #888; text-align: center; padding: 2rem;">Enter HTML content to see preview</p>'
-  // Replace variables with sample values for preview
-  return htmlContent
+function replaceVariables(content: string): string {
+  return content
     .replace(/\{\{firstName\}\}/g, 'John')
     .replace(/\{\{lastName\}\}/g, 'Doe')
     .replace(/\{\{email\}\}/g, 'john.doe@example.com')
@@ -45,7 +42,17 @@ const previewHtml = $derived(() => {
     .replace(/\{\{eventName\}\}/g, 'DevFest Paris')
     .replace(/\{\{editionName\}\}/g, 'DevFest Paris 2025')
     .replace(/\{\{unsubscribeUrl\}\}/g, '#')
-})
+}
+
+const previewHtml = $derived(
+  htmlContent
+    ? replaceVariables(htmlContent)
+    : '<p style="color: #888; text-align: center; padding: 2rem;">Enter HTML content to see preview</p>'
+)
+
+const previewText = $derived(
+  textContent ? replaceVariables(textContent) : 'Enter plain text content to see preview'
+)
 
 function startEdit(template: (typeof data.templates)[0]) {
   editingTemplate = template
@@ -241,11 +248,11 @@ $effect(() => {
 							{#if previewTab === 'html'}
 								<div class="min-h-[400px] rounded-md border bg-white p-4 text-black">
 									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-									{@html previewHtml()}
+									{@html previewHtml}
 								</div>
 							{:else}
-								<div class="min-h-[400px] whitespace-pre-wrap rounded-md border bg-muted p-4 font-mono text-sm">
-									{textContent || 'Enter plain text content to see preview'}
+								<div class="min-h-[400px] whitespace-pre-wrap rounded-md border bg-muted p-4 font-mono text-sm text-foreground">
+									{previewText}
 								</div>
 							{/if}
 						</div>
