@@ -3,6 +3,11 @@ import { browser } from '$app/environment'
 import { Button } from '$lib/components/ui/button'
 import { Badge } from '$lib/components/ui/badge'
 import { Card } from '$lib/components/ui/card'
+import { Textarea } from '$lib/components/ui/textarea'
+import { Input } from '$lib/components/ui/input'
+import { Label } from '$lib/components/ui/label'
+import * as Dialog from '$lib/components/ui/dialog'
+import { RatingInput } from '$lib/features/feedback/ui'
 import { scheduleCacheService } from '$lib/features/planning/services/schedule-cache-service'
 import {
 	Calendar,
@@ -13,7 +18,9 @@ import {
 	AlertCircle,
 	Star,
 	Filter,
-	ChevronRight
+	ChevronRight,
+	Loader2,
+	CheckCircle2
 } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -30,6 +37,37 @@ let selectedTrackId = $state<string | null>(null)
 
 // Favorites state
 let favorites = $state<Set<string>>(new Set())
+
+// Session rating dialog state
+let showSessionRatingDialog = $state(false)
+let ratingSessionId = $state<string | null>(null)
+let ratingSessionTitle = $state<string>('')
+let sessionRatingValue = $state<number | null>(null)
+let sessionRatingComment = $state<string>('')
+let isSubmittingSessionRating = $state(false)
+let sessionRatingSuccess = $state(false)
+let sessionRatingError = $state<string | null>(null)
+
+// Event feedback dialog state
+let showEventFeedbackDialog = $state(false)
+let eventFeedbackType = $state<'general' | 'problem'>('general')
+let eventFeedbackSubject = $state<string>('')
+let eventFeedbackMessage = $state<string>('')
+let isSubmittingEventFeedback = $state(false)
+let eventFeedbackSuccess = $state(false)
+let eventFeedbackError = $state<string | null>(null)
+
+// Generate anonymous user ID for feedback
+function getAnonymousUserId(): string {
+	if (!browser) return ''
+	const key = `feedback_user_${data.edition.slug}`
+	let userId = localStorage.getItem(key)
+	if (!userId) {
+		userId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+		localStorage.setItem(key, userId)
+	}
+	return userId
+}
 
 // Initialize
 $effect(() => {
@@ -93,6 +131,121 @@ async function toggleFavorite(sessionId: string): Promise<void> {
 		}
 	} catch (err) {
 		console.error('Failed to toggle favorite:', err)
+	}
+}
+
+// Session rating functions
+function openSessionRatingDialog(sessionId: string, sessionTitle: string): void {
+	ratingSessionId = sessionId
+	ratingSessionTitle = sessionTitle
+	sessionRatingValue = null
+	sessionRatingComment = ''
+	sessionRatingSuccess = false
+	sessionRatingError = null
+	showSessionRatingDialog = true
+}
+
+function closeSessionRatingDialog(): void {
+	showSessionRatingDialog = false
+	ratingSessionId = null
+	ratingSessionTitle = ''
+	sessionRatingValue = null
+	sessionRatingComment = ''
+	sessionRatingSuccess = false
+	sessionRatingError = null
+}
+
+async function submitSessionRating(): Promise<void> {
+	if (!ratingSessionId || sessionRatingValue === null) return
+
+	isSubmittingSessionRating = true
+	sessionRatingError = null
+
+	try {
+		const response = await fetch('/api/feedback/session', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				sessionId: ratingSessionId,
+				editionId: data.edition.id,
+				userId: getAnonymousUserId(),
+				numericValue: sessionRatingValue,
+				comment: sessionRatingComment.trim() || undefined
+			})
+		})
+
+		const result = await response.json()
+
+		if (!response.ok || !result.success) {
+			sessionRatingError = result.error || 'Failed to submit rating'
+			return
+		}
+
+		sessionRatingSuccess = true
+		setTimeout(() => {
+			closeSessionRatingDialog()
+		}, 1500)
+	} catch (err) {
+		console.error('Failed to submit session rating:', err)
+		sessionRatingError = 'Failed to submit rating. Please try again.'
+	} finally {
+		isSubmittingSessionRating = false
+	}
+}
+
+// Event feedback functions
+function openEventFeedbackDialog(type: 'general' | 'problem'): void {
+	eventFeedbackType = type
+	eventFeedbackSubject = ''
+	eventFeedbackMessage = ''
+	eventFeedbackSuccess = false
+	eventFeedbackError = null
+	showEventFeedbackDialog = true
+}
+
+function closeEventFeedbackDialog(): void {
+	showEventFeedbackDialog = false
+	eventFeedbackSubject = ''
+	eventFeedbackMessage = ''
+	eventFeedbackSuccess = false
+	eventFeedbackError = null
+}
+
+async function submitEventFeedback(): Promise<void> {
+	if (!eventFeedbackMessage.trim()) return
+
+	isSubmittingEventFeedback = true
+	eventFeedbackError = null
+
+	try {
+		const response = await fetch('/api/feedback/event', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				editionId: data.edition.id,
+				userId: getAnonymousUserId(),
+				feedbackType: eventFeedbackType,
+				subject: eventFeedbackSubject.trim() || undefined,
+				message: eventFeedbackMessage.trim()
+			})
+		})
+
+		const result = await response.json()
+
+		if (!response.ok || !result.success) {
+			eventFeedbackError = result.error || 'Failed to submit feedback'
+			return
+		}
+
+		eventFeedbackSuccess = true
+		setTimeout(() => {
+			closeEventFeedbackDialog()
+		}, 1500)
+	} catch (err) {
+		console.error('Failed to submit event feedback:', err)
+		eventFeedbackError = 'Failed to submit feedback. Please try again.'
+	} finally {
+		isSubmittingEventFeedback = false
 	}
 }
 
@@ -365,9 +518,7 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 												<button
 													type="button"
 													class="rounded-full p-1.5 transition-colors hover:bg-muted"
-													onclick={() => {
-														// TODO: Open feedback dialog for session.id
-													}}
+													onclick={() => openSessionRatingDialog(session.id, session.title)}
 													title="Rate session"
 												>
 													<Star class="h-4 w-4 text-muted-foreground hover:text-yellow-500" />
@@ -446,10 +597,20 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 															{formatSpeakers(talk.speakers)}
 														</p>
 													{/if}
-													<div class="mt-2">
+													<div class="mt-2 flex items-center gap-2">
 														<Badge variant="secondary" class="{getTypeColor(session.type)}">
 															{session.type}
 														</Badge>
+														{#if data.feedbackSettings?.sessionRatingEnabled}
+															<button
+																type="button"
+																class="rounded-full p-1 transition-colors hover:bg-muted"
+																onclick={() => openSessionRatingDialog(session.id, session.title)}
+																title="Rate session"
+															>
+																<Star class="h-4 w-4 text-muted-foreground hover:text-yellow-500" />
+															</button>
+														{/if}
 													</div>
 												</div>
 												<button
@@ -472,31 +633,43 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 		{:else if currentView === 'feedback'}
 			<div class="mx-auto max-w-2xl p-4">
 				<div class="space-y-4">
-					<Card class="p-6">
-						<div class="flex items-start gap-3">
-							<MessageSquare class="mt-0.5 h-5 w-5 text-primary" />
-							<div class="flex-1">
-								<h3 class="font-semibold">General Feedback</h3>
-								<p class="mt-1 text-sm text-muted-foreground">
-									Share your thoughts about the event
-								</p>
+					<button
+						type="button"
+						class="w-full text-left"
+						onclick={() => openEventFeedbackDialog('general')}
+					>
+						<Card class="p-6 transition-colors hover:bg-muted/50">
+							<div class="flex items-start gap-3">
+								<MessageSquare class="mt-0.5 h-5 w-5 text-primary" />
+								<div class="flex-1">
+									<h3 class="font-semibold">General Feedback</h3>
+									<p class="mt-1 text-sm text-muted-foreground">
+										Share your thoughts about the event
+									</p>
+								</div>
+								<ChevronRight class="h-5 w-5 text-muted-foreground" />
 							</div>
-							<ChevronRight class="h-5 w-5 text-muted-foreground" />
-						</div>
-					</Card>
+						</Card>
+					</button>
 
-					<Card class="p-6">
-						<div class="flex items-start gap-3">
-							<AlertCircle class="mt-0.5 h-5 w-5 text-orange-600" />
-							<div class="flex-1">
-								<h3 class="font-semibold">Report a Problem</h3>
-								<p class="mt-1 text-sm text-muted-foreground">
-									Let us know about any issues at the event
-								</p>
+					<button
+						type="button"
+						class="w-full text-left"
+						onclick={() => openEventFeedbackDialog('problem')}
+					>
+						<Card class="p-6 transition-colors hover:bg-muted/50">
+							<div class="flex items-start gap-3">
+								<AlertCircle class="mt-0.5 h-5 w-5 text-orange-600" />
+								<div class="flex-1">
+									<h3 class="font-semibold">Report a Problem</h3>
+									<p class="mt-1 text-sm text-muted-foreground">
+										Let us know about any issues at the event
+									</p>
+								</div>
+								<ChevronRight class="h-5 w-5 text-muted-foreground" />
 							</div>
-							<ChevronRight class="h-5 w-5 text-muted-foreground" />
-						</div>
-					</Card>
+						</Card>
+					</button>
 				</div>
 
 				{#if data.feedbackSettings?.feedbackIntroText}
@@ -508,3 +681,145 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 		{/if}
 	</main>
 </div>
+
+<!-- Session Rating Dialog -->
+{#if showSessionRatingDialog && data.feedbackSettings?.sessionRatingMode}
+	<Dialog.Content class="max-w-md" onClose={closeSessionRatingDialog}>
+		<Dialog.Header>
+			<Dialog.Title>Rate Session</Dialog.Title>
+			<Dialog.Description>
+				{ratingSessionTitle}
+			</Dialog.Description>
+		</Dialog.Header>
+
+		{#if sessionRatingSuccess}
+			<div class="flex flex-col items-center py-8">
+				<CheckCircle2 class="h-12 w-12 text-green-500" />
+				<p class="mt-4 font-medium">Thank you for your feedback!</p>
+			</div>
+		{:else}
+			<div class="space-y-6 py-4">
+				<RatingInput
+					mode={data.feedbackSettings.sessionRatingMode}
+					value={sessionRatingValue}
+					onValueChange={(v) => (sessionRatingValue = v)}
+				/>
+
+				<div class="space-y-2">
+					<Label for="session-comment">
+						Comment
+						{#if data.feedbackSettings.sessionCommentRequired}
+							<span class="text-destructive">*</span>
+						{/if}
+					</Label>
+					<Textarea
+						id="session-comment"
+						placeholder="Share your thoughts about this session..."
+						bind:value={sessionRatingComment}
+						rows={3}
+					/>
+				</div>
+
+				{#if sessionRatingError}
+					<div class="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+						<AlertCircle class="mr-2 inline h-4 w-4" />
+						{sessionRatingError}
+					</div>
+				{/if}
+			</div>
+
+			<Dialog.Footer>
+				<Button variant="outline" onclick={closeSessionRatingDialog}>
+					Cancel
+				</Button>
+				<Button
+					onclick={submitSessionRating}
+					disabled={sessionRatingValue === null || isSubmittingSessionRating || (data.feedbackSettings.sessionCommentRequired && !sessionRatingComment.trim())}
+				>
+					{#if isSubmittingSessionRating}
+						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+						Submitting...
+					{:else}
+						Submit Rating
+					{/if}
+				</Button>
+			</Dialog.Footer>
+		{/if}
+	</Dialog.Content>
+{/if}
+
+<!-- Event Feedback Dialog -->
+{#if showEventFeedbackDialog}
+	<Dialog.Content class="max-w-md" onClose={closeEventFeedbackDialog}>
+		<Dialog.Header>
+			<Dialog.Title>
+				{eventFeedbackType === 'general' ? 'General Feedback' : 'Report a Problem'}
+			</Dialog.Title>
+			<Dialog.Description>
+				{eventFeedbackType === 'general'
+					? 'Share your thoughts about the event'
+					: 'Let us know about any issues you encountered'}
+			</Dialog.Description>
+		</Dialog.Header>
+
+		{#if eventFeedbackSuccess}
+			<div class="flex flex-col items-center py-8">
+				<CheckCircle2 class="h-12 w-12 text-green-500" />
+				<p class="mt-4 font-medium">Thank you for your feedback!</p>
+				<p class="mt-1 text-sm text-muted-foreground">We appreciate you taking the time.</p>
+			</div>
+		{:else}
+			<div class="space-y-4 py-4">
+				<div class="space-y-2">
+					<Label for="feedback-subject">Subject (optional)</Label>
+					<Input
+						id="feedback-subject"
+						placeholder={eventFeedbackType === 'general' ? 'What is your feedback about?' : 'Brief description of the issue'}
+						bind:value={eventFeedbackSubject}
+						maxlength={200}
+					/>
+				</div>
+
+				<div class="space-y-2">
+					<Label for="feedback-message">
+						Message <span class="text-destructive">*</span>
+					</Label>
+					<Textarea
+						id="feedback-message"
+						placeholder={eventFeedbackType === 'general' ? 'Share your thoughts...' : 'Please describe the problem in detail...'}
+						bind:value={eventFeedbackMessage}
+						rows={5}
+						maxlength={5000}
+					/>
+					<p class="text-xs text-muted-foreground">
+						{eventFeedbackMessage.length}/5000 characters
+					</p>
+				</div>
+
+				{#if eventFeedbackError}
+					<div class="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+						<AlertCircle class="mr-2 inline h-4 w-4" />
+						{eventFeedbackError}
+					</div>
+				{/if}
+			</div>
+
+			<Dialog.Footer>
+				<Button variant="outline" onclick={closeEventFeedbackDialog}>
+					Cancel
+				</Button>
+				<Button
+					onclick={submitEventFeedback}
+					disabled={!eventFeedbackMessage.trim() || isSubmittingEventFeedback}
+				>
+					{#if isSubmittingEventFeedback}
+						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+						Submitting...
+					{:else}
+						Submit Feedback
+					{/if}
+				</Button>
+			</Dialog.Footer>
+		{/if}
+	</Dialog.Content>
+{/if}
