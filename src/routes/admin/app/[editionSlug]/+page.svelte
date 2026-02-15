@@ -2,6 +2,7 @@
 import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Switch } from '$lib/components/ui/switch'
@@ -21,6 +22,7 @@ import {
   Mic,
   Palette,
   RefreshCw,
+  RotateCcw,
   Settings2,
   Star,
   Ticket,
@@ -73,6 +75,24 @@ let feedbackIntroText = $state(
   data.feedbackSettings?.feedbackIntroText ?? data.defaultFeedbackSettings.feedbackIntroText ?? ''
 )
 
+// Sync appearance settings state when data changes (after form submission)
+$effect(() => {
+  title = data.appSettings?.title ?? data.edition.name
+  subtitle = data.appSettings?.subtitle ?? ''
+  primaryColor = data.appSettings?.primaryColor ?? data.defaultAppSettings.primaryColor
+  accentColor = data.appSettings?.accentColor ?? data.defaultAppSettings.accentColor
+  logoPreview = data.appSettings?.logoUrl
+  headerPreview = data.appSettings?.headerImageUrl
+})
+
+// Sync feature toggles state when data changes (after form submission or reset)
+$effect(() => {
+  showSpeakersTab = data.appSettings?.showSpeakersTab ?? true
+  showTicketsTab = data.appSettings?.showTicketsTab ?? true
+  showFeedbackTab = data.appSettings?.showFeedbackTab ?? true
+  showFavoritesTab = data.appSettings?.showFavoritesTab ?? true
+})
+
 // Sync feedback settings state when data changes (after form submission)
 $effect(() => {
   sessionRatingEnabled =
@@ -92,6 +112,8 @@ $effect(() => {
 let isSavingAppearance = $state(false)
 let isSavingFeatures = $state(false)
 let isSavingFeedback = $state(false)
+let isResetting = $state(false)
+let showResetDialog = $state(false)
 
 // File preview handlers
 function handleLogoChange(event: Event) {
@@ -135,19 +157,67 @@ function handleHeaderChange(event: Event) {
 			<h2 class="text-3xl font-bold tracking-tight">Attendee App</h2>
 			<p class="text-muted-foreground">{data.edition.name}</p>
 		</div>
-		<a href={appUrl} target="_blank" rel="noopener noreferrer">
-			<Button variant="outline">
-				<ExternalLink class="mr-2 h-4 w-4" />
-				Open App
+		<div class="flex gap-2">
+			<Button variant="outline" onclick={() => (showResetDialog = true)}>
+				<RotateCcw class="mr-2 h-4 w-4" />
+				Reset to Defaults
 			</Button>
-		</a>
+			<a href={appUrl} target="_blank" rel="noopener noreferrer">
+				<Button variant="outline">
+					<ExternalLink class="mr-2 h-4 w-4" />
+					Open App
+				</Button>
+			</a>
+		</div>
 	</div>
+
+	<!-- Reset Confirmation Dialog -->
+	{#if showResetDialog}
+		<Dialog.Content class="max-w-md" onClose={() => (showResetDialog = false)}>
+			<Dialog.Header>
+				<Dialog.Title>Reset to Defaults?</Dialog.Title>
+				<Dialog.Description>
+					This will reset all app settings (appearance, features, and feedback) to their default values.
+					This action cannot be undone.
+				</Dialog.Description>
+			</Dialog.Header>
+			<Dialog.Footer>
+				<Button variant="outline" onclick={() => (showResetDialog = false)}>Cancel</Button>
+				<form
+					method="POST"
+					action="?/resetSettings"
+					use:enhance={() => {
+						isResetting = true
+						showResetDialog = false
+						return async ({ update }) => {
+							isResetting = false
+							await update()
+						}
+					}}
+				>
+					<Button type="submit" variant="destructive" disabled={isResetting}>
+						{#if isResetting}
+							<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+							Resetting...
+						{:else}
+							<RotateCcw class="mr-2 h-4 w-4" />
+							Reset
+						{/if}
+					</Button>
+				</form>
+			</Dialog.Footer>
+		</Dialog.Content>
+	{/if}
 
 	<!-- Success/Error Messages -->
 	{#if form?.success}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
 			<CheckCircle2 class="mr-2 inline h-4 w-4" />
-			Settings saved successfully.
+			{#if form.action === 'reset'}
+				Settings reset to defaults successfully.
+			{:else}
+				Settings saved successfully.
+			{/if}
 		</div>
 	{/if}
 
@@ -274,12 +344,12 @@ function handleHeaderChange(event: Event) {
 								<div class="space-y-2">
 									<Label for="primaryColor">Primary Color</Label>
 									<div class="flex gap-2">
-										<Input
+										<input
 											id="primaryColor"
 											name="primaryColor"
 											type="color"
 											bind:value={primaryColor}
-											class="h-10 w-16 cursor-pointer p-1"
+											class="h-10 w-16 cursor-pointer rounded border p-1"
 										/>
 										<Input
 											bind:value={primaryColor}
@@ -292,12 +362,12 @@ function handleHeaderChange(event: Event) {
 								<div class="space-y-2">
 									<Label for="accentColor">Accent Color</Label>
 									<div class="flex gap-2">
-										<Input
+										<input
 											id="accentColor"
 											name="accentColor"
 											type="color"
 											bind:value={accentColor}
-											class="h-10 w-16 cursor-pointer p-1"
+											class="h-10 w-16 cursor-pointer rounded border p-1"
 										/>
 										<Input
 											bind:value={accentColor}

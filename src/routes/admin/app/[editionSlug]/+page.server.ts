@@ -94,10 +94,10 @@ export const actions: Actions = {
     const editionId = edition.id as string
 
     const formData = await request.formData()
-    const title = (formData.get('title') as string)?.trim() || undefined
-    const subtitle = (formData.get('subtitle') as string)?.trim() || undefined
-    const primaryColor = (formData.get('primaryColor') as string)?.trim() || undefined
-    const accentColor = (formData.get('accentColor') as string)?.trim() || undefined
+    const title = (formData.get('title') as string)?.trim() || ''
+    const subtitle = (formData.get('subtitle') as string)?.trim() || ''
+    const primaryColor = (formData.get('primaryColor') as string)?.trim() || '#3b82f6'
+    const accentColor = (formData.get('accentColor') as string)?.trim() || '#8b5cf6'
     const logoFile = formData.get('logoFile') as File | null
     const headerImage = formData.get('headerImage') as File | null
 
@@ -106,21 +106,26 @@ export const actions: Actions = {
 
     try {
       if (existingSettings) {
-        // Update existing settings
-        const updateFormData = new FormData()
+        // Update existing settings - use regular update for non-file fields
+        await appSettingsRepo.update({
+          id: existingSettings.id,
+          title: title || undefined,
+          subtitle: subtitle || undefined,
+          primaryColor,
+          accentColor
+        })
 
-        if (logoFile && logoFile.size > 0) {
-          updateFormData.append('logoFile', logoFile)
+        // Handle file uploads separately if any
+        if ((logoFile && logoFile.size > 0) || (headerImage && headerImage.size > 0)) {
+          const fileFormData = new FormData()
+          if (logoFile && logoFile.size > 0) {
+            fileFormData.append('logoFile', logoFile)
+          }
+          if (headerImage && headerImage.size > 0) {
+            fileFormData.append('headerImage', headerImage)
+          }
+          await locals.pb.collection('pwa_settings').update(existingSettings.id, fileFormData)
         }
-        if (headerImage && headerImage.size > 0) {
-          updateFormData.append('headerImage', headerImage)
-        }
-
-        await appSettingsRepo.updateWithFile(
-          existingSettings.id,
-          { title, subtitle, primaryColor, accentColor },
-          updateFormData
-        )
       } else {
         // Create new settings
         const createFormData = new FormData()
@@ -252,6 +257,49 @@ export const actions: Actions = {
     } catch (err) {
       console.error('Failed to save feedback settings:', err)
       return fail(500, { error: 'Failed to save feedback settings', action: 'feedback' })
+    }
+  },
+
+  resetSettings: async ({ locals, params }) => {
+    const { editionSlug } = params
+
+    const editions = await locals.pb.collection('editions').getList(1, 1, {
+      filter: `slug = "${editionSlug}"`
+    })
+
+    if (editions.items.length === 0) {
+      throw error(404, 'Edition not found')
+    }
+
+    const edition = editions.items[0]
+    const editionId = edition.id as string
+
+    const appSettingsRepo = new AppSettingsRepository(locals.pb)
+    const feedbackSettingsRepo = new FeedbackSettingsRepository(locals.pb)
+
+    try {
+      // Delete existing settings to reset to defaults
+      const [appSettings, feedbackSettings] = await Promise.all([
+        appSettingsRepo.getByEdition(editionId),
+        feedbackSettingsRepo.getByEdition(editionId)
+      ])
+
+      const deletePromises: Promise<boolean>[] = []
+
+      if (appSettings) {
+        deletePromises.push(locals.pb.collection('pwa_settings').delete(appSettings.id))
+      }
+
+      if (feedbackSettings) {
+        deletePromises.push(locals.pb.collection('feedback_settings').delete(feedbackSettings.id))
+      }
+
+      await Promise.all(deletePromises)
+
+      return { success: true, action: 'reset' }
+    } catch (err) {
+      console.error('Failed to reset settings:', err)
+      return fail(500, { error: 'Failed to reset settings', action: 'reset' })
     }
   }
 }
