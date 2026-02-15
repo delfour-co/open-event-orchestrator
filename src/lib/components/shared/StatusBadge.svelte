@@ -27,6 +27,7 @@ const sizeClasses = {
     'inline-flex items-center rounded-full font-medium capitalize',
     classes.bg,
     classes.text,
+    classes.border,
     sizeClasses[size],
     className
   )}

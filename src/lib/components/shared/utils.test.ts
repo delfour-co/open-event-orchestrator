@@ -142,13 +142,13 @@ describe('getStatusClasses', () => {
 
   it('should return green classes for accepted', () => {
     const classes = getStatusClasses('accepted')
-    expect(classes.bg).toContain('green')
+    expect(classes.border).toContain('green')
     expect(classes.text).toContain('green')
   })
 
   it('should return gray classes for unknown status', () => {
     const classes = getStatusClasses('unknown')
-    expect(classes.bg).toContain('gray')
+    expect(classes.border).toContain('gray')
   })
 })
 

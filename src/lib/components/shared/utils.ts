@@ -130,46 +130,46 @@ export function getStatusColor(status: string): StatusColor {
 }
 
 /**
- * Gets Tailwind classes for a status color.
+ * Gets Tailwind classes for a status color (outline style for better theme compatibility).
  */
 export function getStatusClasses(status: string): { bg: string; text: string; border: string } {
   const color = getStatusColor(status)
 
   const colorMap: Record<StatusColor, { bg: string; text: string; border: string }> = {
     gray: {
-      bg: 'bg-gray-100 dark:bg-gray-800',
-      text: 'text-gray-700 dark:text-gray-300',
-      border: 'border-gray-200 dark:border-gray-700'
+      bg: 'bg-transparent',
+      text: 'text-gray-600 dark:text-gray-400',
+      border: 'border border-gray-400 dark:border-gray-500'
     },
     yellow: {
-      bg: 'bg-yellow-100 dark:bg-yellow-900/30',
-      text: 'text-yellow-800 dark:text-yellow-300',
-      border: 'border-yellow-200 dark:border-yellow-800'
+      bg: 'bg-transparent',
+      text: 'text-yellow-600 dark:text-yellow-400',
+      border: 'border border-yellow-500 dark:border-yellow-400'
     },
     blue: {
-      bg: 'bg-blue-100 dark:bg-blue-900/30',
-      text: 'text-blue-800 dark:text-blue-300',
-      border: 'border-blue-200 dark:border-blue-800'
+      bg: 'bg-transparent',
+      text: 'text-blue-600 dark:text-blue-400',
+      border: 'border border-blue-500 dark:border-blue-400'
     },
     green: {
-      bg: 'bg-green-100 dark:bg-green-900/30',
-      text: 'text-green-800 dark:text-green-300',
-      border: 'border-green-200 dark:border-green-800'
+      bg: 'bg-transparent',
+      text: 'text-green-600 dark:text-green-400',
+      border: 'border border-green-500 dark:border-green-400'
     },
     red: {
-      bg: 'bg-red-100 dark:bg-red-900/30',
-      text: 'text-red-800 dark:text-red-300',
-      border: 'border-red-200 dark:border-red-800'
+      bg: 'bg-transparent',
+      text: 'text-red-600 dark:text-red-400',
+      border: 'border border-red-500 dark:border-red-400'
     },
     purple: {
-      bg: 'bg-purple-100 dark:bg-purple-900/30',
-      text: 'text-purple-800 dark:text-purple-300',
-      border: 'border-purple-200 dark:border-purple-800'
+      bg: 'bg-transparent',
+      text: 'text-purple-600 dark:text-purple-400',
+      border: 'border border-purple-500 dark:border-purple-400'
     },
     orange: {
-      bg: 'bg-orange-100 dark:bg-orange-900/30',
-      text: 'text-orange-800 dark:text-orange-300',
-      border: 'border-orange-200 dark:border-orange-800'
+      bg: 'bg-transparent',
+      text: 'text-orange-600 dark:text-orange-400',
+      border: 'border border-orange-500 dark:border-orange-400'
     }
   }
 
