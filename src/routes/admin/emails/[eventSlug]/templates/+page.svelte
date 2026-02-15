@@ -239,7 +239,7 @@ $effect(() => {
 							</div>
 
 							{#if previewTab === 'html'}
-								<div class="min-h-[400px] rounded-md border bg-white p-4">
+								<div class="min-h-[400px] rounded-md border bg-white p-4 text-black">
 									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 									{@html previewHtml()}
 								</div>
