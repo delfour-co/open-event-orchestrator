@@ -19,7 +19,6 @@ let editingTemplate = $state<(typeof data.templates)[0] | null>(null)
 let isSubmitting = $state(false)
 let previewTab = $state<'html' | 'text'>('html')
 let htmlContent = $state('')
-let textContent = $state('')
 
 const basePath = `/admin/emails/${data.eventSlug}`
 
@@ -44,6 +43,34 @@ function replaceVariables(content: string): string {
     .replace(/\{\{unsubscribeUrl\}\}/g, '#')
 }
 
+function htmlToPlainText(html: string): string {
+  if (!html) return ''
+  return (
+    html
+      // Replace <br> and </p> with newlines
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<\/div>/gi, '\n')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<\/h[1-6]>/gi, '\n\n')
+      // Remove all remaining HTML tags
+      .replace(/<[^>]+>/g, '')
+      // Decode common HTML entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Clean up multiple newlines
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+  )
+}
+
+// Plain text extracted from HTML
+const plainTextContent = $derived(htmlToPlainText(htmlContent))
+
 const previewHtml = $derived(
   htmlContent
     ? replaceVariables(htmlContent)
@@ -51,20 +78,20 @@ const previewHtml = $derived(
 )
 
 const previewText = $derived(
-  textContent ? replaceVariables(textContent) : 'Enter plain text content to see preview'
+  plainTextContent
+    ? replaceVariables(plainTextContent)
+    : 'Enter HTML content to see plain text preview'
 )
 
 function startEdit(template: (typeof data.templates)[0]) {
   editingTemplate = template
   htmlContent = template.bodyHtml
-  textContent = template.bodyText
   showForm = true
 }
 
 function startCreate() {
   editingTemplate = null
   htmlContent = ''
-  textContent = ''
   showForm = true
 }
 
@@ -72,7 +99,6 @@ function cancelForm() {
   showForm = false
   editingTemplate = null
   htmlContent = ''
-  textContent = ''
 }
 
 // Close form on success
@@ -147,6 +173,7 @@ $effect(() => {
 					{#if editingTemplate}
 						<input type="hidden" name="id" value={editingTemplate.id} />
 					{/if}
+					<input type="hidden" name="bodyText" value={plainTextContent} />
 
 					<div class="grid gap-4 md:grid-cols-2">
 						<div class="space-y-2">
@@ -176,31 +203,17 @@ $effect(() => {
 						<div class="space-y-4">
 							<div class="flex items-center gap-2">
 								<Code class="h-4 w-4" />
-								<span class="font-medium">Code</span>
+								<span class="font-medium">HTML Body</span>
 							</div>
 
 							<div class="space-y-4">
-								<div class="space-y-2">
-									<Label for="tpl-html">HTML Body</Label>
-									<textarea
-										id="tpl-html"
-										name="bodyHtml"
-										bind:value={htmlContent}
-										class="flex min-h-[250px] w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-										placeholder={'<h1>Hello {{firstName}},</h1>\n<p>We\'d like to invite you to {{eventName}}.</p>'}
-									></textarea>
-								</div>
-
-								<div class="space-y-2">
-									<Label for="tpl-text">Plain Text Body</Label>
-									<textarea
-										id="tpl-text"
-										name="bodyText"
-										bind:value={textContent}
-										class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-										placeholder={"Hello {{firstName}},\n\nWe'd like to invite you to {{eventName}}."}
-									></textarea>
-								</div>
+								<textarea
+									id="tpl-html"
+									name="bodyHtml"
+									bind:value={htmlContent}
+									class="flex min-h-[350px] w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+									placeholder={'<h1>Hello {{firstName}},</h1>\n<p>We\'d like to invite you to {{eventName}}.</p>'}
+								></textarea>
 
 								<!-- Variable Reference -->
 								<Card.Root>
@@ -246,12 +259,12 @@ $effect(() => {
 							</div>
 
 							{#if previewTab === 'html'}
-								<div class="min-h-[400px] rounded-md border bg-white p-4 text-black">
+								<div class="min-h-[350px] rounded-md border bg-white p-4 text-black">
 									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 									{@html previewHtml}
 								</div>
 							{:else}
-								<div class="min-h-[400px] whitespace-pre-wrap rounded-md border bg-muted p-4 font-mono text-sm text-foreground">
+								<div class="min-h-[350px] whitespace-pre-wrap rounded-md border bg-muted p-4 font-mono text-sm text-foreground">
 									{previewText}
 								</div>
 							{/if}
