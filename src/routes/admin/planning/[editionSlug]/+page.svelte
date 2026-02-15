@@ -17,7 +17,6 @@ import {
   GripVertical,
   Layers,
   Loader2,
-  MessageSquare,
   Mic,
   Pencil,
   Plus,
@@ -238,13 +237,6 @@ const publicScheduleUrl = $derived(
   `${typeof window !== 'undefined' ? window.location.origin : ''}/schedule/${data.edition.slug}`
 )
 
-// Get attendee PWA URL
-const attendeePwaUrl = $derived(
-  `${typeof window !== 'undefined' ? window.location.origin : ''}/app/${data.edition.slug}`
-)
-
-let copiedPwaUrl = $state(false)
-
 async function copyScheduleUrl() {
   try {
     await navigator.clipboard.writeText(publicScheduleUrl)
@@ -263,27 +255,6 @@ async function copyScheduleUrl() {
     copiedUrl = true
     setTimeout(() => {
       copiedUrl = false
-    }, 2000)
-  }
-}
-
-async function copyPwaUrl() {
-  try {
-    await navigator.clipboard.writeText(attendeePwaUrl)
-    copiedPwaUrl = true
-    setTimeout(() => {
-      copiedPwaUrl = false
-    }, 2000)
-  } catch {
-    const input = document.createElement('input')
-    input.value = attendeePwaUrl
-    document.body.appendChild(input)
-    input.select()
-    document.execCommand('copy')
-    document.body.removeChild(input)
-    copiedPwaUrl = true
-    setTimeout(() => {
-      copiedPwaUrl = false
     }, 2000)
   }
 }
@@ -556,28 +527,6 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
           </Button>
         </a>
       </div>
-      <!-- Attendee PWA URL -->
-      <div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-        <span class="text-xs text-muted-foreground">PWA Agenda:</span>
-        <code class="text-xs">/app/{data.edition.slug}</code>
-        <Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyPwaUrl}>
-          {#if copiedPwaUrl}
-            <Check class="h-3 w-3 text-green-500" />
-          {:else}
-            <Copy class="h-3 w-3" />
-          {/if}
-        </Button>
-        <a href="/app/{data.edition.slug}" target="_blank">
-          <Button variant="ghost" size="icon" class="h-6 w-6">
-            <ExternalLink class="h-3 w-3" />
-          </Button>
-        </a>
-      </div>
-      <a href="/admin/planning/{data.edition.slug}/feedback" title="Feedback Settings">
-        <Button variant="ghost" size="icon">
-          <MessageSquare class="h-4 w-4" />
-        </Button>
-      </a>
       <a href="/admin/planning/{data.edition.slug}/settings" title="Planning Settings">
         <Button variant="ghost" size="icon">
           <Settings class="h-4 w-4" />

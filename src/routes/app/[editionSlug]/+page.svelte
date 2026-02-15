@@ -1,40 +1,64 @@
 <script lang="ts">
 import { browser } from '$app/environment'
-import { Button } from '$lib/components/ui/button'
 import { Badge } from '$lib/components/ui/badge'
+import { Button } from '$lib/components/ui/button'
 import { Card } from '$lib/components/ui/card'
-import { Textarea } from '$lib/components/ui/textarea'
+import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import * as Dialog from '$lib/components/ui/dialog'
+import { Textarea } from '$lib/components/ui/textarea'
 import { RatingInput } from '$lib/features/feedback/ui'
 import { scheduleCacheService } from '$lib/features/planning/services/schedule-cache-service'
 import {
-	Calendar,
-	Clock,
-	MapPin,
-	Heart,
-	MessageSquare,
-	AlertCircle,
-	Star,
-	Filter,
-	ChevronRight,
-	Loader2,
-	CheckCircle2,
-	Ticket,
-	QrCode,
-	Mail
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Filter,
+  Heart,
+  Loader2,
+  Mail,
+  MapPin,
+  MessageSquare,
+  QrCode,
+  Ticket,
+  Users
 } from 'lucide-svelte'
 import type { PageData } from './$types'
 
 interface Props {
-	data: PageData
+  data: PageData
 }
 
 const { data }: Props = $props()
 
+// Check if tabs are enabled (default to true if no settings)
+// Schedule is always enabled - no toggle for it
+const showSpeakers = data.appSettings?.showSpeakersTab ?? true
+// Feedback tab shows if showFeedbackTab is enabled AND either event feedback or session ratings are enabled
+const showFeedback =
+  (data.appSettings?.showFeedbackTab ?? true) &&
+  ((data.feedbackSettings?.eventFeedbackEnabled ?? false) ||
+    (data.feedbackSettings?.sessionRatingEnabled ?? false))
+const showTickets = data.appSettings?.showTicketsTab ?? true
+const showFavorites = data.appSettings?.showFavoritesTab ?? true
+// Session feedback button shown if feedback tab enabled AND session ratings enabled
+const showSessionFeedback =
+  (data.appSettings?.showFeedbackTab ?? true) &&
+  (data.feedbackSettings?.sessionRatingEnabled ?? false)
+// Event feedback forms (General Feedback / Report a Problem) shown only if event feedback enabled
+const showEventFeedback = data.feedbackSettings?.eventFeedbackEnabled ?? false
+
+// Determine initial view - always start with schedule (it's always enabled)
+function getInitialView(): 'schedule' | 'speakers' | 'favorites' | 'feedback' | 'ticket' {
+  return 'schedule'
+}
+
 // View state
-let currentView = $state<'schedule' | 'favorites' | 'feedback' | 'ticket'>('schedule')
+let currentView = $state<'schedule' | 'speakers' | 'favorites' | 'feedback' | 'ticket'>(
+  getInitialView()
+)
 let selectedDay = $state<string>('')
 let selectedTrackId = $state<string | null>(null)
 
@@ -43,22 +67,23 @@ let favorites = $state<Set<string>>(new Set())
 
 // Ticket lookup state
 interface TicketInfo {
-	id: string
-	ticketNumber: string
-	status: string
-	attendeeFirstName: string
-	attendeeLastName: string
-	attendeeEmail: string
-	qrCode?: string
-	checkedInAt?: string
-	ticketType: { name: string; description?: string } | null
-	order: { orderNumber: string; status: string } | null
+  id: string
+  ticketNumber: string
+  status: string
+  attendeeFirstName: string
+  attendeeLastName: string
+  attendeeEmail: string
+  qrCode?: string
+  checkedInAt?: string
+  ticketType: { name: string; description?: string } | null
+  order: { orderNumber: string; status: string } | null
 }
 let ticketEmail = $state<string>('')
 let ticketResults = $state<TicketInfo[]>([])
 let isLoadingTickets = $state(false)
 let ticketError = $state<string | null>(null)
 let ticketLookupDone = $state(false)
+let expandedQrCode = $state<{ qrCode: string; ticketNumber: string } | null>(null)
 
 // Session rating dialog state
 let showSessionRatingDialog = $state(false)
@@ -69,6 +94,16 @@ let sessionRatingComment = $state<string>('')
 let isSubmittingSessionRating = $state(false)
 let sessionRatingSuccess = $state(false)
 let sessionRatingError = $state<string | null>(null)
+let isEditingFeedback = $state(false)
+
+// Track user's existing feedback for sessions
+interface UserFeedback {
+  id: string
+  sessionId: string
+  numericValue: number
+  comment?: string
+}
+let userFeedback = $state<Map<string, UserFeedback>>(new Map())
 
 // Event feedback dialog state
 let showEventFeedbackDialog = $state(false)
@@ -81,359 +116,495 @@ let eventFeedbackError = $state<string | null>(null)
 
 // Generate anonymous user ID for feedback
 function getAnonymousUserId(): string {
-	if (!browser) return ''
-	const key = `feedback_user_${data.edition.slug}`
-	let userId = localStorage.getItem(key)
-	if (!userId) {
-		userId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-		localStorage.setItem(key, userId)
-	}
-	return userId
+  if (!browser) return ''
+  const key = `feedback_user_${data.edition.slug}`
+  let userId = localStorage.getItem(key)
+  if (!userId) {
+    userId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+    localStorage.setItem(key, userId)
+  }
+  return userId
 }
 
 // Initialize
 $effect(() => {
-	if (!browser) return
+  if (!browser) return
 
-	// Set initial day
-	if (data.slots.length > 0 && !selectedDay) {
-		const dates = new Set<string>()
-		for (const slot of data.slots) {
-			dates.add(slot.date.split('T')[0])
-		}
-		const sorted = Array.from(dates).sort()
-		selectedDay = sorted[0] || ''
-	}
+  // Set initial day
+  if (data.slots.length > 0 && !selectedDay) {
+    const dates = new Set<string>()
+    for (const slot of data.slots) {
+      dates.add(slot.date.split('T')[0])
+    }
+    const sorted = Array.from(dates).sort()
+    selectedDay = sorted[0] || ''
+  }
 
-	loadFavorites()
-	cacheSchedule()
+  loadFavorites()
+  cacheSchedule()
+  loadUserFeedback()
 })
 
 async function loadFavorites(): Promise<void> {
-	if (!browser) return
-	try {
-		const favList = await scheduleCacheService.getFavorites(data.edition.slug)
-		favorites = new Set(favList)
-	} catch (err) {
-		console.error('Failed to load favorites:', err)
-	}
+  if (!browser) return
+  try {
+    const favList = await scheduleCacheService.getFavorites(data.edition.slug)
+    favorites = new Set(favList)
+  } catch (err) {
+    console.error('Failed to load favorites:', err)
+  }
+}
+
+async function loadUserFeedback(): Promise<void> {
+  if (!browser) return
+  const userId = getAnonymousUserId()
+  if (!userId) return
+
+  try {
+    const response = await fetch(
+      `/api/feedback/session?userId=${encodeURIComponent(userId)}&editionId=${encodeURIComponent(data.edition.id)}`
+    )
+    const result = await response.json()
+
+    if (result.success && result.feedback) {
+      const feedbackMap = new Map<string, UserFeedback>()
+      for (const f of result.feedback) {
+        feedbackMap.set(f.sessionId, {
+          id: f.id,
+          sessionId: f.sessionId,
+          numericValue: f.numericValue,
+          comment: f.comment
+        })
+      }
+      userFeedback = feedbackMap
+    }
+  } catch (err) {
+    console.error('Failed to load user feedback:', err)
+  }
 }
 
 async function cacheSchedule(): Promise<void> {
-	if (!browser) return
-	try {
-		await scheduleCacheService.cacheSchedule({
-			editionSlug: data.edition.slug,
-			edition: data.edition,
-			event: data.event,
-			rooms: data.rooms,
-			tracks: data.tracks,
-			slots: data.slots,
-			sessions: data.sessions,
-			talks: data.talks
-		})
-	} catch (err) {
-		console.error('Failed to cache schedule:', err)
-	}
+  if (!browser) return
+  try {
+    await scheduleCacheService.cacheSchedule({
+      editionSlug: data.edition.slug,
+      edition: data.edition,
+      event: data.event,
+      rooms: data.rooms,
+      tracks: data.tracks,
+      slots: data.slots,
+      sessions: data.sessions,
+      talks: data.talks
+    })
+  } catch (err) {
+    console.error('Failed to cache schedule:', err)
+  }
 }
 
 async function toggleFavorite(sessionId: string): Promise<void> {
-	if (!browser) return
-	try {
-		const isNowFavorite = await scheduleCacheService.toggleFavorite(
-			sessionId,
-			data.edition.slug
-		)
-		if (isNowFavorite) {
-			favorites = new Set([...favorites, sessionId])
-		} else {
-			const newFavorites = new Set(favorites)
-			newFavorites.delete(sessionId)
-			favorites = newFavorites
-		}
-	} catch (err) {
-		console.error('Failed to toggle favorite:', err)
-	}
+  if (!browser) return
+  try {
+    const isNowFavorite = await scheduleCacheService.toggleFavorite(sessionId, data.edition.slug)
+    if (isNowFavorite) {
+      favorites = new Set([...favorites, sessionId])
+    } else {
+      const newFavorites = new Set(favorites)
+      newFavorites.delete(sessionId)
+      favorites = newFavorites
+    }
+  } catch (err) {
+    console.error('Failed to toggle favorite:', err)
+  }
 }
 
 // Session rating functions
 function openSessionRatingDialog(sessionId: string, sessionTitle: string): void {
-	ratingSessionId = sessionId
-	ratingSessionTitle = sessionTitle
-	sessionRatingValue = null
-	sessionRatingComment = ''
-	sessionRatingSuccess = false
-	sessionRatingError = null
-	showSessionRatingDialog = true
+  ratingSessionId = sessionId
+  ratingSessionTitle = sessionTitle
+  sessionRatingSuccess = false
+  sessionRatingError = null
+
+  // Check if user already has feedback for this session
+  const existingFeedback = userFeedback.get(sessionId)
+  if (existingFeedback) {
+    isEditingFeedback = true
+    sessionRatingValue = existingFeedback.numericValue
+    sessionRatingComment = existingFeedback.comment || ''
+  } else {
+    isEditingFeedback = false
+    sessionRatingValue = null
+    sessionRatingComment = ''
+  }
+
+  showSessionRatingDialog = true
 }
 
 function closeSessionRatingDialog(): void {
-	showSessionRatingDialog = false
-	ratingSessionId = null
-	ratingSessionTitle = ''
-	sessionRatingValue = null
-	sessionRatingComment = ''
-	sessionRatingSuccess = false
-	sessionRatingError = null
+  showSessionRatingDialog = false
+  ratingSessionId = null
+  ratingSessionTitle = ''
+  sessionRatingValue = null
+  sessionRatingComment = ''
+  sessionRatingSuccess = false
+  sessionRatingError = null
+  isEditingFeedback = false
 }
 
 async function submitSessionRating(): Promise<void> {
-	if (!ratingSessionId || sessionRatingValue === null) return
+  if (!ratingSessionId || sessionRatingValue === null) return
 
-	isSubmittingSessionRating = true
-	sessionRatingError = null
+  isSubmittingSessionRating = true
+  sessionRatingError = null
 
-	try {
-		const response = await fetch('/api/feedback/session', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				sessionId: ratingSessionId,
-				editionId: data.edition.id,
-				userId: getAnonymousUserId(),
-				numericValue: sessionRatingValue,
-				comment: sessionRatingComment.trim() || undefined
-			})
-		})
+  try {
+    const response = await fetch('/api/feedback/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: ratingSessionId,
+        editionId: data.edition.id,
+        userId: getAnonymousUserId(),
+        numericValue: sessionRatingValue,
+        comment: sessionRatingComment.trim() || undefined
+      })
+    })
 
-		const result = await response.json()
+    const result = await response.json()
 
-		if (!response.ok || !result.success) {
-			sessionRatingError = result.error || 'Failed to submit rating'
-			return
-		}
+    if (!response.ok || !result.success) {
+      sessionRatingError = result.error || 'Failed to submit rating'
+      return
+    }
 
-		sessionRatingSuccess = true
-		setTimeout(() => {
-			closeSessionRatingDialog()
-		}, 1500)
-	} catch (err) {
-		console.error('Failed to submit session rating:', err)
-		sessionRatingError = 'Failed to submit rating. Please try again.'
-	} finally {
-		isSubmittingSessionRating = false
-	}
+    // Update local feedback state
+    const newFeedback = new Map(userFeedback)
+    newFeedback.set(ratingSessionId, {
+      id: result.feedback.id,
+      sessionId: ratingSessionId,
+      numericValue: sessionRatingValue,
+      comment: sessionRatingComment.trim() || undefined
+    })
+    userFeedback = newFeedback
+
+    sessionRatingSuccess = true
+    setTimeout(() => {
+      closeSessionRatingDialog()
+    }, 1500)
+  } catch (err) {
+    console.error('Failed to submit session rating:', err)
+    sessionRatingError = 'Failed to submit rating. Please try again.'
+  } finally {
+    isSubmittingSessionRating = false
+  }
 }
 
 // Event feedback functions
 function openEventFeedbackDialog(type: 'general' | 'problem'): void {
-	eventFeedbackType = type
-	eventFeedbackSubject = ''
-	eventFeedbackMessage = ''
-	eventFeedbackSuccess = false
-	eventFeedbackError = null
-	showEventFeedbackDialog = true
+  eventFeedbackType = type
+  eventFeedbackSubject = ''
+  eventFeedbackMessage = ''
+  eventFeedbackSuccess = false
+  eventFeedbackError = null
+  showEventFeedbackDialog = true
 }
 
 function closeEventFeedbackDialog(): void {
-	showEventFeedbackDialog = false
-	eventFeedbackSubject = ''
-	eventFeedbackMessage = ''
-	eventFeedbackSuccess = false
-	eventFeedbackError = null
+  showEventFeedbackDialog = false
+  eventFeedbackSubject = ''
+  eventFeedbackMessage = ''
+  eventFeedbackSuccess = false
+  eventFeedbackError = null
 }
 
 async function submitEventFeedback(): Promise<void> {
-	if (!eventFeedbackMessage.trim()) return
+  if (!eventFeedbackMessage.trim()) return
 
-	isSubmittingEventFeedback = true
-	eventFeedbackError = null
+  isSubmittingEventFeedback = true
+  eventFeedbackError = null
 
-	try {
-		const response = await fetch('/api/feedback/event', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				editionId: data.edition.id,
-				userId: getAnonymousUserId(),
-				feedbackType: eventFeedbackType,
-				subject: eventFeedbackSubject.trim() || undefined,
-				message: eventFeedbackMessage.trim()
-			})
-		})
+  try {
+    const response = await fetch('/api/feedback/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        editionId: data.edition.id,
+        userId: getAnonymousUserId(),
+        feedbackType: eventFeedbackType,
+        subject: eventFeedbackSubject.trim() || undefined,
+        message: eventFeedbackMessage.trim()
+      })
+    })
 
-		const result = await response.json()
+    const result = await response.json()
 
-		if (!response.ok || !result.success) {
-			eventFeedbackError = result.error || 'Failed to submit feedback'
-			return
-		}
+    if (!response.ok || !result.success) {
+      eventFeedbackError = result.error || 'Failed to submit feedback'
+      return
+    }
 
-		eventFeedbackSuccess = true
-		setTimeout(() => {
-			closeEventFeedbackDialog()
-		}, 1500)
-	} catch (err) {
-		console.error('Failed to submit event feedback:', err)
-		eventFeedbackError = 'Failed to submit feedback. Please try again.'
-	} finally {
-		isSubmittingEventFeedback = false
-	}
+    eventFeedbackSuccess = true
+    setTimeout(() => {
+      closeEventFeedbackDialog()
+    }, 1500)
+  } catch (err) {
+    console.error('Failed to submit event feedback:', err)
+    eventFeedbackError = 'Failed to submit feedback. Please try again.'
+  } finally {
+    isSubmittingEventFeedback = false
+  }
 }
 
 // Ticket lookup functions
 async function lookupTickets(): Promise<void> {
-	if (!ticketEmail.trim()) return
+  if (!ticketEmail.trim()) return
 
-	isLoadingTickets = true
-	ticketError = null
-	ticketResults = []
+  isLoadingTickets = true
+  ticketError = null
+  ticketResults = []
 
-	try {
-		const response = await fetch('/api/tickets/lookup', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				email: ticketEmail.trim().toLowerCase(),
-				editionId: data.edition.id
-			})
-		})
+  try {
+    const response = await fetch('/api/tickets/lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: ticketEmail.trim().toLowerCase(),
+        editionId: data.edition.id
+      })
+    })
 
-		const result = await response.json()
+    const result = await response.json()
 
-		if (!response.ok || !result.success) {
-			ticketError = result.error || 'Failed to find tickets'
-			return
-		}
+    if (!response.ok || !result.success) {
+      ticketError = result.error || 'Failed to find tickets'
+      return
+    }
 
-		ticketResults = result.tickets
-		ticketLookupDone = true
+    ticketResults = result.tickets
+    ticketLookupDone = true
 
-		// Save email for convenience
-		if (browser) {
-			localStorage.setItem(`ticket_email_${data.edition.slug}`, ticketEmail.trim().toLowerCase())
-		}
-	} catch (err) {
-		console.error('Failed to lookup tickets:', err)
-		ticketError = 'Failed to lookup tickets. Please try again.'
-	} finally {
-		isLoadingTickets = false
-	}
+    // Save email for convenience
+    if (browser) {
+      localStorage.setItem(`ticket_email_${data.edition.slug}`, ticketEmail.trim().toLowerCase())
+    }
+  } catch (err) {
+    console.error('Failed to lookup tickets:', err)
+    ticketError = 'Failed to lookup tickets. Please try again.'
+  } finally {
+    isLoadingTickets = false
+  }
 }
 
 function resetTicketLookup(): void {
-	ticketResults = []
-	ticketLookupDone = false
-	ticketError = null
+  ticketResults = []
+  ticketLookupDone = false
+  ticketError = null
 }
 
-// Load saved email on init
+// Load saved email on init and auto-lookup
 $effect(() => {
-	if (browser && !ticketEmail) {
-		const savedEmail = localStorage.getItem(`ticket_email_${data.edition.slug}`)
-		if (savedEmail) {
-			ticketEmail = savedEmail
-		}
-	}
+  if (browser && !ticketEmail && !ticketLookupDone) {
+    const savedEmail = localStorage.getItem(`ticket_email_${data.edition.slug}`)
+    if (savedEmail) {
+      ticketEmail = savedEmail
+      // Auto-lookup tickets with saved email
+      lookupTickets()
+    }
+  }
 })
 
 // Helper functions
 function formatTime(time: string): string {
-	return time.slice(0, 5) // HH:MM
+  return time.slice(0, 5) // HH:MM
 }
 
 function formatDate(date: string): string {
-	return new Intl.DateTimeFormat('en-US', {
-		weekday: 'short',
-		month: 'short',
-		day: 'numeric'
-	}).format(new Date(date))
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  }).format(new Date(date))
 }
 
 // Get unique dates
 const uniqueDates = $derived(() => {
-	const dates = new Set<string>()
-	for (const slot of data.slots) {
-		dates.add(slot.date.split('T')[0])
-	}
-	return Array.from(dates).sort()
+  const dates = new Set<string>()
+  for (const slot of data.slots) {
+    dates.add(slot.date.split('T')[0])
+  }
+  return Array.from(dates).sort()
 })
 
 // Get sessions for selected day
 const sessionsForDay = $derived(() => {
-	const daySlots = data.slots.filter((s) => s.date.split('T')[0] === selectedDay)
-	const daySlotIds = new Set(daySlots.map((s) => s.id))
+  const daySlots = data.slots.filter((s) => s.date.split('T')[0] === selectedDay)
+  const daySlotIds = new Set(daySlots.map((s) => s.id))
 
-	return data.sessions
-		.filter((session) => {
-			if (!daySlotIds.has(session.slotId)) return false
-			if (selectedTrackId && session.trackId !== selectedTrackId) return false
-			return true
-		})
-		.map((session) => {
-			const slot = data.slots.find((s) => s.id === session.slotId)
-			const room = slot ? data.rooms.find((r) => r.id === slot.roomId) : undefined
-			const track = session.trackId
-				? data.tracks.find((t) => t.id === session.trackId)
-				: undefined
-			const talk = session.talkId
-				? data.talks.find((t) => t.id === session.talkId)
-				: undefined
+  return data.sessions
+    .filter((session) => {
+      if (!daySlotIds.has(session.slotId)) return false
+      if (selectedTrackId && session.trackId !== selectedTrackId) return false
+      return true
+    })
+    .map((session) => {
+      const slot = data.slots.find((s) => s.id === session.slotId)
+      const room = slot ? data.rooms.find((r) => r.id === slot.roomId) : undefined
+      const track = session.trackId ? data.tracks.find((t) => t.id === session.trackId) : undefined
+      const talk = session.talkId ? data.talks.find((t) => t.id === session.talkId) : undefined
 
-			return { session, slot, room, track, talk }
-		})
-		.sort((a, b) => {
-			if (!a.slot || !b.slot) return 0
-			return a.slot.startTime.localeCompare(b.slot.startTime)
-		})
+      return { session, slot, room, track, talk }
+    })
+    .sort((a, b) => {
+      if (!a.slot || !b.slot) return 0
+      return a.slot.startTime.localeCompare(b.slot.startTime)
+    })
 })
 
 // Get favorite sessions
 const favoriteSessions = $derived(() => {
-	return data.sessions
-		.filter((session) => favorites.has(session.id))
-		.map((session) => {
-			const slot = data.slots.find((s) => s.id === session.slotId)
-			const room = slot ? data.rooms.find((r) => r.id === slot.roomId) : undefined
-			const track = session.trackId
-				? data.tracks.find((t) => t.id === session.trackId)
-				: undefined
-			const talk = session.talkId
-				? data.talks.find((t) => t.id === session.talkId)
-				: undefined
+  return data.sessions
+    .filter((session) => favorites.has(session.id))
+    .map((session) => {
+      const slot = data.slots.find((s) => s.id === session.slotId)
+      const room = slot ? data.rooms.find((r) => r.id === slot.roomId) : undefined
+      const track = session.trackId ? data.tracks.find((t) => t.id === session.trackId) : undefined
+      const talk = session.talkId ? data.talks.find((t) => t.id === session.talkId) : undefined
 
-			return { session, slot, room, track, talk }
-		})
-		.sort((a, b) => {
-			if (!a.slot || !b.slot) return 0
-			const dateCompare = a.slot.date.localeCompare(b.slot.date)
-			if (dateCompare !== 0) return dateCompare
-			return a.slot.startTime.localeCompare(b.slot.startTime)
-		})
+      return { session, slot, room, track, talk }
+    })
+    .sort((a, b) => {
+      if (!a.slot || !b.slot) return 0
+      const dateCompare = a.slot.date.localeCompare(b.slot.date)
+      if (dateCompare !== 0) return dateCompare
+      return a.slot.startTime.localeCompare(b.slot.startTime)
+    })
+})
+
+// Get unique speakers from all talks with session info
+const uniqueSpeakers = $derived(() => {
+  const speakerMap = new Map<
+    string,
+    {
+      id: string
+      firstName: string
+      lastName: string
+      company?: string
+      bio?: string
+      photoUrl?: string
+      talks: Array<{
+        id: string
+        title: string
+        date?: string
+        startTime?: string
+        endTime?: string
+        roomName?: string
+      }>
+    }
+  >()
+
+  for (const talk of data.talks) {
+    // Find session for this talk
+    const session = data.sessions.find((s) => s.talkId === talk.id)
+    const slot = session ? data.slots.find((s) => s.id === session.slotId) : undefined
+    const room = slot ? data.rooms.find((r) => r.id === slot.roomId) : undefined
+
+    for (const speaker of talk.speakers) {
+      if (!speakerMap.has(speaker.id)) {
+        speakerMap.set(speaker.id, {
+          ...speaker,
+          talks: []
+        })
+      }
+      speakerMap.get(speaker.id)?.talks.push({
+        id: talk.id,
+        title: talk.title,
+        date: slot?.date,
+        startTime: slot?.startTime,
+        endTime: slot?.endTime,
+        roomName: room?.name
+      })
+    }
+  }
+
+  // Sort speakers by name, and their talks by date/time
+  return Array.from(speakerMap.values())
+    .map((speaker) => ({
+      ...speaker,
+      talks: speaker.talks.sort((a, b) => {
+        if (!a.date || !b.date) return 0
+        const dateCompare = a.date.localeCompare(b.date)
+        if (dateCompare !== 0) return dateCompare
+        return (a.startTime || '').localeCompare(b.startTime || '')
+      })
+    }))
+    .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`))
 })
 
 function getTypeColor(type: string): string {
-	const colors: Record<string, string> = {
-		talk: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-		workshop:
-			'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-		keynote: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-		panel: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-		break: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
-		other: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400'
-	}
-	return colors[type] || colors.other
+  const colors: Record<string, string> = {
+    talk: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    workshop: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+    keynote: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    panel: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    break: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
+    other: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400'
+  }
+  return colors[type] || colors.other
 }
 
 function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>): string {
-	return speakers.map((s) => `${s.firstName} ${s.lastName}`).join(', ')
+  return speakers.map((s) => `${s.firstName} ${s.lastName}`).join(', ')
 }
+
+// Custom color styles from app settings
+const customStyles = $derived(() => {
+  const primary = data.appSettings?.primaryColor
+  const accent = data.appSettings?.accentColor
+  if (!primary && !accent) return undefined
+  let style = ''
+  if (primary) style += `--color-primary: ${primary}; --color-primary-foreground: white; `
+  if (accent) style += `--color-accent: ${accent};`
+  return style
+})
 </script>
 
 <svelte:head>
-	<title>{data.edition.name} - Attendee App</title>
+	<title>{data.appSettings?.title || data.edition.name} - Attendee App</title>
 	<meta
 		name="description"
-		content="View the schedule and build your agenda for {data.edition.name}"
+		content="View the schedule and build your agenda for {data.appSettings?.title || data.edition.name}"
 	/>
 </svelte:head>
 
-<div class="flex min-h-screen flex-col bg-background">
-	<!-- Minimalist Header -->
-	<header class="border-b bg-card">
-		<div class="mx-auto max-w-4xl px-4 py-6">
-			<h1 class="text-2xl font-bold tracking-tight">{data.edition.name}</h1>
-			<div class="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+<div class="flex min-h-screen flex-col bg-background" style={customStyles()}>
+	<!-- Header -->
+	<header class="relative border-b bg-card overflow-hidden">
+		{#if data.appSettings?.headerImageUrl}
+			<div class="absolute inset-0">
+				<img
+					src={data.appSettings.headerImageUrl}
+					alt=""
+					class="h-full w-full object-cover opacity-20"
+				/>
+				<div class="absolute inset-0 bg-gradient-to-b from-transparent to-card"></div>
+			</div>
+		{/if}
+		<div class="relative mx-auto max-w-4xl px-4 py-6">
+			<div class="flex items-center gap-4">
+				{#if data.appSettings?.logoUrl}
+					<img
+						src={data.appSettings.logoUrl}
+						alt="Logo"
+						class="h-12 w-12 rounded-lg object-contain"
+					/>
+				{/if}
+				<div>
+					<h1 data-testid="edition-name" class="text-2xl font-bold tracking-tight">{data.appSettings?.title || data.edition.name}</h1>
+					{#if data.appSettings?.subtitle}
+						<p class="text-sm text-muted-foreground">{data.appSettings.subtitle}</p>
+					{/if}
+				</div>
+			</div>
+			<div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
 				<div class="flex items-center gap-1.5">
 					<Calendar class="h-4 w-4" />
 					<span>{formatDate(data.edition.startDate)}</span>
@@ -448,60 +619,19 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 		</div>
 	</header>
 
-	<!-- Navigation Tabs -->
-	<nav class="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
-		<div class="mx-auto flex max-w-4xl">
-			<button
-				type="button"
-				class="flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors {currentView === 'schedule' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-				onclick={() => (currentView = 'schedule')}
-			>
-				<Calendar class="h-4 w-4" />
-				Schedule
-			</button>
-			<button
-				type="button"
-				class="flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors {currentView === 'favorites' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-				onclick={() => (currentView = 'favorites')}
-			>
-				<Heart class="h-4 w-4" />
-				My Agenda
-				{#if favorites.size > 0}
-					<Badge variant="secondary" class="ml-1">{favorites.size}</Badge>
-				{/if}
-			</button>
-			{#if data.feedbackSettings?.eventFeedbackEnabled}
-				<button
-					type="button"
-					class="flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors {currentView === 'feedback' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-					onclick={() => (currentView = 'feedback')}
-				>
-					<MessageSquare class="h-4 w-4" />
-					Feedback
-				</button>
-			{/if}
-			<button
-				type="button"
-				class="flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors {currentView === 'ticket' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
-				onclick={() => (currentView = 'ticket')}
-			>
-				<Ticket class="h-4 w-4" />
-				My Ticket
-			</button>
-		</div>
-	</nav>
-
+	
 	<!-- Main Content -->
-	<main class="flex-1">
+	<main class="flex-1 pb-20">
 		{#if currentView === 'schedule'}
 			<div class="mx-auto max-w-4xl">
 				<!-- Day Selector -->
 				{#if uniqueDates().length > 0}
-					<div class="sticky top-[49px] z-10 border-b bg-background/95 backdrop-blur">
+					<div class="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
 						<div class="flex gap-2 overflow-x-auto px-4 py-3">
 							{#each uniqueDates() as dateStr}
 								<button
 									type="button"
+									data-testid="day-selector-{dateStr}"
 									class="shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors {selectedDay === dateStr ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80'}"
 									onclick={() => (selectedDay = dateStr)}
 								>
@@ -553,21 +683,36 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 						</Card>
 					{:else}
 						{#each sessionsForDay() as { session, slot, room, track, talk }}
-							<Card class="group relative overflow-hidden transition-shadow hover:shadow-md">
+							<Card data-testid="session-card-{session.id}" class="group relative overflow-hidden transition-shadow hover:shadow-md">
 								<div class="p-4">
-									<!-- Time & Room -->
-									<div class="mb-2 flex items-center gap-3 text-xs text-muted-foreground">
-										{#if slot}
-											<span class="flex items-center gap-1 font-mono">
-												<Clock class="h-3 w-3" />
-												{formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-											</span>
-										{/if}
-										{#if room}
-											<span class="flex items-center gap-1">
-												<MapPin class="h-3 w-3" />
-												{room.name}
-											</span>
+									<!-- Time, Room & Favorite -->
+									<div class="mb-2 flex items-center justify-between">
+										<div class="flex items-center gap-3 text-xs text-muted-foreground">
+											{#if slot}
+												<span class="flex items-center gap-1 font-mono">
+													<Clock class="h-3 w-3" />
+													{formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+												</span>
+											{/if}
+											{#if room}
+												<span class="flex items-center gap-1">
+													<MapPin class="h-3 w-3" />
+													{room.name}
+												</span>
+											{/if}
+										</div>
+										{#if showFavorites}
+											<button
+												type="button"
+												data-testid="favorite-button-{session.id}"
+												class="rounded-full p-1.5 transition-colors hover:bg-muted"
+												onclick={() => toggleFavorite(session.id)}
+												title={favorites.has(session.id) ? 'Remove from favorites' : 'Add to favorites'}
+											>
+												<Heart
+													class="h-4 w-4 {favorites.has(session.id) ? 'fill-red-500 text-red-500' : 'text-muted-foreground hover:text-red-500'}"
+												/>
+											</button>
 										{/if}
 									</div>
 
@@ -586,8 +731,8 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 										</Badge>
 									</div>
 
-									<!-- Track & Actions Row -->
-									<div class="mt-2 flex items-center justify-between">
+									<!-- Track & Feedback Row -->
+									<div class="mt-3 flex items-center justify-between gap-2">
 										{#if track}
 											<div class="flex items-center gap-1.5 text-xs">
 												<span
@@ -599,34 +744,89 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 										{:else}
 											<div></div>
 										{/if}
-										<div class="flex items-center gap-2">
-											{#if data.feedbackSettings?.sessionRatingEnabled}
-												<button
-													type="button"
-													class="rounded-full p-1.5 transition-colors hover:bg-muted"
-													onclick={() => openSessionRatingDialog(session.id, session.title)}
-													title="Rate session"
-												>
-													<Star class="h-4 w-4 text-muted-foreground hover:text-yellow-500" />
-												</button>
-											{/if}
-											<button
-												type="button"
-												class="rounded-full p-1.5 transition-colors hover:bg-muted"
-												onclick={() => toggleFavorite(session.id)}
-												title={favorites.has(session.id) ? 'Remove from agenda' : 'Add to agenda'}
+										{#if showSessionFeedback}
+											<Button
+												variant="outline"
+												size="sm"
+												class="h-7 text-xs"
+												onclick={() => openSessionRatingDialog(session.id, session.title)}
 											>
-												<Heart
-													class="h-4 w-4 {favorites.has(session.id) ? 'fill-red-500 text-red-500' : 'text-muted-foreground hover:text-red-500'}"
-												/>
-											</button>
-										</div>
+												{#if userFeedback.has(session.id)}
+													Modify my feedback
+												{:else}
+													Give feedback
+												{/if}
+											</Button>
+										{/if}
 									</div>
 								</div>
 							</Card>
 						{/each}
 					{/if}
 				</div>
+			</div>
+		{:else if currentView === 'speakers'}
+			<div class="mx-auto max-w-4xl p-4">
+				{#if uniqueSpeakers().length === 0}
+					<Card class="p-12 text-center">
+						<Users class="mx-auto h-12 w-12 text-muted-foreground" />
+						<h3 class="mt-4 text-lg font-semibold">No speakers yet</h3>
+						<p class="mt-2 text-sm text-muted-foreground">
+							Speakers will appear here once sessions are scheduled.
+						</p>
+					</Card>
+				{:else}
+					<div class="grid gap-4 sm:grid-cols-2">
+						{#each uniqueSpeakers() as speaker}
+							<Card class="p-4">
+								<div class="flex gap-3">
+									{#if speaker.photoUrl}
+										<img
+											src={speaker.photoUrl}
+											alt="{speaker.firstName} {speaker.lastName}"
+											class="h-14 w-14 shrink-0 rounded-full object-cover"
+										/>
+									{:else}
+										<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted">
+											<Users class="h-7 w-7 text-muted-foreground" />
+										</div>
+									{/if}
+									<div class="flex-1 min-w-0">
+										<h3 class="font-semibold">{speaker.firstName} {speaker.lastName}</h3>
+										{#if speaker.company}
+											<p class="text-sm text-muted-foreground">{speaker.company}</p>
+										{/if}
+									</div>
+								</div>
+								{#if speaker.talks.length > 0}
+									<div class="mt-3 space-y-2 border-t pt-3">
+										{#each speaker.talks as talk}
+											<div class="rounded-md bg-muted/50 p-2">
+												<p class="text-sm font-medium leading-snug">{talk.title}</p>
+												{#if talk.startTime || talk.roomName}
+													<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+														{#if talk.date && talk.startTime}
+															<span class="flex items-center gap-1">
+																<Clock class="h-3 w-3" />
+																{formatDate(talk.date)} · {formatTime(talk.startTime)}{#if talk.endTime}-{formatTime(talk.endTime)}{/if}
+															</span>
+														{/if}
+														{#if talk.roomName}
+															<span class="flex items-center gap-1">
+																<MapPin class="h-3 w-3" />
+																{talk.roomName}
+															</span>
+														{/if}
+													</div>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								{/if}
+							</Card>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{:else if currentView === 'favorites'}
 			<div class="mx-auto max-w-4xl p-4">
@@ -635,11 +835,8 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 						<Heart class="mx-auto h-12 w-12 text-muted-foreground" />
 						<h3 class="mt-4 text-lg font-semibold">No favorites yet</h3>
 						<p class="mt-2 text-sm text-muted-foreground">
-							Save sessions to build your personal agenda.
+							Tap the heart icon on sessions to add them to your favorites.
 						</p>
-						<Button class="mt-4" onclick={() => (currentView = 'schedule')}>
-							Browse Schedule
-						</Button>
 					</Card>
 				{:else}
 					{@const sessionsByDate = favoriteSessions().reduce<
@@ -661,53 +858,59 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 								<div class="space-y-2">
 									{#each sessions as { session, slot, room, talk }}
 										<Card class="p-4">
-											<div class="flex items-start justify-between gap-2">
-												<div class="flex-1">
-													<div class="flex items-center gap-3 text-xs text-muted-foreground">
-														{#if slot}
-															<span class="flex items-center gap-1 font-mono">
-																<Clock class="h-3 w-3" />
-																{formatTime(slot.startTime)}
-															</span>
-														{/if}
-														{#if room}
-															<span class="flex items-center gap-1">
-																<MapPin class="h-3 w-3" />
-																{room.name}
-															</span>
-														{/if}
-													</div>
-													<h3 class="mt-2 font-semibold">{session.title}</h3>
-													{#if talk?.speakers && talk.speakers.length > 0}
-														<p class="mt-1 text-sm text-muted-foreground">
-															{formatSpeakers(talk.speakers)}
-														</p>
+											<!-- Time, Room & Favorite -->
+											<div class="mb-2 flex items-center justify-between">
+												<div class="flex items-center gap-3 text-xs text-muted-foreground">
+													{#if slot}
+														<span class="flex items-center gap-1 font-mono">
+															<Clock class="h-3 w-3" />
+															{formatTime(slot.startTime)}
+														</span>
 													{/if}
-													<div class="mt-2 flex items-center gap-2">
-														<Badge variant="secondary" class="{getTypeColor(session.type)}">
-															{session.type}
-														</Badge>
-														{#if data.feedbackSettings?.sessionRatingEnabled}
-															<button
-																type="button"
-																class="rounded-full p-1 transition-colors hover:bg-muted"
-																onclick={() => openSessionRatingDialog(session.id, session.title)}
-																title="Rate session"
-															>
-																<Star class="h-4 w-4 text-muted-foreground hover:text-yellow-500" />
-															</button>
-														{/if}
-													</div>
+													{#if room}
+														<span class="flex items-center gap-1">
+															<MapPin class="h-3 w-3" />
+															{room.name}
+														</span>
+													{/if}
 												</div>
 												<button
 													type="button"
-													class="shrink-0 rounded-full p-1.5 transition-colors hover:bg-muted"
+													class="rounded-full p-1.5 transition-colors hover:bg-muted"
 													onclick={() => toggleFavorite(session.id)}
 													title="Remove from agenda"
 												>
 													<Heart class="h-4 w-4 fill-red-500 text-red-500" />
 												</button>
 											</div>
+											<!-- Title & Type -->
+											<div class="flex items-start justify-between gap-2">
+												<h3 class="font-semibold">{session.title}</h3>
+												<Badge variant="secondary" class="{getTypeColor(session.type)} shrink-0">
+													{session.type}
+												</Badge>
+											</div>
+											{#if talk?.speakers && talk.speakers.length > 0}
+												<p class="mt-1 text-sm text-muted-foreground">
+													{formatSpeakers(talk.speakers)}
+												</p>
+											{/if}
+											{#if showSessionFeedback}
+												<div class="mt-3 flex justify-end">
+													<Button
+														variant="outline"
+														size="sm"
+														class="h-7 text-xs"
+														onclick={() => openSessionRatingDialog(session.id, session.title)}
+													>
+														{#if userFeedback.has(session.id)}
+															Modify my feedback
+														{:else}
+															Give feedback
+														{/if}
+													</Button>
+												</div>
+											{/if}
 										</Card>
 									{/each}
 								</div>
@@ -718,50 +921,68 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 			</div>
 		{:else if currentView === 'feedback'}
 			<div class="mx-auto max-w-2xl p-4">
-				<div class="space-y-4">
-					<button
-						type="button"
-						class="w-full text-left"
-						onclick={() => openEventFeedbackDialog('general')}
-					>
-						<Card class="p-6 transition-colors hover:bg-muted/50">
-							<div class="flex items-start gap-3">
-								<MessageSquare class="mt-0.5 h-5 w-5 text-primary" />
-								<div class="flex-1">
-									<h3 class="font-semibold">General Feedback</h3>
-									<p class="mt-1 text-sm text-muted-foreground">
-										Share your thoughts about the event
-									</p>
+				{#if showEventFeedback}
+					<div class="space-y-4">
+						<button
+							type="button"
+							class="w-full text-left"
+							onclick={() => openEventFeedbackDialog('general')}
+						>
+							<Card class="p-6 transition-colors hover:bg-muted/50">
+								<div class="flex items-start gap-3">
+									<MessageSquare class="mt-0.5 h-5 w-5 text-primary" />
+									<div class="flex-1">
+										<h3 class="font-semibold">General Feedback</h3>
+										<p class="mt-1 text-sm text-muted-foreground">
+											Share your thoughts about the event
+										</p>
+									</div>
+									<ChevronRight class="h-5 w-5 text-muted-foreground" />
 								</div>
-								<ChevronRight class="h-5 w-5 text-muted-foreground" />
-							</div>
-						</Card>
-					</button>
+							</Card>
+						</button>
 
-					<button
-						type="button"
-						class="w-full text-left"
-						onclick={() => openEventFeedbackDialog('problem')}
-					>
-						<Card class="p-6 transition-colors hover:bg-muted/50">
-							<div class="flex items-start gap-3">
-								<AlertCircle class="mt-0.5 h-5 w-5 text-orange-600" />
-								<div class="flex-1">
-									<h3 class="font-semibold">Report a Problem</h3>
-									<p class="mt-1 text-sm text-muted-foreground">
-										Let us know about any issues at the event
-									</p>
+						<button
+							type="button"
+							class="w-full text-left"
+							onclick={() => openEventFeedbackDialog('problem')}
+						>
+							<Card class="p-6 transition-colors hover:bg-muted/50">
+								<div class="flex items-start gap-3">
+									<AlertCircle class="mt-0.5 h-5 w-5 text-orange-600" />
+									<div class="flex-1">
+										<h3 class="font-semibold">Report a Problem</h3>
+										<p class="mt-1 text-sm text-muted-foreground">
+											Let us know about any issues at the event
+										</p>
+									</div>
+									<ChevronRight class="h-5 w-5 text-muted-foreground" />
 								</div>
-								<ChevronRight class="h-5 w-5 text-muted-foreground" />
-							</div>
-						</Card>
-					</button>
-				</div>
+							</Card>
+						</button>
+					</div>
 
-				{#if data.feedbackSettings?.feedbackIntroText}
-					<p class="mt-6 text-center text-sm text-muted-foreground">
-						{data.feedbackSettings.feedbackIntroText}
-					</p>
+					{#if data.feedbackSettings?.feedbackIntroText}
+						<p class="mt-6 text-center text-sm text-muted-foreground">
+							{data.feedbackSettings.feedbackIntroText}
+						</p>
+					{/if}
+				{:else if showSessionFeedback}
+					<div class="text-center py-8">
+						<MessageSquare class="mx-auto h-12 w-12 text-muted-foreground/50" />
+						<h3 class="mt-4 text-lg font-medium">Session Feedback</h3>
+						<p class="mt-2 text-sm text-muted-foreground">
+							You can give feedback on individual sessions from the Schedule tab
+						</p>
+					</div>
+				{:else}
+					<div class="text-center py-8">
+						<MessageSquare class="mx-auto h-12 w-12 text-muted-foreground/50" />
+						<h3 class="mt-4 text-lg font-medium">Feedback not available</h3>
+						<p class="mt-2 text-sm text-muted-foreground">
+							Feedback collection is not enabled for this event
+						</p>
+					</div>
 				{/if}
 			</div>
 		{:else if currentView === 'ticket'}
@@ -879,14 +1100,18 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 									{#if ticket.qrCode && ticket.status === 'valid'}
 										<div class="flex flex-col items-center border-t pt-4">
 											<QrCode class="h-6 w-6 text-muted-foreground mb-2" />
-											<p class="text-xs text-muted-foreground mb-2">Show this at check-in</p>
-											<div class="bg-white p-4 rounded-lg">
+											<p class="text-xs text-muted-foreground mb-2">Tap to enlarge</p>
+											<button
+												type="button"
+												class="bg-white p-4 rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+												onclick={() => expandedQrCode = { qrCode: ticket.qrCode!, ticketNumber: ticket.ticketNumber }}
+											>
 												<img
-													src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={encodeURIComponent(ticket.qrCode)}"
+													src={ticket.qrCode}
 													alt="Ticket QR Code"
 													class="h-48 w-48"
 												/>
-											</div>
+											</button>
 											<p class="mt-2 font-mono text-xs text-muted-foreground">{ticket.ticketNumber}</p>
 										</div>
 									{/if}
@@ -905,13 +1130,75 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 			</div>
 		{/if}
 	</main>
+
+	<!-- Bottom Navigation -->
+	<nav class="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur safe-area-bottom">
+		<div class="mx-auto flex max-w-4xl">
+			<button
+				type="button"
+				data-testid="schedule-tab"
+				class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'schedule' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
+				onclick={() => (currentView = 'schedule')}
+			>
+				<Calendar class="h-5 w-5" />
+				<span>Schedule</span>
+			</button>
+			{#if showFavorites}
+				<button
+					type="button"
+					data-testid="favorites-tab"
+					class="relative flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'favorites' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
+					onclick={() => (currentView = 'favorites')}
+				>
+					<Heart class="h-5 w-5" />
+					<span>Favorites</span>
+					{#if favorites.size > 0}
+						<span class="absolute right-1/4 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">{favorites.size}</span>
+					{/if}
+				</button>
+			{/if}
+			{#if showSpeakers}
+				<button
+					type="button"
+					data-testid="speakers-tab"
+					class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'speakers' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
+					onclick={() => (currentView = 'speakers')}
+				>
+					<Users class="h-5 w-5" />
+					<span>Speakers</span>
+				</button>
+			{/if}
+			{#if showTickets}
+				<button
+					type="button"
+					data-testid="tickets-tab"
+					class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'ticket' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
+					onclick={() => (currentView = 'ticket')}
+				>
+					<Ticket class="h-5 w-5" />
+					<span>My Ticket</span>
+				</button>
+			{/if}
+			{#if showFeedback}
+				<button
+					type="button"
+					data-testid="feedback-tab"
+					class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'feedback' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
+					onclick={() => (currentView = 'feedback')}
+				>
+					<MessageSquare class="h-5 w-5" />
+					<span>Feedback</span>
+				</button>
+			{/if}
+		</div>
+	</nav>
 </div>
 
 <!-- Session Rating Dialog -->
 {#if showSessionRatingDialog && data.feedbackSettings?.sessionRatingMode}
 	<Dialog.Content class="max-w-md" onClose={closeSessionRatingDialog}>
 		<Dialog.Header>
-			<Dialog.Title>Rate Session</Dialog.Title>
+			<Dialog.Title>{isEditingFeedback ? 'Edit Your Feedback' : 'Rate Session'}</Dialog.Title>
 			<Dialog.Description>
 				{ratingSessionTitle}
 			</Dialog.Description>
@@ -920,7 +1207,9 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 		{#if sessionRatingSuccess}
 			<div class="flex flex-col items-center py-8">
 				<CheckCircle2 class="h-12 w-12 text-green-500" />
-				<p class="mt-4 font-medium">Thank you for your feedback!</p>
+				<p class="mt-4 font-medium">
+					{isEditingFeedback ? 'Your feedback has been updated!' : 'Thank you for your feedback!'}
+				</p>
 			</div>
 		{:else}
 			<div class="space-y-6 py-4">
@@ -963,9 +1252,9 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 				>
 					{#if isSubmittingSessionRating}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-						Submitting...
+						{isEditingFeedback ? 'Updating...' : 'Submitting...'}
 					{:else}
-						Submit Rating
+						{isEditingFeedback ? 'Update Feedback' : 'Submit Feedback'}
 					{/if}
 				</Button>
 			</Dialog.Footer>
@@ -1047,4 +1336,25 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 			</Dialog.Footer>
 		{/if}
 	</Dialog.Content>
+{/if}
+
+<!-- Fullscreen QR Code Overlay -->
+{#if expandedQrCode}
+	<button
+		type="button"
+		class="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4"
+		onclick={() => expandedQrCode = null}
+	>
+		<div class="flex flex-col items-center">
+			<div class="bg-white p-6 rounded-2xl">
+				<img
+					src={expandedQrCode.qrCode}
+					alt="Ticket QR Code"
+					class="w-72 h-72 sm:w-80 sm:h-80"
+				/>
+			</div>
+			<p class="mt-4 font-mono text-lg text-white">{expandedQrCode.ticketNumber}</p>
+			<p class="mt-2 text-sm text-white/70">Tap anywhere to close</p>
+		</div>
+	</button>
 {/if}

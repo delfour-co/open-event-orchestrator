@@ -11,9 +11,9 @@ import {
   Building2,
   Calendar,
   CalendarDays,
+  ExternalLink,
   Eye,
   EyeOff,
-  ExternalLink,
   MapPin,
   Plus,
   Settings,
@@ -427,6 +427,11 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
               <div class="flex items-center gap-2">
                 <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
                   <StatusBadge status={edition.status} size="sm" />
+                </a>
+                <a href="/admin/app/{edition.slug}" title="Attendee App Settings">
+                  <Button variant="ghost" size="icon" class="h-8 w-8">
+                    <Smartphone class="h-4 w-4" />
+                  </Button>
                 </a>
                 <a href="/admin/editions/{edition.slug}/settings" title="Edition Settings">
                   <Button variant="ghost" size="icon" class="h-8 w-8">

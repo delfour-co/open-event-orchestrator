@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Mail,
   Settings,
+  Smartphone,
   Ticket,
   Users,
   Wallet
@@ -45,6 +46,7 @@ const allNavItems: NavItem[] = [
   { href: '/admin/events', icon: CalendarDays, label: 'Events', requiresOrganizerAccess: true },
   { href: '/admin/cfp', icon: Calendar, label: 'CFP' },
   { href: '/admin/planning', icon: LayoutGrid, label: 'Planning', requiresOrganizerAccess: true },
+  { href: '/admin/app', icon: Smartphone, label: 'Attendee App', requiresOrganizerAccess: true },
   { href: '/admin/billing', icon: Ticket, label: 'Billetterie', requiresOrganizerAccess: true },
   {
     href: '/admin/sponsoring',

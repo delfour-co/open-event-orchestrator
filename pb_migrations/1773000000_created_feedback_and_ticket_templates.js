@@ -378,7 +378,9 @@ migrate(
           type: 'autodate'
         }
       ],
-      indexes: ['CREATE UNIQUE INDEX idx_feedback_settings_edition ON feedback_settings (editionId)'],
+      indexes: [
+        'CREATE UNIQUE INDEX idx_feedback_settings_edition ON feedback_settings (editionId)'
+      ],
       listRule: '',
       viewRule: '',
       createRule: '@request.auth.id != ""',

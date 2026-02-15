@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const edition = editions.items[0]
   const editionId = edition.id as string
 
+  // Load stats
   const [rooms, tracks, slots, sessions] = await Promise.all([
     locals.pb.collection('rooms').getList(1, 1, {
       filter: `editionId = "${editionId}"`,

@@ -76,7 +76,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   // Add security headers
   response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-Frame-Options', 'DENY')
+  // Allow /app routes to be embedded in iframes from same origin (for admin preview)
+  if (event.url.pathname.startsWith('/app/')) {
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  } else {
+    response.headers.set('X-Frame-Options', 'DENY')
+  }
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
   // Allow camera on scanner and checkin pages, block on others
