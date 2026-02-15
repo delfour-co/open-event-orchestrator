@@ -218,3 +218,75 @@ PUBLIC_STRIPE_PUBLISHABLE_KEY=
 - `domain:crm` - CRM, contacts, GDPR
 - `domain:budget` - Budget, finance, transactions
 - `domain:api` - Public API
+
+## Milestones & Issues Standard
+
+### Milestone Naming
+
+Milestones follow a phased approach with sequential numbering:
+
+```
+Phase {number} - {Short Description}
+```
+
+Examples:
+- `Phase 8 - Public API`
+- `Phase 10 - PWA & Mobile`
+- `Phase 15 - Analytics & Reporting`
+
+### Issue Structure
+
+Each issue must follow this format:
+
+**Title**: Short, descriptive title (action-oriented)
+
+**Labels** (required):
+- Type: `enhancement`, `bug`, `documentation`
+- Domain: `domain:cfp`, `domain:planning`, `domain:billing`, `domain:crm`, `domain:budget`, `domain:api`, `domain:foundations`
+- Component: `type:frontend`, `type:backend`, `type:fullstack`
+- Priority: `priority:high`, `priority:medium`, `priority:low`
+
+**Body**:
+
+```markdown
+## Description
+
+Clear explanation of what needs to be done and why.
+
+## Acceptance Criteria
+
+- [ ] First criterion
+- [ ] Second criterion
+- [ ] Third criterion
+
+## Technical Notes
+
+Optional section for implementation hints, architecture decisions, or related files.
+```
+
+### Example Issue
+
+```markdown
+Title: Recherche globale
+
+Labels: enhancement, domain:planning, type:frontend, priority:high
+
+## Description
+
+Permettre de chercher dans les sessions, speakers et sponsors depuis n'importe quelle page de l'application.
+
+## Acceptance Criteria
+
+- [ ] Search bar in header/navigation
+- [ ] Instant results as user types
+- [ ] Filters by category (sessions, speakers, sponsors)
+- [ ] Keyboard accessible (Ctrl+K shortcut)
+- [ ] Highlight matching text in results
+- [ ] Recent searches history
+
+## Technical Notes
+
+- Use Command component from shadcn-svelte
+- Implement debounced search (300ms)
+- Consider using Fuse.js for fuzzy matching
+```
