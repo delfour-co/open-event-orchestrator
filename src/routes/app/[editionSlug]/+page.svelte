@@ -21,7 +21,9 @@ import {
   Mail,
   MapPin,
   MessageSquare,
+  Moon,
   QrCode,
+  Sun,
   Ticket,
   Users
 } from 'lucide-svelte'
@@ -565,6 +567,37 @@ const customStyles = $derived(() => {
   if (accent) style += `--color-accent: ${accent};`
   return style
 })
+
+// Theme toggle state
+let currentTheme = $state<'light' | 'dark' | 'system'>('system')
+
+// Initialize theme from localStorage
+$effect(() => {
+  if (!browser) return
+  try {
+    const stored = localStorage.getItem('theme')
+    if (stored) {
+      currentTheme = JSON.parse(stored) as 'light' | 'dark' | 'system'
+    }
+    applyTheme(currentTheme)
+  } catch {
+    // Ignore errors
+  }
+})
+
+function applyTheme(value: 'light' | 'dark' | 'system'): void {
+  if (!browser) return
+  const isDark =
+    value === 'dark' ||
+    (value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  document.documentElement.classList.toggle('dark', isDark)
+}
+
+function toggleTheme(): void {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark'
+  localStorage.setItem('theme', JSON.stringify(currentTheme))
+  applyTheme(currentTheme)
+}
 </script>
 
 <svelte:head>
@@ -589,20 +622,31 @@ const customStyles = $derived(() => {
 			</div>
 		{/if}
 		<div class="relative mx-auto max-w-4xl px-4 py-6">
-			<div class="flex items-center gap-4">
-				{#if data.appSettings?.logoUrl}
-					<img
-						src={data.appSettings.logoUrl}
-						alt="Logo"
-						class="h-12 w-12 rounded-lg object-contain"
-					/>
-				{/if}
-				<div>
-					<h1 data-testid="edition-name" class="text-2xl font-bold tracking-tight">{data.appSettings?.title || data.edition.name}</h1>
-					{#if data.appSettings?.subtitle}
-						<p class="text-sm text-muted-foreground">{data.appSettings.subtitle}</p>
+			<div class="flex items-start justify-between">
+				<div class="flex items-center gap-4">
+					{#if data.appSettings?.logoUrl}
+						<img
+							src={data.appSettings.logoUrl}
+							alt="Logo"
+							class="h-12 w-12 rounded-lg object-contain"
+						/>
 					{/if}
+					<div>
+						<h1 data-testid="edition-name" class="text-2xl font-bold tracking-tight">{data.appSettings?.title || data.edition.name}</h1>
+						{#if data.appSettings?.subtitle}
+							<p class="text-sm text-muted-foreground">{data.appSettings.subtitle}</p>
+						{/if}
+					</div>
 				</div>
+				<!-- Theme Toggle -->
+				<Button onclick={toggleTheme} variant="ghost" size="icon" class="shrink-0">
+					{#if currentTheme === 'dark'}
+						<Sun class="h-5 w-5" />
+					{:else}
+						<Moon class="h-5 w-5" />
+					{/if}
+					<span class="sr-only">Toggle theme</span>
+				</Button>
 			</div>
 			<div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
 				<div class="flex items-center gap-1.5">
