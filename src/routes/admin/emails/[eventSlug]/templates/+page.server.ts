@@ -22,6 +22,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       subject: t.subject as string,
       bodyHtml: t.bodyHtml as string,
       bodyText: t.bodyText as string,
+      documentJson: t.documentJson as object | null,
       variables: (t.variables as string[]) || [],
       createdAt: new Date(t.created as string)
     }))
@@ -35,6 +36,7 @@ export const actions: Actions = {
     const subject = (formData.get('subject') as string)?.trim()
     const bodyHtml = (formData.get('bodyHtml') as string) || ''
     const bodyText = (formData.get('bodyText') as string) || ''
+    const documentJsonStr = formData.get('documentJson') as string | null
 
     if (!name) {
       return fail(400, { error: 'Name is required', action: 'createTemplate' })
@@ -65,14 +67,24 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('email_templates').create({
+      const createData: Record<string, unknown> = {
         eventId,
         name,
         subject,
         bodyHtml,
         bodyText,
         variables: JSON.stringify(variables)
-      })
+      }
+
+      if (documentJsonStr) {
+        try {
+          createData.documentJson = JSON.parse(documentJsonStr)
+        } catch {
+          // Invalid JSON, ignore
+        }
+      }
+
+      await locals.pb.collection('email_templates').create(createData)
 
       return { success: true, action: 'createTemplate' }
     } catch (err) {
@@ -88,6 +100,7 @@ export const actions: Actions = {
     const subject = (formData.get('subject') as string)?.trim()
     const bodyHtml = (formData.get('bodyHtml') as string) || ''
     const bodyText = (formData.get('bodyText') as string) || ''
+    const documentJsonStr = formData.get('documentJson') as string | null
 
     if (!id) {
       return fail(400, { error: 'Template ID is required', action: 'updateTemplate' })
@@ -131,13 +144,26 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('email_templates').update(id, {
+      const updateData: Record<string, unknown> = {
         name,
         subject,
         bodyHtml,
         bodyText,
         variables: JSON.stringify(variables)
-      })
+      }
+
+      if (documentJsonStr) {
+        try {
+          updateData.documentJson = JSON.parse(documentJsonStr)
+        } catch {
+          // Invalid JSON, ignore
+        }
+      } else {
+        // Clear documentJson if using code editor
+        updateData.documentJson = null
+      }
+
+      await locals.pb.collection('email_templates').update(id, updateData)
 
       return { success: true, action: 'updateTemplate' }
     } catch (err) {
