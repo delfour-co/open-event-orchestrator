@@ -543,12 +543,12 @@ const uniqueSpeakers = $derived(() => {
 
 function getTypeColor(type: string): string {
   const colors: Record<string, string> = {
-    talk: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    workshop: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-    keynote: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    panel: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    break: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
-    other: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400'
+    talk: 'bg-blue-100 !text-blue-700 dark:bg-blue-900/30 dark:!text-blue-300',
+    workshop: 'bg-purple-100 !text-purple-700 dark:bg-purple-900/30 dark:!text-purple-300',
+    keynote: 'bg-orange-100 !text-orange-700 dark:bg-orange-900/30 dark:!text-orange-300',
+    panel: 'bg-green-100 !text-green-700 dark:bg-green-900/30 dark:!text-green-300',
+    break: 'bg-gray-100 !text-gray-700 dark:bg-gray-800/50 dark:!text-gray-400',
+    other: 'bg-gray-100 !text-gray-700 dark:bg-gray-800/50 dark:!text-gray-400'
   }
   return colors[type] || colors.other
 }
