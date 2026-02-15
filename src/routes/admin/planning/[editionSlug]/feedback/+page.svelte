@@ -3,6 +3,7 @@ import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Label } from '$lib/components/ui/label'
+import { Switch } from '$lib/components/ui/switch'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getAvailableRatingModes } from '$lib/features/feedback/domain/rating-mode'
 import {
@@ -106,13 +107,8 @@ let isSubmitting = $state(false)
 							When enabled, attendees can rate sessions in the mobile app.
 						</p>
 					</div>
-					<label class="relative inline-flex cursor-pointer items-center">
-						<input type="checkbox" bind:checked={sessionRatingEnabled} class="peer sr-only" />
-						<input type="hidden" name="sessionRatingEnabled" value={sessionRatingEnabled ? 'true' : 'false'} />
-						<div
-							class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700"
-						></div>
-					</label>
+					<input type="hidden" name="sessionRatingEnabled" value={sessionRatingEnabled ? 'true' : 'false'} />
+					<Switch checked={sessionRatingEnabled} onCheckedChange={(v) => (sessionRatingEnabled = v)} />
 				</div>
 
 				{#if sessionRatingEnabled}
@@ -148,13 +144,8 @@ let isSubmitting = $state(false)
 								Make comments mandatory when submitting session ratings.
 							</p>
 						</div>
-						<label class="relative inline-flex cursor-pointer items-center">
-							<input type="checkbox" bind:checked={sessionCommentRequired} class="peer sr-only" />
-							<input type="hidden" name="sessionCommentRequired" value={sessionCommentRequired ? 'true' : 'false'} />
-							<div
-								class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700"
-							></div>
-						</label>
+						<input type="hidden" name="sessionCommentRequired" value={sessionCommentRequired ? 'true' : 'false'} />
+						<Switch checked={sessionCommentRequired} onCheckedChange={(v) => (sessionCommentRequired = v)} />
 					</div>
 				{/if}
 			</Card.Content>
@@ -180,13 +171,8 @@ let isSubmitting = $state(false)
 							Show the Feedback tab in the attendee PWA with general feedback and problem report forms.
 						</p>
 					</div>
-					<label class="relative inline-flex cursor-pointer items-center">
-						<input type="checkbox" bind:checked={eventFeedbackEnabled} class="peer sr-only" />
-						<input type="hidden" name="eventFeedbackEnabled" value={eventFeedbackEnabled ? 'true' : 'false'} />
-						<div
-							class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:bg-gray-700"
-						></div>
-					</label>
+					<input type="hidden" name="eventFeedbackEnabled" value={eventFeedbackEnabled ? 'true' : 'false'} />
+					<Switch checked={eventFeedbackEnabled} onCheckedChange={(v) => (eventFeedbackEnabled = v)} />
 				</div>
 
 				{#if eventFeedbackEnabled}

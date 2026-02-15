@@ -20,7 +20,10 @@ import {
 	Filter,
 	ChevronRight,
 	Loader2,
-	CheckCircle2
+	CheckCircle2,
+	Ticket,
+	QrCode,
+	Mail
 } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -31,12 +34,31 @@ interface Props {
 const { data }: Props = $props()
 
 // View state
-let currentView = $state<'schedule' | 'favorites' | 'feedback'>('schedule')
+let currentView = $state<'schedule' | 'favorites' | 'feedback' | 'ticket'>('schedule')
 let selectedDay = $state<string>('')
 let selectedTrackId = $state<string | null>(null)
 
 // Favorites state
 let favorites = $state<Set<string>>(new Set())
+
+// Ticket lookup state
+interface TicketInfo {
+	id: string
+	ticketNumber: string
+	status: string
+	attendeeFirstName: string
+	attendeeLastName: string
+	attendeeEmail: string
+	qrCode?: string
+	checkedInAt?: string
+	ticketType: { name: string; description?: string } | null
+	order: { orderNumber: string; status: string } | null
+}
+let ticketEmail = $state<string>('')
+let ticketResults = $state<TicketInfo[]>([])
+let isLoadingTickets = $state(false)
+let ticketError = $state<string | null>(null)
+let ticketLookupDone = $state(false)
 
 // Session rating dialog state
 let showSessionRatingDialog = $state(false)
@@ -249,6 +271,62 @@ async function submitEventFeedback(): Promise<void> {
 	}
 }
 
+// Ticket lookup functions
+async function lookupTickets(): Promise<void> {
+	if (!ticketEmail.trim()) return
+
+	isLoadingTickets = true
+	ticketError = null
+	ticketResults = []
+
+	try {
+		const response = await fetch('/api/tickets/lookup', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				email: ticketEmail.trim().toLowerCase(),
+				editionId: data.edition.id
+			})
+		})
+
+		const result = await response.json()
+
+		if (!response.ok || !result.success) {
+			ticketError = result.error || 'Failed to find tickets'
+			return
+		}
+
+		ticketResults = result.tickets
+		ticketLookupDone = true
+
+		// Save email for convenience
+		if (browser) {
+			localStorage.setItem(`ticket_email_${data.edition.slug}`, ticketEmail.trim().toLowerCase())
+		}
+	} catch (err) {
+		console.error('Failed to lookup tickets:', err)
+		ticketError = 'Failed to lookup tickets. Please try again.'
+	} finally {
+		isLoadingTickets = false
+	}
+}
+
+function resetTicketLookup(): void {
+	ticketResults = []
+	ticketLookupDone = false
+	ticketError = null
+}
+
+// Load saved email on init
+$effect(() => {
+	if (browser && !ticketEmail) {
+		const savedEmail = localStorage.getItem(`ticket_email_${data.edition.slug}`)
+		if (savedEmail) {
+			ticketEmail = savedEmail
+		}
+	}
+})
+
 // Helper functions
 function formatTime(time: string): string {
 	return time.slice(0, 5) // HH:MM
@@ -402,6 +480,14 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 					Feedback
 				</button>
 			{/if}
+			<button
+				type="button"
+				class="flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors {currentView === 'ticket' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+				onclick={() => (currentView = 'ticket')}
+			>
+				<Ticket class="h-4 w-4" />
+				My Ticket
+			</button>
 		</div>
 	</nav>
 
@@ -676,6 +762,145 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
 					<p class="mt-6 text-center text-sm text-muted-foreground">
 						{data.feedbackSettings.feedbackIntroText}
 					</p>
+				{/if}
+			</div>
+		{:else if currentView === 'ticket'}
+			<div class="mx-auto max-w-2xl p-4">
+				{#if !ticketLookupDone}
+					<!-- Ticket Lookup Form -->
+					<Card class="p-6">
+						<div class="space-y-4">
+							<div class="flex items-center gap-3">
+								<Ticket class="h-6 w-6 text-primary" />
+								<div>
+									<h3 class="font-semibold">Find Your Ticket</h3>
+									<p class="text-sm text-muted-foreground">
+										Enter the email used for your ticket purchase
+									</p>
+								</div>
+							</div>
+
+							<div class="space-y-2">
+								<Label for="ticket-email">Email Address</Label>
+								<div class="flex gap-2">
+									<Input
+										id="ticket-email"
+										type="email"
+										placeholder="your@email.com"
+										bind:value={ticketEmail}
+										class="flex-1"
+										onkeydown={(e) => e.key === 'Enter' && lookupTickets()}
+									/>
+									<Button onclick={lookupTickets} disabled={isLoadingTickets || !ticketEmail.trim()}>
+										{#if isLoadingTickets}
+											<Loader2 class="h-4 w-4 animate-spin" />
+										{:else}
+											<Mail class="h-4 w-4" />
+										{/if}
+									</Button>
+								</div>
+							</div>
+
+							{#if ticketError}
+								<div class="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+									<AlertCircle class="mr-2 inline h-4 w-4" />
+									{ticketError}
+								</div>
+							{/if}
+						</div>
+					</Card>
+				{:else if ticketResults.length === 0}
+					<!-- No Tickets Found -->
+					<Card class="p-12 text-center">
+						<Ticket class="mx-auto h-12 w-12 text-muted-foreground" />
+						<h3 class="mt-4 text-lg font-semibold">No tickets found</h3>
+						<p class="mt-2 text-sm text-muted-foreground">
+							No tickets were found for {ticketEmail}
+						</p>
+						<Button class="mt-4" variant="outline" onclick={resetTicketLookup}>
+							Try Another Email
+						</Button>
+					</Card>
+				{:else}
+					<!-- Ticket Results -->
+					<div class="space-y-4">
+						<div class="flex items-center justify-between">
+							<p class="text-sm text-muted-foreground">
+								{ticketResults.length} ticket{ticketResults.length > 1 ? 's' : ''} found for {ticketEmail}
+							</p>
+							<Button variant="ghost" size="sm" onclick={resetTicketLookup}>
+								Change Email
+							</Button>
+						</div>
+
+						{#each ticketResults as ticket}
+							<Card class="overflow-hidden">
+								<div class="bg-primary p-4 text-primary-foreground">
+									<div class="flex items-center justify-between">
+										<div>
+											<p class="text-xs opacity-80">Ticket #{ticket.ticketNumber}</p>
+											<p class="text-lg font-bold">
+												{ticket.attendeeFirstName} {ticket.attendeeLastName}
+											</p>
+										</div>
+										<div class="rounded-full bg-white/20 px-3 py-1 text-xs font-medium">
+											{ticket.status === 'valid' ? 'Valid' : ticket.status === 'used' ? 'Checked In' : ticket.status}
+										</div>
+									</div>
+								</div>
+
+								<div class="p-4 space-y-4">
+									{#if ticket.ticketType}
+										<div>
+											<p class="text-sm font-medium">{ticket.ticketType.name}</p>
+											{#if ticket.ticketType.description}
+												<p class="text-xs text-muted-foreground">{ticket.ticketType.description}</p>
+											{/if}
+										</div>
+									{/if}
+
+									<div class="grid grid-cols-2 gap-4 text-sm">
+										<div>
+											<p class="text-muted-foreground">Event</p>
+											<p class="font-medium">{data.edition.name}</p>
+										</div>
+										<div>
+											<p class="text-muted-foreground">Date</p>
+											<p class="font-medium">{formatDate(data.edition.startDate)}</p>
+										</div>
+										{#if data.edition.venue}
+											<div class="col-span-2">
+												<p class="text-muted-foreground">Venue</p>
+												<p class="font-medium">{data.edition.venue}</p>
+											</div>
+										{/if}
+									</div>
+
+									{#if ticket.qrCode && ticket.status === 'valid'}
+										<div class="flex flex-col items-center border-t pt-4">
+											<QrCode class="h-6 w-6 text-muted-foreground mb-2" />
+											<p class="text-xs text-muted-foreground mb-2">Show this at check-in</p>
+											<div class="bg-white p-4 rounded-lg">
+												<img
+													src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={encodeURIComponent(ticket.qrCode)}"
+													alt="Ticket QR Code"
+													class="h-48 w-48"
+												/>
+											</div>
+											<p class="mt-2 font-mono text-xs text-muted-foreground">{ticket.ticketNumber}</p>
+										</div>
+									{/if}
+
+									{#if ticket.checkedInAt}
+										<div class="rounded-md bg-green-50 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
+											<CheckCircle2 class="mr-2 inline h-4 w-4" />
+											Checked in on {new Date(ticket.checkedInAt).toLocaleString()}
+										</div>
+									{/if}
+								</div>
+							</Card>
+						{/each}
+					</div>
 				{/if}
 			</div>
 		{/if}

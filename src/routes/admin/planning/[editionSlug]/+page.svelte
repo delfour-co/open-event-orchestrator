@@ -17,6 +17,7 @@ import {
   GripVertical,
   Layers,
   Loader2,
+  MessageSquare,
   Mic,
   Pencil,
   Plus,
@@ -572,6 +573,11 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
           </Button>
         </a>
       </div>
+      <a href="/admin/planning/{data.edition.slug}/feedback" title="Feedback Settings">
+        <Button variant="ghost" size="icon">
+          <MessageSquare class="h-4 w-4" />
+        </Button>
+      </a>
       <a href="/admin/planning/{data.edition.slug}/settings" title="Planning Settings">
         <Button variant="ghost" size="icon">
           <Settings class="h-4 w-4" />
