@@ -1,6 +1,6 @@
 import type PocketBase from 'pocketbase'
 import type { EditionMetrics } from '../domain/metrics'
-import type { ReportConfig, ReportSection } from '../domain/report-config'
+import type { ReportConfig } from '../domain/report-config'
 import type { ReportData } from '../domain/report-data'
 import { dashboardCacheService } from './dashboard-cache-service'
 

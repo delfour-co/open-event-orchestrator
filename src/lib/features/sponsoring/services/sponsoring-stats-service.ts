@@ -12,69 +12,6 @@ import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { SponsorStatus } from '../domain/edition-sponsor'
 
-interface Benefit {
-  name: string
-  included: boolean
-}
-
-/**
- * Parse benefits from a package record
- */
-function parseBenefits(benefitsData: unknown): Benefit[] {
-  if (!benefitsData) return []
-  if (typeof benefitsData === 'string') {
-    try {
-      return JSON.parse(benefitsData)
-    } catch {
-      return []
-    }
-  }
-  if (Array.isArray(benefitsData)) {
-    return benefitsData as Benefit[]
-  }
-  return []
-}
-
-/**
- * Calculate target revenue from packages
- */
-function calculateTargetRevenue(packages: Array<Record<string, unknown>>): number | null {
-  let targetRevenue: number | null = null
-  let hasTarget = false
-
-  for (const pkg of packages) {
-    const maxSponsors = pkg.maxSponsors as number | undefined
-    const price = (pkg.price as number) || 0
-    if (maxSponsors && price > 0) {
-      hasTarget = true
-      targetRevenue = (targetRevenue || 0) + price * maxSponsors
-    }
-  }
-
-  return hasTarget ? targetRevenue : null
-}
-
-/**
- * Calculate revenues from confirmed sponsors
- */
-function calculateRevenues(sponsors: Array<Record<string, unknown>>): {
-  total: number
-  paid: number
-} {
-  let total = 0
-  let paid = 0
-
-  for (const sponsor of sponsors) {
-    const amount = (sponsor.amount as number) || 0
-    total += amount
-    if (sponsor.paidAt) {
-      paid += amount
-    }
-  }
-
-  return { total, paid }
-}
-
 export interface SponsorsByPackage {
   packageId: string
   packageName: string
@@ -84,7 +21,7 @@ export interface SponsorsByPackage {
   availableSlots: number | null
 }
 
-export interface SponsorStats {
+export interface SponsorStatsDetailed {
   total: number
   byStatus: Record<SponsorStatus, number>
   byPackage: SponsorsByPackage[]
@@ -122,7 +59,7 @@ export interface DeliverableSummary {
 }
 
 export interface SponsoringStats {
-  sponsors: SponsorStats
+  sponsors: SponsorStatsDetailed
   revenue: RevenueStats
   pipeline: PipelineStats
   totalPackages: number
@@ -138,7 +75,7 @@ export interface SponsoringStatsService {
   /**
    * Get sponsor statistics for an edition
    */
-  getSponsorStats(editionId: string): Promise<SponsorStats>
+  getSponsorStats(editionId: string): Promise<SponsorStatsDetailed>
 
   /**
    * Get revenue statistics for an edition
@@ -179,7 +116,7 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
       }
     },
 
-    async getSponsorStats(editionId: string): Promise<SponsorStats> {
+    async getSponsorStats(editionId: string): Promise<SponsorStatsDetailed> {
       // Fetch all edition sponsors with expanded package info
       const editionSponsors = await pb.collection('edition_sponsors').getFullList({
         filter: safeFilter`editionId = ${editionId}`,

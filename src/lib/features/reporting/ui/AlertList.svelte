@@ -3,14 +3,14 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { cn } from '$lib/utils'
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-svelte'
-import type { Alert, AlertStatus } from '../domain/alert'
+import type { Alert } from '../domain/alert'
 import {
   canAcknowledgeAlert,
   canDismissAlert,
   canResolveAlert,
   getAlertStatusLabel
 } from '../domain/alert'
-import { getAlertLevelLabel, getMetricSourceLabel } from '../domain/alert-threshold'
+import { getMetricSourceLabel } from '../domain/alert-threshold'
 
 type Props = {
   alerts: Alert[]

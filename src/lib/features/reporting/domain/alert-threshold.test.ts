@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  type AlertLevel,
-  type ComparisonOperator,
   alertLevelSchema,
   alertThresholdSchema,
   comparisonOperatorSchema,

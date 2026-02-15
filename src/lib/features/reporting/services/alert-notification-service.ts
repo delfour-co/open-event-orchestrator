@@ -1,10 +1,6 @@
 import type { EmailService } from '../../cfp/services/email-service'
 import type { Alert } from '../domain/alert'
-import {
-  getAlertLevelColor,
-  getAlertLevelLabel,
-  getMetricSourceLabel
-} from '../domain/alert-threshold'
+import { getAlertLevelLabel, getMetricSourceLabel } from '../domain/alert-threshold'
 
 export type AlertNotificationConfig = {
   appName: string

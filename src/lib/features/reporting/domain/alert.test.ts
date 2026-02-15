@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  type AlertStatus,
   alertSchema,
   alertStatusSchema,
   canAcknowledgeAlert,

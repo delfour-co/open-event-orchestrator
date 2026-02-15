@@ -47,10 +47,6 @@ const getStatusLabel = (status: 'under' | 'on_track' | 'over'): string => {
   return 'On Track'
 }
 
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-}
-
 const getTransactionStatusColor = (
   status: 'pending' | 'paid' | 'cancelled'
 ): 'default' | 'secondary' | 'destructive' => {

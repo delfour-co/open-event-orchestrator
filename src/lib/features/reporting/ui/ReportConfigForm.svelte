@@ -182,7 +182,15 @@ const isValid = $derived(
       {#if frequency === 'monthly'}
         <div class="space-y-2">
           <Label for="dayOfMonth">Day of Month</Label>
-          <Input id="dayOfMonth" type="number" bind:value={dayOfMonth} min={1} max={31} placeholder="1-31" />
+          <Input
+            id="dayOfMonth"
+            type="number"
+            value={dayOfMonth?.toString() ?? '1'}
+            oninput={(e) => (dayOfMonth = Number(e.currentTarget.value))}
+            min={1}
+            max={31}
+            placeholder="1-31"
+          />
         </div>
       {/if}
 

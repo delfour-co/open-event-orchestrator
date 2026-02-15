@@ -61,7 +61,8 @@ const createMockDependencies = () => {
   }
 
   return {
-    pb: mockPb as never,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pb: mockPb as any,
     emailService: mockEmailService,
     reportGenerator: mockReportGenerator
   }

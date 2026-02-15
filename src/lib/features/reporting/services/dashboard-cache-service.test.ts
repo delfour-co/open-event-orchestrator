@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { type EditionMetrics, createEmptyEditionMetrics } from '../domain/metrics'
+import { createEmptyEditionMetrics } from '../domain/metrics'
 import { dashboardCacheService } from './dashboard-cache-service'
 
 describe('DashboardCacheService', () => {

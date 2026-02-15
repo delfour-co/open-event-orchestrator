@@ -186,7 +186,12 @@ function handleLevelChange(e: Event) {
 
           <div class="space-y-2">
             <Label for="value">Value</Label>
-            <Input id="value" type="number" bind:value={newThreshold.thresholdValue} />
+            <Input
+              id="value"
+              type="number"
+              value={newThreshold.thresholdValue?.toString() ?? '0'}
+              oninput={(e) => (newThreshold.thresholdValue = Number(e.currentTarget.value))}
+            />
           </div>
 
           <div class="space-y-2">

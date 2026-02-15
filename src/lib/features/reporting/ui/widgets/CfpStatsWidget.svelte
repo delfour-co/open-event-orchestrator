@@ -3,7 +3,7 @@ import * as Card from '$lib/components/ui/card'
 import type { AcceptanceRateStats, ReviewStats, SubmissionStats } from '$lib/features/cfp/services'
 import { cn } from '$lib/utils'
 import { CheckCircle, Clock, FileText, Users } from 'lucide-svelte'
-import { MetricCard, TrendIndicator } from '../index'
+import { MetricCard } from '../index'
 
 type Props = {
   submissionStats: SubmissionStats | null

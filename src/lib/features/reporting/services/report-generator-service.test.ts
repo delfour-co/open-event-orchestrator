@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { EditionMetrics } from '../domain/metrics'
 import { createEmptyEditionMetrics } from '../domain/metrics'
-import type { ReportConfig } from '../domain/report-config'
+import type { ReportConfig, ReportSection } from '../domain/report-config'
 import {
   createReportGeneratorService,
   generateHtmlReport,
@@ -169,7 +169,7 @@ describe('generateHtmlReport', () => {
   })
 
   it('includes all requested sections', () => {
-    const config = { ...createMockConfig(), sections: ['cfp', 'billing', 'planning'] as const }
+    const config = { ...createMockConfig(), sections: ['cfp', 'billing', 'planning'] as ReportSection[] }
     const data = {
       editionId: 'ed-123',
       editionName: 'Test Edition',
@@ -251,7 +251,7 @@ describe('generateTextReport', () => {
   })
 
   it('formats currency correctly', () => {
-    const config = { ...createMockConfig(), sections: ['billing'] as const }
+    const config = { ...createMockConfig(), sections: ['billing'] as ReportSection[] }
     const data = {
       editionId: 'ed-123',
       editionName: 'Test Edition',

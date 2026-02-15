@@ -15,7 +15,7 @@ export {
   createSponsoringStatsService,
   type SponsoringStatsService,
   type SponsoringStats,
-  type SponsorStats,
+  type SponsorStatsDetailed,
   type RevenueStats,
   type PipelineStats,
   type SponsorsByPackage,
