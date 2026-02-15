@@ -13,9 +13,11 @@ import {
   CalendarDays,
   Eye,
   EyeOff,
+  ExternalLink,
   MapPin,
   Plus,
   Settings,
+  Smartphone,
   Users,
   X
 } from 'lucide-svelte'
@@ -452,6 +454,21 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 </div>
               {/if}
             </div>
+            {#if edition.status === 'published'}
+              <div class="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
+                <Smartphone class="h-4 w-4 text-muted-foreground" />
+                <code class="flex-1 text-xs">/app/{edition.slug}</code>
+                <a
+                  href="/app/{edition.slug}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-primary hover:text-primary/80"
+                  title="Open attendee app"
+                >
+                  <ExternalLink class="h-4 w-4" />
+                </a>
+              </div>
+            {/if}
           </Card.Content>
         </Card.Root>
       {/each}
