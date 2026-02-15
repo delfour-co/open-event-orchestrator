@@ -4,7 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { Download, FileText, Upload } from 'lucide-svelte'
+import { ArrowLeft, Download, FileText, Upload } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -102,7 +102,9 @@ function downloadCsv() {
 <div class="space-y-6">
 	<div class="flex items-center gap-4">
 		<a href={basePath}>
-			<Button variant="ghost" size="sm">Back to Contacts</Button>
+			<Button variant="ghost" size="icon">
+				<ArrowLeft class="h-5 w-5" />
+			</Button>
 		</a>
 		<div>
 			<h2 class="text-3xl font-bold tracking-tight">Import / Export</h2>

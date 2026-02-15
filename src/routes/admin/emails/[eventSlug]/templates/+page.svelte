@@ -4,7 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { Code, Edit, Eye, FileText, Plus, Trash2 } from 'lucide-svelte'
+import { ArrowLeft, Code, Edit, Eye, FileText, Plus, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -117,7 +117,9 @@ $effect(() => {
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
 			<a href={basePath}>
-				<Button variant="ghost" size="sm">Back to Campaigns</Button>
+				<Button variant="ghost" size="icon">
+					<ArrowLeft class="h-5 w-5" />
+				</Button>
 			</a>
 			<div>
 				<h2 class="text-3xl font-bold tracking-tight">Email Templates</h2>

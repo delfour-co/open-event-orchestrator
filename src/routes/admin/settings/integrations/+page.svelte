@@ -90,18 +90,16 @@ function getConfigPath(integration: IntegrationEntry): string | null {
 <div class="space-y-6">
 <div class="flex items-center gap-4">
     <a href="/admin/settings">
-      <Button variant="ghost" size="sm">
-        <ArrowLeft class="mr-2 h-4 w-4" />
-        Back to Settings
+      <Button variant="ghost" size="icon">
+        <ArrowLeft class="h-5 w-5" />
       </Button>
     </a>
-  </div>
-
-  <div>
-    <h2 class="text-3xl font-bold tracking-tight">Integrations</h2>
-    <p class="text-muted-foreground">
-      Connect and manage third-party services for your event platform.
-    </p>
+    <div>
+      <h2 class="text-3xl font-bold tracking-tight">Integrations</h2>
+      <p class="text-muted-foreground">
+        Connect and manage third-party services for your event platform.
+      </p>
+    </div>
   </div>
 
   <!-- Summary stats -->

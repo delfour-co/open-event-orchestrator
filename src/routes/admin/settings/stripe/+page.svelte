@@ -39,21 +39,19 @@ let testing = $state(false)
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex items-center gap-4">
-    <a href="/admin/settings/integrations">
-      <Button variant="ghost" size="sm">
-        <ArrowLeft class="mr-2 h-4 w-4" />
-        Back to Integrations
-      </Button>
-    </a>
-  </div>
-
   <div class="flex items-center justify-between">
-    <div>
-      <h2 class="text-3xl font-bold tracking-tight">Stripe Configuration</h2>
-      <p class="text-muted-foreground">
-        Configure Stripe for payment processing and ticket sales.
-      </p>
+    <div class="flex items-center gap-4">
+      <a href="/admin/settings/integrations">
+        <Button variant="ghost" size="icon">
+          <ArrowLeft class="h-5 w-5" />
+        </Button>
+      </a>
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight">Stripe Configuration</h2>
+        <p class="text-muted-foreground">
+          Configure Stripe for payment processing and ticket sales.
+        </p>
+      </div>
     </div>
     <div class="flex items-center gap-2">
       {#if data.stripe.isConfigured}

@@ -6,7 +6,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import type { SegmentCriteria } from '$lib/features/crm/domain/segment'
 import { SegmentCriteriaBuilder } from '$lib/features/crm/ui'
-import { Edit, Filter, Plus, RefreshCw, Trash2 } from 'lucide-svelte'
+import { ArrowLeft, Edit, Filter, Plus, RefreshCw, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -98,7 +98,9 @@ $effect(() => {
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
 			<a href={basePath}>
-				<Button variant="ghost" size="sm">Back to Contacts</Button>
+				<Button variant="ghost" size="icon">
+					<ArrowLeft class="h-5 w-5" />
+				</Button>
 			</a>
 			<div>
 				<h2 class="text-3xl font-bold tracking-tight">Segments</h2>
