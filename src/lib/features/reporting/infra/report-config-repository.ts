@@ -3,6 +3,7 @@ import type PocketBase from 'pocketbase'
 import type {
   CreateReportConfig,
   DayOfWeek,
+  RecipientRole,
   ReportConfig,
   ReportFrequency,
   ReportRecipient,
@@ -69,7 +70,8 @@ export const createReportConfigRepository = (pb: PocketBase) => ({
 
     const record = await pb.collection(COLLECTION).create({
       ...data,
-      recipients: JSON.stringify(data.recipients),
+      recipientRoles: JSON.stringify(data.recipientRoles || ['admin', 'organizer']),
+      recipients: JSON.stringify(data.recipients || []),
       sections: JSON.stringify(data.sections),
       nextScheduledAt: nextScheduledAt.toISOString()
     })
@@ -80,6 +82,9 @@ export const createReportConfigRepository = (pb: PocketBase) => ({
   async update(id: string, data: UpdateReportConfig): Promise<ReportConfig> {
     const updateData: Record<string, unknown> = { ...data }
 
+    if (data.recipientRoles) {
+      updateData.recipientRoles = JSON.stringify(data.recipientRoles)
+    }
     if (data.recipients) {
       updateData.recipients = JSON.stringify(data.recipients)
     }
@@ -149,14 +154,24 @@ export const createReportConfigRepository = (pb: PocketBase) => ({
 })
 
 const mapRecordToConfig = (record: Record<string, unknown>): ReportConfig => {
+  let recipientRoles: RecipientRole[] = ['admin', 'organizer']
   let recipients: ReportRecipient[] = []
   let sections: ReportSection[] = []
+
+  try {
+    recipientRoles =
+      typeof record.recipientRoles === 'string'
+        ? JSON.parse(record.recipientRoles)
+        : (record.recipientRoles as RecipientRole[]) || ['admin', 'organizer']
+  } catch {
+    recipientRoles = ['admin', 'organizer']
+  }
 
   try {
     recipients =
       typeof record.recipients === 'string'
         ? JSON.parse(record.recipients)
-        : (record.recipients as ReportRecipient[])
+        : (record.recipients as ReportRecipient[]) || []
   } catch {
     recipients = []
   }
@@ -180,6 +195,7 @@ const mapRecordToConfig = (record: Record<string, unknown>): ReportConfig => {
     dayOfMonth: record.dayOfMonth as number | undefined,
     timeOfDay: record.timeOfDay as string,
     timezone: (record.timezone as string) || 'UTC',
+    recipientRoles,
     recipients,
     sections,
     lastSentAt: record.lastSentAt ? new Date(record.lastSentAt as string) : undefined,

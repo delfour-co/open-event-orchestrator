@@ -50,6 +50,7 @@ const createMockConfig = (): ReportConfig => ({
   dayOfWeek: 'monday',
   timeOfDay: '09:00',
   timezone: 'Europe/Paris',
+  recipientRoles: ['admin', 'organizer'],
   recipients: [{ email: 'test@example.com', name: 'Test User' }],
   sections: ['cfp', 'billing'],
   createdAt: new Date(),

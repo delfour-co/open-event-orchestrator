@@ -11,6 +11,7 @@ const createMockConfig = (): ReportConfig => ({
   dayOfWeek: 'monday',
   timeOfDay: '09:00',
   timezone: 'Europe/Paris',
+  recipientRoles: ['admin', 'organizer'],
   recipients: [
     { email: 'test1@example.com', name: 'Test User 1' },
     { email: 'test2@example.com', name: 'Test User 2' }

@@ -2,12 +2,6 @@ import { createReportConfigRepository } from '$lib/features/reporting/infra/repo
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-type SuggestedRecipient = {
-  email: string
-  name: string
-  role: string
-}
-
 export const load: PageServerLoad = async ({ params, locals }) => {
   const { editionSlug } = params
 
@@ -26,38 +20,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
   let eventName = 'Event'
   let eventSlug = ''
-  let organizationId = ''
   try {
     const event = await locals.pb.collection('events').getOne(eventId)
     eventName = event.name as string
     eventSlug = event.slug as string
-    organizationId = event.organizationId as string
   } catch {
     // Event might not exist, continue with defaults
-  }
-
-  // Fetch organization members (admins and organizers) for suggested recipients
-  const suggestedRecipients: SuggestedRecipient[] = []
-  if (organizationId) {
-    try {
-      const members = await locals.pb.collection('organization_members').getFullList({
-        filter: `organizationId = "${organizationId}" && (role = "admin" || role = "organizer" || role = "owner")`,
-        expand: 'userId'
-      })
-
-      for (const member of members) {
-        const user = member.expand?.userId as Record<string, unknown> | undefined
-        if (user?.email) {
-          suggestedRecipients.push({
-            email: user.email as string,
-            name: (user.name as string) || '',
-            role: member.role as string
-          })
-        }
-      }
-    } catch {
-      // Collection might not exist or no members
-    }
   }
 
   const reportConfigRepo = createReportConfigRepository(locals.pb)
@@ -74,8 +42,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       name: edition.name as string,
       slug: edition.slug as string
     },
-    reportConfigs,
-    suggestedRecipients
+    reportConfigs
   }
 }
 
@@ -97,7 +64,8 @@ export const actions: Actions = {
         dayOfMonth: data.dayOfMonth,
         timeOfDay: data.timeOfDay,
         timezone: data.timezone || 'UTC',
-        recipients: data.recipients,
+        recipientRoles: data.recipientRoles || ['admin', 'organizer'],
+        recipients: data.recipients || [],
         sections: data.sections
       })
 
@@ -129,7 +97,8 @@ export const actions: Actions = {
         dayOfMonth: data.dayOfMonth,
         timeOfDay: data.timeOfDay,
         timezone: data.timezone,
-        recipients: data.recipients,
+        recipientRoles: data.recipientRoles,
+        recipients: data.recipients || [],
         sections: data.sections
       })
 

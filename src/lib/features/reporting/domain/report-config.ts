@@ -21,13 +21,25 @@ export const dayOfWeekSchema = z.enum([
 export type DayOfWeek = z.infer<typeof dayOfWeekSchema>
 
 /**
- * Report recipient configuration
+ * Report recipient configuration (legacy - individual emails)
  */
 export const reportRecipientSchema = z.object({
   email: z.string().email(),
   name: z.string().optional()
 })
 export type ReportRecipient = z.infer<typeof reportRecipientSchema>
+
+/**
+ * Recipient roles that can receive reports
+ */
+export const recipientRoleSchema = z.enum(['owner', 'admin', 'organizer'])
+export type RecipientRole = z.infer<typeof recipientRoleSchema>
+
+export const RECIPIENT_ROLE_LABELS: Record<RecipientRole, string> = {
+  owner: 'Owner',
+  admin: 'Admin',
+  organizer: 'Organizer'
+}
 
 /**
  * Report sections that can be included
@@ -55,7 +67,8 @@ export const reportConfigSchema = z.object({
   dayOfMonth: z.number().int().min(1).max(31).optional(),
   timeOfDay: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
   timezone: z.string().default('UTC'),
-  recipients: z.array(reportRecipientSchema).min(1),
+  recipientRoles: z.array(recipientRoleSchema).default(['admin', 'organizer']),
+  recipients: z.array(reportRecipientSchema).default([]),
   sections: z.array(reportSectionSchema).min(1),
   lastSentAt: z.date().optional(),
   nextScheduledAt: z.date().optional(),

@@ -16,11 +16,11 @@ import {
   Calendar,
   Clock,
   FileText,
-  Mail,
   Pencil,
   Play,
   Plus,
-  Trash2
+  Trash2,
+  Users
 } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -176,6 +176,15 @@ function getSectionLabels(sections: string[]): string {
     sponsoring: 'Sponsoring'
   }
   return sections.map((s) => labels[s] || s).join(', ')
+}
+
+function getRoleLabels(roles: string[]): string {
+  const labels: Record<string, string> = {
+    owner: 'Owner',
+    admin: 'Admin',
+    organizer: 'Organizer'
+  }
+  return roles.map((r) => labels[r] || r).join(', ')
 }
 </script>
 
@@ -350,12 +359,8 @@ function getSectionLabels(sections: string[]): string {
                     <span>{getScheduleDescription(config)}</span>
                   </div>
                   <div class="flex items-center gap-1.5">
-                    <Mail class="h-4 w-4" />
-                    <span
-                      >{config.recipients.length} recipient{config.recipients.length !== 1
-                        ? 's'
-                        : ''}</span
-                    >
+                    <Users class="h-4 w-4" />
+                    <span>{getRoleLabels(config.recipientRoles || [])}</span>
                   </div>
                   <div class="flex items-center gap-1.5">
                     <FileText class="h-4 w-4" />
@@ -398,16 +403,12 @@ function getSectionLabels(sections: string[]): string {
 
 <!-- Create Dialog -->
 {#if showCreateDialog}
-  <Dialog.Content class="max-h-[90vh] max-w-2xl overflow-y-auto" onClose={closeCreateDialog}>
+  <Dialog.Content class="max-w-lg" onClose={closeCreateDialog}>
     <Dialog.Header>
-      <Dialog.Title>Create Report Configuration</Dialog.Title>
-      <Dialog.Description>
-        Configure an automated report to be sent on a schedule.
-      </Dialog.Description>
+      <Dialog.Title>New Report</Dialog.Title>
     </Dialog.Header>
     <ReportConfigForm
       initialData={{ editionId: data.edition?.id ?? '' }}
-      suggestedRecipients={data.suggestedRecipients}
       onSubmit={submitCreate}
       onCancel={closeCreateDialog}
       isLoading={isSubmitting}
@@ -417,10 +418,9 @@ function getSectionLabels(sections: string[]): string {
 
 <!-- Edit Dialog -->
 {#if showEditDialog && selectedConfig}
-  <Dialog.Content class="max-h-[90vh] max-w-2xl overflow-y-auto" onClose={closeEditDialog}>
+  <Dialog.Content class="max-w-lg" onClose={closeEditDialog}>
     <Dialog.Header>
-      <Dialog.Title>Edit Report Configuration</Dialog.Title>
-      <Dialog.Description>Update the report configuration settings.</Dialog.Description>
+      <Dialog.Title>Edit Report</Dialog.Title>
     </Dialog.Header>
     <ReportConfigForm
       initialData={{
@@ -432,10 +432,9 @@ function getSectionLabels(sections: string[]): string {
         dayOfMonth: selectedConfig.dayOfMonth,
         timeOfDay: selectedConfig.timeOfDay,
         timezone: selectedConfig.timezone,
-        recipients: selectedConfig.recipients,
+        recipientRoles: selectedConfig.recipientRoles,
         sections: selectedConfig.sections
       }}
-      suggestedRecipients={data.suggestedRecipients}
       onSubmit={submitUpdate}
       onCancel={closeEditDialog}
       isLoading={isSubmitting}

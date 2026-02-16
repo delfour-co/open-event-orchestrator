@@ -18,6 +18,7 @@ describe('reportConfigSchema', () => {
     dayOfWeek: 'monday',
     timeOfDay: '09:00',
     timezone: 'Europe/Paris',
+    recipientRoles: ['admin', 'organizer'],
     recipients: [{ email: 'test@example.com', name: 'Test User' }],
     sections: ['cfp', 'billing'],
     createdAt: new Date(),
@@ -38,13 +39,14 @@ describe('reportConfigSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('rejects empty recipients', () => {
-    const invalid = {
+  it('allows empty recipients when using role-based recipients', () => {
+    const withRoles = {
       ...validConfig,
+      recipientRoles: ['admin', 'organizer'],
       recipients: []
     }
-    const result = reportConfigSchema.safeParse(invalid)
-    expect(result.success).toBe(false)
+    const result = reportConfigSchema.safeParse(withRoles)
+    expect(result.success).toBe(true)
   })
 
   it('rejects empty sections', () => {
