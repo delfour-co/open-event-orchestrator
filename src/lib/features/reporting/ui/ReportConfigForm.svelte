@@ -1,10 +1,11 @@
 <script lang="ts">
+import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import { Checkbox } from '$lib/components/ui/checkbox'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Select } from '$lib/components/ui/select'
-import { Clock, Mail, Plus, Trash2 } from 'lucide-svelte'
+import { Clock, Mail, Plus, Trash2, UserPlus } from 'lucide-svelte'
 import type {
   CreateReportConfig,
   DayOfWeek,
@@ -13,14 +14,27 @@ import type {
   ReportSection
 } from '../domain/report-config'
 
+type SuggestedRecipient = {
+  email: string
+  name: string
+  role: string
+}
+
 interface Props {
   initialData?: Partial<CreateReportConfig>
+  suggestedRecipients?: SuggestedRecipient[]
   onSubmit: (data: CreateReportConfig) => void
   onCancel: () => void
   isLoading?: boolean
 }
 
-const { initialData, onSubmit, onCancel, isLoading = false }: Props = $props()
+const {
+  initialData,
+  suggestedRecipients = [],
+  onSubmit,
+  onCancel,
+  isLoading = false
+}: Props = $props()
 
 // Extract initial values to avoid state_referenced_locally warning
 const initName = initialData?.name ?? ''
@@ -90,6 +104,35 @@ function updateRecipientEmail(index: number, email: string) {
 
 function updateRecipientName(index: number, recipientName: string) {
   recipients = recipients.map((r, i) => (i === index ? { ...r, name: recipientName } : r))
+}
+
+function addSuggestedRecipient(suggested: SuggestedRecipient) {
+  // Check if already added
+  if (recipients.some((r) => r.email === suggested.email)) {
+    return
+  }
+  // Replace empty recipient or add new one
+  const emptyIndex = recipients.findIndex((r) => r.email.trim() === '')
+  if (emptyIndex !== -1) {
+    recipients = recipients.map((r, i) =>
+      i === emptyIndex ? { email: suggested.email, name: suggested.name } : r
+    )
+  } else {
+    recipients = [...recipients, { email: suggested.email, name: suggested.name }]
+  }
+}
+
+function isRecipientAdded(email: string): boolean {
+  return recipients.some((r) => r.email === email)
+}
+
+function getRoleLabel(role: string): string {
+  const labels: Record<string, string> = {
+    owner: 'Owner',
+    admin: 'Admin',
+    organizer: 'Organizer'
+  }
+  return labels[role] || role
 }
 
 function toggleSection(section: ReportSection) {
@@ -229,6 +272,33 @@ const isValid = $derived(
       <Mail class="h-4 w-4" />
       Recipients
     </h3>
+
+    {#if suggestedRecipients.length > 0}
+      <div class="space-y-2">
+        <p class="text-sm text-muted-foreground">
+          <UserPlus class="mr-1 inline-block h-4 w-4" />
+          Organization team members:
+        </p>
+        <div class="flex flex-wrap gap-2">
+          {#each suggestedRecipients as suggested}
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+              onclick={() => addSuggestedRecipient(suggested)}
+              disabled={isRecipientAdded(suggested.email)}
+            >
+              <span class="truncate max-w-[150px]">{suggested.name || suggested.email}</span>
+              <Badge variant="secondary" class="text-xs">{getRoleLabel(suggested.role)}</Badge>
+              {#if isRecipientAdded(suggested.email)}
+                <span class="text-xs text-green-600">✓</span>
+              {:else}
+                <Plus class="h-3 w-3" />
+              {/if}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
     <div class="space-y-3">
       {#each recipients as recipient, index}

@@ -407,6 +407,7 @@ function getSectionLabels(sections: string[]): string {
     </Dialog.Header>
     <ReportConfigForm
       initialData={{ editionId: data.edition?.id ?? '' }}
+      suggestedRecipients={data.suggestedRecipients}
       onSubmit={submitCreate}
       onCancel={closeCreateDialog}
       isLoading={isSubmitting}
@@ -434,6 +435,7 @@ function getSectionLabels(sections: string[]): string {
         recipients: selectedConfig.recipients,
         sections: selectedConfig.sections
       }}
+      suggestedRecipients={data.suggestedRecipients}
       onSubmit={submitUpdate}
       onCancel={closeEditDialog}
       isLoading={isSubmitting}
