@@ -1,4 +1,8 @@
+import { createSmtpEmailService } from '$lib/features/cfp/services'
 import { createReportConfigRepository } from '$lib/features/reporting/infra/report-config-repository'
+import { createReportGeneratorService } from '$lib/features/reporting/services/report-generator-service'
+import { createReportSchedulerService } from '$lib/features/reporting/services/report-scheduler-service'
+import { getSmtpSettings } from '$lib/server/app-settings'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -160,16 +164,47 @@ export const actions: Actions = {
     }
 
     try {
-      const reportConfigRepo = createReportConfigRepository(locals.pb)
-      const config = await reportConfigRepo.findById(id)
-
-      if (!config) {
-        return fail(404, { error: 'Report configuration not found' })
+      // Get SMTP settings
+      const smtpSettings = await getSmtpSettings(locals.pb)
+      if (!smtpSettings.smtpEnabled) {
+        return fail(400, { error: 'SMTP is not configured. Please configure SMTP settings first.' })
       }
 
-      // For now, we return success - the actual email sending would be handled
-      // by the report scheduler service with proper email service dependency
-      return { success: true, action: 'test', message: `Test report would be sent to ${testEmail}` }
+      // Create email service
+      const emailService = createSmtpEmailService({
+        host: smtpSettings.smtpHost,
+        port: smtpSettings.smtpPort,
+        user: smtpSettings.smtpUser || undefined,
+        pass: smtpSettings.smtpPass || undefined,
+        from: smtpSettings.smtpFrom
+      })
+
+      // Create report generator and scheduler
+      const reportGenerator = createReportGeneratorService({
+        pb: locals.pb,
+        fetchMetrics: async (editionId: string) => {
+          // Import dashboard metrics service dynamically
+          const { createDashboardMetricsService } = await import(
+            '$lib/features/reporting/services/dashboard-metrics-service'
+          )
+          const metricsService = createDashboardMetricsService(locals.pb)
+          return metricsService.getEditionMetrics(editionId)
+        }
+      })
+
+      const scheduler = createReportSchedulerService({
+        pb: locals.pb,
+        emailService,
+        reportGenerator
+      })
+
+      // Send test report
+      const result = await scheduler.sendTestReport(id, testEmail)
+
+      if (result.success) {
+        return { success: true, action: 'test', message: `Test report sent to ${testEmail}` }
+      }
+      return fail(500, { error: result.error || 'Failed to send test report' })
     } catch (err) {
       console.error('Failed to send test report:', err)
       return fail(500, { error: 'Failed to send test report' })
