@@ -46,22 +46,26 @@ async function getEditionInfo(pb: PocketBase, editionSlug: string): Promise<Edit
 
   const record = editions.items[0]
   let eventName = record.name as string
+  let organizationId = ''
 
   try {
     if (record.eventId) {
       const event = await pb.collection('events').getOne(record.eventId as string)
       eventName = event.name as string
+      organizationId = event.organizationId as string
     }
   } catch {
     // Use edition name as fallback
   }
+
+  if (!organizationId) return null
 
   return {
     id: record.id as string,
     name: record.name as string,
     slug: record.slug as string,
     eventName,
-    organizationId: record.organizationId as string
+    organizationId
   }
 }
 
