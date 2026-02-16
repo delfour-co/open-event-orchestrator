@@ -12,7 +12,18 @@ import {
   getStatusBadgeVariant,
   getStatusLabel
 } from '$lib/features/sponsoring/domain'
-import { Check, CheckCircle2, Loader2, Trash2, Upload, X } from 'lucide-svelte'
+import {
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  FileImage,
+  Gift,
+  Loader2,
+  MessageSquare,
+  Trash2,
+  Upload,
+  X
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -312,7 +323,17 @@ const excludedBenefits = $derived(
 					{#if includedBenefits.length > 0 || excludedBenefits.length > 0}
 						<Card.Root>
 							<Card.Header>
-								<Card.Title>Your Benefits</Card.Title>
+								<div class="flex items-center justify-between">
+									<Card.Title>Your Benefits</Card.Title>
+									<a
+										href="/sponsor/{data.edition.slug}/portal/benefits?token={data.token}"
+										class="text-sm text-primary hover:underline inline-flex items-center gap-1"
+									>
+										<Gift class="h-4 w-4" />
+										Track Delivery
+										<ArrowRight class="h-3 w-3" />
+									</a>
+								</div>
 							</Card.Header>
 							<Card.Content>
 								<ul class="space-y-2">
@@ -334,6 +355,54 @@ const excludedBenefits = $derived(
 					{/if}
 				{/if}
 
+				<!-- Assets / Documents -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center justify-between">
+							<Card.Title class="flex items-center gap-2">
+								<FileImage class="h-5 w-5" />
+								My Documents
+							</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content>
+						<p class="text-sm text-muted-foreground mb-4">
+							Upload your logos, visuals, and documents to share with the event organizers.
+						</p>
+						<a
+							href="/sponsor/{data.edition.slug}/portal/assets?token={data.token}"
+							class="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+						>
+							Manage Documents
+							<ArrowRight class="h-4 w-4" />
+						</a>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Messages -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center justify-between">
+							<Card.Title class="flex items-center gap-2">
+								<MessageSquare class="h-5 w-5" />
+								Messages
+							</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content>
+						<p class="text-sm text-muted-foreground mb-4">
+							Send messages to the event team and receive updates about your sponsorship.
+						</p>
+						<a
+							href="/sponsor/{data.edition.slug}/portal/messages?token={data.token}"
+							class="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+						>
+							Open Messages
+							<ArrowRight class="h-4 w-4" />
+						</a>
+					</Card.Content>
+				</Card.Root>
+
 				<!-- Help & Support -->
 				<Card.Root>
 					<Card.Header>
@@ -342,10 +411,10 @@ const excludedBenefits = $derived(
 					<Card.Content>
 						<p class="text-sm text-muted-foreground mb-4">
 							If you have any questions about your sponsorship or need assistance,
-							please contact the event organizers.
+							send us a message through the portal.
 						</p>
 						<a
-							href="mailto:sponsors@example.com"
+							href="/sponsor/{data.edition.slug}/portal/messages?token={data.token}"
 							class="text-sm text-primary hover:underline"
 						>
 							Contact Event Team

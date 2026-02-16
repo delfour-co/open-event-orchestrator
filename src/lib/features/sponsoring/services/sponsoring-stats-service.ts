@@ -11,6 +11,7 @@
 import { filterAnd, safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import type { SponsorStatus } from '../domain/edition-sponsor'
+import { createSponsorDeliverableRepository } from '../infra/sponsor-deliverable-repository'
 
 export interface SponsorsByPackage {
   packageId: string
@@ -26,7 +27,7 @@ export interface SponsorStatsDetailed {
   byStatus: Record<SponsorStatus, number>
   byPackage: SponsorsByPackage[]
   confirmed: number
-  active: number // prospect + contacted + negotiating + confirmed
+  active: number
 }
 
 export interface RevenueStats {
@@ -45,7 +46,7 @@ export interface PipelineStats {
   confirmed: number
   declined: number
   cancelled: number
-  conversionRate: number // confirmed / (total - cancelled)
+  conversionRate: number
   averageDealSize: number
 }
 
@@ -67,30 +68,54 @@ export interface SponsoringStats {
 }
 
 export interface SponsoringStatsService {
-  /**
-   * Get comprehensive sponsoring statistics for an edition
-   */
   getStats(editionId: string): Promise<SponsoringStats>
-
-  /**
-   * Get sponsor statistics for an edition
-   */
   getSponsorStats(editionId: string): Promise<SponsorStatsDetailed>
-
-  /**
-   * Get revenue statistics for an edition
-   */
   getRevenueStats(editionId: string): Promise<RevenueStats>
-
-  /**
-   * Get pipeline statistics for an edition
-   */
   getPipelineStats(editionId: string): Promise<PipelineStats>
-
-  /**
-   * Get pending deliverables for confirmed sponsors
-   */
   getPendingDeliverables(editionId: string): Promise<DeliverableSummary[]>
+}
+
+interface SponsorAmounts {
+  totalRevenue: number
+  paidRevenue: number
+}
+
+const calculateSponsorAmounts = (
+  confirmedSponsors: Array<Record<string, unknown>>
+): SponsorAmounts => {
+  let totalRevenue = 0
+  let paidRevenue = 0
+
+  for (const sponsor of confirmedSponsors) {
+    const amount = (sponsor.amount as number) || 0
+    totalRevenue += amount
+    if (sponsor.paidAt) {
+      paidRevenue += amount
+    }
+  }
+
+  return { totalRevenue, paidRevenue }
+}
+
+const calculateTargetRevenue = (packages: Array<Record<string, unknown>>): number | null => {
+  let targetRevenue = 0
+  let hasTarget = false
+
+  for (const pkg of packages) {
+    const maxSponsors = pkg.maxSponsors as number | undefined
+    const price = pkg.price as number
+    if (maxSponsors && price > 0) {
+      hasTarget = true
+      targetRevenue += price * maxSponsors
+    }
+  }
+
+  return hasTarget ? targetRevenue : null
+}
+
+const calculateProgressPercent = (totalRevenue: number, targetRevenue: number | null): number => {
+  if (targetRevenue === null || targetRevenue <= 0) return 0
+  return Math.round((totalRevenue / targetRevenue) * 100 * 100) / 100
 }
 
 export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsService => {
@@ -117,20 +142,17 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
     },
 
     async getSponsorStats(editionId: string): Promise<SponsorStatsDetailed> {
-      // Fetch all edition sponsors with expanded package info
       const editionSponsors = await pb.collection('edition_sponsors').getFullList({
         filter: safeFilter`editionId = ${editionId}`,
         expand: 'packageId',
         requestKey: null
       })
 
-      // Fetch all packages for the edition
       const packages = await pb.collection('sponsor_packages').getFullList({
         filter: safeFilter`editionId = ${editionId}`,
         sort: 'tier'
       })
 
-      // Initialize status counts
       const byStatus: Record<SponsorStatus, number> = {
         prospect: 0,
         contacted: 0,
@@ -140,7 +162,6 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
         cancelled: 0
       }
 
-      // Count by package
       const packageCounts = new Map<string, number>()
 
       for (const es of editionSponsors) {
@@ -153,7 +174,6 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
         }
       }
 
-      // Build package statistics
       const byPackage: SponsorsByPackage[] = packages.map((pkg) => {
         const count = packageCounts.get(pkg.id as string) || 0
         const maxSponsors = (pkg.maxSponsors as number) || null
@@ -182,55 +202,23 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
     },
 
     async getRevenueStats(editionId: string): Promise<RevenueStats> {
-      // Fetch confirmed sponsors with their amounts
       const confirmedSponsors = await pb.collection('edition_sponsors').getFullList({
         filter: filterAnd(safeFilter`editionId = ${editionId}`, 'status = "confirmed"'),
         fields: 'id,amount,paidAt',
         requestKey: null
       })
 
-      // Fetch packages to determine currency (use first package's currency)
       const packages = await pb.collection('sponsor_packages').getFullList({
         filter: safeFilter`editionId = ${editionId}`,
-        fields: 'id,currency,price',
+        fields: 'id,currency,price,maxSponsors',
         sort: 'tier'
       })
 
       const currency = packages.length > 0 ? (packages[0].currency as string) || 'EUR' : 'EUR'
-
-      // Calculate revenues
-      let totalRevenue = 0
-      let paidRevenue = 0
-
-      for (const sponsor of confirmedSponsors) {
-        const amount = (sponsor.amount as number) || 0
-        totalRevenue += amount
-        if (sponsor.paidAt) {
-          paidRevenue += amount
-        }
-      }
-
+      const { totalRevenue, paidRevenue } = calculateSponsorAmounts(confirmedSponsors)
       const pendingRevenue = totalRevenue - paidRevenue
-
-      // Calculate target revenue (sum of all package prices * max sponsors if set)
-      let targetRevenue: number | null = null
-      let hasTarget = false
-
-      for (const pkg of packages) {
-        if (pkg.maxSponsors && (pkg.price as number) > 0) {
-          hasTarget = true
-          targetRevenue = (targetRevenue || 0) + (pkg.price as number) * (pkg.maxSponsors as number)
-        }
-      }
-
-      if (!hasTarget) {
-        targetRevenue = null
-      }
-
-      const progressPercent =
-        targetRevenue !== null && targetRevenue > 0
-          ? Math.round((totalRevenue / targetRevenue) * 100 * 100) / 100
-          : 0
+      const targetRevenue = calculateTargetRevenue(packages)
+      const progressPercent = calculateProgressPercent(totalRevenue, targetRevenue)
 
       return {
         totalRevenue,
@@ -269,12 +257,10 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
         }
       }
 
-      // Conversion rate: confirmed / (total excluding cancelled)
       const eligibleTotal = editionSponsors.length - counts.cancelled
       const conversionRate =
         eligibleTotal > 0 ? Math.round((counts.confirmed / eligibleTotal) * 100 * 100) / 100 : 0
 
-      // Average deal size
       const averageDealSize =
         counts.confirmed > 0 ? Math.round(totalConfirmedAmount / counts.confirmed) : 0
 
@@ -291,54 +277,55 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
     },
 
     async getPendingDeliverables(editionId: string): Promise<DeliverableSummary[]> {
-      // Fetch confirmed sponsors with package and sponsor info
-      const confirmedSponsors = await pb.collection('edition_sponsors').getFullList({
-        filter: filterAnd(safeFilter`editionId = ${editionId}`, 'status = "confirmed"'),
-        expand: 'sponsorId,packageId',
-        requestKey: null
-      })
+      const deliverableRepo = createSponsorDeliverableRepository(pb)
+      const pendingDeliverables = await deliverableRepo.findPendingByEdition(editionId)
 
-      const deliverables: DeliverableSummary[] = []
+      const bySponsor = new Map<
+        string,
+        {
+          sponsorId: string
+          sponsorName: string
+          packageName: string
+          pending: string[]
+          total: number
+          completed: number
+        }
+      >()
 
-      for (const es of confirmedSponsors) {
-        const expand = es.expand as Record<string, unknown> | undefined
-        const sponsorRecord = expand?.sponsorId as Record<string, unknown> | undefined
-        const packageRecord = expand?.packageId as Record<string, unknown> | undefined
-
-        if (!packageRecord) continue
-
-        // Parse benefits from package
-        let benefits: Array<{ name: string; included: boolean }> = []
-        if (packageRecord.benefits) {
-          if (typeof packageRecord.benefits === 'string') {
-            try {
-              benefits = JSON.parse(packageRecord.benefits)
-            } catch {
-              benefits = []
-            }
-          } else if (Array.isArray(packageRecord.benefits)) {
-            benefits = packageRecord.benefits as Array<{ name: string; included: boolean }>
-          }
+      for (const d of pendingDeliverables) {
+        const esId = d.editionSponsorId
+        if (!bySponsor.has(esId)) {
+          bySponsor.set(esId, {
+            sponsorId: d.editionSponsor?.sponsorId || '',
+            sponsorName: d.editionSponsor?.sponsor?.name || 'Unknown Sponsor',
+            packageName: d.editionSponsor?.package?.name || 'Unknown Package',
+            pending: [],
+            total: 0,
+            completed: 0
+          })
         }
 
-        // For now, we consider all included benefits as pending
-        // In a full implementation, there would be a deliverables tracking system
-        const includedBenefits = benefits.filter((b) => b.included)
-        const pendingBenefits = includedBenefits.map((b) => b.name)
-
-        if (pendingBenefits.length > 0) {
-          deliverables.push({
-            sponsorId: es.sponsorId as string,
-            sponsorName: (sponsorRecord?.name as string) || 'Unknown Sponsor',
-            packageName: (packageRecord.name as string) || 'Unknown Package',
-            pendingBenefits,
-            totalBenefits: includedBenefits.length,
-            completedBenefits: 0 // Placeholder - would need deliverables tracking
-          })
+        const entry = bySponsor.get(esId)
+        if (entry) {
+          entry.pending.push(d.benefitName)
+          entry.total++
         }
       }
 
-      return deliverables
+      for (const [esId, entry] of bySponsor.entries()) {
+        const counts = await deliverableRepo.countByEditionSponsor(esId)
+        entry.total = counts.pending + counts.in_progress + counts.delivered
+        entry.completed = counts.delivered
+      }
+
+      return Array.from(bySponsor.values()).map((entry) => ({
+        sponsorId: entry.sponsorId,
+        sponsorName: entry.sponsorName,
+        packageName: entry.packageName,
+        pendingBenefits: entry.pending,
+        totalBenefits: entry.total,
+        completedBenefits: entry.completed
+      }))
     }
   }
 }

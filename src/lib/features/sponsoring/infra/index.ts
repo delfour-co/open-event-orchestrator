@@ -22,3 +22,18 @@ export {
   createSponsorInquiryRepository,
   type SponsorInquiryRepository
 } from './sponsor-inquiry-repository'
+
+export {
+  createSponsorDeliverableRepository,
+  type SponsorDeliverableRepository
+} from './sponsor-deliverable-repository'
+
+export {
+  createSponsorAssetRepository,
+  type SponsorAssetRepository
+} from './sponsor-asset-repository'
+
+export {
+  createSponsorMessageRepository,
+  type SponsorMessageRepository
+} from './sponsor-message-repository'

@@ -345,13 +345,82 @@ describe('sponsoring-stats-service', () => {
 
   describe('getPendingDeliverables', () => {
     it('should return pending deliverables for confirmed sponsors', async () => {
-      const confirmedSponsors = mockEditionSponsors.filter((s) => s.status === 'confirmed')
+      const mockDeliverables = [
+        {
+          id: 'del-1',
+          editionSponsorId: 'es-1',
+          benefitName: 'Logo on website',
+          status: 'pending',
+          created: new Date().toISOString(),
+          updated: new Date().toISOString(),
+          expand: {
+            editionSponsorId: {
+              id: 'es-1',
+              sponsorId: 'sponsor-1',
+              packageId: 'pkg-1',
+              status: 'confirmed',
+              created: new Date().toISOString(),
+              updated: new Date().toISOString(),
+              expand: {
+                sponsorId: {
+                  id: 'sponsor-1',
+                  name: 'Acme Corp',
+                  created: new Date().toISOString(),
+                  updated: new Date().toISOString()
+                },
+                packageId: {
+                  id: 'pkg-1',
+                  name: 'Platinum',
+                  tier: 1,
+                  benefits: [],
+                  created: new Date().toISOString(),
+                  updated: new Date().toISOString()
+                }
+              }
+            }
+          }
+        },
+        {
+          id: 'del-2',
+          editionSponsorId: 'es-1',
+          benefitName: 'Booth',
+          status: 'in_progress',
+          created: new Date().toISOString(),
+          updated: new Date().toISOString(),
+          expand: {
+            editionSponsorId: {
+              id: 'es-1',
+              sponsorId: 'sponsor-1',
+              packageId: 'pkg-1',
+              status: 'confirmed',
+              created: new Date().toISOString(),
+              updated: new Date().toISOString(),
+              expand: {
+                sponsorId: {
+                  id: 'sponsor-1',
+                  name: 'Acme Corp',
+                  created: new Date().toISOString(),
+                  updated: new Date().toISOString()
+                },
+                packageId: {
+                  id: 'pkg-1',
+                  name: 'Platinum',
+                  tier: 1,
+                  benefits: [],
+                  created: new Date().toISOString(),
+                  updated: new Date().toISOString()
+                }
+              }
+            }
+          }
+        }
+      ]
 
       mockPb = {
         collection: vi.fn().mockImplementation((name) => {
-          if (name === 'edition_sponsors') {
+          if (name === 'sponsor_deliverables') {
             return {
-              getFullList: vi.fn().mockResolvedValue(confirmedSponsors)
+              getFullList: vi.fn().mockResolvedValue(mockDeliverables)
             }
           }
           return {}
@@ -361,37 +430,20 @@ describe('sponsoring-stats-service', () => {
       const service = createSponsoringStatsService(mockPb)
       const deliverables = await service.getPendingDeliverables('edition-1')
 
-      expect(deliverables).toHaveLength(2)
+      expect(deliverables).toHaveLength(1)
 
       const acme = deliverables.find((d) => d.sponsorId === 'sponsor-1')
-      expect(acme?.pendingBenefits).toHaveLength(3)
+      expect(acme?.pendingBenefits).toHaveLength(2)
       expect(acme?.pendingBenefits).toContain('Logo on website')
       expect(acme?.pendingBenefits).toContain('Booth')
-      expect(acme?.pendingBenefits).toContain('Speaking slot')
-
-      const techco = deliverables.find((d) => d.sponsorId === 'sponsor-2')
-      expect(techco?.pendingBenefits).toHaveLength(2)
     })
 
-    it('should handle sponsors without packages', async () => {
-      const sponsorWithoutPackage = [
-        {
-          id: 'es-no-pkg',
-          sponsorId: 'sponsor-x',
-          packageId: null,
-          status: 'confirmed',
-          amount: 1000,
-          expand: {
-            sponsorId: { id: 'sponsor-x', name: 'No Package Sponsor' }
-          }
-        }
-      ]
-
+    it('should handle no pending deliverables', async () => {
       mockPb = {
         collection: vi.fn().mockImplementation((name) => {
-          if (name === 'edition_sponsors') {
+          if (name === 'sponsor_deliverables') {
             return {
-              getFullList: vi.fn().mockResolvedValue(sponsorWithoutPackage)
+              getFullList: vi.fn().mockResolvedValue([])
             }
           }
           return {}
@@ -426,6 +478,11 @@ describe('sponsoring-stats-service', () => {
               getFullList: vi.fn().mockResolvedValue(mockPackages)
             }
           }
+          if (name === 'sponsor_deliverables') {
+            return {
+              getFullList: vi.fn().mockResolvedValue([])
+            }
+          }
           return {}
         })
       } as unknown as PocketBase
@@ -437,7 +494,7 @@ describe('sponsoring-stats-service', () => {
       expect(stats.revenue.totalRevenue).toBe(15000)
       expect(stats.pipeline.confirmed).toBe(2)
       expect(stats.totalPackages).toBe(3)
-      expect(stats.pendingDeliverables).toHaveLength(2)
+      expect(stats.pendingDeliverables).toHaveLength(0)
     })
   })
 })
