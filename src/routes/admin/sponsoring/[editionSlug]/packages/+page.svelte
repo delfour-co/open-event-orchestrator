@@ -126,6 +126,12 @@ $effect(() => {
 		>
 			Sponsors
 		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/inquiries"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Inquiries
+		</a>
 	</nav>
 
 	<!-- Packages Section -->

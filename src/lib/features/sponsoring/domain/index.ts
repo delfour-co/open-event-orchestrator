@@ -75,3 +75,19 @@ export {
   type SponsorToken,
   type CreateSponsorToken
 } from './sponsor-token'
+
+export {
+  sponsorInquiryStatusSchema,
+  sponsorInquirySchema,
+  createSponsorInquirySchema,
+  updateSponsorInquirySchema,
+  getStatusLabel as getInquiryStatusLabel,
+  getStatusColor as getInquiryStatusColor,
+  getStatusBadgeVariant as getInquiryStatusBadgeVariant,
+  isPendingInquiry,
+  isActiveInquiry,
+  type SponsorInquiryStatus,
+  type SponsorInquiry,
+  type CreateSponsorInquiry,
+  type UpdateSponsorInquiry
+} from './sponsor-inquiry'

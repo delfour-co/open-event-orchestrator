@@ -43,8 +43,26 @@ let showEditionSponsorDetail = $state(false)
 let editingSponsor = $state<(typeof data.sponsors)[0] | null>(null)
 let selectedEditionSponsor = $state<(typeof data.editionSponsors)[0] | null>(null)
 let isSubmitting = $state(false)
-let copiedLink = $state(false)
+let copiedLink = $state<string | null>(null)
+let copiedContact = $state(false)
+let copiedPackages = $state(false)
 let generatedPortalUrl = $state<string | null>(null)
+
+function copyContactUrl() {
+  navigator.clipboard.writeText(`${window.location.origin}/sponsor/${data.edition.slug}/contact`)
+  copiedContact = true
+  setTimeout(() => {
+    copiedContact = false
+  }, 2000)
+}
+
+function copyPackagesUrl() {
+  navigator.clipboard.writeText(`${window.location.origin}/sponsor/${data.edition.slug}/packages`)
+  copiedPackages = true
+  setTimeout(() => {
+    copiedPackages = false
+  }, 2000)
+}
 
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -79,9 +97,9 @@ function cancelEditionSponsorDetail() {
 
 async function copyPortalLink(url: string) {
   await navigator.clipboard.writeText(url)
-  copiedLink = true
+  copiedLink = url
   setTimeout(() => {
-    copiedLink = false
+    copiedLink = null
   }, 2000)
 }
 
@@ -148,7 +166,42 @@ $effect(() => {
 				</p>
 			</div>
 		</div>
-		<div class="flex items-center gap-2">
+		<div class="flex flex-wrap items-center gap-2">
+			<!-- Contact Form URL -->
+			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
+				<span class="text-xs text-muted-foreground">Contact:</span>
+				<code class="text-xs">/sponsor/{data.edition.slug}/contact</code>
+				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyContactUrl}>
+					{#if copiedContact}
+						<Check class="h-3 w-3 text-green-500" />
+					{:else}
+						<Copy class="h-3 w-3" />
+					{/if}
+				</Button>
+				<a href="/sponsor/{data.edition.slug}/contact" target="_blank" rel="noopener noreferrer">
+					<Button variant="ghost" size="icon" class="h-6 w-6">
+						<ExternalLink class="h-3 w-3" />
+					</Button>
+				</a>
+			</div>
+			<!-- Packages URL -->
+			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
+				<span class="text-xs text-muted-foreground">Packages:</span>
+				<code class="text-xs">/sponsor/{data.edition.slug}/packages</code>
+				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyPackagesUrl}>
+					{#if copiedPackages}
+						<Check class="h-3 w-3 text-green-500" />
+					{:else}
+						<Copy class="h-3 w-3" />
+					{/if}
+				</Button>
+				<a href="/sponsor/{data.edition.slug}/packages" target="_blank" rel="noopener noreferrer">
+					<Button variant="ghost" size="icon" class="h-6 w-6">
+						<ExternalLink class="h-3 w-3" />
+					</Button>
+				</a>
+			</div>
+			<!-- Actions -->
 			<Button variant="outline" onclick={() => { editingSponsor = null; showSponsorForm = true }}>
 				<Building2 class="mr-2 h-4 w-4" />
 				New Sponsor
@@ -181,6 +234,12 @@ $effect(() => {
 			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
 		>
 			Sponsors
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/inquiries"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Inquiries
 		</a>
 	</nav>
 
@@ -742,7 +801,7 @@ $effect(() => {
 								size="icon"
 								onclick={() => copyPortalLink(generatedPortalUrl!)}
 							>
-								{#if copiedLink}
+								{#if copiedLink === generatedPortalUrl}
 									<Check class="h-4 w-4 text-green-600" />
 								{:else}
 									<Copy class="h-4 w-4" />

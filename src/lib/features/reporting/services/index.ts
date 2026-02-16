@@ -1,4 +1,5 @@
 export { dashboardCacheService } from './dashboard-cache-service'
+export * from './dashboard-metrics-service'
 export * from './threshold-evaluation-service'
 export * from './alert-notification-service'
 export * from './report-generator-service'

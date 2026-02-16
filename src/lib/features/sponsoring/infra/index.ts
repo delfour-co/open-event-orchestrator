@@ -17,3 +17,8 @@ export {
   createSponsorTokenRepository,
   type SponsorTokenRepository
 } from './sponsor-token-repository'
+
+export {
+  createSponsorInquiryRepository,
+  type SponsorInquiryRepository
+} from './sponsor-inquiry-repository'
