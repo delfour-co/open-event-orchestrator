@@ -23,7 +23,10 @@ interface Props {
 
 const { initialDocument, onSave }: Props = $props()
 
-let document = $state<EmailDocument>(initialDocument ?? createEmptyDocument())
+// Extract initial value to avoid state_referenced_locally warning
+const initDocument = initialDocument ?? createEmptyDocument()
+
+let document = $state<EmailDocument>(initDocument)
 let selectedBlockId = $state<string | null>(null)
 let viewMode = $state<'edit' | 'preview' | 'code'>('edit')
 

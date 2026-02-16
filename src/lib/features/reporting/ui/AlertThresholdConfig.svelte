@@ -34,9 +34,12 @@ const { thresholds, editionId, onAdd, onDelete, onToggle, class: className }: Pr
 
 let isAddingNew = $state(false)
 
+// Extract editionId to avoid state_referenced_locally warning
+const initEditionId = editionId
+
 // Form state for new threshold
 let newThreshold = $state<Partial<CreateAlertThreshold>>({
-  editionId,
+  editionId: initEditionId,
   name: '',
   metricSource: 'billing_sales',
   operator: 'lt',
@@ -300,7 +303,7 @@ function handleLevelChange(e: Event) {
             <div class="flex items-start justify-between gap-4">
               <div class="flex items-start gap-3">
                 <div class={cn('rounded-lg border p-2', levelColors[threshold.level])}>
-                  <svelte:component this={LevelIcon} class="h-4 w-4" />
+                  <LevelIcon class="h-4 w-4" />
                 </div>
                 <div>
                   <div class="flex items-center gap-2">

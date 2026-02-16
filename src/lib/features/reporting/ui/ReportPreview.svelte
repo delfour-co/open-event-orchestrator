@@ -137,7 +137,7 @@ const scheduleDescription = $derived(getScheduleDescription(config))
                   title="HTML Preview"
                   class="h-[500px] w-full rounded-lg"
                   sandbox="allow-same-origin"
-                />
+                ></iframe>
               </div>
             {:else}
               <p class="text-muted-foreground">No HTML content available</p>

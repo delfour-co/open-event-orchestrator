@@ -71,12 +71,13 @@ const formatDate = (date: Date): string => {
   {:else}
     {#each alerts as alert (alert.id)}
       {@const config = levelConfig[alert.level]}
+      {@const LevelIcon = config.icon}
       {@const StatusIcon = statusIcons[alert.status]}
       <Card.Root class={cn('border-l-4 transition-all', config.borderColor, config.bgColor)}>
         <Card.Content class="p-4">
           <div class="flex items-start gap-3">
             <div class={cn('mt-0.5', config.textColor)}>
-              <svelte:component this={config.icon} class="h-5 w-5" />
+              <LevelIcon class="h-5 w-5" />
             </div>
             <div class="min-w-0 flex-1">
               <div class="flex items-start justify-between gap-2">
@@ -89,7 +90,7 @@ const formatDate = (date: Date): string => {
                   </p>
                 </div>
                 <div class="flex shrink-0 items-center gap-1.5">
-                  <svelte:component this={StatusIcon} class="h-4 w-4 text-muted-foreground" />
+                  <StatusIcon class="h-4 w-4 text-muted-foreground" />
                   <span class="text-xs text-muted-foreground">
                     {getAlertStatusLabel(alert.status)}
                   </span>

@@ -33,13 +33,17 @@ const { organizations, onClose, onSuccess }: Props = $props()
 
 type WizardStep = 'organization' | 'event' | 'edition'
 
+// Extract initial values to avoid state_referenced_locally warning
+const initCreateNewOrg = organizations.length === 0
+const initSelectedOrgId = organizations[0]?.id || ''
+
 let currentStep = $state<WizardStep>('organization')
 let isSubmitting = $state(false)
 let errorMessage = $state<string | null>(null)
 
 // Organization step state
-let createNewOrg = $state(organizations.length === 0)
-let selectedOrgId = $state<string>(organizations[0]?.id || '')
+let createNewOrg = $state(initCreateNewOrg)
+let selectedOrgId = $state<string>(initSelectedOrgId)
 let newOrgName = $state('')
 let newOrgSlug = $state('')
 let newOrgDescription = $state('')

@@ -30,13 +30,16 @@ interface Props {
 
 const { data }: Props = $props()
 
+// Extract initial value to avoid state_referenced_locally warning
+const initSelectedEditionId = data.selectedEditionId
+
 let showWizard = $state(false)
 
 const handleWizardSuccess = (editionSlug: string) => {
   goto(`/admin/editions/${editionSlug}/settings`)
 }
 
-let selectedEditionId = $state(data.selectedEditionId)
+let selectedEditionId = $state(initSelectedEditionId)
 
 function handleEditionChange(e: Event) {
   const value = (e.target as HTMLSelectElement).value

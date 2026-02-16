@@ -22,15 +22,26 @@ interface Props {
 
 const { initialData, onSubmit, onCancel, isLoading = false }: Props = $props()
 
-let name = $state(initialData?.name ?? '')
-let enabled = $state(initialData?.enabled ?? true)
-let frequency = $state<ReportFrequency>(initialData?.frequency ?? 'weekly')
-let dayOfWeek = $state<DayOfWeek | undefined>(initialData?.dayOfWeek ?? 'monday')
-let dayOfMonth = $state<number | undefined>(initialData?.dayOfMonth ?? 1)
-let timeOfDay = $state(initialData?.timeOfDay ?? '09:00')
-let timezone = $state(initialData?.timezone ?? 'Europe/Paris')
-let recipients = $state<ReportRecipient[]>(initialData?.recipients ?? [{ email: '' }])
-let sections = $state<ReportSection[]>(initialData?.sections ?? ['cfp', 'billing'])
+// Extract initial values to avoid state_referenced_locally warning
+const initName = initialData?.name ?? ''
+const initEnabled = initialData?.enabled ?? true
+const initFrequency = initialData?.frequency ?? 'weekly'
+const initDayOfWeek = initialData?.dayOfWeek ?? 'monday'
+const initDayOfMonth = initialData?.dayOfMonth ?? 1
+const initTimeOfDay = initialData?.timeOfDay ?? '09:00'
+const initTimezone = initialData?.timezone ?? 'Europe/Paris'
+const initRecipients = initialData?.recipients ?? [{ email: '' }]
+const initSections = initialData?.sections ?? ['cfp', 'billing']
+
+let name = $state(initName)
+let enabled = $state(initEnabled)
+let frequency = $state<ReportFrequency>(initFrequency)
+let dayOfWeek = $state<DayOfWeek | undefined>(initDayOfWeek)
+let dayOfMonth = $state<number | undefined>(initDayOfMonth)
+let timeOfDay = $state(initTimeOfDay)
+let timezone = $state(initTimezone)
+let recipients = $state<ReportRecipient[]>(initRecipients)
+let sections = $state<ReportSection[]>(initSections)
 
 const frequencyOptions = [
   { value: 'daily', label: 'Daily' },
