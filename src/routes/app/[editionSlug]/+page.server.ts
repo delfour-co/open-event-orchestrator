@@ -23,9 +23,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   const editionId = edition.id as string
+  const eventId = edition.eventId as string | undefined
+
+  // Validate eventId exists
+  if (!eventId) {
+    throw error(500, 'Edition has no associated event')
+  }
 
   // Get the event for organization info
-  const event = await locals.pb.collection('events').getOne(edition.eventId as string)
+  const event = await locals.pb.collection('events').getOne(eventId)
 
   // Load feedback settings and app settings
   const feedbackSettingsRepo = new FeedbackSettingsRepository(locals.pb)
