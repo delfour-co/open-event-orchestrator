@@ -5,14 +5,17 @@ import * as Card from '$lib/components/ui/card'
 import { DashboardGrid, HorizontalBarChart, MetricCard } from '$lib/features/reporting/ui'
 import {
   ArrowLeft,
+  Bell,
   Calendar,
   Check,
   CreditCard,
   DollarSign,
   FileText,
   Loader2,
+  Mail,
   MessageSquare,
   RefreshCw,
+  Settings,
   Target,
   Ticket,
   Users
@@ -215,15 +218,116 @@ const budgetUsageChartData = $derived(
       </div>
     </div>
 
-    <Button variant="outline" onclick={refreshDashboard} disabled={isRefreshing}>
-      {#if isRefreshing}
-        <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-      {:else}
-        <RefreshCw class="mr-2 h-4 w-4" />
-      {/if}
-      Refresh
-    </Button>
+    <div class="flex items-center gap-2">
+      <a href="/admin/reporting/{data.edition.slug}/alerts">
+        <Button variant="outline" class="gap-2">
+          <Bell class="h-4 w-4" />
+          Alerts
+        </Button>
+      </a>
+      <a href="/admin/reporting/{data.edition.slug}/reports">
+        <Button variant="outline" class="gap-2">
+          <Mail class="h-4 w-4" />
+          Reports
+        </Button>
+      </a>
+      <Button variant="outline" onclick={refreshDashboard} disabled={isRefreshing}>
+        {#if isRefreshing}
+          <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+        {:else}
+          <RefreshCw class="mr-2 h-4 w-4" />
+        {/if}
+        Refresh
+      </Button>
+    </div>
   </div>
+
+  <!-- Notifications Summary -->
+  <Card.Root>
+    <Card.Header class="pb-3">
+      <div class="flex items-center justify-between">
+        <Card.Title class="flex items-center gap-2 text-base font-medium">
+          <Settings class="h-4 w-4" />
+          Notification Settings
+        </Card.Title>
+      </div>
+    </Card.Header>
+    <Card.Content>
+      <div class="grid gap-4 md:grid-cols-2">
+        <!-- Alert Thresholds -->
+        <a href="/admin/reporting/{data.edition.slug}/alerts" class="group">
+          <div
+            class="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50"
+          >
+            <div class="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/30">
+              <Bell class="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div class="flex-1">
+              <h4 class="font-medium group-hover:underline">Alert Thresholds</h4>
+              <p class="text-sm text-muted-foreground">
+                {#if data.notifications.alertThresholds.total === 0}
+                  No alerts configured
+                {:else}
+                  {data.notifications.alertThresholds.enabled} active / {data.notifications
+                    .alertThresholds.total} configured
+                  {#if data.notifications.alertThresholds.withEmail > 0}
+                    <span class="ml-1 text-xs"
+                      >({data.notifications.alertThresholds.withEmail} with email)</span
+                    >
+                  {/if}
+                {/if}
+              </p>
+            </div>
+            <div class="text-muted-foreground">
+              <ArrowLeft class="h-4 w-4 rotate-180" />
+            </div>
+          </div>
+        </a>
+
+        <!-- Automated Reports -->
+        <a href="/admin/reporting/{data.edition.slug}/reports" class="group">
+          <div
+            class="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50"
+          >
+            <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
+              <Mail class="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div class="flex-1">
+              <h4 class="font-medium group-hover:underline">Automated Reports</h4>
+              <p class="text-sm text-muted-foreground">
+                {#if data.notifications.reportConfigs.total === 0}
+                  No reports configured
+                {:else}
+                  {data.notifications.reportConfigs.enabled} active / {data.notifications
+                    .reportConfigs.total} configured
+                  {#if data.notifications.reportConfigs.enabled > 0}
+                    <span class="ml-1 text-xs">
+                      ({#if data.notifications.reportConfigs.daily > 0}
+                        {data.notifications.reportConfigs.daily} daily
+                      {/if}
+                      {#if data.notifications.reportConfigs.weekly > 0}
+                        {data.notifications.reportConfigs.daily > 0 ? ', ' : ''}{data.notifications
+                          .reportConfigs.weekly} weekly
+                      {/if}
+                      {#if data.notifications.reportConfigs.monthly > 0}
+                        {data.notifications.reportConfigs.daily > 0 ||
+                        data.notifications.reportConfigs.weekly > 0
+                          ? ', '
+                          : ''}{data.notifications.reportConfigs.monthly} monthly
+                      {/if})
+                    </span>
+                  {/if}
+                {/if}
+              </p>
+            </div>
+            <div class="text-muted-foreground">
+              <ArrowLeft class="h-4 w-4 rotate-180" />
+            </div>
+          </div>
+        </a>
+      </div>
+    </Card.Content>
+  </Card.Root>
 
   {#if !data.metrics}
     <Card.Root>

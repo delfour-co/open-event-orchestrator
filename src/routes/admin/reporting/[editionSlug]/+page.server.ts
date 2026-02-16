@@ -50,7 +50,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     sponsors,
     budget,
     categories,
-    formats
+    formats,
+    alertThresholds,
+    reportConfigs
   ] = await Promise.all([
     locals.pb
       .collection('ticket_types')
@@ -98,6 +100,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       .catch(() => []),
     locals.pb
       .collection('formats')
+      .getFullList({ filter: `editionId = "${editionId}"` })
+      .catch(() => []),
+    locals.pb
+      .collection('alert_thresholds')
+      .getFullList({ filter: `editionId = "${editionId}"` })
+      .catch(() => []),
+    locals.pb
+      .collection('report_configs')
       .getFullList({ filter: `editionId = "${editionId}"` })
       .catch(() => [])
   ])
@@ -339,6 +349,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       talkFormats: talkFormatDistribution,
       sessionTracks: sessionTrackDistribution,
       sponsorTiers: sponsorTierDistribution
+    },
+    notifications: {
+      alertThresholds: {
+        total: alertThresholds.length,
+        enabled: alertThresholds.filter((a) => a.enabled).length,
+        withEmail: alertThresholds.filter((a) => a.notifyByEmail).length
+      },
+      reportConfigs: {
+        total: reportConfigs.length,
+        enabled: reportConfigs.filter((r) => r.enabled).length,
+        daily: reportConfigs.filter((r) => r.enabled && r.frequency === 'daily').length,
+        weekly: reportConfigs.filter((r) => r.enabled && r.frequency === 'weekly').length,
+        monthly: reportConfigs.filter((r) => r.enabled && r.frequency === 'monthly').length
+      }
     }
   }
 }
