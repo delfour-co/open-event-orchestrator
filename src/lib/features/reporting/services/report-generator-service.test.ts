@@ -169,7 +169,10 @@ describe('generateHtmlReport', () => {
   })
 
   it('includes all requested sections', () => {
-    const config = { ...createMockConfig(), sections: ['cfp', 'billing', 'planning'] as ReportSection[] }
+    const config = {
+      ...createMockConfig(),
+      sections: ['cfp', 'billing', 'planning'] as ReportSection[]
+    }
     const data = {
       editionId: 'ed-123',
       editionName: 'Test Edition',

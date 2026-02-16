@@ -412,7 +412,7 @@ describe('sponsoring-stats-service', () => {
           if (name === 'edition_sponsors') {
             return {
               getFullList: vi.fn().mockImplementation(({ filter }) => {
-                if (filter && filter.includes('confirmed')) {
+                if (filter?.includes('confirmed')) {
                   return Promise.resolve(
                     mockEditionSponsors.filter((s) => s.status === 'confirmed')
                   )

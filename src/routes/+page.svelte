@@ -28,7 +28,8 @@ const features = [
   {
     icon: Ticket,
     title: 'Ticketing',
-    description: 'Sell tickets via Stripe, manage registrations, and check-in attendees with QR codes'
+    description:
+      'Sell tickets via Stripe, manage registrations, and check-in attendees with QR codes'
   },
   {
     icon: BarChart3,

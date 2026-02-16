@@ -99,9 +99,13 @@ test.describe('Reporting Module', () => {
     test('should display CFP section with metrics', async ({ page }) => {
       await page.goto(dashboardUrl)
 
-      await expect(page.getByRole('heading', { name: 'Call for Papers', exact: true })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'Call for Papers', exact: true })
+      ).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Submissions', exact: true })).toBeVisible()
-      await expect(page.getByRole('heading', { name: 'Pending Reviews', exact: true })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'Pending Reviews', exact: true })
+      ).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Accepted', exact: true })).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Speakers', exact: true })).toBeVisible()
     })
@@ -120,7 +124,9 @@ test.describe('Reporting Module', () => {
       await page.goto(dashboardUrl)
 
       await expect(page.getByRole('heading', { name: 'Sponsoring', exact: true })).toBeVisible()
-      await expect(page.getByRole('heading', { name: 'Sponsorship Value', exact: true })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'Sponsorship Value', exact: true })
+      ).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Confirmed', exact: true })).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Total Sponsors', exact: true })).toBeVisible()
     })
@@ -157,7 +163,9 @@ test.describe('Reporting Module', () => {
       await page.goto(dashboardUrl)
 
       // Check for chart containers
-      await expect(page.getByRole('heading', { name: 'Submission Status', exact: true })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'Submission Status', exact: true })
+      ).toBeVisible()
       await expect(page.getByRole('heading', { name: 'Sponsor Status', exact: true })).toBeVisible()
     })
   })
@@ -208,7 +216,9 @@ test.describe('Reporting Module', () => {
       await page.goto(alertsUrl)
       await page.waitForLoadState('networkidle')
 
-      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
     })
 
     test('should show back button to dashboard', async ({ page }) => {
@@ -235,7 +245,9 @@ test.describe('Reporting Module', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for the page to fully load
-      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
 
       await expect(page.getByRole('button', { name: /^Alerts/ }).first()).toBeVisible()
       await expect(page.getByRole('button', { name: /Thresholds/ })).toBeVisible()
@@ -247,13 +259,17 @@ test.describe('Reporting Module', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for page to load
-      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
 
       // Click Thresholds tab and wait for content
       const thresholdsTab = page.getByRole('button', { name: /Thresholds/ })
       await thresholdsTab.click()
       await page.waitForTimeout(500) // Wait for tab animation
-      await expect(page.getByRole('heading', { name: 'Alert Thresholds', exact: true })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'Alert Thresholds', exact: true })
+      ).toBeVisible()
 
       // Click History tab
       const historyTab = page.getByRole('button', { name: /History/ })
@@ -276,7 +292,9 @@ test.describe('Reporting Module', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for page to load
-      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
 
       await page.getByRole('button', { name: /Thresholds/ }).click()
 
@@ -289,7 +307,9 @@ test.describe('Reporting Module', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for page to load
-      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
 
       // Click Thresholds tab and wait for it to render
       await page.getByRole('button', { name: /Thresholds/ }).click()
@@ -301,7 +321,9 @@ test.describe('Reporting Module', () => {
       // Click Add Threshold and wait for form
       await addButton.click()
 
-      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({ timeout: 5000 })
+      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({
+        timeout: 5000
+      })
       await expect(page.locator('#name')).toBeVisible()
       await expect(page.locator('#metric')).toBeVisible()
       await expect(page.locator('#operator')).toBeVisible()
@@ -315,7 +337,9 @@ test.describe('Reporting Module', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for page to load
-      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
 
       // Navigate to Thresholds tab
       await page.getByRole('button', { name: /Thresholds/ }).click()
@@ -326,7 +350,9 @@ test.describe('Reporting Module', () => {
 
       // Open form
       await addButton.click()
-      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({ timeout: 5000 })
+      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({
+        timeout: 5000
+      })
 
       // Cancel and verify form is hidden
       await page.getByRole('button', { name: /Cancel/ }).click()
@@ -339,7 +365,9 @@ test.describe('Reporting Module', () => {
       await page.waitForLoadState('networkidle')
 
       // Wait for page to load
-      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({ timeout: 10000 })
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
 
       // Navigate to Thresholds tab
       await page.getByRole('button', { name: /Thresholds/ }).click()
@@ -350,7 +378,9 @@ test.describe('Reporting Module', () => {
 
       // Open form
       await addButton.click()
-      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({ timeout: 5000 })
+      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({
+        timeout: 5000
+      })
 
       const thresholdName = `E2E Threshold ${Date.now()}`
 

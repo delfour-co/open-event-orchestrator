@@ -162,11 +162,12 @@ export const createCfpStatsService = (pb: PocketBase): CfpStatsService => ({
         categoryStats.set(categoryId, { submitted: 0, accepted: 0 })
       }
 
-      const stats = categoryStats.get(categoryId)!
-      stats.submitted++
-
-      if (['accepted', 'confirmed'].includes(talk.status as TalkStatus)) {
-        stats.accepted++
+      const stats = categoryStats.get(categoryId)
+      if (stats) {
+        stats.submitted++
+        if (['accepted', 'confirmed'].includes(talk.status as TalkStatus)) {
+          stats.accepted++
+        }
       }
     }
 

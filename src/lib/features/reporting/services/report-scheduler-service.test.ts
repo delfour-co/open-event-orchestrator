@@ -61,7 +61,7 @@ const createMockDependencies = () => {
   }
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
     pb: mockPb as any,
     emailService: mockEmailService,
     reportGenerator: mockReportGenerator

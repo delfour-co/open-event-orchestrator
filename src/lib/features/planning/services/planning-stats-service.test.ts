@@ -229,12 +229,12 @@ describe('planning-stats-service', () => {
       const occupancy = await service.getRoomOccupancy('edition-1')
 
       expect(occupancy).toHaveLength(2)
-      occupancy.forEach((room) => {
+      for (const room of occupancy) {
         expect(room.totalSlots).toBe(0)
         expect(room.occupiedSlots).toBe(0)
         expect(room.occupancyRate).toBe(0)
         expect(room.emptySlots).toHaveLength(0)
-      })
+      }
     })
   })
 
