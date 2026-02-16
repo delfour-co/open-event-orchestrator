@@ -235,12 +235,27 @@ The reporting module provides comprehensive dashboards and analytics for event e
 - `/admin/reporting` - Edition selector
 - `/admin/reporting/[editionSlug]` - Dashboard with KPIs and charts
 - `/admin/reporting/[editionSlug]/alerts` - Alert thresholds configuration
+- `/admin/reporting/[editionSlug]/reports` - Automated reports configuration
 
 **Key Features:**
 - **Dashboard KPIs**: Revenue, tickets sold, check-in rate, submissions, speakers, sessions, sponsors, budget
 - **Distribution Charts**: Tickets by type, talks by category/format, sessions by track, sponsors by tier
 - **Alert System**: Configurable thresholds with email/in-app notifications
 - **Automated Reports**: Scheduled email reports (daily/weekly/monthly)
+- **Presets**: Quick setup templates for both alerts and reports
+
+**Alert Presets:**
+- Low Ticket Sales (billing_sales < 50, warning)
+- Low Revenue (billing_revenue < 10000, critical)
+- Pending Reviews Backlog (cfp_pending_reviews > 20, info)
+- Low Acceptance Rate (cfp_acceptance_rate < 25%, warning)
+- Budget Overrun (budget_utilization > 90%, critical)
+
+**Report Presets:**
+- Weekly Summary (Monday 09:00, CFP + Billing + Planning)
+- Daily Sales (08:00, Billing only)
+- Monthly Overview (1st 10:00, all sections)
+- CFP Weekly (Friday 17:00, CFP only)
 
 **UI Components** (`src/lib/features/reporting/ui/`):
 - `MetricCard` - Single metric display with optional trend indicator
@@ -248,13 +263,15 @@ The reporting module provides comprehensive dashboards and analytics for event e
 - `DonutChart` - Pie/donut chart with legend
 - `HorizontalBarChart` - Bar chart for comparisons
 - `MiniProgressChart` - Circular progress indicator
-- `AlertThresholdConfig` - Alert configuration form
+- `AlertThresholdConfig` - Alert configuration form with presets
+- `ReportConfigForm` - Report configuration form with presets
 - `AlertList` - Alert display and management
 
 **Services:**
 - Stats aggregation services per domain (billing, cfp, planning, etc.)
 - Threshold evaluation service
 - Report scheduler service
+- Report generator service
 
 ## Milestones & Issues Standard
 

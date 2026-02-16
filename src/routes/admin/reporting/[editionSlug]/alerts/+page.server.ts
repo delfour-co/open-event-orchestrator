@@ -125,7 +125,6 @@ export const actions: Actions = {
     const jsonData = formData.get('data') as string
 
     try {
-      // Parse JSON data from form
       const data = JSON.parse(jsonData)
 
       await locals.pb.collection('alert_thresholds').create({
@@ -134,7 +133,7 @@ export const actions: Actions = {
         description: data.description || null,
         metricSource: data.metricSource,
         operator: data.operator,
-        thresholdValue: Number(data.thresholdValue),
+        thresholdValue: Number(data.thresholdValue) || 0,
         level: data.level,
         enabled: data.enabled ?? true,
         notifyByEmail: data.notifyByEmail ?? false,

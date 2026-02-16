@@ -80,8 +80,23 @@ export type ReportConfig = z.infer<typeof reportConfigSchema>
 
 export type CreateReportConfig = Omit<
   ReportConfig,
-  'id' | 'lastSentAt' | 'nextScheduledAt' | 'createdAt' | 'updatedAt'
->
+  | 'id'
+  | 'lastSentAt'
+  | 'nextScheduledAt'
+  | 'createdAt'
+  | 'updatedAt'
+  // Omit fields with defaults to re-add as optional
+  | 'recipientRoles'
+  | 'recipients'
+  | 'enabled'
+  | 'timezone'
+> & {
+  // Fields with defaults are optional for creation
+  recipientRoles?: RecipientRole[]
+  recipients?: ReportRecipient[]
+  enabled?: boolean
+  timezone?: string
+}
 
 export type UpdateReportConfig = Partial<
   Omit<ReportConfig, 'id' | 'editionId' | 'createdAt' | 'updatedAt'>

@@ -7,7 +7,11 @@ import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Switch } from '$lib/components/ui/switch'
-import type { ReportConfig } from '$lib/features/reporting/domain/report-config'
+import type {
+  CreateReportConfig,
+  ReportConfig,
+  UpdateReportConfig
+} from '$lib/features/reporting/domain/report-config'
 import { getScheduleDescription } from '$lib/features/reporting/domain/report-config'
 import { ReportConfigForm } from '$lib/features/reporting/ui'
 import { cn } from '$lib/utils'
@@ -103,18 +107,7 @@ async function handleToggle(config: ReportConfig) {
   }
 }
 
-async function submitCreate(formData: {
-  editionId: string
-  name: string
-  enabled: boolean
-  frequency: string
-  dayOfWeek?: string
-  dayOfMonth?: number
-  timeOfDay: string
-  timezone: string
-  recipients: Array<{ email: string; name?: string }>
-  sections: string[]
-}) {
+async function submitCreate(formData: CreateReportConfig) {
   if (createDataInput && createForm) {
     isSubmitting = true
     createDataInput.value = JSON.stringify(formData)
@@ -122,17 +115,7 @@ async function submitCreate(formData: {
   }
 }
 
-async function submitUpdate(formData: {
-  name: string
-  enabled: boolean
-  frequency: string
-  dayOfWeek?: string
-  dayOfMonth?: number
-  timeOfDay: string
-  timezone: string
-  recipients: Array<{ email: string; name?: string }>
-  sections: string[]
-}) {
+async function submitUpdate(formData: UpdateReportConfig) {
   if (updateDataInput && updateIdInput && updateForm && selectedConfig) {
     isSubmitting = true
     updateIdInput.value = selectedConfig.id

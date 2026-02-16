@@ -400,6 +400,390 @@ test.describe('Reporting Module', () => {
   })
 
   // ==========================================================================
+  // Alert Threshold Presets
+  // ==========================================================================
+  test.describe('Alert Threshold Presets', () => {
+    test('should display preset buttons when adding threshold', async ({ page }) => {
+      await page.goto(alertsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
+
+      await page.getByRole('button', { name: /Thresholds/ }).click()
+
+      const addButton = page.getByRole('button', { name: /Add Threshold/ })
+      await expect(addButton).toBeVisible({ timeout: 5000 })
+      await addButton.click()
+
+      // Wait for form to render
+      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({
+        timeout: 5000
+      })
+
+      await expect(page.getByText('Quick presets')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Low Ticket Sales' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Low Revenue' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Pending Reviews Backlog' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Low Acceptance Rate' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Budget Overrun' })).toBeVisible()
+    })
+
+    test('should fill form when clicking preset', async ({ page }) => {
+      await page.goto(alertsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
+
+      await page.getByRole('button', { name: /Thresholds/ }).click()
+
+      const addButton = page.getByRole('button', { name: /Add Threshold/ })
+      await expect(addButton).toBeVisible({ timeout: 5000 })
+      await addButton.click()
+
+      // Wait for form to render
+      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({
+        timeout: 5000
+      })
+
+      // Click the Low Ticket Sales preset
+      await page.getByRole('button', { name: 'Low Ticket Sales' }).click()
+
+      // Verify form is filled with preset values
+      await expect(page.locator('#name')).toHaveValue('Low Ticket Sales')
+      await expect(page.locator('#metric')).toHaveValue('billing_sales')
+      await expect(page.locator('#operator')).toHaveValue('lt')
+      await expect(page.locator('#value')).toHaveValue('50')
+      await expect(page.locator('#level')).toHaveValue('warning')
+    })
+
+    test('should create threshold from preset', async ({ page }) => {
+      await page.goto(alertsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(page.getByRole('heading', { name: 'Alerts', exact: true })).toBeVisible({
+        timeout: 10000
+      })
+
+      await page.getByRole('button', { name: /Thresholds/ }).click()
+
+      const addButton = page.getByRole('button', { name: /Add Threshold/ })
+      await expect(addButton).toBeVisible({ timeout: 5000 })
+      await addButton.click()
+
+      // Wait for form to render
+      await expect(page.getByRole('heading', { name: 'New Alert Threshold' })).toBeVisible({
+        timeout: 5000
+      })
+
+      // Click the Budget Overrun preset
+      await page.getByRole('button', { name: 'Budget Overrun' }).click()
+
+      // Modify name to make it unique
+      const uniqueName = `Budget Overrun E2E ${Date.now()}`
+      await page.locator('#name').fill(uniqueName)
+
+      // Submit
+      await page.getByRole('button', { name: /Create Threshold/ }).click()
+      await page.waitForLoadState('networkidle')
+
+      // Verify the threshold appears
+      await expect(page.getByText(uniqueName)).toBeVisible({ timeout: 5000 })
+    })
+  })
+
+  // ==========================================================================
+  // Reports Configuration Page
+  // ==========================================================================
+  test.describe('Reports Configuration', () => {
+    const reportsUrl = `${dashboardUrl}/reports`
+
+    test('should navigate to reports page', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+    })
+
+    test('should show back button to dashboard', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      const backButton = page.locator(`main a[href="${dashboardUrl}"]`).first()
+      await expect(backButton).toBeVisible({ timeout: 10000 })
+    })
+
+    test('should display New Report button', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      await expect(page.getByRole('button', { name: /New Report/ })).toBeVisible()
+    })
+
+    test('should open report creation dialog', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      await page.getByRole('button', { name: /New Report/ }).click()
+
+      // Wait for dialog to render
+      await expect(page.getByRole('heading', { name: 'New Report' })).toBeVisible({
+        timeout: 5000
+      })
+      await expect(page.getByText('Quick presets')).toBeVisible({ timeout: 5000 })
+    })
+
+    test('should display preset buttons in report form', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      await page.getByRole('button', { name: /New Report/ }).click()
+
+      // Wait for dialog to render
+      await expect(page.getByText('Quick presets')).toBeVisible({ timeout: 5000 })
+
+      await expect(page.getByRole('button', { name: 'Weekly Summary' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Daily Sales' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Monthly Overview' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'CFP Weekly' })).toBeVisible()
+    })
+
+    test('should fill form when clicking preset', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      await page.getByRole('button', { name: /New Report/ }).click()
+
+      // Wait for dialog to render
+      await expect(page.getByText('Quick presets')).toBeVisible({ timeout: 5000 })
+
+      // Click Weekly Summary preset
+      await page.getByRole('button', { name: 'Weekly Summary' }).click()
+
+      // Verify form is filled
+      await expect(page.locator('#name')).toHaveValue('Weekly Summary')
+      await expect(page.locator('#frequency')).toHaveValue('weekly')
+      await expect(page.locator('#timeOfDay')).toHaveValue('09:00')
+    })
+
+    test('should create report from preset', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      await page.getByRole('button', { name: /New Report/ }).click()
+
+      // Wait for dialog to render
+      await expect(page.getByText('Quick presets')).toBeVisible({ timeout: 5000 })
+
+      // Click Daily Sales preset
+      await page.getByRole('button', { name: 'Daily Sales' }).click()
+
+      // Modify name to make it unique
+      const uniqueName = `Daily Sales E2E ${Date.now()}`
+      await page.locator('#name').fill(uniqueName)
+
+      // Submit
+      await page.getByRole('button', { name: /Save/ }).click()
+      await page.waitForLoadState('networkidle')
+
+      // Verify the report appears in the list
+      await expect(page.getByText(uniqueName)).toBeVisible({ timeout: 5000 })
+    })
+
+    test('should display existing report configs or empty state', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      // Page should have either the New Report button (always present) or some reports
+      await expect(page.getByRole('button', { name: /New Report/ })).toBeVisible()
+    })
+
+    test('should toggle report enabled status', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      // First create a report to toggle
+      await page.getByRole('button', { name: /New Report/ }).click()
+      await expect(page.getByText('Quick presets')).toBeVisible({ timeout: 5000 })
+      await page.getByRole('button', { name: 'Daily Sales' }).click()
+
+      const uniqueName = `Toggle Test ${Date.now()}`
+      await page.locator('#name').fill(uniqueName)
+      await page.getByRole('button', { name: /Save/ }).click()
+      await page.waitForLoadState('networkidle')
+
+      // Wait for the new report to appear in the list
+      await expect(page.getByRole('heading', { name: uniqueName, level: 3 })).toBeVisible({
+        timeout: 5000
+      })
+
+      // Find any switch on the page (they all work the same way)
+      // Our newly created report should have a switch
+      const switches = page.locator('[role="switch"]')
+      const switchCount = await switches.count()
+      expect(switchCount).toBeGreaterThan(0)
+
+      // Get the first switch and toggle it
+      const firstSwitch = switches.first()
+      await expect(firstSwitch).toBeVisible()
+
+      // Switch uses aria-checked attribute
+      const initialState = await firstSwitch.getAttribute('aria-checked')
+      await firstSwitch.click()
+      await page.waitForTimeout(500) // Small delay for state change
+
+      // State should have changed
+      const newState = await firstSwitch.getAttribute('aria-checked')
+      expect(newState).not.toBe(initialState)
+    })
+
+    test('should delete a report config', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      // First create a report to delete
+      await page.getByRole('button', { name: /New Report/ }).click()
+
+      // Wait for dialog to render
+      await expect(page.getByText('Quick presets')).toBeVisible({ timeout: 5000 })
+
+      await page.getByRole('button', { name: 'Daily Sales' }).click()
+
+      const uniqueName = `Delete Me ${Date.now()}`
+      await page.locator('#name').fill(uniqueName)
+      await page.getByRole('button', { name: /Save/ }).click()
+      await page.waitForLoadState('networkidle')
+
+      // Wait for the new report to appear
+      await expect(page.getByRole('heading', { name: uniqueName, level: 3 })).toBeVisible({
+        timeout: 5000
+      })
+
+      // Find the card containing this report, then find the delete button (last icon button)
+      const card = page.locator('article, [class*="card"]').filter({
+        has: page.getByRole('heading', { name: uniqueName, level: 3 })
+      })
+
+      // Find all buttons in the card (switch is also a button role)
+      // The order is: switch, play icon, edit icon, delete icon
+      // Use locator with svg child to get only icon buttons
+      const iconButtons = card.locator('button:has(svg)')
+      await iconButtons.last().click()
+
+      // Confirm deletion in dialog
+      await expect(page.getByRole('heading', { name: 'Delete Report Configuration' })).toBeVisible({
+        timeout: 5000
+      })
+      await page.getByRole('button', { name: 'Delete' }).click()
+      await page.waitForLoadState('networkidle')
+
+      // Verify it's gone
+      await expect(page.getByRole('heading', { name: uniqueName, level: 3 })).not.toBeVisible({
+        timeout: 5000
+      })
+    })
+
+    test('should open test report dialog', async ({ page }) => {
+      await page.goto(reportsUrl)
+      await page.waitForLoadState('networkidle')
+
+      await expect(
+        page.getByRole('heading', { name: 'Automated Reports', exact: true })
+      ).toBeVisible({
+        timeout: 10000
+      })
+
+      // First we need to create a report to test
+      await page.getByRole('button', { name: /New Report/ }).click()
+
+      // Wait for dialog to render
+      await expect(page.getByText('Quick presets')).toBeVisible({ timeout: 5000 })
+
+      await page.getByRole('button', { name: 'Daily Sales' }).click()
+
+      const uniqueName = `Test Report E2E ${Date.now()}`
+      await page.locator('#name').fill(uniqueName)
+      await page.getByRole('button', { name: /Save/ }).click()
+      await page.waitForLoadState('networkidle')
+
+      // Wait for the new report to appear
+      await expect(page.getByRole('heading', { name: uniqueName, level: 3 })).toBeVisible({
+        timeout: 5000
+      })
+
+      // Find the card containing this report
+      const card = page.locator('article, [class*="card"]').filter({
+        has: page.getByRole('heading', { name: uniqueName, level: 3 })
+      })
+
+      // Find icon buttons - the order is: switch, play (1st icon), edit (2nd icon), delete (3rd icon)
+      const iconButtons = card.locator('button:has(svg)')
+      await iconButtons.first().click() // This should be the play button (first icon button)
+
+      // Should open a dialog asking for email
+      await expect(page.getByRole('heading', { name: 'Send Test Report' })).toBeVisible({
+        timeout: 5000
+      })
+      await expect(page.getByLabel('Email Address')).toBeVisible()
+    })
+  })
+
+  // ==========================================================================
   // Access Control
   // ==========================================================================
   test.describe('Access Control', () => {

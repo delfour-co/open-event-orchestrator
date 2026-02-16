@@ -4,7 +4,7 @@ import { Checkbox } from '$lib/components/ui/checkbox'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Select } from '$lib/components/ui/select'
-import { Clock, Users } from 'lucide-svelte'
+import { Clock, Sparkles, Users } from 'lucide-svelte'
 import type {
   CreateReportConfig,
   DayOfWeek,
@@ -13,6 +13,45 @@ import type {
   ReportSection
 } from '../domain/report-config'
 import { RECIPIENT_ROLE_LABELS } from '../domain/report-config'
+
+// Preset report templates
+const REPORT_PRESETS = [
+  {
+    name: 'Weekly Summary',
+    label: 'Weekly Summary',
+    frequency: 'weekly' as ReportFrequency,
+    dayOfWeek: 'monday' as DayOfWeek,
+    timeOfDay: '09:00',
+    recipientRoles: ['admin', 'organizer'] as RecipientRole[],
+    sections: ['cfp', 'billing', 'planning'] as ReportSection[]
+  },
+  {
+    name: 'Daily Sales',
+    label: 'Daily Sales',
+    frequency: 'daily' as ReportFrequency,
+    timeOfDay: '08:00',
+    recipientRoles: ['admin'] as RecipientRole[],
+    sections: ['billing'] as ReportSection[]
+  },
+  {
+    name: 'Monthly Overview',
+    label: 'Monthly Overview',
+    frequency: 'monthly' as ReportFrequency,
+    dayOfMonth: 1,
+    timeOfDay: '10:00',
+    recipientRoles: ['owner', 'admin'] as RecipientRole[],
+    sections: ['cfp', 'billing', 'planning', 'budget', 'sponsoring'] as ReportSection[]
+  },
+  {
+    name: 'CFP Weekly',
+    label: 'CFP Weekly',
+    frequency: 'weekly' as ReportFrequency,
+    dayOfWeek: 'friday' as DayOfWeek,
+    timeOfDay: '17:00',
+    recipientRoles: ['admin', 'organizer'] as RecipientRole[],
+    sections: ['cfp'] as ReportSection[]
+  }
+] as const
 
 interface Props {
   initialData?: Partial<CreateReportConfig>
@@ -131,6 +170,16 @@ function handleTimezoneChange(e: Event) {
   timezone = target.value
 }
 
+function applyPreset(preset: (typeof REPORT_PRESETS)[number]) {
+  name = preset.name
+  frequency = preset.frequency
+  if ('dayOfWeek' in preset) dayOfWeek = preset.dayOfWeek
+  if ('dayOfMonth' in preset) dayOfMonth = preset.dayOfMonth
+  timeOfDay = preset.timeOfDay
+  recipientRoles = [...preset.recipientRoles]
+  sections = [...preset.sections]
+}
+
 const isValid = $derived(
   name.trim() !== '' &&
     recipientRoles.length > 0 &&
@@ -147,6 +196,27 @@ const isValid = $derived(
   }}
   class="space-y-4"
 >
+  <!-- Presets -->
+  <div class="space-y-2">
+    <div class="flex items-center gap-2 text-sm text-muted-foreground">
+      <Sparkles class="h-4 w-4" />
+      <span>Quick presets</span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {#each REPORT_PRESETS as preset}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          class="h-7 text-xs"
+          onclick={() => applyPreset(preset)}
+        >
+          {preset.label}
+        </Button>
+      {/each}
+    </div>
+  </div>
+
   <!-- Name & Enabled -->
   <div class="flex items-end gap-3">
     <div class="flex-1 space-y-1">

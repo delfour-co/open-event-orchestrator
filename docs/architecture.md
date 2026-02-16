@@ -30,6 +30,7 @@ src/
 │   │   ├── core/              # Organization, Event, Edition
 │   │   ├── crm/               # Contact management
 │   │   ├── planning/          # Schedule management
+│   │   ├── reporting/         # Dashboards, alerts & reports
 │   │   └── sponsoring/        # Sponsor management
 │   ├── components/            # Shared UI components
 │   │   ├── layout/            # Sidebar, Header, etc.
@@ -228,6 +229,7 @@ export function canSubmitReviews(role: string): boolean {
 ├── planning/[editionSlug]/    # Schedule
 ├── crm/[editionSlug]/         # Contacts
 ├── sponsoring/[editionSlug]/  # Sponsors
+├── reporting/[editionSlug]/   # Dashboards, alerts & reports
 ├── organizations/             # Org management
 ├── events/                    # Event settings
 └── editions/                  # Edition settings
@@ -380,4 +382,5 @@ SMTP_PORT=1025
 - [Budget Module](./features/budget-module.md)
 - [CRM Module](./features/crm-module.md)
 - [Sponsoring Module](./features/sponsoring-module.md)
+- [Reporting Module](./features/reporting-module.md)
 - [Core Module](./features/core-module.md)

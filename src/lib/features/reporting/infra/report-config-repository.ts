@@ -60,12 +60,13 @@ export const createReportConfigRepository = (pb: PocketBase) => ({
   },
 
   async create(data: CreateReportConfig): Promise<ReportConfig> {
+    const timezone = data.timezone ?? 'UTC'
     const nextScheduledAt = calculateNextScheduledAt({
       frequency: data.frequency,
       dayOfWeek: data.dayOfWeek,
       dayOfMonth: data.dayOfMonth,
       timeOfDay: data.timeOfDay,
-      timezone: data.timezone
+      timezone
     })
 
     const record = await pb.collection(COLLECTION).create({

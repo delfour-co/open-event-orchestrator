@@ -2009,6 +2009,9 @@ async function seed(): Promise<void> {
     editionSponsors: string[]
     apiKeys: string[]
     webhooks: string[]
+    alertThresholds: string[]
+    alerts: string[]
+    reportConfigs: string[]
   } = {
     users: [],
     organization: '',
@@ -2037,7 +2040,10 @@ async function seed(): Promise<void> {
     sponsorPackages: [],
     editionSponsors: [],
     apiKeys: [],
-    webhooks: []
+    webhooks: [],
+    alertThresholds: [],
+    alerts: [],
+    reportConfigs: []
   }
 
   try {
@@ -4771,6 +4777,298 @@ async function seed(): Promise<void> {
     console.log('')
 
     // ========================================================================
+    // Alert Thresholds
+    // ========================================================================
+    console.log('🚨 Creating alert thresholds...')
+    let alertThresholdsCreated = 0
+    if (ids.edition) {
+      const thresholdDefs = [
+        {
+          name: 'Low Ticket Sales Alert',
+          description: 'Alert when ticket sales drop below expected threshold',
+          metricSource: 'billing_sales',
+          operator: 'lt',
+          thresholdValue: 50,
+          level: 'warning',
+          enabled: true,
+          notifyByEmail: true,
+          notifyInApp: true,
+          emailRecipients: ['admin@example.com']
+        },
+        {
+          name: 'Critical Low Revenue',
+          description: 'Critical alert for very low revenue',
+          metricSource: 'billing_revenue',
+          operator: 'lt',
+          thresholdValue: 10000,
+          level: 'critical',
+          enabled: true,
+          notifyByEmail: true,
+          notifyInApp: true,
+          emailRecipients: ['admin@example.com', 'finance@example.com']
+        },
+        {
+          name: 'High Pending Reviews',
+          description: 'Alert when too many talks are pending review',
+          metricSource: 'cfp_pending_reviews',
+          operator: 'gt',
+          thresholdValue: 20,
+          level: 'info',
+          enabled: true,
+          notifyByEmail: false,
+          notifyInApp: true,
+          emailRecipients: []
+        },
+        {
+          name: 'Low Acceptance Rate',
+          description: 'Alert when acceptance rate is too low',
+          metricSource: 'cfp_acceptance_rate',
+          operator: 'lt',
+          thresholdValue: 20,
+          level: 'warning',
+          enabled: true,
+          notifyByEmail: false,
+          notifyInApp: true,
+          emailRecipients: []
+        },
+        {
+          name: 'Budget Overrun Warning',
+          description: 'Alert when budget utilization exceeds threshold',
+          metricSource: 'budget_utilization',
+          operator: 'gt',
+          thresholdValue: 90,
+          level: 'warning',
+          enabled: false, // Disabled for demo
+          notifyByEmail: true,
+          notifyInApp: true,
+          emailRecipients: ['admin@example.com']
+        }
+      ]
+
+      for (const threshold of thresholdDefs) {
+        try {
+          const existing = await pb.collection('alert_thresholds').getList(1, 1, {
+            filter: `name = "${threshold.name}" && editionId = "${ids.edition}"`
+          })
+
+          if (existing.items.length === 0) {
+            const record = await pb.collection('alert_thresholds').create({
+              editionId: ids.edition,
+              name: threshold.name,
+              description: threshold.description,
+              metricSource: threshold.metricSource,
+              operator: threshold.operator,
+              thresholdValue: threshold.thresholdValue,
+              level: threshold.level,
+              enabled: threshold.enabled,
+              notifyByEmail: threshold.notifyByEmail,
+              notifyInApp: threshold.notifyInApp,
+              emailRecipients: JSON.stringify(threshold.emailRecipients)
+            })
+            ids.alertThresholds.push(record.id)
+            console.log(`  Created threshold: ${threshold.name}`)
+            alertThresholdsCreated++
+          } else {
+            ids.alertThresholds.push(existing.items[0].id)
+            console.log(`  Threshold already exists: ${threshold.name}`)
+          }
+        } catch (err) {
+          console.error(`  Failed to create threshold ${threshold.name}:`, err)
+        }
+      }
+    } else {
+      console.log('  Skipping alert thresholds (no edition)')
+    }
+    console.log('')
+
+    // ========================================================================
+    // Alerts
+    // ========================================================================
+    console.log('🔔 Creating sample alerts...')
+    let alertsCreated = 0
+    if (ids.edition && ids.alertThresholds.length > 0) {
+      const alertDefs = [
+        {
+          thresholdIndex: 0,
+          title: 'Low Ticket Sales Detected',
+          message:
+            'Ticket sales (35) are below the threshold of 50. Consider launching a marketing campaign.',
+          level: 'warning',
+          metricSource: 'billing_sales',
+          currentValue: 35,
+          thresholdValue: 50,
+          status: 'active',
+          hoursAgo: 2
+        },
+        {
+          thresholdIndex: 2,
+          title: 'High Pending Reviews',
+          message: 'There are 25 talks pending review, which exceeds the threshold of 20.',
+          level: 'info',
+          metricSource: 'cfp_pending_reviews',
+          currentValue: 25,
+          thresholdValue: 20,
+          status: 'acknowledged',
+          acknowledgedBy: 0, // admin user index
+          hoursAgo: 12
+        },
+        {
+          thresholdIndex: 3,
+          title: 'Low Acceptance Rate',
+          message: 'The current acceptance rate (15%) is below the threshold of 20%.',
+          level: 'warning',
+          metricSource: 'cfp_acceptance_rate',
+          currentValue: 15,
+          thresholdValue: 20,
+          status: 'resolved',
+          hoursAgo: 48
+        }
+      ]
+
+      for (const alert of alertDefs) {
+        try {
+          const thresholdId = ids.alertThresholds[alert.thresholdIndex]
+          if (!thresholdId) continue
+
+          const existing = await pb.collection('alerts').getList(1, 1, {
+            filter: `title = "${alert.title}" && editionId = "${ids.edition}"`
+          })
+
+          if (existing.items.length === 0) {
+            const data: Record<string, unknown> = {
+              editionId: ids.edition,
+              thresholdId,
+              title: alert.title,
+              message: alert.message,
+              level: alert.level,
+              metricSource: alert.metricSource,
+              currentValue: alert.currentValue,
+              thresholdValue: alert.thresholdValue,
+              status: alert.status
+            }
+
+            if (alert.status === 'acknowledged' && alert.acknowledgedBy !== undefined) {
+              data.acknowledgedBy = ids.users[alert.acknowledgedBy]
+              data.acknowledgedAt = new Date(
+                Date.now() - (alert.hoursAgo - 1) * 60 * 60 * 1000
+              ).toISOString()
+            }
+
+            if (alert.status === 'resolved') {
+              data.resolvedAt = new Date(
+                Date.now() - (alert.hoursAgo / 2) * 60 * 60 * 1000
+              ).toISOString()
+            }
+
+            const record = await pb.collection('alerts').create(data)
+            ids.alerts.push(record.id)
+            console.log(`  Created alert: ${alert.title} (${alert.status})`)
+            alertsCreated++
+          } else {
+            ids.alerts.push(existing.items[0].id)
+            console.log(`  Alert already exists: ${alert.title}`)
+          }
+        } catch (err) {
+          console.error(`  Failed to create alert ${alert.title}:`, err)
+        }
+      }
+    } else {
+      console.log('  Skipping alerts (no edition or thresholds)')
+    }
+    console.log('')
+
+    // ========================================================================
+    // Report Configs
+    // ========================================================================
+    console.log('📊 Creating report configurations...')
+    let reportConfigsCreated = 0
+    if (ids.edition) {
+      const reportConfigDefs = [
+        {
+          name: 'Weekly CFP Summary',
+          enabled: true,
+          frequency: 'weekly',
+          dayOfWeek: 'monday',
+          timeOfDay: '09:00',
+          timezone: 'Europe/Paris',
+          recipientRoles: ['admin', 'organizer'],
+          recipients: [],
+          sections: ['cfp']
+        },
+        {
+          name: 'Daily Sales Report',
+          enabled: true,
+          frequency: 'daily',
+          timeOfDay: '08:00',
+          timezone: 'Europe/Paris',
+          recipientRoles: ['admin'],
+          recipients: [{ email: 'finance@example.com', name: 'Finance Team' }],
+          sections: ['billing']
+        },
+        {
+          name: 'Monthly Overview',
+          enabled: true,
+          frequency: 'monthly',
+          dayOfMonth: 1,
+          timeOfDay: '10:00',
+          timezone: 'Europe/Paris',
+          recipientRoles: ['owner', 'admin'],
+          recipients: [],
+          sections: ['cfp', 'billing', 'planning', 'budget', 'sponsoring']
+        },
+        {
+          name: 'Weekly Planning Update',
+          enabled: false, // Disabled for demo
+          frequency: 'weekly',
+          dayOfWeek: 'friday',
+          timeOfDay: '17:00',
+          timezone: 'Europe/Paris',
+          recipientRoles: ['admin', 'organizer'],
+          recipients: [],
+          sections: ['planning']
+        }
+      ]
+
+      for (const config of reportConfigDefs) {
+        try {
+          const existing = await pb.collection('report_configs').getList(1, 1, {
+            filter: `name = "${config.name}" && editionId = "${ids.edition}"`
+          })
+
+          if (existing.items.length === 0) {
+            const data: Record<string, unknown> = {
+              editionId: ids.edition,
+              name: config.name,
+              enabled: config.enabled,
+              frequency: config.frequency,
+              timeOfDay: config.timeOfDay,
+              timezone: config.timezone,
+              recipientRoles: config.recipientRoles,
+              recipients: config.recipients,
+              sections: config.sections
+            }
+
+            if (config.dayOfWeek) data.dayOfWeek = config.dayOfWeek
+            if (config.dayOfMonth) data.dayOfMonth = config.dayOfMonth
+
+            const record = await pb.collection('report_configs').create(data)
+            ids.reportConfigs.push(record.id)
+            console.log(`  Created report config: ${config.name}`)
+            reportConfigsCreated++
+          } else {
+            ids.reportConfigs.push(existing.items[0].id)
+            console.log(`  Report config already exists: ${config.name}`)
+          }
+        } catch (err) {
+          console.error(`  Failed to create report config ${config.name}:`, err)
+        }
+      }
+    } else {
+      console.log('  Skipping report configs (no edition)')
+    }
+    console.log('')
+
+    // ========================================================================
     // Summary
     // ========================================================================
     console.log('✅ Seed completed!\n')
@@ -4811,6 +5109,9 @@ async function seed(): Promise<void> {
     console.log(`   Webhooks: ${ids.webhooks.length}`)
     console.log(`   API Request Logs: ${apiLogsCreated}`)
     console.log(`   Webhook Deliveries: ${deliveriesCreated}`)
+    console.log(`   Alert Thresholds: ${ids.alertThresholds.length}`)
+    console.log(`   Alerts: ${ids.alerts.length}`)
+    console.log(`   Report Configs: ${ids.reportConfigs.length}`)
     console.log('')
     console.log('🔐 Test accounts:')
     console.log('   admin@example.com / admin123 (organizer, owner)')

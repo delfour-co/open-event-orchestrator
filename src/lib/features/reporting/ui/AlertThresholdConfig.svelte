@@ -6,7 +6,7 @@ import { Label } from '$lib/components/ui/label'
 import { Select } from '$lib/components/ui/select'
 import { Switch } from '$lib/components/ui/switch'
 import { cn } from '$lib/utils'
-import { AlertCircle, AlertTriangle, Info, Plus, Trash2, X } from 'lucide-svelte'
+import { AlertCircle, AlertTriangle, Info, Plus, Sparkles, Trash2, X } from 'lucide-svelte'
 import {
   type AlertLevel,
   type AlertThreshold,
@@ -21,6 +21,50 @@ import {
   metricSourceSchema
 } from '../domain/alert-threshold'
 
+// Preset threshold templates
+const THRESHOLD_PRESETS = [
+  {
+    name: 'Low Ticket Sales',
+    description: 'Alert when ticket sales are below target',
+    metricSource: 'billing_sales' as MetricSource,
+    operator: 'lt' as ComparisonOperator,
+    thresholdValue: 50,
+    level: 'warning' as AlertLevel
+  },
+  {
+    name: 'Low Revenue',
+    description: 'Alert when revenue drops below threshold',
+    metricSource: 'billing_revenue' as MetricSource,
+    operator: 'lt' as ComparisonOperator,
+    thresholdValue: 10000,
+    level: 'critical' as AlertLevel
+  },
+  {
+    name: 'Pending Reviews Backlog',
+    description: 'Alert when too many talks await review',
+    metricSource: 'cfp_pending_reviews' as MetricSource,
+    operator: 'gt' as ComparisonOperator,
+    thresholdValue: 20,
+    level: 'info' as AlertLevel
+  },
+  {
+    name: 'Low Acceptance Rate',
+    description: 'Alert when CFP acceptance rate is low',
+    metricSource: 'cfp_acceptance_rate' as MetricSource,
+    operator: 'lt' as ComparisonOperator,
+    thresholdValue: 25,
+    level: 'warning' as AlertLevel
+  },
+  {
+    name: 'Budget Overrun',
+    description: 'Alert when budget utilization exceeds limit',
+    metricSource: 'budget_utilization' as MetricSource,
+    operator: 'gt' as ComparisonOperator,
+    thresholdValue: 90,
+    level: 'critical' as AlertLevel
+  }
+] as const
+
 type Props = {
   thresholds: AlertThreshold[]
   editionId: string
@@ -34,23 +78,17 @@ const { thresholds, editionId, onAdd, onDelete, onToggle, class: className }: Pr
 
 let isAddingNew = $state(false)
 
-// Extract editionId to avoid state_referenced_locally warning
-const initEditionId = editionId
-
 // Form state for new threshold
-let newThreshold = $state<Partial<CreateAlertThreshold>>({
-  editionId: initEditionId,
-  name: '',
-  metricSource: 'billing_sales',
-  operator: 'lt',
-  thresholdValue: 0,
-  level: 'warning',
-  enabled: true,
-  notifyByEmail: false,
-  notifyInApp: true,
-  emailRecipients: []
-})
-
+let newName = $state('')
+let newDescription = $state('')
+let newMetricSource = $state('billing_sales')
+let newOperator = $state('lt')
+let newThresholdValue = $state('0')
+let newLevel = $state('warning')
+let newEnabled = $state(true)
+let newNotifyByEmail = $state(false)
+let newNotifyInApp = $state(true)
+let newEmailRecipients = $state<string[]>([])
 let newEmailInput = $state('')
 
 const levelIcons = {
@@ -70,36 +108,34 @@ const operators = comparisonOperatorSchema.options
 const levels = alertLevelSchema.options
 
 function resetNewForm() {
-  newThreshold = {
-    editionId,
-    name: '',
-    metricSource: 'billing_sales',
-    operator: 'lt',
-    thresholdValue: 0,
-    level: 'warning',
-    enabled: true,
-    notifyByEmail: false,
-    notifyInApp: true,
-    emailRecipients: []
-  }
+  newName = ''
+  newDescription = ''
+  newMetricSource = 'billing_sales'
+  newOperator = 'lt'
+  newThresholdValue = '0'
+  newLevel = 'warning'
+  newEnabled = true
+  newNotifyByEmail = false
+  newNotifyInApp = true
+  newEmailRecipients = []
   newEmailInput = ''
   isAddingNew = false
 }
 
 function handleAddThreshold() {
-  if (!newThreshold.name || !newThreshold.metricSource) return
+  if (!newName || !newMetricSource) return
   onAdd?.({
     editionId,
-    name: newThreshold.name,
-    description: newThreshold.description,
-    metricSource: newThreshold.metricSource as MetricSource,
-    operator: (newThreshold.operator || 'lt') as ComparisonOperator,
-    thresholdValue: newThreshold.thresholdValue || 0,
-    level: (newThreshold.level || 'warning') as AlertLevel,
-    enabled: newThreshold.enabled ?? true,
-    notifyByEmail: newThreshold.notifyByEmail ?? false,
-    notifyInApp: newThreshold.notifyInApp ?? true,
-    emailRecipients: newThreshold.emailRecipients || []
+    name: newName,
+    description: newDescription || undefined,
+    metricSource: newMetricSource as MetricSource,
+    operator: newOperator as ComparisonOperator,
+    thresholdValue: Number(newThresholdValue) || 0,
+    level: newLevel as AlertLevel,
+    enabled: newEnabled,
+    notifyByEmail: newNotifyByEmail,
+    notifyInApp: newNotifyInApp,
+    emailRecipients: newEmailRecipients
   })
   resetNewForm()
 }
@@ -107,13 +143,13 @@ function handleAddThreshold() {
 function addEmailRecipient() {
   const email = newEmailInput.trim()
   if (!email || !email.includes('@')) return
-  if (newThreshold.emailRecipients?.includes(email)) return
-  newThreshold.emailRecipients = [...(newThreshold.emailRecipients || []), email]
+  if (newEmailRecipients.includes(email)) return
+  newEmailRecipients = [...newEmailRecipients, email]
   newEmailInput = ''
 }
 
 function removeEmailRecipient(email: string) {
-  newThreshold.emailRecipients = (newThreshold.emailRecipients || []).filter((e) => e !== email)
+  newEmailRecipients = newEmailRecipients.filter((e) => e !== email)
 }
 
 function handleKeyDown(e: KeyboardEvent) {
@@ -123,19 +159,13 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-function handleMetricChange(e: Event) {
-  const target = e.target as HTMLSelectElement
-  newThreshold.metricSource = target.value as MetricSource
-}
-
-function handleOperatorChange(e: Event) {
-  const target = e.target as HTMLSelectElement
-  newThreshold.operator = target.value as ComparisonOperator
-}
-
-function handleLevelChange(e: Event) {
-  const target = e.target as HTMLSelectElement
-  newThreshold.level = target.value as AlertLevel
+function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
+  newName = preset.name
+  newDescription = preset.description
+  newMetricSource = preset.metricSource
+  newOperator = preset.operator
+  newThresholdValue = preset.thresholdValue.toString()
+  newLevel = preset.level
 }
 </script>
 
@@ -161,15 +191,36 @@ function handleLevelChange(e: Event) {
         <Card.Title class="text-base">New Alert Threshold</Card.Title>
       </Card.Header>
       <Card.Content class="space-y-4">
+        <!-- Presets -->
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-sm text-muted-foreground">
+            <Sparkles class="h-4 w-4" />
+            <span>Quick presets</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {#each THRESHOLD_PRESETS as preset}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                class="h-7 text-xs"
+                onclick={() => applyPreset(preset)}
+              >
+                {preset.name}
+              </Button>
+            {/each}
+          </div>
+        </div>
+
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input id="name" placeholder="e.g., Low ticket sales" bind:value={newThreshold.name} />
+            <Input id="name" placeholder="e.g., Low ticket sales" bind:value={newName} />
           </div>
 
           <div class="space-y-2">
             <Label for="metric">Metric</Label>
-            <Select id="metric" value={newThreshold.metricSource} onchange={handleMetricChange}>
+            <Select id="metric" bind:value={newMetricSource}>
               {#each metricSources as source}
                 <option value={source}>{getMetricSourceLabel(source)}</option>
               {/each}
@@ -180,7 +231,7 @@ function handleLevelChange(e: Event) {
         <div class="grid gap-4 sm:grid-cols-3">
           <div class="space-y-2">
             <Label for="operator">Condition</Label>
-            <Select id="operator" value={newThreshold.operator} onchange={handleOperatorChange}>
+            <Select id="operator" bind:value={newOperator}>
               {#each operators as op}
                 <option value={op}>{getComparisonOperatorLabel(op)}</option>
               {/each}
@@ -192,14 +243,13 @@ function handleLevelChange(e: Event) {
             <Input
               id="value"
               type="number"
-              value={newThreshold.thresholdValue?.toString() ?? '0'}
-              oninput={(e) => (newThreshold.thresholdValue = Number(e.currentTarget.value))}
+              bind:value={newThresholdValue}
             />
           </div>
 
           <div class="space-y-2">
             <Label for="level">Alert Level</Label>
-            <Select id="level" value={newThreshold.level} onchange={handleLevelChange}>
+            <Select id="level" bind:value={newLevel}>
               {#each levels as level}
                 <option value={level}>{getAlertLevelLabel(level)}</option>
               {/each}
@@ -212,7 +262,7 @@ function handleLevelChange(e: Event) {
           <Input
             id="description"
             placeholder="Describe what this alert monitors..."
-            bind:value={newThreshold.description}
+            bind:value={newDescription}
           />
         </div>
 
@@ -224,8 +274,8 @@ function handleLevelChange(e: Event) {
             <Label for="notifyInApp" class="cursor-pointer">In-app notifications</Label>
             <Switch
               id="notifyInApp"
-              checked={newThreshold.notifyInApp ?? true}
-              onCheckedChange={(checked) => (newThreshold.notifyInApp = checked)}
+              checked={newNotifyInApp}
+              onCheckedChange={(checked) => (newNotifyInApp = checked)}
             />
           </div>
 
@@ -233,12 +283,12 @@ function handleLevelChange(e: Event) {
             <Label for="notifyByEmail" class="cursor-pointer">Email notifications</Label>
             <Switch
               id="notifyByEmail"
-              checked={newThreshold.notifyByEmail ?? false}
-              onCheckedChange={(checked) => (newThreshold.notifyByEmail = checked)}
+              checked={newNotifyByEmail}
+              onCheckedChange={(checked) => (newNotifyByEmail = checked)}
             />
           </div>
 
-          {#if newThreshold.notifyByEmail}
+          {#if newNotifyByEmail}
             <div class="space-y-2">
               <Label for="emails">Email Recipients</Label>
               <div class="flex gap-2">
@@ -251,9 +301,9 @@ function handleLevelChange(e: Event) {
                 />
                 <Button type="button" variant="outline" onclick={addEmailRecipient}>Add</Button>
               </div>
-              {#if newThreshold.emailRecipients && newThreshold.emailRecipients.length > 0}
+              {#if newEmailRecipients.length > 0}
                 <div class="flex flex-wrap gap-2">
-                  {#each newThreshold.emailRecipients as email}
+                  {#each newEmailRecipients as email}
                     <span
                       class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-sm"
                     >
@@ -275,7 +325,7 @@ function handleLevelChange(e: Event) {
 
         <div class="flex justify-end gap-2">
           <Button variant="ghost" onclick={resetNewForm}>Cancel</Button>
-          <Button onclick={handleAddThreshold} disabled={!newThreshold.name}>
+          <Button onclick={handleAddThreshold} disabled={!newName}>
             Create Threshold
           </Button>
         </div>
