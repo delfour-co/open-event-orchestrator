@@ -42,3 +42,6 @@ pb_data/
 
 *storybook.log
 storybook-static
+
+# Setup token (temporary file for first-run setup)
+.setup-token.json

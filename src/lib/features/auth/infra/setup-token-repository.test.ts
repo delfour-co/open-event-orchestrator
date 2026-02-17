@@ -1,185 +1,306 @@
-import { describe, expect, it, vi } from 'vitest'
+import * as fs from 'node:fs'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSetupTokenRepository } from './setup-token-repository'
 
-const createMockPocketBase = () => {
-  const mockRecord = {
-    id: 'token-123',
-    token: 'a'.repeat(48),
-    expiresAt: new Date(Date.now() + 86400000).toISOString(),
-    used: false,
-    usedAt: null,
-    created: new Date().toISOString(),
-    updated: new Date().toISOString()
-  }
-
-  return {
-    collection: vi.fn().mockReturnValue({
-      getFirstListItem: vi.fn().mockResolvedValue(mockRecord),
-      getFullList: vi.fn().mockResolvedValue([mockRecord]),
-      create: vi.fn().mockResolvedValue(mockRecord),
-      update: vi
-        .fn()
-        .mockResolvedValue({ ...mockRecord, used: true, usedAt: new Date().toISOString() }),
-      delete: vi.fn().mockResolvedValue(undefined)
-    }),
-    mockRecord
-  }
-}
+vi.mock('node:fs')
 
 describe('createSetupTokenRepository', () => {
-  describe('create', () => {
-    it('creates token with expiration date', async () => {
-      const { collection, mockRecord } = createMockPocketBase()
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository({ collection } as any)
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
+  afterEach(() => {
+    vi.resetAllMocks()
+  })
+
+  describe('create', () => {
+    it('creates token file with token data', async () => {
+      const repo = createSetupTokenRepository()
+      const token = 'a'.repeat(48)
+      const expiresAt = new Date(Date.now() + 86400000)
+
+      const result = await repo.create(token, expiresAt)
+
+      expect(fs.writeFileSync).toHaveBeenCalledTimes(1)
+      expect(result.token).toBe(token)
+      expect(result.expiresAt.getTime()).toBe(expiresAt.getTime())
+      expect(result.used).toBe(false)
+      expect(result.id).toBeDefined()
+    })
+
+    it('generates unique id for token', async () => {
+      const repo = createSetupTokenRepository()
       const token = 'b'.repeat(48)
       const expiresAt = new Date(Date.now() + 86400000)
 
       const result = await repo.create(token, expiresAt)
 
-      expect(collection().create).toHaveBeenCalledWith({
-        token,
-        expiresAt: expiresAt.toISOString(),
-        used: false
-      })
-      expect(result.id).toBe(mockRecord.id)
+      expect(result.id).toMatch(/^[a-z0-9]+$/)
+      expect(result.id.length).toBeGreaterThan(0)
     })
   })
 
   describe('findByToken', () => {
-    it('returns token when found', async () => {
-      const { collection, mockRecord } = createMockPocketBase()
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository({ collection } as any)
+    it('returns token when file exists and token matches', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
 
-      const result = await repo.findByToken(mockRecord.token)
+      const repo = createSetupTokenRepository()
+      const result = await repo.findByToken(storedToken.token)
 
       expect(result).not.toBeNull()
-      expect(result?.token).toBe(mockRecord.token)
-      expect(collection().getFirstListItem).toHaveBeenCalledWith(`token="${mockRecord.token}"`)
+      expect(result?.token).toBe(storedToken.token)
+      expect(result?.id).toBe(storedToken.id)
     })
 
-    it('returns null when not found', async () => {
-      const pb = {
-        collection: vi.fn().mockReturnValue({
-          getFirstListItem: vi.fn().mockRejectedValue(new Error('Not found'))
-        })
-      }
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository(pb as any)
+    it('returns null when file does not exist', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(false)
 
+      const repo = createSetupTokenRepository()
       const result = await repo.findByToken('nonexistent')
 
       expect(result).toBeNull()
     })
 
-    it('parses dates correctly', async () => {
-      const { collection } = createMockPocketBase()
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository({ collection } as any)
+    it('returns null when token does not match', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date().toISOString(),
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
 
-      const result = await repo.findByToken('a'.repeat(48))
+      const repo = createSetupTokenRepository()
+      const result = await repo.findByToken('different-token')
+
+      expect(result).toBeNull()
+    })
+
+    it('parses dates correctly', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        used: false,
+        usedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
+
+      const repo = createSetupTokenRepository()
+      const result = await repo.findByToken(storedToken.token)
 
       expect(result?.expiresAt).toBeInstanceOf(Date)
       expect(result?.createdAt).toBeInstanceOf(Date)
       expect(result?.updatedAt).toBeInstanceOf(Date)
+      expect(result?.usedAt).toBeInstanceOf(Date)
     })
   })
 
   describe('markAsUsed', () => {
     it('marks token as used with timestamp', async () => {
-      const { collection } = createMockPocketBase()
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository({ collection } as any)
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
 
+      const repo = createSetupTokenRepository()
       const result = await repo.markAsUsed('token-123')
 
-      expect(collection().update).toHaveBeenCalledWith('token-123', {
-        used: true,
-        usedAt: expect.any(String)
-      })
       expect(result.used).toBe(true)
+      expect(result.usedAt).toBeInstanceOf(Date)
+      expect(fs.writeFileSync).toHaveBeenCalled()
+    })
+
+    it('throws when token id does not match', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date().toISOString(),
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
+
+      const repo = createSetupTokenRepository()
+
+      await expect(repo.markAsUsed('wrong-id')).rejects.toThrow('Token not found')
     })
   })
 
   describe('deleteExpired', () => {
-    it('deletes expired and used tokens', async () => {
-      const expiredTokens = [{ id: 'expired-1' }, { id: 'expired-2' }]
-      const pb = {
-        collection: vi.fn().mockReturnValue({
-          getFullList: vi.fn().mockResolvedValue(expiredTokens),
-          delete: vi.fn().mockResolvedValue(undefined)
-        })
+    it('deletes file when token is expired', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() - 86400000).toISOString(), // Expired
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository(pb as any)
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
 
+      const repo = createSetupTokenRepository()
       const count = await repo.deleteExpired()
 
-      expect(count).toBe(2)
-      expect(pb.collection().delete).toHaveBeenCalledTimes(2)
-      expect(pb.collection().delete).toHaveBeenCalledWith('expired-1')
-      expect(pb.collection().delete).toHaveBeenCalledWith('expired-2')
+      expect(count).toBe(1)
+      expect(fs.unlinkSync).toHaveBeenCalled()
     })
 
-    it('returns 0 when no expired tokens', async () => {
-      const pb = {
-        collection: vi.fn().mockReturnValue({
-          getFullList: vi.fn().mockResolvedValue([]),
-          delete: vi.fn()
-        })
+    it('deletes file when token is used', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        used: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository(pb as any)
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
 
+      const repo = createSetupTokenRepository()
+      const count = await repo.deleteExpired()
+
+      expect(count).toBe(1)
+      expect(fs.unlinkSync).toHaveBeenCalled()
+    })
+
+    it('returns 0 when no file exists', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(false)
+
+      const repo = createSetupTokenRepository()
       const count = await repo.deleteExpired()
 
       expect(count).toBe(0)
-      expect(pb.collection().delete).not.toHaveBeenCalled()
+      expect(fs.unlinkSync).not.toHaveBeenCalled()
     })
 
-    it('returns 0 when getFullList fails', async () => {
-      const pb = {
-        collection: vi.fn().mockReturnValue({
-          getFullList: vi.fn().mockRejectedValue(new Error('Database error'))
-        })
+    it('returns 0 when token is still valid', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository(pb as any)
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
 
+      const repo = createSetupTokenRepository()
       const count = await repo.deleteExpired()
 
       expect(count).toBe(0)
+      expect(fs.unlinkSync).not.toHaveBeenCalled()
     })
   })
 
   describe('hasValidToken', () => {
     it('returns true when valid token exists', async () => {
-      const { collection } = createMockPocketBase()
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository({ collection } as any)
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
 
+      const repo = createSetupTokenRepository()
       const result = await repo.hasValidToken()
 
       expect(result).toBe(true)
-      expect(collection().getFirstListItem).toHaveBeenCalledWith(
-        expect.stringContaining('used = false')
-      )
     })
 
-    it('returns false when no valid token exists', async () => {
-      const pb = {
-        collection: vi.fn().mockReturnValue({
-          getFirstListItem: vi.fn().mockRejectedValue(new Error('Not found'))
-        })
-      }
-      // biome-ignore lint/suspicious/noExplicitAny: Mock PocketBase for testing
-      const repo = createSetupTokenRepository(pb as any)
+    it('returns false when no file exists', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(false)
 
+      const repo = createSetupTokenRepository()
       const result = await repo.hasValidToken()
 
       expect(result).toBe(false)
+    })
+
+    it('returns false when token is expired', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() - 86400000).toISOString(),
+        used: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
+
+      const repo = createSetupTokenRepository()
+      const result = await repo.hasValidToken()
+
+      expect(result).toBe(false)
+    })
+
+    it('returns false when token is used', async () => {
+      const storedToken = {
+        id: 'token-123',
+        token: 'a'.repeat(48),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        used: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(storedToken))
+
+      const repo = createSetupTokenRepository()
+      const result = await repo.hasValidToken()
+
+      expect(result).toBe(false)
+    })
+  })
+
+  describe('deleteAll', () => {
+    it('deletes the token file', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true)
+
+      const repo = createSetupTokenRepository()
+      await repo.deleteAll()
+
+      expect(fs.unlinkSync).toHaveBeenCalled()
+    })
+
+    it('does nothing when file does not exist', async () => {
+      vi.mocked(fs.existsSync).mockReturnValue(false)
+
+      const repo = createSetupTokenRepository()
+      await repo.deleteAll()
+
+      expect(fs.unlinkSync).not.toHaveBeenCalled()
     })
   })
 })

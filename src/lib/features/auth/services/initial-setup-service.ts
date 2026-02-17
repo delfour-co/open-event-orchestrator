@@ -6,6 +6,7 @@ export type InitialSetupService = {
   isFirstRun: () => Promise<boolean>
   generateSetupLink: (baseUrl: string) => Promise<string | null>
   checkAndDisplaySetupLink: (baseUrl: string) => Promise<void>
+  cleanupAfterSetup: () => Promise<void>
 }
 
 /**
@@ -25,7 +26,7 @@ export async function checkIsFirstRun(pb: PocketBase): Promise<boolean> {
  * Create the initial setup service
  */
 export const createInitialSetupService = (pb: PocketBase): InitialSetupService => {
-  const tokenRepository = createSetupTokenRepository(pb)
+  const tokenRepository = createSetupTokenRepository()
 
   return {
     async isFirstRun() {
@@ -56,6 +57,8 @@ export const createInitialSetupService = (pb: PocketBase): InitialSetupService =
       const isFirstRun = await checkIsFirstRun(pb)
 
       if (!isFirstRun) {
+        // Clean up any leftover setup tokens
+        await tokenRepository.deleteAll()
         return
       }
 
@@ -64,6 +67,10 @@ export const createInitialSetupService = (pb: PocketBase): InitialSetupService =
       if (setupLink) {
         displaySetupLink(setupLink)
       }
+    },
+
+    async cleanupAfterSetup() {
+      await tokenRepository.deleteAll()
     }
   }
 }
