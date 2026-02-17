@@ -13,8 +13,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const { editionSlug } = params
 
   const editions = await locals.pb.collection('editions').getList(1, 1, {
-    filter: `slug = "${editionSlug}"`,
-    expand: 'eventId'
+    filter: `slug = "${editionSlug}"`
   })
 
   if (editions.items.length === 0) {
@@ -23,7 +22,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
   const edition = editions.items[0]
   const editionId = edition.id as string
-  const event = edition.expand?.eventId
+
+  // Get budget currency
+  let budgetCurrency = 'EUR'
+  try {
+    const budget = await locals.pb
+      .collection('edition_budgets')
+      .getFirstListItem(safeFilter`editionId = ${editionId}`)
+    budgetCurrency = (budget.currency as string) || 'EUR'
+  } catch {
+    // No budget found, use default
+  }
 
   // Get ticket types for this edition
   const ticketTypes = await locals.pb.collection('ticket_types').getFullList({
@@ -41,7 +50,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       name: edition.name as string,
       slug: edition.slug as string
     },
-    currency: (event?.currency as string) || 'USD',
+    currency: budgetCurrency,
     ticketTypes: ticketTypes.map((t) => ({
       id: t.id as string,
       name: t.name as string,

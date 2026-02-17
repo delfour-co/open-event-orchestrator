@@ -35,14 +35,14 @@ const statusColors: Record<string, string> = {
 }
 
 const statusLabels: Record<string, string> = {
-  draft: 'Brouillon',
-  submitted: 'Soumis',
-  under_review: 'En review',
-  accepted: 'Accepte',
-  rejected: 'Refuse',
-  confirmed: 'Confirme',
-  declined: 'Decline',
-  withdrawn: 'Retire'
+  draft: 'Draft',
+  submitted: 'Submitted',
+  under_review: 'Under Review',
+  accepted: 'Accepted',
+  rejected: 'Rejected',
+  confirmed: 'Confirmed',
+  declined: 'Declined',
+  withdrawn: 'Withdrawn'
 }
 
 const getStatusPercentage = (count: number, total: number): number => {
@@ -63,7 +63,7 @@ const getStatusPercentage = (count: number, total: number): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Total soumissions',
+          label: 'Total Submissions',
           value: submissionStats?.total ?? 0,
           format: 'number'
         }}
@@ -76,7 +76,7 @@ const getStatusPercentage = (count: number, total: number): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Soumis (hors brouillons)',
+          label: 'Submitted (excl. drafts)',
           value: submissionStats?.submittedCount ?? 0,
           format: 'number'
         }}
@@ -89,7 +89,7 @@ const getStatusPercentage = (count: number, total: number): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Talks en attente de review',
+          label: 'Talks Pending Review',
           value: reviewStats?.pendingReviewTalks ?? 0,
           format: 'number'
         }}
@@ -102,7 +102,7 @@ const getStatusPercentage = (count: number, total: number): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Taux acceptation',
+          label: 'Acceptance Rate',
           value: acceptanceStats?.globalRate ?? 0,
           format: 'percentage'
         }}
@@ -116,7 +116,7 @@ const getStatusPercentage = (count: number, total: number): number => {
     <!-- Status Distribution -->
     <Card.Root>
       <Card.Header>
-        <Card.Title class="text-sm font-medium">Repartition par statut</Card.Title>
+        <Card.Title class="text-sm font-medium">Status Distribution</Card.Title>
       </Card.Header>
       <Card.Content>
         {#if loading}
@@ -153,7 +153,7 @@ const getStatusPercentage = (count: number, total: number): number => {
     <div class="grid gap-4 md:grid-cols-2">
       <Card.Root>
         <Card.Header>
-          <Card.Title class="text-sm font-medium">Statistiques de review</Card.Title>
+          <Card.Title class="text-sm font-medium">Review Statistics</Card.Title>
         </Card.Header>
         <Card.Content>
           {#if loading}
@@ -169,15 +169,15 @@ const getStatusPercentage = (count: number, total: number): number => {
                 <dd class="font-medium">{reviewStats.totalReviews}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-muted-foreground">Talks avec review</dt>
+                <dt class="text-muted-foreground">Talks with reviews</dt>
                 <dd class="font-medium">{reviewStats.reviewedTalks}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-muted-foreground">Moyenne reviews/talk</dt>
+                <dt class="text-muted-foreground">Avg. reviews/talk</dt>
                 <dd class="font-medium">{reviewStats.averageReviewsPerTalk}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-muted-foreground">Note moyenne</dt>
+                <dt class="text-muted-foreground">Average rating</dt>
                 <dd class="font-medium">
                   {reviewStats.averageRating !== null ? `${reviewStats.averageRating}/5` : '-'}
                 </dd>
@@ -190,7 +190,7 @@ const getStatusPercentage = (count: number, total: number): number => {
       <!-- Top Categories by Acceptance -->
       <Card.Root>
         <Card.Header>
-          <Card.Title class="text-sm font-medium">Taux acceptation par categorie</Card.Title>
+          <Card.Title class="text-sm font-medium">Acceptance Rate by Category</Card.Title>
         </Card.Header>
         <Card.Content>
           {#if loading}
@@ -214,7 +214,7 @@ const getStatusPercentage = (count: number, total: number): number => {
             </ul>
           {:else}
             <p class="text-center text-sm text-muted-foreground">
-              Aucune decision prise pour le moment
+              No decisions yet
             </p>
           {/if}
         </Card.Content>

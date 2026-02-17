@@ -74,7 +74,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Billets vendus',
+          label: 'Tickets Sold',
           value: salesStats?.totalSales ?? 0,
           format: 'number'
         }}
@@ -87,7 +87,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Revenus totaux',
+          label: 'Total Revenue',
           value: salesStats ? formatCurrency(salesStats.totalRevenue) : '0',
           format: 'number'
         }}
@@ -100,7 +100,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Capacite utilisee',
+          label: 'Capacity Used',
           value: salesStats?.soldPercentage ?? 0,
           format: 'percentage'
         }}
@@ -113,7 +113,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
       <MetricCard
         {loading}
         data={{
-          label: 'Ventes/jour (moyenne)',
+          label: 'Sales/day (average)',
           value: salesTrend?.averageDailySales ?? 0,
           format: 'number'
         }}
@@ -127,7 +127,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
     <!-- Sales vs Capacity Progress -->
     <Card.Root>
       <Card.Header>
-        <Card.Title class="text-sm font-medium">Ventes vs Capacite</Card.Title>
+        <Card.Title class="text-sm font-medium">Sales vs Capacity</Card.Title>
       </Card.Header>
       <Card.Content>
         {#if loading}
@@ -135,7 +135,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
         {:else if salesStats}
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
-              <span>{salesStats.totalSales} vendus</span>
+              <span>{salesStats.totalSales} sold</span>
               <span>{salesStats.totalCapacity} total</span>
             </div>
             <div class="h-4 overflow-hidden rounded-full bg-muted">
@@ -145,7 +145,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
               ></div>
             </div>
             <p class="text-center text-sm text-muted-foreground">
-              {salesStats.totalCapacity - salesStats.totalSales} places restantes
+              {salesStats.totalCapacity - salesStats.totalSales} remaining
             </p>
           </div>
         {/if}
@@ -155,7 +155,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
     <!-- Revenue by Ticket Type -->
     <Card.Root>
       <Card.Header>
-        <Card.Title class="text-sm font-medium">Revenus par type de billet</Card.Title>
+        <Card.Title class="text-sm font-medium">Revenue by Ticket Type</Card.Title>
       </Card.Header>
       <Card.Content>
         {#if loading}
@@ -182,14 +182,14 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
                   ></div>
                 </div>
                 <p class="text-xs text-muted-foreground">
-                  {ticketType.quantitySold} vendus
+                  {ticketType.quantitySold} sold
                 </p>
               </div>
             {/each}
           </div>
         {:else}
           <p class="text-center text-sm text-muted-foreground">
-            Aucune vente pour le moment
+            No sales yet
           </p>
         {/if}
       </Card.Content>
@@ -198,7 +198,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
     <!-- Sales Trend Chart (simplified bar chart) -->
     <Card.Root>
       <Card.Header>
-        <Card.Title class="text-sm font-medium">Evolution des ventes (30 derniers jours)</Card.Title>
+        <Card.Title class="text-sm font-medium">Sales Evolution (Last 30 Days)</Card.Title>
       </Card.Header>
       <Card.Content>
         {#if loading}
@@ -210,7 +210,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
               <div
                 class="flex-1 rounded-t bg-blue-500 transition-all hover:bg-blue-600"
                 style="height: {(day.quantity / maxQuantity) * 100}%"
-                title="{day.date}: {day.quantity} ventes"
+                title="{day.date}: {day.quantity} sales"
               ></div>
             {/each}
           </div>
@@ -220,7 +220,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
           </div>
         {:else}
           <p class="text-center text-sm text-muted-foreground">
-            Aucune donnee disponible
+            No data available
           </p>
         {/if}
       </Card.Content>
@@ -232,7 +232,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
         <Card.Header>
           <Card.Title class="flex items-center gap-2 text-sm font-medium text-orange-600 dark:text-orange-400">
             <AlertTriangle class="h-4 w-4" />
-            Alertes stock bas
+            Low Stock Alerts
           </Card.Title>
         </Card.Header>
         <Card.Content>
@@ -244,7 +244,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
                   <span class="font-bold text-orange-600 dark:text-orange-400">
                     {alert.remaining}
                   </span>
-                  <span class="text-muted-foreground">/ {alert.total} restants</span>
+                  <span class="text-muted-foreground">/ {alert.total} remaining</span>
                 </span>
               </li>
             {/each}
@@ -256,7 +256,7 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
     <!-- Order Status Summary -->
     <Card.Root>
       <Card.Header>
-        <Card.Title class="text-sm font-medium">Commandes par statut</Card.Title>
+        <Card.Title class="text-sm font-medium">Orders by Status</Card.Title>
       </Card.Header>
       <Card.Content>
         {#if loading}
@@ -265,19 +265,19 @@ const getMaxRevenue = (data: RevenueByTicketType[] | null): number => {
           <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div class="text-center">
               <div class="text-2xl font-bold text-yellow-600">{salesStats.ordersByStatus.pending}</div>
-              <div class="text-xs text-muted-foreground">En attente</div>
+              <div class="text-xs text-muted-foreground">Pending</div>
             </div>
             <div class="text-center">
               <div class="text-2xl font-bold text-green-600">{salesStats.ordersByStatus.paid}</div>
-              <div class="text-xs text-muted-foreground">Payees</div>
+              <div class="text-xs text-muted-foreground">Paid</div>
             </div>
             <div class="text-center">
               <div class="text-2xl font-bold text-gray-600">{salesStats.ordersByStatus.cancelled}</div>
-              <div class="text-xs text-muted-foreground">Annulees</div>
+              <div class="text-xs text-muted-foreground">Cancelled</div>
             </div>
             <div class="text-center">
               <div class="text-2xl font-bold text-orange-600">{salesStats.ordersByStatus.refunded}</div>
-              <div class="text-xs text-muted-foreground">Remboursees</div>
+              <div class="text-xs text-muted-foreground">Refunded</div>
             </div>
           </div>
         {/if}

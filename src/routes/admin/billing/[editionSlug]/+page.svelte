@@ -98,7 +98,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Billetterie - {data.edition.name} - Open Event Orchestrator</title>
+	<title>Billing - {data.edition.name} - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">

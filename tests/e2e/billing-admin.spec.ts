@@ -16,7 +16,7 @@ test.describe('Billing Admin Module', () => {
     test('should display billing page with editions', async ({ page }) => {
       await page.goto('/admin/billing')
 
-      await expect(page.getByRole('heading', { name: 'Billetterie' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Billing' })).toBeVisible()
       await expect(page.getByText('DevFest Paris 2025')).toBeVisible()
     })
 

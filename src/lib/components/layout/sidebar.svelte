@@ -48,7 +48,7 @@ const allNavItems: NavItem[] = [
   { href: '/admin/cfp', icon: Calendar, label: 'CFP' },
   { href: '/admin/planning', icon: LayoutGrid, label: 'Planning', requiresOrganizerAccess: true },
   { href: '/admin/app', icon: Smartphone, label: 'Attendee App', requiresOrganizerAccess: true },
-  { href: '/admin/billing', icon: Ticket, label: 'Billetterie', requiresOrganizerAccess: true },
+  { href: '/admin/billing', icon: Ticket, label: 'Billing', requiresOrganizerAccess: true },
   {
     href: '/admin/sponsoring',
     icon: Handshake,

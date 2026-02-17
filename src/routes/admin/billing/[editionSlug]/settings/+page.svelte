@@ -37,7 +37,7 @@ function copyPublicUrl() {
 </script>
 
 <svelte:head>
-  <title>Settings - Billetterie - {data.edition.name}</title>
+  <title>Settings - Billing - {data.edition.name}</title>
 </svelte:head>
 
 <div class="space-y-6">

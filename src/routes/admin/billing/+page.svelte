@@ -31,13 +31,13 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-	<title>Billetterie - Open Event Orchestrator</title>
+	<title>Billing - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Billetterie</h2>
+			<h2 class="text-3xl font-bold tracking-tight">Billing</h2>
 			<p class="text-muted-foreground">
 				Select an edition to manage ticket types, orders, and check-in.
 			</p>
