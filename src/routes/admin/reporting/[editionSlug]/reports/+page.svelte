@@ -1,12 +1,14 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Switch } from '$lib/components/ui/switch'
+import { getReportingNavItems } from '$lib/config'
 import type {
   CreateReportConfig,
   ReportConfig,
@@ -295,6 +297,11 @@ function getRoleLabels(roles: string[]): string {
       New Report
     </Button>
   </div>
+
+  <!-- Sub-navigation -->
+  {#if data.edition}
+    <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={getReportingNavItems(data.edition.slug)} />
+  {/if}
 
   {#if !data.edition}
     <Card.Root>

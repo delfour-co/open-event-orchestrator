@@ -1,10 +1,11 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { StatusBadge } from '$lib/components/shared'
+import { AdminSubNav, StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import { getEmailsNavItems } from '$lib/config'
 import { Ban, Calendar, Edit, Mail, MailCheck, Plus, Send, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -76,6 +77,9 @@ $effect(() => {
 			</Button>
 		</div>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/emails/{data.eventSlug}" items={getEmailsNavItems(data.eventSlug)} />
 
 	<!-- Success / Error messages -->
 	{#if form?.success}

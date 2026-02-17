@@ -1,10 +1,12 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { goto } from '$app/navigation'
+import { AdminSubNav } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Table from '$lib/components/ui/table'
+import { getSponsoringNavItems } from '$lib/config'
 import {
   getInquiryStatusBadgeVariant,
   getInquiryStatusLabel
@@ -72,50 +74,7 @@ function setFilter(status: string | null) {
 	</div>
 
 	<!-- Sub-navigation -->
-	<nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
-		<a
-			href="/admin/sponsoring/{data.edition.slug}"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Dashboard
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/packages"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Packages
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/sponsors"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Sponsors
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/inquiries"
-			class="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm"
-		>
-			Inquiries
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/deliverables"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Deliverables
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/messages"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Messages
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/assets"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Assets
-		</a>
-	</nav>
+	<AdminSubNav basePath="/admin/sponsoring/{data.edition.slug}" items={getSponsoringNavItems(data.edition.slug)} />
 
 	<!-- Status Filters -->
 	<div class="flex flex-wrap gap-2">

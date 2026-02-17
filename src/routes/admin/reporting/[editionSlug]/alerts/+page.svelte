@@ -1,8 +1,10 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import { getReportingNavItems } from '$lib/config'
 import type { Alert } from '$lib/features/reporting/domain/alert'
 import type {
   AlertThreshold,
@@ -215,6 +217,11 @@ const resolvedAlerts = $derived(
       </div>
     </div>
   </div>
+
+  <!-- Sub-navigation -->
+  {#if data.edition}
+    <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={getReportingNavItems(data.edition.slug)} />
+  {/if}
 
   {#if !data.edition}
     <Card.Root>

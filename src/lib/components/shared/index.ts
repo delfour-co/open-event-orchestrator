@@ -1,4 +1,5 @@
 // Shared UI components
+export { default as AdminSubNav, type NavItem } from './AdminSubNav.svelte'
 export { default as Alert } from './Alert.svelte'
 export { default as EditionCard } from './EditionCard.svelte'
 export { default as EmptyState } from './EmptyState.svelte'

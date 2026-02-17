@@ -1,12 +1,14 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Checkbox } from '$lib/components/ui/checkbox'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import { getBillingNavItems } from '$lib/config'
 import { DEFAULT_TICKET_TEMPLATE } from '$lib/features/billing/domain'
 import { TicketPreview } from '$lib/features/billing/ui'
 import { ArrowLeft, Palette, RotateCcw, Trash2, Upload } from 'lucide-svelte'
@@ -81,6 +83,9 @@ function resetToDefaults() {
       <p class="text-muted-foreground">{data.edition.name}</p>
     </div>
   </div>
+
+  <!-- Sub-navigation -->
+  <AdminSubNav basePath="/admin/billing/{data.edition.slug}" items={getBillingNavItems(data.edition.slug)} />
 
   {#if form?.success}
     <div

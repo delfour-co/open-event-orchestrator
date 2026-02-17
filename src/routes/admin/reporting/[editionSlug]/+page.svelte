@@ -1,7 +1,9 @@
 <script lang="ts">
 import { invalidateAll } from '$app/navigation'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import { getReportingNavItems } from '$lib/config'
 import { DashboardGrid, HorizontalBarChart, MetricCard } from '$lib/features/reporting/ui'
 import {
   ArrowLeft,
@@ -241,6 +243,9 @@ const budgetUsageChartData = $derived(
       </Button>
     </div>
   </div>
+
+  <!-- Sub-navigation -->
+  <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={getReportingNavItems(data.edition.slug)} />
 
   <!-- Notifications Summary -->
   <Card.Root>

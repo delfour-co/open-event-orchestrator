@@ -1,9 +1,11 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import { getCrmNavItems } from '$lib/config'
 import type { SegmentCriteria } from '$lib/features/crm/domain/segment'
 import { SegmentCriteriaBuilder } from '$lib/features/crm/ui'
 import { ArrowLeft, Edit, Filter, Plus, RefreshCw, Trash2 } from 'lucide-svelte'
@@ -114,6 +116,9 @@ $effect(() => {
 			Create Segment
 		</Button>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/crm/{data.eventSlug}" items={getCrmNavItems(data.eventSlug)} />
 
 	<!-- Success / Error messages -->
 	{#if form?.success}

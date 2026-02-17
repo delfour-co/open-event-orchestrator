@@ -1,12 +1,13 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { StatusBadge } from '$lib/components/shared'
+import { AdminSubNav, StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import { getBudgetNavItems } from '$lib/config'
 import {
   ArrowLeft,
   DollarSign,
@@ -143,38 +144,7 @@ $effect(() => {
 	</div>
 
 	<!-- Sub-navigation -->
-	<nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
-		<a
-			href="/admin/budget/{data.edition.slug}"
-			class="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm"
-		>
-			Dashboard
-		</a>
-		<a
-			href="/admin/budget/{data.edition.slug}/quotes"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Quotes
-		</a>
-		<a
-			href="/admin/budget/{data.edition.slug}/invoices"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Invoices
-		</a>
-		<a
-			href="/admin/budget/{data.edition.slug}/reimbursements"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Reimbursements
-		</a>
-		<a
-			href="/admin/budget/{data.edition.slug}/journal"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Journal
-		</a>
-	</nav>
+	<AdminSubNav basePath="/admin/budget/{data.edition.slug}" items={getBudgetNavItems(data.edition.slug)} />
 
 	{#if data.budget}
 		<!-- Stats Cards -->

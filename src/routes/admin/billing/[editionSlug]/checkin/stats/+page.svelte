@@ -1,7 +1,9 @@
 <script lang="ts">
 import { invalidateAll } from '$app/navigation'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import { getBillingNavItems } from '$lib/config'
 import {
   Activity,
   ArrowLeft,
@@ -100,6 +102,9 @@ $effect(() => {
       </Button>
     </div>
   </div>
+
+  <!-- Sub-navigation -->
+  <AdminSubNav basePath="/admin/billing/{data.edition.slug}" items={getBillingNavItems(data.edition.slug)} />
 
   <!-- Last updated -->
   <p class="text-sm text-muted-foreground">

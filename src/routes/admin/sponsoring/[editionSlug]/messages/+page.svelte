@@ -1,8 +1,10 @@
 <script lang="ts">
+import { AdminSubNav } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
+import { getSponsoringNavItems } from '$lib/config'
 import { getStatusBadgeVariant, getStatusLabel } from '$lib/features/sponsoring/domain'
 import { ArrowLeft, ArrowRight, Building2, MessageSquare, Search } from 'lucide-svelte'
 import type { PageData } from './$types'
@@ -48,50 +50,7 @@ const filteredConversations = $derived(
 	</div>
 
 	<!-- Sub-navigation -->
-	<nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
-		<a
-			href="/admin/sponsoring/{data.edition.slug}"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Dashboard
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/packages"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Packages
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/sponsors"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Sponsors
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/inquiries"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Inquiries
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/deliverables"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Deliverables
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/messages"
-			class="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm"
-		>
-			Messages
-		</a>
-		<a
-			href="/admin/sponsoring/{data.edition.slug}/assets"
-			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
-		>
-			Assets
-		</a>
-	</nav>
+	<AdminSubNav basePath="/admin/sponsoring/{data.edition.slug}" items={getSponsoringNavItems(data.edition.slug)} />
 
 	<!-- Stats -->
 	<div class="grid gap-4 md:grid-cols-3">

@@ -1,11 +1,13 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import { getBudgetNavItems } from '$lib/config'
 import { ArrowLeft, ExternalLink, FileText, FileUp, Loader2, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -77,6 +79,9 @@ $effect(() => {
 			Upload Invoice
 		</Button>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/budget/{data.edition.slug}" items={getBudgetNavItems(data.edition.slug)} />
 
 	<!-- Error display -->
 	{#if form?.error && (form?.action === 'deleteInvoice')}

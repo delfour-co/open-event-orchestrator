@@ -1,11 +1,13 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import { getBudgetNavItems } from '$lib/config'
 import {
   ArrowLeft,
   ArrowRightLeft,
@@ -180,6 +182,9 @@ $effect(() => {
 			New Quote
 		</Button>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/budget/{data.edition.slug}" items={getBudgetNavItems(data.edition.slug)} />
 
 	<!-- Status Filter Tabs -->
 	<div class="flex flex-wrap gap-2">

@@ -1,10 +1,12 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import { getBudgetNavItems } from '$lib/config'
 import {
   ArrowLeft,
   Check,
@@ -241,6 +243,9 @@ $effect(() => {
 			</form>
 		</div>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/budget/{data.edition.slug}" items={getBudgetNavItems(data.edition.slug)} />
 
 	<!-- Stats Cards -->
 	<div class="grid gap-4 md:grid-cols-4">

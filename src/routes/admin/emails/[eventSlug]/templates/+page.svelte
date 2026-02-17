@@ -1,9 +1,11 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import { getEmailsNavItems } from '$lib/config'
 import { ArrowLeft, Code, Edit, Eye, FileText, Plus, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -133,6 +135,9 @@ $effect(() => {
 			Create Template
 		</Button>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/emails/{data.eventSlug}" items={getEmailsNavItems(data.eventSlug)} />
 
 	<!-- Success / Error messages -->
 	{#if form?.success}

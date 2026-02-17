@@ -1,9 +1,11 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
+import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
+import { getBillingNavItems } from '$lib/config'
 import {
   Activity,
   ArrowLeft,
@@ -189,6 +191,9 @@ function formatTimeAgo(isoDate: string): string {
 			</a>
 		</div>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/billing/{data.edition.slug}" items={getBillingNavItems(data.edition.slug)} />
 
 	<!-- Global Stats -->
 	<Card.Root>
