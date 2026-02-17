@@ -1,4 +1,9 @@
-import { DEFAULT_SIMULATION_PRESETS, calculateSimulation } from '$lib/features/budget/domain'
+import {
+  DEFAULT_SIMULATION_PRESETS,
+  type SimulationParameters,
+  calculateSimulation,
+  simulationParametersSchema
+} from '$lib/features/budget/domain'
 import { createSimulationScenarioRepository } from '$lib/features/budget/infra'
 import { safeFilter } from '$lib/server/safe-filter'
 import { error, fail } from '@sveltejs/kit'
@@ -122,9 +127,14 @@ export const actions: Actions = {
       return fail(400, { error: 'Name is required' })
     }
 
-    let parameters: Record<string, unknown>
+    let parameters: SimulationParameters
     try {
-      parameters = JSON.parse(parametersJson)
+      const parsed = JSON.parse(parametersJson)
+      const validated = simulationParametersSchema.safeParse(parsed)
+      if (!validated.success) {
+        return fail(400, { error: 'Invalid parameters format' })
+      }
+      parameters = validated.data
     } catch {
       return fail(400, { error: 'Invalid parameters format' })
     }
