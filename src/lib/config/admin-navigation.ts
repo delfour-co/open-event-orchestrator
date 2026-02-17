@@ -20,6 +20,8 @@ export const getSponsoringNavItems = (editionSlug: string): NavItem[] => [
  */
 export const getBudgetNavItems = (editionSlug: string): NavItem[] => [
   { href: `/admin/budget/${editionSlug}`, label: 'Dashboard' },
+  { href: `/admin/budget/${editionSlug}/checklist`, label: 'Checklist' },
+  { href: `/admin/budget/${editionSlug}/profitability`, label: 'Profitability' },
   { href: `/admin/budget/${editionSlug}/quotes`, label: 'Quotes' },
   { href: `/admin/budget/${editionSlug}/invoices`, label: 'Invoices' },
   { href: `/admin/budget/${editionSlug}/reimbursements`, label: 'Reimbursements' },

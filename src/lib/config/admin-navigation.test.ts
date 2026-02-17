@@ -35,16 +35,18 @@ describe('admin-navigation', () => {
   describe('getBudgetNavItems', () => {
     it('should return navigation items with correct paths', () => {
       const items = getBudgetNavItems('devfest-2025')
-      expect(items).toHaveLength(6)
+      expect(items).toHaveLength(8)
       expect(items[0]).toEqual({
         href: '/admin/budget/devfest-2025',
         label: 'Dashboard'
       })
-      expect(items[1].href).toBe('/admin/budget/devfest-2025/quotes')
-      expect(items[2].href).toBe('/admin/budget/devfest-2025/invoices')
-      expect(items[3].href).toBe('/admin/budget/devfest-2025/reimbursements')
-      expect(items[4].href).toBe('/admin/budget/devfest-2025/journal')
-      expect(items[5].href).toBe('/admin/budget/devfest-2025/settings')
+      expect(items[1].href).toBe('/admin/budget/devfest-2025/checklist')
+      expect(items[2].href).toBe('/admin/budget/devfest-2025/profitability')
+      expect(items[3].href).toBe('/admin/budget/devfest-2025/quotes')
+      expect(items[4].href).toBe('/admin/budget/devfest-2025/invoices')
+      expect(items[5].href).toBe('/admin/budget/devfest-2025/reimbursements')
+      expect(items[6].href).toBe('/admin/budget/devfest-2025/journal')
+      expect(items[7].href).toBe('/admin/budget/devfest-2025/settings')
     })
   })
 

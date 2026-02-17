@@ -10,6 +10,7 @@ import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
 import {
   ArrowLeft,
+  Calculator,
   DollarSign,
   Loader2,
   Pencil,
@@ -121,6 +122,11 @@ $effect(() => {
 					</Button>
 				</form>
 			{:else}
+				<a href="/admin/budget/{data.edition.slug}/simulator">
+					<Button variant="outline" size="icon" title="Budget Simulator">
+						<Calculator class="h-4 w-4" />
+					</Button>
+				</a>
 				<StatusBadge status={data.budget.status} size="sm" />
 			{/if}
 		</div>

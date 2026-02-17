@@ -20,6 +20,7 @@ const mapToEvent = (record: RecordModel): Event => ({
   description: record.description || undefined,
   logo: record.logo || undefined,
   website: record.website || undefined,
+  currency: record.currency || 'USD',
   createdAt: new Date(record.created),
   updatedAt: new Date(record.updated)
 })

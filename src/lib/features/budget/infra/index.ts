@@ -37,3 +37,18 @@ export {
   createAuditLogRepository,
   type AuditLogRepository
 } from './audit-log-repository'
+
+export {
+  createChecklistItemRepository,
+  type ChecklistItemRepository
+} from './checklist-item-repository'
+
+export {
+  createBudgetTemplateRepository,
+  type BudgetTemplateRepository
+} from './budget-template-repository'
+
+export {
+  createSimulationScenarioRepository,
+  type SimulationScenarioRepository
+} from './simulation-scenario-repository'

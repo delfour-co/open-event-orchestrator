@@ -14,3 +14,17 @@ export {
   createExportReimbursementsUseCase,
   type ExportRow
 } from './export-reimbursements'
+
+export {
+  createConvertChecklistToTransactionUseCase,
+  type ConvertChecklistToTransactionInput,
+  type ConvertChecklistToTransactionResult,
+  type ConvertChecklistToTransactionUseCase
+} from './convert-checklist-to-transaction'
+
+export {
+  createApplyBudgetTemplateUseCase,
+  type ApplyBudgetTemplateInput,
+  type ApplyBudgetTemplateResult,
+  type ApplyBudgetTemplateUseCase
+} from './apply-budget-template'
