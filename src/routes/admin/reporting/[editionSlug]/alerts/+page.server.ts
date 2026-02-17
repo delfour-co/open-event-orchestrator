@@ -89,6 +89,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     }
   }
 
+  // Fetch report configs count for nav badges
+  const reportConfigs = await locals.pb
+    .collection('report_configs')
+    .getFullList({
+      filter: `editionId = "${editionId}"`
+    })
+    .catch(() => [])
+
+  const navBadges = {
+    alerts: alertCounts.active,
+    reports: reportConfigs.filter((r) => r.enabled).length
+  }
+
   return {
     event: {
       id: eventId,
@@ -102,7 +115,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     },
     thresholds,
     alerts,
-    alertCounts
+    alertCounts,
+    navBadges
   }
 }
 

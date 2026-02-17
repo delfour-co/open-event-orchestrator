@@ -4,13 +4,13 @@ import { invalidateAll } from '$app/navigation'
 import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
-import { getReportingNavItems } from '$lib/config'
+import type { NavItem } from '$lib/config'
 import type { Alert } from '$lib/features/reporting/domain/alert'
 import type {
   AlertThreshold,
   CreateAlertThreshold
 } from '$lib/features/reporting/domain/alert-threshold'
-import { AlertBadge, AlertList } from '$lib/features/reporting/ui'
+import { AlertList } from '$lib/features/reporting/ui'
 import AlertThresholdConfig from '$lib/features/reporting/ui/AlertThresholdConfig.svelte'
 import { cn } from '$lib/utils'
 import { AlertCircle, AlertTriangle, ArrowLeft, Bell, Info, Settings } from 'lucide-svelte'
@@ -90,6 +90,21 @@ const activeAlerts = $derived(
 const resolvedAlerts = $derived(
   (data.alerts as Alert[]).filter((a) => a.status === 'resolved' || a.status === 'dismissed')
 )
+
+// Navigation items with badges
+const navItems = $derived<NavItem[]>([
+  { href: `/admin/reporting/${data.edition?.slug}`, label: 'Dashboard' },
+  {
+    href: `/admin/reporting/${data.edition?.slug}/alerts`,
+    label: 'Alerts',
+    badge: data.navBadges.alerts
+  },
+  {
+    href: `/admin/reporting/${data.edition?.slug}/reports`,
+    label: 'Reports',
+    badge: data.navBadges.reports
+  }
+])
 </script>
 
 <svelte:head>
@@ -204,23 +219,14 @@ const resolvedAlerts = $derived(
         </Button>
       </a>
       <div>
-        <div class="flex items-center gap-3">
-          <h2 class="text-3xl font-bold tracking-tight">Alerts</h2>
-          <AlertBadge count={data.alertCounts.active} />
-        </div>
-        <p class="text-muted-foreground">
-          {data.event.name}
-          {#if data.edition}
-            - {data.edition.name}
-          {/if}
-        </p>
+        <h2 class="text-3xl font-bold tracking-tight">{data.edition?.name ?? 'Alerts'}</h2>
       </div>
     </div>
   </div>
 
   <!-- Sub-navigation -->
   {#if data.edition}
-    <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={getReportingNavItems(data.edition.slug)} />
+    <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={navItems} />
   {/if}
 
   {#if !data.edition}

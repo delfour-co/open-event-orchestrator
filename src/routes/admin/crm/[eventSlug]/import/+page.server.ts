@@ -11,9 +11,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     filter: `slug = "${params.eventSlug}"`
   })
   if (events.items.length === 0) throw error(404, 'Event not found')
-  const eventId = events.items[0].id as string
+  const event = events.items[0]
+  const eventId = event.id as string
+  const eventName = event.name as string
 
-  return { eventSlug: params.eventSlug, eventId }
+  return { eventSlug: params.eventSlug, eventName, eventId }
 }
 
 export const actions: Actions = {

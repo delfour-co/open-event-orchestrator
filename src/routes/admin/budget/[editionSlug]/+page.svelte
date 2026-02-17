@@ -14,7 +14,6 @@ import {
   Loader2,
   Pencil,
   Plus,
-  Settings,
   Trash2,
   TrendingDown,
   TrendingUp,
@@ -40,14 +39,6 @@ const formatAmount = (amount: number, currency: string) => {
     style: 'currency',
     currency
   }).format(amount)
-}
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
 }
 
 const formatDateInput = (dateStr: string | undefined) => {
@@ -116,9 +107,6 @@ $effect(() => {
 			</a>
 			<div>
 				<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-				<p class="text-muted-foreground">
-					{formatDate(data.edition.startDate)} - {formatDate(data.edition.endDate)}
-				</p>
 			</div>
 		</div>
 		<div class="flex items-center gap-2">
@@ -134,11 +122,6 @@ $effect(() => {
 				</form>
 			{:else}
 				<StatusBadge status={data.budget.status} size="sm" />
-				<a href="/admin/budget/{data.edition.slug}/settings">
-					<Button variant="ghost" size="icon">
-						<Settings class="h-5 w-5" />
-					</Button>
-				</a>
 			{/if}
 		</div>
 	</div>
@@ -152,9 +135,7 @@ $effect(() => {
 			<Card.Root>
 				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
 					<Card.Title class="text-sm font-medium">Total Budget</Card.Title>
-					<a href="/admin/budget/{data.edition.slug}/settings">
-						<Settings class="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
-					</a>
+					<Wallet class="h-4 w-4 text-muted-foreground" />
 				</Card.Header>
 				<Card.Content>
 					<div class="text-2xl font-bold">

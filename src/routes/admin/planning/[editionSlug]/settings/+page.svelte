@@ -24,10 +24,54 @@ const { data }: Props = $props()
 			</Button>
 		</a>
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Planning Settings</h2>
-			<p class="text-muted-foreground">{data.edition.name}</p>
+			<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
 		</div>
 	</div>
+
+	<!-- Tab Navigation -->
+	<nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+		<a
+			href="/admin/planning/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Schedule
+		</a>
+		<a
+			href="/admin/planning/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Sessions ({data.stats.totalSessions})
+		</a>
+		<a
+			href="/admin/planning/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Rooms ({data.stats.totalRooms})
+		</a>
+		<a
+			href="/admin/planning/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Tracks ({data.stats.totalTracks})
+		</a>
+		<a
+			href="/admin/planning/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Slots ({data.stats.totalSlots})
+		</a>
+		<a
+			href="/admin/planning/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Staff
+		</a>
+		<span
+			class="rounded-md px-3 py-1.5 text-sm font-medium bg-background shadow-sm"
+		>
+			Settings
+		</span>
+	</nav>
 
 	<!-- Overview -->
 	<Card.Root>

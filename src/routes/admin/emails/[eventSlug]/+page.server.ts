@@ -29,6 +29,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
   return {
     eventSlug: params.eventSlug,
+    eventName: event.name as string,
     eventId,
     campaigns: campaigns.map((c) => ({
       id: c.id as string,

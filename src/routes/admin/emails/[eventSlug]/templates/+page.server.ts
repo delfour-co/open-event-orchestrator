@@ -6,7 +6,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     filter: `slug = "${params.eventSlug}"`
   })
   if (events.items.length === 0) throw error(404, 'Event not found')
-  const eventId = events.items[0].id as string
+  const event = events.items[0]
+  const eventId = event.id as string
+  const eventName = event.name as string
 
   const templates = await locals.pb.collection('email_templates').getFullList({
     filter: `eventId = "${eventId}"`,
@@ -15,6 +17,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
   return {
     eventSlug: params.eventSlug,
+    eventName,
     eventId,
     templates: templates.map((t) => ({
       id: t.id as string,

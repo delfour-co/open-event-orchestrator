@@ -105,10 +105,7 @@ $effect(() => {
 				</Button>
 			</a>
 			<div>
-				<h2 class="text-3xl font-bold tracking-tight">Segments</h2>
-				<p class="text-muted-foreground">
-					Create dynamic or static segments to organize your contacts.
-				</p>
+				<h2 class="text-3xl font-bold tracking-tight">{data.eventName}</h2>
 			</div>
 		</div>
 		<Button onclick={startCreate} class="gap-2">

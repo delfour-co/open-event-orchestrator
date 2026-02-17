@@ -1,12 +1,13 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
-import { StatusBadge } from '$lib/components/shared'
+import { AdminSubNav, StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import { getBudgetNavItems } from '$lib/config'
 import { ArrowLeft, Loader2, Wallet } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -42,10 +43,12 @@ const formatAmount = (amount: number, currency: string) => {
 			</Button>
 		</a>
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Budget Settings</h2>
-			<p class="text-muted-foreground">{data.edition.name}</p>
+			<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
 		</div>
 	</div>
+
+	<!-- Sub-navigation -->
+	<AdminSubNav basePath="/admin/budget/{data.edition.slug}" items={getBudgetNavItems(data.edition.slug)} />
 
 	{#if form?.success}
 		<div

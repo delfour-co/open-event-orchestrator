@@ -3,7 +3,7 @@ import { invalidateAll } from '$app/navigation'
 import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
-import { getReportingNavItems } from '$lib/config'
+import type { NavItem } from '$lib/config'
 import { DashboardGrid, HorizontalBarChart, MetricCard } from '$lib/features/reporting/ui'
 import {
   ArrowLeft,
@@ -32,18 +32,25 @@ const { data }: Props = $props()
 
 let isRefreshing = $state(false)
 
+// Navigation items with badges
+const navItems = $derived<NavItem[]>([
+  { href: `/admin/reporting/${data.edition.slug}`, label: 'Dashboard' },
+  {
+    href: `/admin/reporting/${data.edition.slug}/alerts`,
+    label: 'Alerts',
+    badge: data.navBadges?.alerts ?? 0
+  },
+  {
+    href: `/admin/reporting/${data.edition.slug}/reports`,
+    label: 'Reports',
+    badge: data.navBadges?.reports ?? 0
+  }
+])
+
 async function refreshDashboard() {
   isRefreshing = true
   await invalidateAll()
   isRefreshing = false
-}
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
 }
 
 // Chart colors palette
@@ -214,38 +221,21 @@ const budgetUsageChartData = $derived(
       </a>
       <div>
         <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-        <p class="text-muted-foreground">
-          {data.event.name} - {formatDate(data.edition.startDate)} to {formatDate(data.edition.endDate)}
-        </p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <a href="/admin/reporting/{data.edition.slug}/alerts">
-        <Button variant="outline" class="gap-2">
-          <Bell class="h-4 w-4" />
-          Alerts
-        </Button>
-      </a>
-      <a href="/admin/reporting/{data.edition.slug}/reports">
-        <Button variant="outline" class="gap-2">
-          <Mail class="h-4 w-4" />
-          Reports
-        </Button>
-      </a>
-      <Button variant="outline" onclick={refreshDashboard} disabled={isRefreshing}>
-        {#if isRefreshing}
-          <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-        {:else}
-          <RefreshCw class="mr-2 h-4 w-4" />
-        {/if}
-        Refresh
-      </Button>
-    </div>
+    <Button variant="outline" onclick={refreshDashboard} disabled={isRefreshing}>
+      {#if isRefreshing}
+        <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+      {:else}
+        <RefreshCw class="mr-2 h-4 w-4" />
+      {/if}
+      Refresh
+    </Button>
   </div>
 
   <!-- Sub-navigation -->
-  <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={getReportingNavItems(data.edition.slug)} />
+  <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={navItems} />
 
   <!-- Notifications Summary -->
   <Card.Root>

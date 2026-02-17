@@ -7,7 +7,16 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getCrmNavItems } from '$lib/config'
-import { ExternalLink, Plus, RefreshCw, Search, Trash2, UserPlus, Users } from 'lucide-svelte'
+import {
+  ArrowLeft,
+  ExternalLink,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  UserPlus,
+  Users
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -82,16 +91,15 @@ const getSourceColor = (source: string) => {
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
-		<div>
-			<div class="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-				<a href="/admin/crm" class="hover:underline">CRM</a>
-				<span>/</span>
-				<span>{data.eventName}</span>
+		<div class="flex items-center gap-4">
+			<a href="/admin/crm">
+				<Button variant="ghost" size="icon">
+					<ArrowLeft class="h-5 w-5" />
+				</Button>
+			</a>
+			<div>
+				<h2 class="text-3xl font-bold tracking-tight">{data.eventName}</h2>
 			</div>
-			<h2 class="text-3xl font-bold tracking-tight">Contacts</h2>
-			<p class="text-muted-foreground">
-				Manage your event contacts, speakers, and attendees.
-			</p>
 		</div>
 		<div class="flex items-center gap-2">
 			<form method="POST" action="?/syncContacts" use:enhance={() => {

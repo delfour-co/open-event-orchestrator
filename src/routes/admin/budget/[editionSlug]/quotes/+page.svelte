@@ -173,8 +173,7 @@ $effect(() => {
 				</Button>
 			</a>
 			<div>
-				<h2 class="text-3xl font-bold tracking-tight">Quotes</h2>
-				<p class="text-muted-foreground">{data.edition.name}</p>
+				<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
 			</div>
 		</div>
 		<Button onclick={openCreateForm}>

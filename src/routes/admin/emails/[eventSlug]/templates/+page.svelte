@@ -124,10 +124,7 @@ $effect(() => {
 				</Button>
 			</a>
 			<div>
-				<h2 class="text-3xl font-bold tracking-tight">Email Templates</h2>
-				<p class="text-muted-foreground">
-					Manage reusable email templates for your campaigns.
-				</p>
+				<h2 class="text-3xl font-bold tracking-tight">{data.eventName}</h2>
 			</div>
 		</div>
 		<Button onclick={startCreate} class="gap-2">

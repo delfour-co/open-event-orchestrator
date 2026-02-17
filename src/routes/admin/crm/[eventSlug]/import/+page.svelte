@@ -109,10 +109,7 @@ function downloadCsv() {
 			</Button>
 		</a>
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Import / Export</h2>
-			<p class="text-muted-foreground">
-				Import contacts from CSV or export your contact database.
-			</p>
+			<h2 class="text-3xl font-bold tracking-tight">{data.eventName}</h2>
 		</div>
 	</div>
 

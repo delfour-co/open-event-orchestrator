@@ -7,7 +7,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     filter: `slug = "${params.eventSlug}"`
   })
   if (events.items.length === 0) throw error(404, 'Event not found')
-  const eventId = events.items[0].id as string
+  const event = events.items[0]
+  const eventId = event.id as string
+  const eventName = event.name as string
 
   const segments = await locals.pb.collection('segments').getFullList({
     filter: `eventId = "${eventId}"`,
@@ -16,6 +18,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
   return {
     eventSlug: params.eventSlug,
+    eventName,
     eventId,
     segments: segments.map((s) => {
       const criteria = s.criteria as { match?: string; rules?: unknown[] } | undefined

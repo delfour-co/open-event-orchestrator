@@ -66,9 +66,6 @@ function getLogoAssetsCount(): number {
       </a>
       <div>
         <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-        <p class="text-muted-foreground">
-          View and download assets from confirmed sponsors
-        </p>
       </div>
     </div>
     {#if data.totalAssets > 0}

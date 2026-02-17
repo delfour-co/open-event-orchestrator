@@ -164,18 +164,17 @@ const hasFilters = $derived(
   <title>Audit Journal - {data.edition.name} - Open Event Orchestrator</title>
 </svelte:head>
 
-<div class="container mx-auto space-y-6 py-6">
+<div class="space-y-6">
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-4">
       <a href="/admin/budget/{data.edition.slug}">
         <Button variant="ghost" size="icon">
-          <ArrowLeft class="h-4 w-4" />
+          <ArrowLeft class="h-5 w-5" />
         </Button>
       </a>
       <div>
-        <p class="text-sm text-muted-foreground">{data.edition.name}</p>
-        <h2 class="text-3xl font-bold tracking-tight">Audit Journal</h2>
+        <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
       </div>
     </div>
     <div class="flex gap-2">

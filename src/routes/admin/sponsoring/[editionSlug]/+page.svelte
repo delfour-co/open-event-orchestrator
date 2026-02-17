@@ -163,9 +163,6 @@ $effect(() => {
 			</a>
 			<div>
 				<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-				<p class="text-muted-foreground">
-					{formatDate(data.edition.startDate)} - {formatDate(data.edition.endDate)}
-				</p>
 			</div>
 		</div>
 		<div class="flex flex-wrap items-center gap-2">

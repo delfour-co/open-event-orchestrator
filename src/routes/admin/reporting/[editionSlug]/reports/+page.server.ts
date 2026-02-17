@@ -35,6 +35,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const reportConfigRepo = createReportConfigRepository(locals.pb)
   const reportConfigs = await reportConfigRepo.findByEdition(editionId)
 
+  // Fetch alerts count for nav badges
+  const alerts = await locals.pb
+    .collection('alerts')
+    .getFullList({
+      filter: `editionId = "${editionId}"`
+    })
+    .catch(() => [])
+
+  const navBadges = {
+    alerts: alerts.filter((a) => a.status === 'active' || a.status === 'acknowledged').length,
+    reports: reportConfigs.filter((r) => r.enabled).length
+  }
+
   return {
     event: {
       id: eventId,
@@ -46,7 +59,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       name: edition.name as string,
       slug: edition.slug as string
     },
-    reportConfigs
+    reportConfigs,
+    navBadges
   }
 }
 

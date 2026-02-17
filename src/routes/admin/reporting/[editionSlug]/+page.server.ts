@@ -52,7 +52,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     categories,
     formats,
     alertThresholds,
-    reportConfigs
+    reportConfigs,
+    alerts
   ] = await Promise.all([
     locals.pb
       .collection('ticket_types')
@@ -108,6 +109,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       .catch(() => []),
     locals.pb
       .collection('report_configs')
+      .getFullList({ filter: `editionId = "${editionId}"` })
+      .catch(() => []),
+    locals.pb
+      .collection('alerts')
       .getFullList({ filter: `editionId = "${editionId}"` })
       .catch(() => [])
   ])
@@ -363,6 +368,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         weekly: reportConfigs.filter((r) => r.enabled && r.frequency === 'weekly').length,
         monthly: reportConfigs.filter((r) => r.enabled && r.frequency === 'monthly').length
       }
+    },
+    navBadges: {
+      alerts: alerts.filter((a) => a.status === 'active' || a.status === 'acknowledged').length,
+      reports: reportConfigs.filter((r) => r.enabled).length
     }
   }
 }

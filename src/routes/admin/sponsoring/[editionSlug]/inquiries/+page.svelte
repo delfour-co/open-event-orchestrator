@@ -66,9 +66,6 @@ function setFilter(status: string | null) {
 			</a>
 			<div>
 				<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-				<p class="text-muted-foreground">
-					Sponsor inquiries management
-				</p>
 			</div>
 		</div>
 	</div>

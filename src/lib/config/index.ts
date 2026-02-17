@@ -3,6 +3,8 @@ export {
   getBudgetNavItems,
   getCrmNavItems,
   getEmailsNavItems,
+  getPlanningNavItems,
   getReportingNavItems,
-  getSponsoringNavItems
+  getSponsoringNavItems,
+  type NavItem
 } from './admin-navigation'

@@ -6,7 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getEmailsNavItems } from '$lib/config'
-import { Ban, Calendar, Edit, Mail, MailCheck, Plus, Send, Trash2 } from 'lucide-svelte'
+import { ArrowLeft, Ban, Calendar, Edit, Mail, MailCheck, Plus, Send, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -19,8 +19,6 @@ const { data, form }: Props = $props()
 let showForm = $state(false)
 let editingCampaign = $state<(typeof data.campaigns)[0] | null>(null)
 let isSubmitting = $state(false)
-
-const basePath = `/admin/emails/${data.eventSlug}`
 
 function startEdit(campaign: (typeof data.campaigns)[0]) {
   editingCampaign = campaign
@@ -56,26 +54,20 @@ $effect(() => {
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
-		<div>
-			<div class="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-				<a href="/admin/emails" class="hover:underline">Emails</a>
-				<span>/</span>
-				<span>Campaigns</span>
-			</div>
-			<h2 class="text-3xl font-bold tracking-tight">Email Campaigns</h2>
-			<p class="text-muted-foreground">
-				Create and send email campaigns to your contacts.
-			</p>
-		</div>
-		<div class="flex items-center gap-2">
-			<a href="{basePath}/templates">
-				<Button variant="outline">Templates</Button>
+		<div class="flex items-center gap-4">
+			<a href="/admin/emails">
+				<Button variant="ghost" size="icon">
+					<ArrowLeft class="h-5 w-5" />
+				</Button>
 			</a>
-			<Button onclick={() => { editingCampaign = null; showForm = !showForm }} class="gap-2">
-				<Plus class="h-4 w-4" />
-				New Campaign
-			</Button>
+			<div>
+				<h2 class="text-3xl font-bold tracking-tight">{data.eventName}</h2>
+			</div>
 		</div>
+		<Button onclick={() => { editingCampaign = null; showForm = !showForm }} class="gap-2">
+			<Plus class="h-4 w-4" />
+			New Campaign
+		</Button>
 	</div>
 
 	<!-- Sub-navigation -->

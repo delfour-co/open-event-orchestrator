@@ -4,6 +4,7 @@ import { page } from '$app/stores'
 export interface NavItem {
   href: string
   label: string
+  badge?: number
 }
 
 interface Props {
@@ -28,11 +29,16 @@ const isActive = (href: string): boolean => {
   {#each items as item}
     <a
       href={item.href}
-      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {isActive(item.href)
+      class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors {isActive(item.href)
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
       {item.label}
+      {#if item.badge !== undefined && item.badge > 0}
+        <span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
+          {item.badge}
+        </span>
+      {/if}
     </a>
   {/each}
 </nav>

@@ -8,7 +8,7 @@ import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Switch } from '$lib/components/ui/switch'
-import { getReportingNavItems } from '$lib/config'
+import type { NavItem } from '$lib/config'
 import type {
   CreateReportConfig,
   ReportConfig,
@@ -171,6 +171,21 @@ function getRoleLabels(roles: string[]): string {
   }
   return roles.map((r) => labels[r] || r).join(', ')
 }
+
+// Navigation items with badges
+const navItems = $derived<NavItem[]>([
+  { href: `/admin/reporting/${data.edition?.slug}`, label: 'Dashboard' },
+  {
+    href: `/admin/reporting/${data.edition?.slug}/alerts`,
+    label: 'Alerts',
+    badge: data.navBadges.alerts
+  },
+  {
+    href: `/admin/reporting/${data.edition?.slug}/reports`,
+    label: 'Reports',
+    badge: data.navBadges.reports
+  }
+])
 </script>
 
 <svelte:head>
@@ -282,13 +297,7 @@ function getRoleLabels(roles: string[]): string {
         </Button>
       </a>
       <div>
-        <h2 class="text-3xl font-bold tracking-tight">Automated Reports</h2>
-        <p class="text-muted-foreground">
-          {data.event.name}
-          {#if data.edition}
-            - {data.edition.name}
-          {/if}
-        </p>
+        <h2 class="text-3xl font-bold tracking-tight">{data.edition?.name ?? 'Reports'}</h2>
       </div>
     </div>
 
@@ -300,7 +309,7 @@ function getRoleLabels(roles: string[]): string {
 
   <!-- Sub-navigation -->
   {#if data.edition}
-    <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={getReportingNavItems(data.edition.slug)} />
+    <AdminSubNav basePath="/admin/reporting/{data.edition.slug}" items={navItems} />
   {/if}
 
   {#if !data.edition}

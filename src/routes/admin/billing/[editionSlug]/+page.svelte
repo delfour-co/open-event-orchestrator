@@ -16,14 +16,10 @@ import {
   DollarSign,
   ExternalLink,
   Loader2,
-  Palette,
   Pencil,
   Plus,
-  QrCode,
-  Settings,
   Ticket,
-  Trash2,
-  Users
+  Trash2
 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -115,12 +111,9 @@ $effect(() => {
 			</a>
 			<div>
 				<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-				<p class="text-muted-foreground">
-					{formatDate(data.edition.startDate)} - {formatDate(data.edition.endDate)}
-				</p>
 			</div>
 		</div>
-		<!-- Actions & URLs -->
+		<!-- URLs -->
 		<div class="flex flex-wrap items-center gap-2">
 			<!-- Public Tickets URL -->
 			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
@@ -156,29 +149,6 @@ $effect(() => {
 					</Button>
 				</a>
 			</div>
-			<!-- Actions -->
-			<a href="/admin/billing/{data.edition.slug}/checkin">
-				<Button variant="outline" class="gap-2">
-					<QrCode class="h-4 w-4" />
-					Check-in
-				</Button>
-			</a>
-			<a href="/admin/billing/{data.edition.slug}/participants">
-				<Button variant="outline" class="gap-2">
-					<Users class="h-4 w-4" />
-					Participants
-				</Button>
-			</a>
-			<a href="/admin/billing/{data.edition.slug}/design" title="Ticket Design">
-				<Button variant="ghost" size="icon">
-					<Palette class="h-4 w-4" />
-				</Button>
-			</a>
-			<a href="/admin/billing/{data.edition.slug}/settings" title="Billing Settings">
-				<Button variant="ghost" size="icon">
-					<Settings class="h-4 w-4" />
-				</Button>
-			</a>
 		</div>
 	</div>
 

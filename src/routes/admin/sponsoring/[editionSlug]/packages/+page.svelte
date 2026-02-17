@@ -28,14 +28,6 @@ let editingBenefits = $state<Benefit[]>([])
 let customBenefitInput = $state('')
 let toggleForms: Record<string, HTMLFormElement> = {}
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
-
 function startEditPackage(pkg: (typeof data.packages)[0]) {
   editingPackage = pkg
   editingBenefits = [...pkg.benefits]
@@ -101,9 +93,6 @@ $effect(() => {
 			</a>
 			<div>
 				<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-				<p class="text-muted-foreground">
-					{formatDate(data.edition.startDate)} - {formatDate(data.edition.endDate)}
-				</p>
 			</div>
 		</div>
 	</div>

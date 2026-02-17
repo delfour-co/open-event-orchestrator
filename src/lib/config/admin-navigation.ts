@@ -1,5 +1,7 @@
 import type { NavItem } from '$lib/components/shared'
 
+export type { NavItem }
+
 /**
  * Generate sponsoring navigation items
  */
@@ -21,7 +23,8 @@ export const getBudgetNavItems = (editionSlug: string): NavItem[] => [
   { href: `/admin/budget/${editionSlug}/quotes`, label: 'Quotes' },
   { href: `/admin/budget/${editionSlug}/invoices`, label: 'Invoices' },
   { href: `/admin/budget/${editionSlug}/reimbursements`, label: 'Reimbursements' },
-  { href: `/admin/budget/${editionSlug}/journal`, label: 'Journal' }
+  { href: `/admin/budget/${editionSlug}/journal`, label: 'Journal' },
+  { href: `/admin/budget/${editionSlug}/settings`, label: 'Settings' }
 ]
 
 /**
@@ -59,4 +62,17 @@ export const getReportingNavItems = (editionSlug: string): NavItem[] => [
   { href: `/admin/reporting/${editionSlug}`, label: 'Dashboard' },
   { href: `/admin/reporting/${editionSlug}/alerts`, label: 'Alerts' },
   { href: `/admin/reporting/${editionSlug}/reports`, label: 'Reports' }
+]
+
+/**
+ * Generate planning navigation items
+ */
+export const getPlanningNavItems = (editionSlug: string): NavItem[] => [
+  { href: `/admin/planning/${editionSlug}`, label: 'Schedule' },
+  { href: `/admin/planning/${editionSlug}/sessions`, label: 'Sessions' },
+  { href: `/admin/planning/${editionSlug}/rooms`, label: 'Rooms' },
+  { href: `/admin/planning/${editionSlug}/tracks`, label: 'Tracks' },
+  { href: `/admin/planning/${editionSlug}/slots`, label: 'Slots' },
+  { href: `/admin/planning/${editionSlug}/staff`, label: 'Staff' },
+  { href: `/admin/planning/${editionSlug}/settings`, label: 'Settings' }
 ]

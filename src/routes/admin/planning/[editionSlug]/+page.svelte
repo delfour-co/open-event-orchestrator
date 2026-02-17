@@ -20,7 +20,6 @@ import {
   Mic,
   Pencil,
   Plus,
-  Settings,
   Trash2,
   Users,
   X
@@ -34,7 +33,9 @@ interface Props {
 
 const { data, form }: Props = $props()
 
-let activeTab = $state<'schedule' | 'sessions' | 'rooms' | 'tracks' | 'slots' | 'staff'>('schedule')
+let activeTab = $state<
+  'schedule' | 'sessions' | 'rooms' | 'tracks' | 'slots' | 'staff' | 'settings'
+>('schedule')
 let scheduleView = $state<'by-room' | 'by-track'>('by-room')
 let copiedUrl = $state(false)
 let showRoomForm = $state(false)
@@ -503,9 +504,6 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
       </a>
       <div>
         <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-        <p class="text-muted-foreground">
-          {formatDate(data.edition.startDate)} - {formatDate(data.edition.endDate)}
-        </p>
       </div>
     </div>
     <!-- URLs -->
@@ -527,65 +525,66 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
           </Button>
         </a>
       </div>
-      <a href="/admin/planning/{data.edition.slug}/settings" title="Planning Settings">
-        <Button variant="ghost" size="icon">
-          <Settings class="h-4 w-4" />
-        </Button>
-      </a>
     </div>
   </div>
 
   <!-- Tab Navigation -->
-  <div class="flex gap-2 border-b pb-2">
-    <Button
-      variant={activeTab === 'schedule' ? 'default' : 'ghost'}
+  <nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+    <button
       onclick={() => (activeTab = 'schedule')}
-      class="flex items-center gap-2"
+      class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'schedule'
+        ? 'bg-background shadow-sm'
+        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      <Calendar class="h-4 w-4" />
       Schedule
-    </Button>
-    <Button
-      variant={activeTab === 'sessions' ? 'default' : 'ghost'}
+    </button>
+    <button
       onclick={() => (activeTab = 'sessions')}
-      class="flex items-center gap-2"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'sessions'
+        ? 'bg-background shadow-sm'
+        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      <Mic class="h-4 w-4" />
       Sessions ({data.sessions.length})
-    </Button>
-    <Button
-      variant={activeTab === 'rooms' ? 'default' : 'ghost'}
+    </button>
+    <button
       onclick={() => (activeTab = 'rooms')}
-      class="flex items-center gap-2"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'rooms'
+        ? 'bg-background shadow-sm'
+        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      <DoorOpen class="h-4 w-4" />
       Rooms ({data.rooms.length})
-    </Button>
-    <Button
-      variant={activeTab === 'tracks' ? 'default' : 'ghost'}
+    </button>
+    <button
       onclick={() => (activeTab = 'tracks')}
-      class="flex items-center gap-2"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'tracks'
+        ? 'bg-background shadow-sm'
+        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      <Layers class="h-4 w-4" />
       Tracks ({data.tracks.length})
-    </Button>
-    <Button
-      variant={activeTab === 'slots' ? 'default' : 'ghost'}
+    </button>
+    <button
       onclick={() => (activeTab = 'slots')}
-      class="flex items-center gap-2"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'slots'
+        ? 'bg-background shadow-sm'
+        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      <Clock class="h-4 w-4" />
       Slots ({data.slots.length})
-    </Button>
-    <Button
-      variant={activeTab === 'staff' ? 'default' : 'ghost'}
+    </button>
+    <button
       onclick={() => (activeTab = 'staff')}
-      class="flex items-center gap-2"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'staff'
+        ? 'bg-background shadow-sm'
+        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      <Users class="h-4 w-4" />
       Staff ({data.roomAssignments.length})
-    </Button>
-  </div>
+    </button>
+    <a
+      href="/admin/planning/{data.edition.slug}/settings"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      Settings
+    </a>
+  </nav>
 
   <!-- Schedule Tab -->
   {#if activeTab === 'schedule'}
