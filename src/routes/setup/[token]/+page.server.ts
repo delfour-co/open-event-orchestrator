@@ -8,8 +8,8 @@ import { createOrganizationRepository } from '$lib/features/core/infra'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ params, locals }) => {
-  const tokenRepository = createSetupTokenRepository(locals.pb)
+export const load: PageServerLoad = async ({ params }) => {
+  const tokenRepository = createSetupTokenRepository()
   const setupToken = await tokenRepository.findByToken(params.token)
 
   if (!setupToken) {
@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, params, locals }) => {
-    const tokenRepository = createSetupTokenRepository(locals.pb)
+    const tokenRepository = createSetupTokenRepository()
     const setupToken = await tokenRepository.findByToken(params.token)
 
     if (!setupToken || !isTokenValid(setupToken)) {
