@@ -66,7 +66,8 @@ export const createNotificationRepository = (pb: PocketBase) => ({
   async findRecentByUser(userId: string, limit = 10): Promise<Notification[]> {
     const records = await pb.collection(COLLECTION).getList(1, limit, {
       filter: filterAnd(safeFilter`userId = ${userId}`, 'deletedAt = null'),
-      sort: '-created'
+      sort: '-created',
+      requestKey: null // Disable auto-cancellation for parallel requests
     })
     return records.items.map(mapRecordToNotification)
   },
@@ -104,7 +105,8 @@ export const createNotificationRepository = (pb: PocketBase) => ({
   async getUnreadCount(userId: string): Promise<number> {
     const records = await pb.collection(COLLECTION).getList(1, 1, {
       filter: filterAnd(safeFilter`userId = ${userId}`, 'isRead = false', 'deletedAt = null'),
-      fields: 'id'
+      fields: 'id',
+      requestKey: null // Disable auto-cancellation for parallel requests
     })
     return records.totalItems
   },
