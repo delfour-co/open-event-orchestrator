@@ -1,4 +1,5 @@
 <script lang="ts">
+import * as m from '$lib/paraglide/messages'
 import type { Snippet } from 'svelte'
 import type { LayoutData } from './$types'
 
@@ -19,7 +20,7 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-	<title>Tickets - {data.edition.name} | Open Event Orchestrator</title>
+	<title>{m.billing_tickets_page_title()} - {data.edition.name} | {m.common_app_name()}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
@@ -27,7 +28,7 @@ const formatDate = (date: Date) => {
 	<header class="border-b bg-background">
 		<div class="container mx-auto flex h-16 items-center justify-between px-4">
 			<div class="flex items-center gap-4">
-				<a href="/" class="text-xl font-bold">OEO</a>
+				<a href="/" class="text-xl font-bold">{m.common_app_short_name()}</a>
 				<span class="text-muted-foreground">/</span>
 				<span class="font-medium">{data.edition.name}</span>
 			</div>
@@ -50,7 +51,7 @@ const formatDate = (date: Date) => {
 	<!-- Footer -->
 	<footer class="border-t bg-background px-4 py-6">
 		<div class="container mx-auto text-center text-sm text-muted-foreground">
-			<p>Powered by Open Event Orchestrator</p>
+			<p>{m.cfp_powered_by()}</p>
 		</div>
 	</footer>
 </div>

@@ -2,6 +2,7 @@
 import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { ArrowRight, Calendar, Eye, EyeOff, Settings, Ticket } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -31,25 +32,25 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-	<title>Billing - Open Event Orchestrator</title>
+	<title>{m.billing_title()} - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Billing</h2>
+			<h2 class="text-3xl font-bold tracking-tight">{m.billing_title()}</h2>
 			<p class="text-muted-foreground">
-				Select an edition to manage ticket types, orders, and check-in.
+				{m.billing_select_edition()}
 			</p>
 		</div>
 		{#if archivedCount > 0}
 			<Button variant="outline" onclick={() => (showArchived = !showArchived)}>
 				{#if showArchived}
 					<EyeOff class="mr-2 h-4 w-4" />
-					Hide Archived ({archivedCount})
+					{m.billing_hide_archived()} ({archivedCount})
 				{:else}
 					<Eye class="mr-2 h-4 w-4" />
-					Show Archived ({archivedCount})
+					{m.billing_show_archived()} ({archivedCount})
 				{/if}
 			</Button>
 		{/if}
@@ -59,15 +60,15 @@ const formatDate = (date: Date) => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Ticket class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No editions available</h3>
+				<h3 class="text-lg font-semibold">{m.billing_no_editions()}</h3>
 				<p class="text-sm text-muted-foreground">
 					{#if !showArchived && archivedCount > 0}
-						All editions are archived.
+						{m.billing_all_archived()}
 						<button class="text-primary underline" onclick={() => (showArchived = true)}>
-							Show archived editions
+							{m.billing_show_archived_link()}
 						</button>
 					{:else}
-						Create an edition to start managing tickets.
+						{m.billing_create_edition()}
 					{/if}
 				</p>
 			</Card.Content>
@@ -86,7 +87,7 @@ const formatDate = (date: Date) => {
 								<a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
 									<StatusBadge status={edition.status} size="sm" />
 								</a>
-								<a href="/admin/billing/{edition.slug}/settings" title="Billing Settings">
+								<a href="/admin/billing/{edition.slug}/settings" title="{m.billing_nav_settings()}">
 									<Button variant="ghost" size="icon" class="h-8 w-8">
 										<Settings class="h-4 w-4" />
 									</Button>
@@ -100,7 +101,7 @@ const formatDate = (date: Date) => {
 					<Card.Content>
 						<a href="/admin/billing/{edition.slug}">
 							<Button class="w-full" variant="outline">
-								Manage Tickets
+								{m.billing_manage_tickets()}
 								<ArrowRight class="ml-2 h-4 w-4" />
 							</Button>
 						</a>

@@ -5,6 +5,8 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import { ArrowLeft, Camera, Check, Eye, EyeOff, Key, Trash2, Upload, User } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -28,10 +30,11 @@ let newPassword = $state('')
 let avatarInput: HTMLInputElement
 let isUploadingAvatar = $state(false)
 
-// Format creation date
+// Format creation date based on current language
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return date.toLocaleDateString(locale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -50,7 +53,7 @@ const getInitials = (name: string): string => {
 </script>
 
 <svelte:head>
-  <title>Profile - Open Event Orchestrator</title>
+  <title>{m.profile_page_title()}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30 py-8">
@@ -62,28 +65,28 @@ const getInitials = (name: string): string => {
         class="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft class="h-4 w-4" />
-        Back to dashboard
+        {m.profile_back_to_dashboard()}
       </a>
-      <h1 class="text-3xl font-bold tracking-tight">Profile</h1>
-      <p class="text-muted-foreground">Manage your account settings</p>
+      <h1 class="text-3xl font-bold tracking-tight">{m.profile_title()}</h1>
+      <p class="text-muted-foreground">{m.profile_description()}</p>
     </div>
 
     <div class="space-y-6">
       <!-- Success/Error Messages -->
       {#if form?.success && form?.action === 'updateProfile'}
-        <Alert variant="success">Profile updated successfully.</Alert>
+        <Alert variant="success">{m.profile_success_updated()}</Alert>
       {/if}
 
       {#if form?.success && form?.action === 'uploadAvatar'}
-        <Alert variant="success">Avatar updated successfully.</Alert>
+        <Alert variant="success">{m.profile_success_avatar_updated()}</Alert>
       {/if}
 
       {#if form?.success && form?.action === 'removeAvatar'}
-        <Alert variant="success">Avatar removed successfully.</Alert>
+        <Alert variant="success">{m.profile_success_avatar_removed()}</Alert>
       {/if}
 
       {#if form?.success && form?.action === 'changePassword'}
-        <Alert variant="success">Password changed successfully.</Alert>
+        <Alert variant="success">{m.profile_success_password_changed()}</Alert>
       {/if}
 
       {#if form?.error && !form?.errors}
@@ -95,10 +98,10 @@ const getInitials = (name: string): string => {
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <Camera class="h-5 w-5" />
-            Avatar
+            {m.profile_avatar()}
           </Card.Title>
           <Card.Description>
-            Your profile picture visible to other users
+            {m.profile_avatar_description()}
           </Card.Description>
         </Card.Header>
         <Card.Content>
@@ -153,7 +156,7 @@ const getInitials = (name: string): string => {
                   onclick={() => avatarInput.click()}
                 >
                   <Upload class="mr-2 h-4 w-4" />
-                  {isUploadingAvatar ? 'Uploading...' : 'Upload new avatar'}
+                  {isUploadingAvatar ? m.profile_uploading() : m.profile_upload_avatar()}
                 </Button>
               </form>
 
@@ -161,13 +164,13 @@ const getInitials = (name: string): string => {
                 <form method="POST" action="?/removeAvatar" use:enhance>
                   <Button type="submit" variant="ghost" size="sm" class="text-destructive">
                     <Trash2 class="mr-2 h-4 w-4" />
-                    Remove avatar
+                    {m.profile_remove_avatar()}
                   </Button>
                 </form>
               {/if}
 
               <p class="text-xs text-muted-foreground">
-                JPEG, PNG, GIF, or WebP. Max 2MB.
+                {m.profile_avatar_formats()}
               </p>
             </div>
           </div>
@@ -179,17 +182,17 @@ const getInitials = (name: string): string => {
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <User class="h-5 w-5" />
-            Profile Information
+            {m.profile_info()}
           </Card.Title>
           <Card.Description>
-            Your personal information and account details
+            {m.profile_info_description()}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           <form method="POST" action="?/updateProfile" use:enhance class="space-y-4">
             <!-- Email (read-only) -->
             <div class="space-y-2">
-              <Label for="email">Email</Label>
+              <Label for="email">{m.auth_email()}</Label>
               <Input
                 id="email"
                 type="email"
@@ -198,19 +201,19 @@ const getInitials = (name: string): string => {
                 class="bg-muted"
               />
               <p class="text-xs text-muted-foreground">
-                Email cannot be changed
+                {m.profile_email_cannot_change()}
               </p>
             </div>
 
             <!-- Name -->
             <div class="space-y-2">
-              <Label for="name">Name</Label>
+              <Label for="name">{m.profile_name()}</Label>
               <Input
                 id="name"
                 name="name"
                 type="text"
                 value={data.user.name}
-                placeholder="Your name"
+                placeholder={m.profile_name_placeholder()}
                 required
               />
               {#if getFormError('name') && form?.action === 'updateProfile'}
@@ -220,7 +223,7 @@ const getInitials = (name: string): string => {
 
             <!-- Role (read-only) -->
             <div class="space-y-2">
-              <Label for="role">Role</Label>
+              <Label for="role">{m.profile_role()}</Label>
               <Input
                 id="role"
                 type="text"
@@ -232,7 +235,7 @@ const getInitials = (name: string): string => {
 
             <!-- Member Since (read-only) -->
             <div class="space-y-2">
-              <Label for="created">Member since</Label>
+              <Label for="created">{m.profile_member_since()}</Label>
               <Input
                 id="created"
                 type="text"
@@ -245,7 +248,7 @@ const getInitials = (name: string): string => {
             <div class="flex justify-end pt-2">
               <Button type="submit">
                 <Check class="mr-2 h-4 w-4" />
-                Save Changes
+                {m.profile_save_changes()}
               </Button>
             </div>
           </form>
@@ -257,23 +260,23 @@ const getInitials = (name: string): string => {
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <Key class="h-5 w-5" />
-            Change Password
+            {m.profile_change_password()}
           </Card.Title>
           <Card.Description>
-            Update your password to keep your account secure
+            {m.profile_change_password_description()}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           <form method="POST" action="?/changePassword" use:enhance class="space-y-4">
             <!-- Current Password -->
             <div class="space-y-2">
-              <Label for="oldPassword">Current Password</Label>
+              <Label for="oldPassword">{m.profile_current_password()}</Label>
               <div class="relative">
                 <Input
                   id="oldPassword"
                   name="oldPassword"
                   type={showOldPassword ? 'text' : 'password'}
-                  placeholder="Enter current password"
+                  placeholder={m.profile_current_password_placeholder()}
                   required
                   autocomplete="current-password"
                   class="pr-10"
@@ -297,13 +300,13 @@ const getInitials = (name: string): string => {
 
             <!-- New Password -->
             <div class="space-y-2">
-              <Label for="password">New Password</Label>
+              <Label for="password">{m.profile_new_password()}</Label>
               <div class="relative">
                 <Input
                   id="password"
                   name="password"
                   type={showNewPassword ? 'text' : 'password'}
-                  placeholder="Enter new password"
+                  placeholder={m.profile_new_password_placeholder()}
                   required
                   autocomplete="new-password"
                   class="pr-10"
@@ -329,13 +332,13 @@ const getInitials = (name: string): string => {
 
             <!-- Confirm New Password -->
             <div class="space-y-2">
-              <Label for="passwordConfirm">Confirm New Password</Label>
+              <Label for="passwordConfirm">{m.profile_confirm_new_password()}</Label>
               <div class="relative">
                 <Input
                   id="passwordConfirm"
                   name="passwordConfirm"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirm new password"
+                  placeholder={m.profile_confirm_password_placeholder()}
                   required
                   autocomplete="new-password"
                   class="pr-10"
@@ -360,7 +363,7 @@ const getInitials = (name: string): string => {
             <div class="flex justify-end pt-2">
               <Button type="submit">
                 <Key class="mr-2 h-4 w-4" />
-                Change Password
+                {m.profile_change_password()}
               </Button>
             </div>
           </form>

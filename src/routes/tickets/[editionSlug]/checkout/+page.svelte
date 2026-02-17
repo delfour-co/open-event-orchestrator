@@ -4,6 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Loader2, Lock } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -16,7 +17,7 @@ const { data, form }: Props = $props()
 let isSubmitting = $state(false)
 
 const formatPrice = (priceInCents: number, currency: string) => {
-  if (priceInCents === 0) return 'Free'
+  if (priceInCents === 0) return m.billing_free()
   const amount = priceInCents / 100
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -39,7 +40,7 @@ const itemsJson = JSON.stringify(
 				<ArrowLeft class="h-5 w-5" />
 			</Button>
 		</a>
-		<h1 class="text-3xl font-bold tracking-tight">Checkout</h1>
+		<h1 class="text-3xl font-bold tracking-tight">{m.billing_checkout_title()}</h1>
 	</div>
 
 	{#if form?.error}
@@ -55,9 +56,9 @@ const itemsJson = JSON.stringify(
 		<div class="md:col-span-3">
 			<Card.Root>
 				<Card.Header>
-					<Card.Title>Your Information</Card.Title>
+					<Card.Title>{m.billing_checkout_your_info()}</Card.Title>
 					<Card.Description>
-						This information will appear on your tickets.
+						{m.billing_checkout_info_desc()}
 					</Card.Description>
 				</Card.Header>
 				<Card.Content>
@@ -76,7 +77,7 @@ const itemsJson = JSON.stringify(
 
 						<div class="grid gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<Label for="firstName">First Name *</Label>
+								<Label for="firstName">{m.billing_checkout_first_name()} *</Label>
 								<Input
 									id="firstName"
 									name="firstName"
@@ -85,7 +86,7 @@ const itemsJson = JSON.stringify(
 								/>
 							</div>
 							<div class="space-y-2">
-								<Label for="lastName">Last Name *</Label>
+								<Label for="lastName">{m.billing_checkout_last_name()} *</Label>
 								<Input
 									id="lastName"
 									name="lastName"
@@ -96,7 +97,7 @@ const itemsJson = JSON.stringify(
 						</div>
 
 						<div class="space-y-2">
-							<Label for="email">Email *</Label>
+							<Label for="email">{m.billing_checkout_email()} *</Label>
 							<Input
 								id="email"
 								name="email"
@@ -105,7 +106,7 @@ const itemsJson = JSON.stringify(
 								placeholder="john@example.com"
 							/>
 							<p class="text-xs text-muted-foreground">
-								Your tickets will be sent to this email address.
+								{m.billing_checkout_email_help()}
 							</p>
 						</div>
 
@@ -117,12 +118,12 @@ const itemsJson = JSON.stringify(
 						>
 							{#if isSubmitting}
 								<Loader2 class="h-4 w-4 animate-spin" />
-								Processing...
+								{m.billing_checkout_processing()}
 							{:else if data.isFree}
-								Confirm Registration
+								{m.billing_checkout_confirm_registration()}
 							{:else}
 								<Lock class="h-4 w-4" />
-								Proceed to Payment
+								{m.billing_checkout_proceed_payment()}
 							{/if}
 						</Button>
 					</form>
@@ -134,7 +135,7 @@ const itemsJson = JSON.stringify(
 		<div class="md:col-span-2">
 			<Card.Root>
 				<Card.Header>
-					<Card.Title>Order Summary</Card.Title>
+					<Card.Title>{m.billing_checkout_order_summary()}</Card.Title>
 				</Card.Header>
 				<Card.Content class="space-y-4">
 					{#each data.selectedItems as item}
@@ -150,7 +151,7 @@ const itemsJson = JSON.stringify(
 					{/each}
 					<div class="border-t pt-4">
 						<div class="flex items-center justify-between text-lg font-bold">
-							<span>Total</span>
+							<span>{m.billing_checkout_total()}</span>
 							<span>
 								{formatPrice(
 									data.totalAmount,

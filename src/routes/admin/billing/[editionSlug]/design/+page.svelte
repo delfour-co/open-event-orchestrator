@@ -11,6 +11,7 @@ import { Textarea } from '$lib/components/ui/textarea'
 import { getBillingNavItems } from '$lib/config'
 import { DEFAULT_TICKET_TEMPLATE } from '$lib/features/billing/domain'
 import { TicketPreview } from '$lib/features/billing/ui'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Palette, RotateCcw, Trash2, Upload } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -68,7 +69,7 @@ function resetToDefaults() {
 </script>
 
 <svelte:head>
-  <title>Ticket Design - {data.edition.name}</title>
+  <title>{m.billing_design_title()} - {data.edition.name}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -90,7 +91,7 @@ function resetToDefaults() {
     <div
       class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
     >
-      {form.message || 'Changes saved successfully'}
+      {form.message || m.message_saved_successfully()}
     </div>
   {/if}
 
@@ -121,16 +122,16 @@ function resetToDefaults() {
           <Card.Header>
             <Card.Title class="flex items-center gap-2">
               <Palette class="h-5 w-5" />
-              Colors
+              {m.billing_design_colors()}
             </Card.Title>
             <Card.Description>
-              Customize the colors used in your ticket design.
+              {m.billing_design_colors_desc()}
             </Card.Description>
           </Card.Header>
           <Card.Content class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div class="space-y-2">
-                <Label for="primaryColor">Primary Color</Label>
+                <Label for="primaryColor">{m.billing_design_primary_color()}</Label>
                 <div class="flex gap-2">
                   <input
                     type="color"
@@ -149,7 +150,7 @@ function resetToDefaults() {
               </div>
 
               <div class="space-y-2">
-                <Label for="backgroundColor">Background Color</Label>
+                <Label for="backgroundColor">{m.billing_design_background_color()}</Label>
                 <div class="flex gap-2">
                   <input
                     type="color"
@@ -168,7 +169,7 @@ function resetToDefaults() {
               </div>
 
               <div class="space-y-2">
-                <Label for="textColor">Text Color</Label>
+                <Label for="textColor">{m.billing_design_text_color()}</Label>
                 <div class="flex gap-2">
                   <input
                     type="color"
@@ -187,7 +188,7 @@ function resetToDefaults() {
               </div>
 
               <div class="space-y-2">
-                <Label for="accentColor">Accent Color</Label>
+                <Label for="accentColor">{m.billing_design_accent_color()}</Label>
                 <div class="flex gap-2">
                   <input
                     type="color"
@@ -213,10 +214,10 @@ function resetToDefaults() {
           <Card.Header>
             <Card.Title class="flex items-center gap-2">
               <Upload class="h-5 w-5" />
-              Event Logo
+              {m.billing_design_logo()}
             </Card.Title>
             <Card.Description>
-              Upload a logo to display on your tickets. Recommended size: 200x80px.
+              {m.billing_design_logo_desc()}
             </Card.Description>
           </Card.Header>
           <Card.Content class="space-y-4">
@@ -224,7 +225,7 @@ function resetToDefaults() {
               <div class="flex items-center gap-4">
                 <img
                   src={logoPreviewUrl}
-                  alt="Logo preview"
+                  alt={m.billing_design_logo_preview()}
                   class="h-16 w-auto max-w-[200px] rounded border object-contain p-2"
                 />
                 <Button
@@ -237,13 +238,13 @@ function resetToDefaults() {
                   }}
                 >
                   <Trash2 class="mr-2 h-4 w-4" />
-                  Remove
+                  {m.billing_design_remove_logo()}
                 </Button>
               </div>
             {/if}
 
             <div>
-              <Label for="logoFile">Upload Logo</Label>
+              <Label for="logoFile">{m.billing_design_upload_logo()}</Label>
               <Input
                 id="logoFile"
                 name="logoFile"
@@ -253,12 +254,12 @@ function resetToDefaults() {
                 class="mt-2"
               />
               <p class="mt-1 text-xs text-muted-foreground">
-                PNG, JPEG, or WebP. Max 2MB.
+                {m.billing_design_logo_formats()}
               </p>
             </div>
 
             <div>
-              <Label for="logoUrl">Or use a URL</Label>
+              <Label for="logoUrl">{m.billing_design_logo_url()}</Label>
               <Input
                 id="logoUrl"
                 name="logoUrl"
@@ -273,9 +274,9 @@ function resetToDefaults() {
         <!-- Display Options -->
         <Card.Root class="mt-6">
           <Card.Header>
-            <Card.Title>Display Options</Card.Title>
+            <Card.Title>{m.billing_design_display_options()}</Card.Title>
             <Card.Description>
-              Choose what information to display on the ticket.
+              {m.billing_design_display_options_desc()}
             </Card.Description>
           </Card.Header>
           <Card.Content class="space-y-4">
@@ -286,7 +287,7 @@ function resetToDefaults() {
                 onCheckedChange={(checked) => (showDate = checked === true)}
               />
               <input type="hidden" name="showDate" value={showDate} />
-              <Label for="showDate" class="cursor-pointer">Show event date</Label>
+              <Label for="showDate" class="cursor-pointer">{m.billing_design_show_date()}</Label>
             </div>
 
             <div class="flex items-center gap-3">
@@ -296,7 +297,7 @@ function resetToDefaults() {
                 onCheckedChange={(checked) => (showVenue = checked === true)}
               />
               <input type="hidden" name="showVenue" value={showVenue} />
-              <Label for="showVenue" class="cursor-pointer">Show venue</Label>
+              <Label for="showVenue" class="cursor-pointer">{m.billing_design_show_venue()}</Label>
             </div>
 
             <div class="flex items-center gap-3">
@@ -306,20 +307,20 @@ function resetToDefaults() {
                 onCheckedChange={(checked) => (showQrCode = checked === true)}
               />
               <input type="hidden" name="showQrCode" value={showQrCode} />
-              <Label for="showQrCode" class="cursor-pointer">Show QR code</Label>
+              <Label for="showQrCode" class="cursor-pointer">{m.billing_design_show_qr()}</Label>
             </div>
 
             <div class="space-y-2">
-              <Label for="customFooterText">Custom Footer Text</Label>
+              <Label for="customFooterText">{m.billing_design_footer_text()}</Label>
               <Textarea
                 id="customFooterText"
                 name="customFooterText"
                 bind:value={customFooterText}
-                placeholder="e.g., Please arrive 30 minutes early"
+                placeholder={m.billing_design_footer_placeholder()}
                 maxlength={200}
               />
               <p class="text-xs text-muted-foreground">
-                {customFooterText.length}/200 characters
+                {m.billing_design_characters({ count: customFooterText.length })}
               </p>
             </div>
           </Card.Content>
@@ -327,10 +328,10 @@ function resetToDefaults() {
 
         <!-- Actions -->
         <div class="mt-6 flex gap-3">
-          <Button type="submit">Save Design</Button>
+          <Button type="submit">{m.billing_design_save()}</Button>
           <Button type="button" variant="outline" onclick={resetToDefaults}>
             <RotateCcw class="mr-2 h-4 w-4" />
-            Reset to Defaults
+            {m.billing_design_reset()}
           </Button>
         </div>
       </form>
@@ -339,7 +340,7 @@ function resetToDefaults() {
         <form method="POST" action="?/reset" use:enhance>
           <Button type="submit" variant="destructive" size="sm">
             <Trash2 class="mr-2 h-4 w-4" />
-            Delete Custom Design
+            {m.billing_design_delete()}
           </Button>
         </form>
       {/if}
@@ -349,9 +350,9 @@ function resetToDefaults() {
     <div class="space-y-4">
       <Card.Root>
         <Card.Header>
-          <Card.Title>Preview</Card.Title>
+          <Card.Title>{m.billing_design_preview()}</Card.Title>
           <Card.Description>
-            This is how your tickets will appear in emails and PDFs.
+            {m.billing_design_preview_desc()}
           </Card.Description>
         </Card.Header>
         <Card.Content>
@@ -368,17 +369,17 @@ function resetToDefaults() {
 
       <Card.Root>
         <Card.Header>
-          <Card.Title>Tips</Card.Title>
+          <Card.Title>{m.billing_design_tips()}</Card.Title>
         </Card.Header>
         <Card.Content class="space-y-3 text-sm text-muted-foreground">
           <p>
-            <strong>Colors:</strong> Use contrasting colors for better readability. The header text color is automatically calculated based on the primary color.
+            <strong>{m.billing_design_colors()}:</strong> {m.billing_design_tip_colors()}
           </p>
           <p>
-            <strong>Logo:</strong> For best results, use a transparent PNG with your logo on a light background. The logo will be resized to fit.
+            <strong>{m.billing_design_logo()}:</strong> {m.billing_design_tip_logo()}
           </p>
           <p>
-            <strong>QR Code:</strong> The QR code contains the ticket ID and is used for check-in. We recommend keeping it enabled.
+            <strong>QR Code:</strong> {m.billing_design_tip_qr()}
           </p>
         </Card.Content>
       </Card.Root>

@@ -39,7 +39,15 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", ".svelte-kit", "build", "dist", "coverage", "*.md"]
+    "ignore": [
+      "node_modules",
+      ".svelte-kit",
+      "build",
+      "dist",
+      "coverage",
+      "*.md",
+      "src/lib/paraglide"
+    ]
   },
   "overrides": [
     {

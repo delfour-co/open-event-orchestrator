@@ -10,6 +10,7 @@ import { Input } from '$lib/components/ui/input'
 import { Select } from '$lib/components/ui/select'
 import * as Table from '$lib/components/ui/table'
 import { talkStatusSchema } from '$lib/features/cfp/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
@@ -144,7 +145,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-  <title>CFP Submissions - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.cfp_submissions_title()} - {data.edition.name} - {m.common_app_name()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -157,7 +158,7 @@ $effect(() => {
         </Button>
       </a>
       <div>
-        <h2 class="text-3xl font-bold tracking-tight">CFP Submissions</h2>
+        <h2 class="text-3xl font-bold tracking-tight">{m.cfp_submissions_title()}</h2>
         <p class="text-muted-foreground">{data.edition.name}</p>
       </div>
     </div>
@@ -165,22 +166,22 @@ $effect(() => {
       <!-- Public CFP URL -->
       <div class="flex items-center gap-2">
         <div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-          <span class="text-sm text-muted-foreground">Public URL:</span>
+          <span class="text-sm text-muted-foreground">{m.cfp_public_url()}</span>
           <code class="text-sm">/cfp/{data.edition.slug}</code>
         </div>
         <Button variant="outline" size="sm" onclick={copyCfpUrl} class="gap-2">
           {#if copiedUrl}
             <Check class="h-4 w-4 text-green-500" />
-            Copied
+            {m.cfp_copied()}
           {:else}
             <Copy class="h-4 w-4" />
-            Copy
+            {m.action_copy()}
           {/if}
         </Button>
         <a href="/cfp/{data.edition.slug}" target="_blank">
           <Button variant="outline" size="sm" class="gap-2">
             <ExternalLink class="h-4 w-4" />
-            Open
+            {m.cfp_open()}
           </Button>
         </a>
       </div>
@@ -194,11 +195,11 @@ $effect(() => {
       }}>
         <Button variant="outline" type="submit" disabled={isExporting}>
           <Download class="mr-2 h-4 w-4" />
-          Export CSV
+          {m.cfp_export_csv()}
         </Button>
       </form>
     {/if}
-      <a href="/admin/cfp/{data.edition.slug}/settings" title="CFP Settings">
+      <a href="/admin/cfp/{data.edition.slug}/settings" title={m.cfp_settings()}>
         <Button variant="ghost" size="icon">
           <Settings class="h-4 w-4" />
         </Button>
@@ -222,7 +223,7 @@ $effect(() => {
   <div class="grid gap-4 md:grid-cols-4 lg:grid-cols-8">
     <Card.Root class="col-span-2">
       <Card.Header class="pb-2">
-        <Card.Title class="text-sm font-medium">Total</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.cfp_status_total()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{totalSubmissions}</div>
@@ -231,7 +232,7 @@ $effect(() => {
 
     <Card.Root>
       <Card.Header class="pb-2">
-        <Card.Title class="text-sm font-medium text-blue-600">Submitted</Card.Title>
+        <Card.Title class="text-sm font-medium text-blue-600">{m.cfp_status_submitted()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{data.statusCounts.submitted}</div>
@@ -240,7 +241,7 @@ $effect(() => {
 
     <Card.Root>
       <Card.Header class="pb-2">
-        <Card.Title class="text-sm font-medium text-yellow-600">Review</Card.Title>
+        <Card.Title class="text-sm font-medium text-yellow-600">{m.cfp_status_review()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{data.statusCounts.under_review}</div>
@@ -249,7 +250,7 @@ $effect(() => {
 
     <Card.Root>
       <Card.Header class="pb-2">
-        <Card.Title class="text-sm font-medium text-green-600">Accepted</Card.Title>
+        <Card.Title class="text-sm font-medium text-green-600">{m.cfp_status_accepted()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{data.statusCounts.accepted}</div>
@@ -258,7 +259,7 @@ $effect(() => {
 
     <Card.Root>
       <Card.Header class="pb-2">
-        <Card.Title class="text-sm font-medium text-red-600">Rejected</Card.Title>
+        <Card.Title class="text-sm font-medium text-red-600">{m.cfp_status_rejected()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{data.statusCounts.rejected}</div>
@@ -267,7 +268,7 @@ $effect(() => {
 
     <Card.Root>
       <Card.Header class="pb-2">
-        <Card.Title class="text-sm font-medium text-emerald-600">Confirmed</Card.Title>
+        <Card.Title class="text-sm font-medium text-emerald-600">{m.cfp_status_confirmed()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{data.statusCounts.confirmed}</div>
@@ -276,7 +277,7 @@ $effect(() => {
 
     <Card.Root>
       <Card.Header class="pb-2">
-        <Card.Title class="text-sm font-medium text-gray-600">Draft</Card.Title>
+        <Card.Title class="text-sm font-medium text-gray-600">{m.cfp_status_draft()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{data.statusCounts.draft}</div>
@@ -290,32 +291,32 @@ $effect(() => {
       <div class="flex flex-wrap items-end gap-4">
         <!-- Search -->
         <div class="flex-1">
-          <label for="search" class="mb-2 block text-sm font-medium">Search</label>
+          <label for="search" class="mb-2 block text-sm font-medium">{m.cfp_filter_search()}</label>
           <div class="flex gap-2">
             <div class="relative flex-1">
               <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="search"
                 type="text"
-                placeholder="Search by title or speaker..."
+                placeholder={m.cfp_filter_search_placeholder()}
                 class="pl-10"
                 bind:value={search}
                 onkeydown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
-            <Button onclick={handleSearch}>Search</Button>
+            <Button onclick={handleSearch}>{m.action_search()}</Button>
           </div>
         </div>
 
         <!-- Status Filter -->
         <div class="w-40">
-          <label for="status-filter" class="mb-2 block text-sm font-medium">Status</label>
+          <label for="status-filter" class="mb-2 block text-sm font-medium">{m.cfp_filter_status()}</label>
           <Select
             id="status-filter"
             value={data.filters.status}
             onchange={(e) => updateFilter('status', e.currentTarget.value)}
           >
-            <option value="all">All statuses</option>
+            <option value="all">{m.cfp_filter_all_statuses()}</option>
             {#each allStatuses as status}
               <option value={status}>{status}</option>
             {/each}
@@ -324,13 +325,13 @@ $effect(() => {
 
         <!-- Category Filter -->
         <div class="w-40">
-          <label for="category-filter" class="mb-2 block text-sm font-medium">Category</label>
+          <label for="category-filter" class="mb-2 block text-sm font-medium">{m.cfp_filter_category()}</label>
           <Select
             id="category-filter"
             value={data.filters.category}
             onchange={(e) => updateFilter('category', e.currentTarget.value)}
           >
-            <option value="all">All categories</option>
+            <option value="all">{m.cfp_filter_all_categories()}</option>
             {#each data.categories as category}
               <option value={category.id}>{category.name}</option>
             {/each}
@@ -339,13 +340,13 @@ $effect(() => {
 
         <!-- Format Filter -->
         <div class="w-40">
-          <label for="format-filter" class="mb-2 block text-sm font-medium">Format</label>
+          <label for="format-filter" class="mb-2 block text-sm font-medium">{m.cfp_filter_format()}</label>
           <Select
             id="format-filter"
             value={data.filters.format}
             onchange={(e) => updateFilter('format', e.currentTarget.value)}
           >
-            <option value="all">All formats</option>
+            <option value="all">{m.cfp_filter_all_formats()}</option>
             {#each data.formats as format}
               <option value={format.id}>{format.name}</option>
             {/each}
@@ -359,7 +360,7 @@ $effect(() => {
   {#if selectedIds.size > 0 && data.permissions.canChangeStatus}
     <Card.Root class="border-primary bg-primary/5">
       <Card.Content class="flex items-center justify-between py-3">
-        <span class="text-sm font-medium">{selectedIds.size} talk(s) selected</span>
+        <span class="text-sm font-medium">{m.cfp_talks_selected({ count: selectedIds.size })}</span>
         <div class="flex items-center gap-2">
           <form method="POST" action="?/updateStatus" use:enhance>
             {#each [...selectedIds] as id}
@@ -367,20 +368,20 @@ $effect(() => {
             {/each}
             <div class="flex gap-2">
               <Button type="submit" name="status" value="under_review" variant="outline" size="sm">
-                Start Review
+                {m.cfp_start_review()}
               </Button>
               <Button type="submit" name="status" value="accepted" variant="outline" size="sm" class="text-green-600">
                 <Check class="mr-1 h-3 w-3" />
-                Accept
+                {m.cfp_accept()}
               </Button>
               <Button type="submit" name="status" value="rejected" variant="outline" size="sm" class="text-red-600">
                 <X class="mr-1 h-3 w-3" />
-                Reject
+                {m.cfp_reject()}
               </Button>
             </div>
           </form>
           <Button variant="ghost" size="sm" onclick={clearSelection}>
-            Clear selection
+            {m.cfp_clear_selection()}
           </Button>
         </div>
       </Card.Content>
@@ -400,12 +401,12 @@ $effect(() => {
               />
             </Table.Head>
           {/if}
-          <Table.Head>Title</Table.Head>
-          <Table.Head>Speaker(s)</Table.Head>
-          <Table.Head>Category</Table.Head>
-          <Table.Head>Format</Table.Head>
-          <Table.Head>Status</Table.Head>
-          <Table.Head>Submitted</Table.Head>
+          <Table.Head>{m.cfp_table_title()}</Table.Head>
+          <Table.Head>{m.cfp_table_speaker()}</Table.Head>
+          <Table.Head>{m.cfp_table_category()}</Table.Head>
+          <Table.Head>{m.cfp_table_format()}</Table.Head>
+          <Table.Head>{m.cfp_table_status()}</Table.Head>
+          <Table.Head>{m.cfp_table_submitted()}</Table.Head>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -414,11 +415,11 @@ $effect(() => {
             <Table.Cell colspan={data.permissions.canChangeStatus ? 7 : 6}>
               <div class="flex flex-col items-center justify-center py-12">
                 <FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-                <h3 class="text-lg font-semibold">No submissions found</h3>
+                <h3 class="text-lg font-semibold">{m.cfp_no_submissions()}</h3>
                 <p class="text-sm text-muted-foreground">
                   {data.filters.search || data.filters.status !== 'all' || data.filters.category !== 'all'
-                    ? 'Try adjusting your filters.'
-                    : 'Submissions will appear here once speakers submit talks.'}
+                    ? m.cfp_filter_adjust_hint()
+                    : m.cfp_submissions_appear_hint()}
                 </p>
               </div>
             </Table.Cell>

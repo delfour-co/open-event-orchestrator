@@ -4,6 +4,7 @@ import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { getBillingNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   Activity,
   ArrowLeft,
@@ -69,7 +70,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-  <title>Check-in Stats - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.billing_stats_title()} - {data.edition.name} - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -93,11 +94,11 @@ $effect(() => {
         class="gap-2"
       >
         <Activity class="h-4 w-4 {autoRefresh ? 'animate-pulse' : ''}" />
-        {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh'}
+        {autoRefresh ? m.billing_stats_auto_refresh_on() : m.billing_stats_auto_refresh()}
       </Button>
       <Button variant="outline" size="sm" onclick={refresh} disabled={refreshing} class="gap-2">
         <RefreshCw class="h-4 w-4 {refreshing ? 'animate-spin' : ''}" />
-        Refresh
+        {m.action_refresh()}
       </Button>
     </div>
   </div>
@@ -107,14 +108,14 @@ $effect(() => {
 
   <!-- Last updated -->
   <p class="text-sm text-muted-foreground">
-    Last updated: {formatTime(data.lastUpdated)}
+    {m.billing_stats_last_updated({ time: formatTime(data.lastUpdated) })}
   </p>
 
   <!-- Overview Stats -->
   <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Checked In</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.billing_stats_checked_in()}</Card.Title>
         <Users class="h-4 w-4 text-muted-foreground" />
       </Card.Header>
       <Card.Content>
@@ -131,49 +132,49 @@ $effect(() => {
           ></div>
         </div>
         <p class="mt-1 text-xs text-muted-foreground">
-          {data.stats.percentage}% complete
+          {m.billing_stats_complete({ percent: data.stats.percentage })}
         </p>
       </Card.Content>
     </Card.Root>
 
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Remaining</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.billing_stats_remaining()}</Card.Title>
         <Ticket class="h-4 w-4 text-muted-foreground" />
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">
           {data.stats.totalValid - data.stats.totalCheckedIn}
         </div>
-        <p class="text-xs text-muted-foreground">tickets to check in</p>
+        <p class="text-xs text-muted-foreground">{m.billing_stats_tickets_to_checkin()}</p>
       </Card.Content>
     </Card.Root>
 
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Average Rate</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.billing_stats_average_rate()}</Card.Title>
         <TrendingUp class="h-4 w-4 text-muted-foreground" />
       </Card.Header>
       <Card.Content>
         <div class="text-2xl font-bold">{data.stats.averagePerHour}</div>
-        <p class="text-xs text-muted-foreground">check-ins per hour</p>
+        <p class="text-xs text-muted-foreground">{m.billing_stats_checkins_per_hour()}</p>
       </Card.Content>
     </Card.Root>
 
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Peak Hour</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.billing_stats_peak_hour()}</Card.Title>
         <Clock class="h-4 w-4 text-muted-foreground" />
       </Card.Header>
       <Card.Content>
         {#if data.stats.peakCount > 0}
           <div class="text-2xl font-bold">{formatHour(data.stats.peakHour)}</div>
           <p class="text-xs text-muted-foreground">
-            {data.stats.peakCount} check-ins
+            {data.stats.peakCount} {m.billing_stats_checkins()}
           </p>
         {:else}
           <div class="text-2xl font-bold text-muted-foreground">--</div>
-          <p class="text-xs text-muted-foreground">No check-ins yet</p>
+          <p class="text-xs text-muted-foreground">{m.billing_stats_no_checkins()}</p>
         {/if}
       </Card.Content>
     </Card.Root>
@@ -185,13 +186,13 @@ $effect(() => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Ticket class="h-5 w-5" />
-          By Ticket Type
+          {m.billing_stats_by_ticket_type()}
         </Card.Title>
-        <Card.Description>Check-in progress for each ticket category</Card.Description>
+        <Card.Description>{m.billing_stats_by_ticket_type_desc()}</Card.Description>
       </Card.Header>
       <Card.Content>
         {#if data.ticketTypeStats.length === 0}
-          <p class="py-8 text-center text-muted-foreground">No tickets found</p>
+          <p class="py-8 text-center text-muted-foreground">{m.billing_stats_no_tickets()}</p>
         {:else}
           <div class="space-y-4">
             {#each data.ticketTypeStats as ticketType}
@@ -221,13 +222,13 @@ $effect(() => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <BarChart3 class="h-5 w-5" />
-          Hourly Distribution
+          {m.billing_stats_hourly_distribution()}
         </Card.Title>
-        <Card.Description>Check-ins by hour of day</Card.Description>
+        <Card.Description>{m.billing_stats_hourly_distribution_desc()}</Card.Description>
       </Card.Header>
       <Card.Content>
         {#if data.hourlyStats.length === 0}
-          <p class="py-8 text-center text-muted-foreground">No check-ins yet</p>
+          <p class="py-8 text-center text-muted-foreground">{m.billing_stats_no_checkins()}</p>
         {:else}
           <div class="flex h-48 items-end gap-1">
             {#each data.hourlyStats as hourData}
@@ -257,19 +258,19 @@ $effect(() => {
   <!-- Quick Actions -->
   <Card.Root>
     <Card.Header>
-      <Card.Title>Quick Actions</Card.Title>
+      <Card.Title>{m.billing_stats_quick_actions()}</Card.Title>
     </Card.Header>
     <Card.Content class="flex gap-4">
       <a href="/admin/billing/{data.edition.slug}/checkin">
         <Button variant="outline">
           <Users class="mr-2 h-4 w-4" />
-          Back to Check-in Scanner
+          {m.billing_stats_back_to_scanner()}
         </Button>
       </a>
       <a href="/admin/billing/{data.edition.slug}/participants">
         <Button variant="outline">
           <Ticket class="mr-2 h-4 w-4" />
-          View All Participants
+          {m.billing_stats_view_participants()}
         </Button>
       </a>
     </Card.Content>

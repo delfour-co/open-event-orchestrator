@@ -1,4 +1,5 @@
 <script lang="ts">
+import * as m from '$lib/paraglide/messages'
 import type { TicketTemplate } from '../domain'
 import { getContrastColor } from '../domain/ticket-template'
 
@@ -19,7 +20,7 @@ const {
   template,
   eventName,
   editionName,
-  ticketTypeName = 'General Admission',
+  ticketTypeName,
   attendeeName = 'John Doe',
   attendeeEmail = 'john.doe@example.com',
   ticketNumber = 'TKT-ABC123-XYZ',
@@ -27,6 +28,10 @@ const {
   startDate = new Date(),
   logoUrl
 }: Props = $props()
+
+const displayTicketTypeName = $derived(
+  ticketTypeName || m.billing_ticket_preview_general_admission()
+)
 
 const primaryColor = $derived(template.primaryColor || '#3B82F6')
 const backgroundColor = $derived(template.backgroundColor || '#FFFFFF')
@@ -71,22 +76,22 @@ const formattedDate = $derived(
     <!-- Left side - Ticket info -->
     <div class="flex flex-1 flex-col justify-between p-4" style="color: {textColor};">
       <div>
-        <div class="font-bold" style="color: {primaryColor};">{ticketTypeName}</div>
+        <div class="font-bold" style="color: {primaryColor};">{displayTicketTypeName}</div>
         <div class="mt-2">
           <div class="font-semibold">{attendeeName}</div>
           <div class="text-xs opacity-70">{attendeeEmail}</div>
         </div>
         <div class="mt-2 space-y-1 text-xs">
           {#if showDate}
-            <div>Date: {formattedDate}</div>
+            <div>{m.billing_ticket_preview_date({ date: formattedDate })}</div>
           {/if}
           {#if showVenue && venue}
-            <div>Venue: {venue}</div>
+            <div>{m.billing_ticket_preview_venue({ venue })}</div>
           {/if}
         </div>
       </div>
       <div>
-        <div class="text-xs" style="color: {accentColor};">Ticket #{ticketNumber}</div>
+        <div class="text-xs" style="color: {accentColor};">{m.billing_ticket_preview_ticket_number({ number: ticketNumber })}</div>
         {#if customFooterText}
           <div class="mt-1 text-[10px] opacity-60">{customFooterText}</div>
         {/if}
@@ -109,7 +114,7 @@ const formattedDate = $derived(
             {/each}
           </div>
         </div>
-        <div class="mt-1 text-[8px]" style="color: {textColor}60;">Scan to check in</div>
+        <div class="mt-1 text-[8px]" style="color: {textColor}60;">{m.billing_ticket_preview_scan_checkin()}</div>
       </div>
     {/if}
   </div>

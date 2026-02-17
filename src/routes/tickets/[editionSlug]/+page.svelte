@@ -2,6 +2,7 @@
 import { goto } from '$app/navigation'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { Minus, Plus, ShoppingCart, Ticket } from 'lucide-svelte'
 import type { LayoutData } from './$types'
 
@@ -14,7 +15,7 @@ const { data }: Props = $props()
 let quantities = $state<Record<string, number>>({})
 
 const formatPrice = (priceInCents: number, currency: string) => {
-  if (priceInCents === 0) return 'Free'
+  if (priceInCents === 0) return m.billing_free()
   const amount = priceInCents / 100
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -79,16 +80,16 @@ function proceedToCheckout() {
 				{[data.edition.venue, data.edition.city].filter(Boolean).join(', ')}
 			</p>
 		{/if}
-		<p class="mt-4 text-muted-foreground">Select your tickets below</p>
+		<p class="mt-4 text-muted-foreground">{m.billing_tickets_select_below()}</p>
 	</div>
 
 	{#if data.ticketTypes.length === 0}
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Ticket class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No tickets available</h3>
+				<h3 class="text-lg font-semibold">{m.billing_tickets_no_available()}</h3>
 				<p class="text-sm text-muted-foreground">
-					Tickets are not yet on sale. Check back later.
+					{m.billing_tickets_not_on_sale()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -109,12 +110,12 @@ function proceedToCheckout() {
 							</div>
 							{#if remainingCount <= 20 && remainingCount > 0}
 								<p class="mt-1 text-sm text-orange-600">
-									Only {remainingCount} left
+									{m.billing_tickets_only_left({ count: remainingCount })}
 								</p>
 							{/if}
 							{#if !available}
 								<p class="mt-1 text-sm text-destructive">
-									{remainingCount === 0 ? 'Sold out' : 'Not on sale'}
+									{remainingCount === 0 ? m.billing_tickets_sold_out() : m.billing_tickets_not_on_sale_status()}
 								</p>
 							{/if}
 						</div>
@@ -155,17 +156,17 @@ function proceedToCheckout() {
 					<Card.Content class="flex items-center justify-between p-6">
 						<div>
 							<div class="text-lg font-semibold">
-								{totalQuantity()} ticket{totalQuantity() > 1 ? 's' : ''}
+								{totalQuantity()} {totalQuantity() > 1 ? m.billing_tickets_tickets() : m.billing_tickets_ticket()}
 							</div>
 							<div class="text-2xl font-bold">
 								{totalAmount() === 0
-									? 'Free'
+									? m.billing_free()
 									: formatPrice(totalAmount(), data.ticketTypes[0].currency)}
 							</div>
 						</div>
 						<Button size="lg" onclick={proceedToCheckout} class="gap-2">
 							<ShoppingCart class="h-5 w-5" />
-							Continue to Checkout
+							{m.billing_tickets_continue_checkout()}
 						</Button>
 					</Card.Content>
 				</Card.Root>

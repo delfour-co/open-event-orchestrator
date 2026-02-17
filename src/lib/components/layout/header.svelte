@@ -183,7 +183,7 @@ function getInitials(name: string | undefined): string {
             onclick={closeUserMenu}
           >
             <User class="h-4 w-4" />
-            Profile
+            {m.header_profile()}
           </a>
           <div class="my-1 h-px bg-border"></div>
           <form action="/auth/logout" method="POST" class="w-full">

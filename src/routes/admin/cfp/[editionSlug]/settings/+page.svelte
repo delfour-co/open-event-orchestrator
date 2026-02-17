@@ -15,6 +15,7 @@ import {
   type FieldConditionRule
 } from '$lib/features/cfp/domain/conditional-field'
 import { FieldConditionRuleBuilder } from '$lib/features/cfp/ui'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   ChevronDown,
@@ -88,7 +89,7 @@ const statuses = ['draft', 'published', 'archived'] as const
 </script>
 
 <svelte:head>
-  <title>CFP Settings - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.cfp_settings_title()} - {data.edition.name} - {m.common_app_name()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -100,9 +101,9 @@ const statuses = ['draft', 'published', 'archived'] as const
       </Button>
     </a>
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">CFP Settings</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.cfp_settings_title()}</h2>
       <p class="text-muted-foreground">
-        Configure the Call for Papers for {data.edition.name}
+        {m.cfp_settings_description({ name: data.edition.name })}
       </p>
     </div>
   </div>
@@ -122,18 +123,18 @@ const statuses = ['draft', 'published', 'archived'] as const
   <!-- CFP Status Card -->
   <Card.Root>
     <Card.Header>
-      <Card.Title>CFP Status</Card.Title>
+      <Card.Title>{m.cfp_settings_status_title()}</Card.Title>
       <Card.Description>
-        Control whether this CFP is visible to speakers and accepting submissions
+        {m.cfp_settings_status_description()}
       </Card.Description>
     </Card.Header>
     <Card.Content>
       <div class="flex items-center gap-4">
-        <span class="text-sm text-muted-foreground">Current status:</span>
+        <span class="text-sm text-muted-foreground">{m.cfp_settings_current_status()}</span>
         <StatusBadge status={data.edition.status} />
       </div>
       <div class="mt-4 flex items-center gap-2">
-        <span class="mr-2 text-sm text-muted-foreground">Change to:</span>
+        <span class="mr-2 text-sm text-muted-foreground">{m.cfp_settings_change_to()}</span>
         {#each statuses as status}
           <form
             method="POST"
@@ -159,9 +160,9 @@ const statuses = ['draft', 'published', 'archived'] as const
         {/each}
       </div>
       <p class="mt-3 text-xs text-muted-foreground">
-        <strong>Draft:</strong> CFP not visible, no submissions allowed.
-        <strong>Published:</strong> CFP open for submissions.
-        <strong>Archived:</strong> CFP closed, submissions preserved.
+        <strong>{m.status_draft()}:</strong> {m.cfp_settings_status_draft_hint()}
+        <strong>{m.status_published()}:</strong> {m.cfp_settings_status_published_hint()}
+        <strong>{m.status_archived()}:</strong> {m.cfp_settings_status_archived_hint()}
       </p>
     </Card.Content>
   </Card.Root>
@@ -169,8 +170,8 @@ const statuses = ['draft', 'published', 'archived'] as const
   <!-- Submission Settings Card -->
   <Card.Root>
     <Card.Header>
-      <Card.Title>Submission Settings</Card.Title>
-      <Card.Description>Configure submission dates, limits, and form requirements</Card.Description>
+      <Card.Title>{m.cfp_settings_submission_title()}</Card.Title>
+      <Card.Description>{m.cfp_settings_submission_description()}</Card.Description>
     </Card.Header>
     <Card.Content>
       <form
@@ -188,46 +189,46 @@ const statuses = ['draft', 'published', 'archived'] as const
         <!-- Dates -->
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
-            <Label for="cfpOpenDate">CFP Open Date</Label>
+            <Label for="cfpOpenDate">{m.cfp_settings_open_date()}</Label>
             <Input
               id="cfpOpenDate"
               name="cfpOpenDate"
               type="date"
               value={formatDateForInput(data.settings.cfpOpenDate)}
             />
-            <p class="text-xs text-muted-foreground">When speakers can start submitting talks</p>
+            <p class="text-xs text-muted-foreground">{m.cfp_settings_open_date_hint()}</p>
           </div>
 
           <div class="space-y-2">
-            <Label for="cfpCloseDate">CFP Close Date</Label>
+            <Label for="cfpCloseDate">{m.cfp_settings_close_date()}</Label>
             <Input
               id="cfpCloseDate"
               name="cfpCloseDate"
               type="date"
               value={formatDateForInput(data.settings.cfpCloseDate)}
             />
-            <p class="text-xs text-muted-foreground">Deadline for talk submissions</p>
+            <p class="text-xs text-muted-foreground">{m.cfp_settings_close_date_hint()}</p>
           </div>
         </div>
 
         <!-- Introduction Text -->
         <div class="space-y-2">
-          <Label for="introText">Introduction Text</Label>
+          <Label for="introText">{m.cfp_settings_intro_text()}</Label>
           <Textarea
             id="introText"
             name="introText"
             rows={4}
             value={data.settings.introText}
-            placeholder="Welcome message for speakers..."
+            placeholder={m.cfp_settings_intro_placeholder()}
           />
           <p class="text-xs text-muted-foreground">
-            This text will be displayed on the CFP submission page
+            {m.cfp_settings_intro_hint()}
           </p>
         </div>
 
         <!-- Submission Limits -->
         <div class="space-y-2">
-          <Label for="maxSubmissions">Max Submissions per Speaker</Label>
+          <Label for="maxSubmissions">{m.cfp_settings_max_submissions()}</Label>
           <Input
             id="maxSubmissions"
             name="maxSubmissionsPerSpeaker"
@@ -241,27 +242,27 @@ const statuses = ['draft', 'published', 'archived'] as const
 
         <!-- Form Options -->
         <div class="space-y-4">
-          <h4 class="text-sm font-medium">Form Options</h4>
+          <h4 class="text-sm font-medium">{m.cfp_settings_form_options()}</h4>
 
           <div class="space-y-3">
             <label class="flex items-center gap-3">
               <Checkbox checked={data.settings.requireAbstract} name="requireAbstract" />
-              <span class="text-sm">Require abstract</span>
+              <span class="text-sm">{m.cfp_settings_require_abstract()}</span>
             </label>
 
             <label class="flex items-center gap-3">
               <Checkbox checked={data.settings.requireDescription} name="requireDescription" />
-              <span class="text-sm">Require detailed description</span>
+              <span class="text-sm">{m.cfp_settings_require_description()}</span>
             </label>
 
             <label class="flex items-center gap-3">
               <Checkbox checked={data.settings.allowCoSpeakers} name="allowCoSpeakers" />
-              <span class="text-sm">Allow co-speakers</span>
+              <span class="text-sm">{m.cfp_settings_allow_cospeakers()}</span>
             </label>
 
             <label class="flex items-center gap-3">
               <Checkbox checked={data.settings.anonymousReview} name="anonymousReview" />
-              <span class="text-sm">Anonymous review (hide speaker names from reviewers)</span>
+              <span class="text-sm">{m.cfp_settings_anonymous_review()}</span>
             </label>
 
             {#if data.settings.anonymousReview}
@@ -270,10 +271,10 @@ const statuses = ['draft', 'published', 'archived'] as const
                   checked={data.settings.revealSpeakersAfterDecision}
                   name="revealSpeakersAfterDecision"
                 />
-                <span class="text-sm">Reveal speaker names after decision is made</span>
+                <span class="text-sm">{m.cfp_settings_reveal_after_decision()}</span>
               </label>
               <p class="ml-6 text-xs text-muted-foreground">
-                When enabled, reviewers will see speaker information once a talk is accepted or rejected
+                {m.cfp_settings_reveal_hint()}
               </p>
             {/if}
           </div>
@@ -281,7 +282,7 @@ const statuses = ['draft', 'published', 'archived'] as const
 
         <!-- Review Mode -->
         <div class="space-y-4">
-          <h4 class="text-sm font-medium">Review Mode</h4>
+          <h4 class="text-sm font-medium">{m.cfp_settings_review_mode()}</h4>
           <div class="space-y-3">
             <label class="flex items-start gap-3">
               <input
@@ -292,9 +293,9 @@ const statuses = ['draft', 'published', 'archived'] as const
                 class="mt-1"
               />
               <div>
-                <span class="text-sm font-medium">Star Rating (1-5)</span>
+                <span class="text-sm font-medium">{m.cfp_settings_review_stars()}</span>
                 <p class="text-xs text-muted-foreground">
-                  Classic rating scale from 1 to 5 stars
+                  {m.cfp_settings_review_stars_hint()}
                 </p>
               </div>
             </label>
@@ -308,9 +309,9 @@ const statuses = ['draft', 'published', 'archived'] as const
                 class="mt-1"
               />
               <div>
-                <span class="text-sm font-medium">Yes / No</span>
+                <span class="text-sm font-medium">{m.cfp_settings_review_yes_no()}</span>
                 <p class="text-xs text-muted-foreground">
-                  Simple binary decision - accept or reject
+                  {m.cfp_settings_review_yes_no_hint()}
                 </p>
               </div>
             </label>
@@ -324,9 +325,9 @@ const statuses = ['draft', 'published', 'archived'] as const
                 class="mt-1"
               />
               <div>
-                <span class="text-sm font-medium">Comparative Ranking (1-100)</span>
+                <span class="text-sm font-medium">{m.cfp_settings_review_comparative()}</span>
                 <p class="text-xs text-muted-foreground">
-                  Rank talks relative to each other on a 0-100 scale
+                  {m.cfp_settings_review_comparative_hint()}
                 </p>
               </div>
             </label>
@@ -337,9 +338,9 @@ const statuses = ['draft', 'published', 'archived'] as const
           <Button type="submit" disabled={isSubmitting}>
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {m.cfp_settings_saving()}
             {:else}
-              Save Settings
+              {m.cfp_settings_save()}
             {/if}
           </Button>
         </div>
@@ -352,12 +353,12 @@ const statuses = ['draft', 'published', 'archived'] as const
     <Card.Header>
       <div class="flex items-center justify-between">
         <div>
-          <Card.Title>Categories</Card.Title>
-          <Card.Description>Topics and tracks for talk submissions</Card.Description>
+          <Card.Title>{m.cfp_categories_title()}</Card.Title>
+          <Card.Description>{m.cfp_categories_description()}</Card.Description>
         </div>
         <Button size="sm" variant="outline" onclick={() => (showNewCategory = !showNewCategory)}>
           <Plus class="mr-2 h-4 w-4" />
-          Add Category
+          {m.cfp_categories_add()}
         </Button>
       </div>
     </Card.Header>
@@ -376,26 +377,26 @@ const statuses = ['draft', 'published', 'archived'] as const
         >
           <div class="grid gap-4 sm:grid-cols-3">
             <div class="space-y-2">
-              <Label for="cat-name">Name</Label>
-              <Input id="cat-name" name="name" placeholder="Web Development" required />
+              <Label for="cat-name">{m.cfp_categories_name()}</Label>
+              <Input id="cat-name" name="name" placeholder={m.cfp_categories_name_placeholder()} required />
             </div>
             <div class="space-y-2">
-              <Label for="cat-description">Description</Label>
+              <Label for="cat-description">{m.cfp_categories_category_description()}</Label>
               <Input
                 id="cat-description"
                 name="description"
-                placeholder="Talks about web technologies"
+                placeholder={m.cfp_categories_description_placeholder()}
               />
             </div>
             <div class="space-y-2">
-              <Label for="cat-color">Color</Label>
+              <Label for="cat-color">{m.cfp_categories_color()}</Label>
               <Input id="cat-color" name="color" type="color" value="#6b7280" class="h-10 w-full" />
             </div>
           </div>
           <div class="mt-4 flex gap-2">
-            <Button type="submit" size="sm">Add</Button>
+            <Button type="submit" size="sm">{m.action_add()}</Button>
             <Button type="button" variant="ghost" size="sm" onclick={() => (showNewCategory = false)}>
-              Cancel
+              {m.action_cancel()}
             </Button>
           </div>
         </form>
@@ -403,7 +404,7 @@ const statuses = ['draft', 'published', 'archived'] as const
 
       {#if data.categories.length === 0}
         <p class="text-sm text-muted-foreground">
-          No categories yet. Add categories so speakers can classify their talks.
+          {m.cfp_categories_empty()}
         </p>
       {:else}
         <div class="space-y-2">
@@ -429,7 +430,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                   size="icon"
                   class="h-8 w-8 text-destructive hover:text-destructive"
                   onclick={(e) => {
-                    if (!confirm('Delete this category?')) {
+                    if (!confirm(m.cfp_categories_delete_confirm())) {
                       e.preventDefault()
                     }
                   }}
@@ -449,12 +450,12 @@ const statuses = ['draft', 'published', 'archived'] as const
     <Card.Header>
       <div class="flex items-center justify-between">
         <div>
-          <Card.Title>Talk Formats</Card.Title>
-          <Card.Description>Duration and types of talks accepted</Card.Description>
+          <Card.Title>{m.cfp_formats_title()}</Card.Title>
+          <Card.Description>{m.cfp_formats_description()}</Card.Description>
         </div>
         <Button size="sm" variant="outline" onclick={() => (showNewFormat = !showNewFormat)}>
           <Plus class="mr-2 h-4 w-4" />
-          Add Format
+          {m.cfp_formats_add()}
         </Button>
       </div>
     </Card.Header>
@@ -473,34 +474,34 @@ const statuses = ['draft', 'published', 'archived'] as const
         >
           <div class="grid gap-4 sm:grid-cols-3">
             <div class="space-y-2">
-              <Label for="fmt-name">Name</Label>
-              <Input id="fmt-name" name="name" placeholder="Conference Talk" required />
+              <Label for="fmt-name">{m.cfp_formats_name()}</Label>
+              <Input id="fmt-name" name="name" placeholder={m.cfp_formats_name_placeholder()} required />
             </div>
             <div class="space-y-2">
-              <Label for="fmt-duration">Duration (minutes)</Label>
+              <Label for="fmt-duration">{m.cfp_formats_duration()}</Label>
               <Input
                 id="fmt-duration"
                 name="duration"
                 type="number"
                 min="5"
                 max="480"
-                placeholder="45"
+                placeholder={m.cfp_formats_duration_placeholder()}
                 required
               />
             </div>
             <div class="space-y-2">
-              <Label for="fmt-description">Description</Label>
+              <Label for="fmt-description">{m.cfp_formats_format_description()}</Label>
               <Input
                 id="fmt-description"
                 name="description"
-                placeholder="Standard conference session"
+                placeholder={m.cfp_formats_description_placeholder()}
               />
             </div>
           </div>
           <div class="mt-4 flex gap-2">
-            <Button type="submit" size="sm">Add</Button>
+            <Button type="submit" size="sm">{m.action_add()}</Button>
             <Button type="button" variant="ghost" size="sm" onclick={() => (showNewFormat = false)}>
-              Cancel
+              {m.action_cancel()}
             </Button>
           </div>
         </form>
@@ -508,7 +509,7 @@ const statuses = ['draft', 'published', 'archived'] as const
 
       {#if data.formats.length === 0}
         <p class="text-sm text-muted-foreground">
-          No formats yet. Add formats so speakers can choose the type of talk they want to give.
+          {m.cfp_formats_empty()}
         </p>
       {:else}
         <div class="space-y-2">
@@ -517,7 +518,7 @@ const statuses = ['draft', 'published', 'archived'] as const
               <div>
                 <p class="font-medium">{format.name}</p>
                 <p class="text-sm text-muted-foreground">
-                  {format.duration} minutes
+                  {m.cfp_formats_minutes({ duration: format.duration })}
                   {#if format.description}
                     - {format.description}
                   {/if}
@@ -531,7 +532,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                   size="icon"
                   class="h-8 w-8 text-destructive hover:text-destructive"
                   onclick={(e) => {
-                    if (!confirm('Delete this format?')) {
+                    if (!confirm(m.cfp_formats_delete_confirm())) {
                       e.preventDefault()
                     }
                   }}
@@ -551,16 +552,16 @@ const statuses = ['draft', 'published', 'archived'] as const
     <Card.Header>
       <div class="flex items-center justify-between">
         <div>
-          <Card.Title>Conditional Fields</Card.Title>
+          <Card.Title>{m.cfp_conditional_title()}</Card.Title>
           <Card.Description>
-            Show or hide form fields based on speaker selections
+            {m.cfp_conditional_description()}
           </Card.Description>
         </div>
         <div class="flex gap-2">
           <a href="/cfp/{data.edition.slug}/submit" target="_blank" rel="noopener">
             <Button size="sm" variant="ghost">
               <ExternalLink class="mr-2 h-4 w-4" />
-              Preview Form
+              {m.cfp_conditional_preview_form()}
             </Button>
           </a>
           <Button
@@ -572,7 +573,7 @@ const statuses = ['draft', 'published', 'archived'] as const
             }}
           >
             <Plus class="mr-2 h-4 w-4" />
-            Add Rule
+            {m.cfp_conditional_add_rule()}
           </Button>
         </div>
       </div>
@@ -610,10 +611,10 @@ const statuses = ['draft', 'published', 'archived'] as const
 
           <div class="mt-4 flex gap-2">
             <Button type="submit" size="sm">
-              {editingRuleId ? 'Update Rule' : 'Add Rule'}
+              {editingRuleId ? m.cfp_conditional_update_rule() : m.cfp_conditional_add_rule()}
             </Button>
             <Button type="button" variant="ghost" size="sm" onclick={resetRuleForm}>
-              Cancel
+              {m.action_cancel()}
             </Button>
           </div>
         </form>
@@ -621,8 +622,7 @@ const statuses = ['draft', 'published', 'archived'] as const
 
       {#if data.fieldConditionRules.length === 0}
         <p class="text-sm text-muted-foreground">
-          No conditional field rules yet. Add rules to show or hide fields based on the speaker's
-          selections (e.g., show "Duration" only when format is "Workshop").
+          {m.cfp_conditional_empty()}
         </p>
       {:else}
         <div class="space-y-2">
@@ -636,7 +636,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                   <p class="font-medium">{rule.name}</p>
                   {#if !rule.isActive}
                     <span class="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      Disabled
+                      {m.cfp_conditional_disabled()}
                     </span>
                   {/if}
                 </div>
@@ -656,7 +656,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                     variant="ghost"
                     size="icon"
                     class="h-8 w-8"
-                    title={rule.isActive ? 'Disable rule' : 'Enable rule'}
+                    title={rule.isActive ? m.cfp_conditional_disable() : m.cfp_conditional_enable()}
                   >
                     {#if rule.isActive}
                       <ChevronDown class="h-4 w-4" />
@@ -683,7 +683,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                     size="icon"
                     class="h-8 w-8 text-destructive hover:text-destructive"
                     onclick={(e) => {
-                      if (!confirm('Delete this rule?')) {
+                      if (!confirm(m.cfp_conditional_delete_confirm())) {
                         e.preventDefault()
                       }
                     }}
@@ -702,16 +702,16 @@ const statuses = ['draft', 'published', 'archived'] as const
   <!-- Quick Links -->
   <Card.Root>
     <Card.Header>
-      <Card.Title>Related Settings</Card.Title>
-      <Card.Description>Manage other aspects of this edition</Card.Description>
+      <Card.Title>{m.cfp_related_title()}</Card.Title>
+      <Card.Description>{m.cfp_related_description()}</Card.Description>
     </Card.Header>
     <Card.Content>
       <div class="flex gap-2">
         <a href="/admin/editions/{data.edition.slug}/settings">
-          <Button variant="outline">Edition Settings</Button>
+          <Button variant="outline">{m.cfp_related_edition_settings()}</Button>
         </a>
         <a href="/admin/cfp/{data.edition.slug}/submissions">
-          <Button variant="outline">View Submissions</Button>
+          <Button variant="outline">{m.cfp_related_view_submissions()}</Button>
         </a>
       </div>
     </Card.Content>

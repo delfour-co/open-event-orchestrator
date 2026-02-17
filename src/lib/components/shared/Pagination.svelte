@@ -1,4 +1,5 @@
 <script lang="ts">
+import * as m from '$lib/paraglide/messages.js'
 import { cn } from '$lib/utils'
 import type { HTMLAttributes } from 'svelte/elements'
 
@@ -49,9 +50,7 @@ const endItem = $derived(Math.min(currentPage * perPage, totalItems || 0))
 >
   {#if showInfo && totalItems}
     <p class="text-sm text-muted-foreground">
-      Showing <span class="font-medium">{startItem}</span> to
-      <span class="font-medium">{endItem}</span> of
-      <span class="font-medium">{totalItems}</span> results
+      {m.pagination_showing_results({ start: startItem, end: endItem, total: totalItems })}
     </p>
   {:else}
     <div></div>
@@ -67,7 +66,7 @@ const endItem = $derived(Math.min(currentPage * perPage, totalItems || 0))
       )}
       disabled={currentPage === 1}
       onclick={() => onPageChange(currentPage - 1)}
-      aria-label="Previous page"
+      aria-label={m.pagination_previous()}
     >
       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -103,7 +102,7 @@ const endItem = $derived(Math.min(currentPage * perPage, totalItems || 0))
       )}
       disabled={currentPage === totalPages}
       onclick={() => onPageChange(currentPage + 1)}
-      aria-label="Next page"
+      aria-label={m.pagination_next()}
     >
       <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

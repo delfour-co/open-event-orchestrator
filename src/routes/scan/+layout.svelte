@@ -1,6 +1,7 @@
 <script lang="ts">
 import '../../app.css'
 import { offlineSyncService } from '$lib/features/billing/services/offline-sync-service'
+import * as m from '$lib/paraglide/messages'
 import { onMount } from 'svelte'
 
 interface Props {
@@ -71,7 +72,7 @@ async function syncNow() {
   <div class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 text-sm {isOnline ? 'bg-green-600' : 'bg-amber-600'} text-white">
     <div class="flex items-center gap-2">
       <span class="h-2 w-2 rounded-full {isOnline ? 'bg-green-300' : 'bg-amber-300'}"></span>
-      <span>{isOnline ? 'Online' : 'Offline'}</span>
+      <span>{isOnline ? m.billing_scan_online() : m.billing_scan_offline()}</span>
     </div>
     {#if pendingCount > 0}
       <button
@@ -84,9 +85,9 @@ async function syncNow() {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Syncing...
+          {m.billing_scan_syncing()}
         {:else}
-          {pendingCount} pending
+          {pendingCount} {m.billing_scan_pending()}
         {/if}
       </button>
     {/if}

@@ -2,6 +2,7 @@
 import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { ArrowRight, Calendar, Eye, EyeOff, FileText, Settings } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -31,23 +32,23 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-  <title>CFP Management - Open Event Orchestrator</title>
+  <title>{m.cfp_management_title()} - {m.common_app_name()}</title>
 </svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">CFP Management</h2>
-      <p class="text-muted-foreground">Select an edition to manage its Call for Papers submissions.</p>
+      <h2 class="text-3xl font-bold tracking-tight">{m.cfp_management_title()}</h2>
+      <p class="text-muted-foreground">{m.cfp_management_description()}</p>
     </div>
     {#if archivedCount > 0}
       <Button variant="outline" onclick={() => (showArchived = !showArchived)}>
         {#if showArchived}
           <EyeOff class="mr-2 h-4 w-4" />
-          Hide Archived ({archivedCount})
+          {m.cfp_hide_archived()} ({archivedCount})
         {:else}
           <Eye class="mr-2 h-4 w-4" />
-          Show Archived ({archivedCount})
+          {m.cfp_show_archived()} ({archivedCount})
         {/if}
       </Button>
     {/if}
@@ -57,15 +58,15 @@ const formatDate = (date: Date) => {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No editions available</h3>
+        <h3 class="text-lg font-semibold">{m.cfp_no_editions()}</h3>
         <p class="text-sm text-muted-foreground">
           {#if !showArchived && archivedCount > 0}
-            All editions are archived.
+            {m.cfp_all_editions_archived()}
             <button class="text-primary underline" onclick={() => (showArchived = true)}>
-              Show archived editions
+              {m.cfp_show_archived_editions()}
             </button>
           {:else}
-            Create and publish an edition to start managing CFP submissions.
+            {m.cfp_create_edition_hint()}
           {/if}
         </p>
       </Card.Content>
@@ -85,7 +86,7 @@ const formatDate = (date: Date) => {
                   <StatusBadge status={edition.status} size="sm" />
                 </a>
                 {#if data.permissions.canManageSettings}
-                  <a href="/admin/cfp/{edition.slug}/settings" title="CFP Settings">
+                  <a href="/admin/cfp/{edition.slug}/settings" title={m.cfp_settings()}>
                     <Button variant="ghost" size="icon" class="h-8 w-8">
                       <Settings class="h-4 w-4" />
                     </Button>
@@ -100,7 +101,7 @@ const formatDate = (date: Date) => {
           <Card.Content>
             <a href="/admin/cfp/{edition.slug}/submissions">
               <Button class="w-full" variant="outline">
-                Manage Submissions
+                {m.cfp_manage_submissions()}
                 <ArrowRight class="ml-2 h-4 w-4" />
               </Button>
             </a>

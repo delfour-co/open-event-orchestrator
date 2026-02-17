@@ -4,6 +4,7 @@ import { page } from '$app/stores'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
+import * as m from '$lib/paraglide/messages'
 
 type Props = {
   form: { error?: string } | null
@@ -16,14 +17,14 @@ const redirectUrl = $derived($page.url.searchParams.get('redirect'))
 </script>
 
 <svelte:head>
-  <title>Login - Open Event Orchestrator</title>
+  <title>{m.auth_login_page_title()}</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-muted/50 p-4">
   <Card.Root class="w-full max-w-md">
     <Card.Header class="space-y-1">
-      <Card.Title class="text-2xl font-bold">Welcome back</Card.Title>
-      <Card.Description>Enter your credentials to access your account</Card.Description>
+      <Card.Title class="text-2xl font-bold">{m.auth_login_welcome()}</Card.Title>
+      <Card.Description>{m.auth_login_description()}</Card.Description>
     </Card.Header>
     <Card.Content>
       <form method="POST" use:enhance class="space-y-4">
@@ -37,22 +38,22 @@ const redirectUrl = $derived($page.url.searchParams.get('redirect'))
         {/if}
 
         <div class="space-y-2">
-          <label for="email" class="text-sm font-medium">Email</label>
-          <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+          <label for="email" class="text-sm font-medium">{m.auth_email()}</label>
+          <Input id="email" name="email" type="email" placeholder={m.auth_login_email_placeholder()} required />
         </div>
 
         <div class="space-y-2">
-          <label for="password" class="text-sm font-medium">Password</label>
+          <label for="password" class="text-sm font-medium">{m.auth_password()}</label>
           <Input id="password" name="password" type="password" required />
         </div>
 
-        <Button type="submit" class="w-full">Sign in</Button>
+        <Button type="submit" class="w-full">{m.auth_login_sign_in()}</Button>
       </form>
     </Card.Content>
     <Card.Footer class="flex flex-col space-y-2">
       <p class="text-center text-sm text-muted-foreground">
-        Don't have an account?
-        <a href="/auth/register" class="text-primary hover:underline">Sign up</a>
+        {m.auth_login_no_account()}
+        <a href="/auth/register" class="text-primary hover:underline">{m.auth_login_sign_up()}</a>
       </p>
     </Card.Footer>
   </Card.Root>

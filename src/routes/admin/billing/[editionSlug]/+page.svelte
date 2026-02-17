@@ -8,6 +8,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBillingNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
@@ -98,7 +99,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Billing - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.billing_title()} - {data.edition.name} - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -117,7 +118,7 @@ $effect(() => {
 		<div class="flex flex-wrap items-center gap-2">
 			<!-- Public Tickets URL -->
 			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-				<span class="text-xs text-muted-foreground">Tickets:</span>
+				<span class="text-xs text-muted-foreground">{m.billing_public_url_label()}:</span>
 				<code class="text-xs">/tickets/{data.edition.slug}</code>
 				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyPublicUrl}>
 					{#if copiedPublic}
@@ -134,7 +135,7 @@ $effect(() => {
 			</div>
 			<!-- Scanner URL -->
 			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-				<span class="text-xs text-muted-foreground">Scanner:</span>
+				<span class="text-xs text-muted-foreground">{m.billing_scanner_url_label()}:</span>
 				<code class="text-xs">/scan/{data.edition.id}</code>
 				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyScannerUrl}>
 					{#if copiedScanner}
@@ -159,7 +160,7 @@ $effect(() => {
 	<div class="grid gap-4 md:grid-cols-4">
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Revenue</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.billing_revenue()}</Card.Title>
 				<DollarSign class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
@@ -167,48 +168,48 @@ $effect(() => {
 					{formatPrice(data.stats.totalRevenue, 'EUR')}
 				</div>
 				<p class="text-xs text-muted-foreground">
-					{data.stats.paidOrders} paid orders
+					{data.stats.paidOrders} {m.billing_paid_orders()}
 				</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Tickets Sold</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.billing_tickets_sold()}</Card.Title>
 				<Ticket class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{data.stats.ticketsSold}</div>
 				<p class="text-xs text-muted-foreground">
-					across {data.stats.totalOrders} orders
+					{m.billing_across_orders({ count: data.stats.totalOrders })}
 				</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Check-in</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.billing_checkin()}</Card.Title>
 				<Check class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{data.stats.ticketsCheckedIn}</div>
 				<p class="text-xs text-muted-foreground">
-					{data.stats.ticketsSold > 0
+					{m.billing_checked_in_percent({ percent: data.stats.ticketsSold > 0
 						? Math.round((data.stats.ticketsCheckedIn / data.stats.ticketsSold) * 100)
-						: 0}% checked in
+						: 0 })}
 				</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Orders</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.billing_orders()}</Card.Title>
 				<CreditCard class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{data.stats.totalOrders}</div>
 				<p class="text-xs text-muted-foreground">
-					{data.stats.paidOrders} paid, {data.stats.totalOrders - data.stats.paidOrders} other
+					{m.billing_paid_other({ paid: data.stats.paidOrders, other: data.stats.totalOrders - data.stats.paidOrders })}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -217,7 +218,7 @@ $effect(() => {
 	<!-- Ticket Types Section -->
 	<div class="space-y-4">
 		<div class="flex items-center justify-between">
-			<h3 class="text-xl font-semibold">Ticket Types</h3>
+			<h3 class="text-xl font-semibold">{m.billing_ticket_types()}</h3>
 			<Button
 				onclick={() => {
 					editingTicketType = null
@@ -225,7 +226,7 @@ $effect(() => {
 				}}
 			>
 				<Plus class="mr-2 h-4 w-4" />
-				Add Ticket Type
+				{m.billing_add_ticket_type()}
 			</Button>
 		</div>
 
@@ -233,9 +234,9 @@ $effect(() => {
 			<Card.Root>
 				<Card.Content class="flex flex-col items-center justify-center py-12">
 					<Ticket class="mb-4 h-12 w-12 text-muted-foreground" />
-					<h3 class="text-lg font-semibold">No ticket types yet</h3>
+					<h3 class="text-lg font-semibold">{m.billing_no_ticket_types()}</h3>
 					<p class="text-sm text-muted-foreground">
-						Create your first ticket type to start selling tickets.
+						{m.billing_create_ticket_type()}
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -252,7 +253,7 @@ $effect(() => {
 											<span
 												class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
 											>
-												Inactive
+												{m.billing_inactive()}
 											</span>
 										{/if}
 									</Card.Title>
@@ -287,10 +288,10 @@ $effect(() => {
 						<Card.Content>
 							<div class="space-y-2">
 								<div class="text-2xl font-bold">
-									{tt.price === 0 ? 'Free' : formatPrice(tt.price, tt.currency)}
+									{tt.price === 0 ? m.billing_free() : formatPrice(tt.price, tt.currency)}
 								</div>
 								<div class="flex items-center justify-between text-sm">
-									<span class="text-muted-foreground">Sold</span>
+									<span class="text-muted-foreground">{m.billing_sold()}</span>
 									<span class="font-medium"
 										>{tt.quantitySold} / {tt.quantity}</span
 									>
@@ -307,10 +308,10 @@ $effect(() => {
 								{#if tt.salesStartDate || tt.salesEndDate}
 									<div class="text-xs text-muted-foreground">
 										{#if tt.salesStartDate}
-											From {formatDate(tt.salesStartDate)}
+											{m.billing_from_date({ date: formatDate(tt.salesStartDate) })}
 										{/if}
 										{#if tt.salesEndDate}
-											until {formatDate(tt.salesEndDate)}
+											{m.billing_until_date({ date: formatDate(tt.salesEndDate) })}
 										{/if}
 									</div>
 								{/if}
@@ -328,12 +329,12 @@ $effect(() => {
 	<Dialog.Content class="max-w-lg" onClose={cancelForm}>
 			<Dialog.Header>
 				<Dialog.Title
-					>{editingTicketType ? 'Edit Ticket Type' : 'Create Ticket Type'}</Dialog.Title
+					>{editingTicketType ? m.billing_edit_ticket_type() : m.billing_create_ticket_type_title()}</Dialog.Title
 				>
 				<Dialog.Description>
 					{editingTicketType
-						? 'Update the ticket type details.'
-						: 'Define a new ticket type for this edition.'}
+						? m.billing_update_ticket_type()
+						: m.billing_define_ticket_type()}
 				</Dialog.Description>
 			</Dialog.Header>
 
@@ -363,29 +364,29 @@ $effect(() => {
 				{/if}
 
 				<div class="space-y-2">
-					<Label for="tt-name">Name *</Label>
+					<Label for="tt-name">{m.billing_form_name()} *</Label>
 					<Input
 						id="tt-name"
 						name="name"
-						placeholder="Early Bird"
+						placeholder={m.billing_form_name_placeholder()}
 						required
 						value={editingTicketType?.name || ''}
 					/>
 				</div>
 
 				<div class="space-y-2">
-					<Label for="tt-description">Description</Label>
+					<Label for="tt-description">{m.billing_form_description()}</Label>
 					<Textarea
 						id="tt-description"
 						name="description"
-						placeholder="Describe what's included..."
+						placeholder={m.billing_form_description_placeholder()}
 						value={editingTicketType?.description || ''}
 					/>
 				</div>
 
 				<div class="grid gap-4 md:grid-cols-3">
 					<div class="space-y-2">
-						<Label for="tt-price">Price (EUR)</Label>
+						<Label for="tt-price">{m.billing_form_price()}</Label>
 						<Input
 							id="tt-price"
 							name="price"
@@ -397,10 +398,10 @@ $effect(() => {
 								? (editingTicketType.price / 100).toFixed(2)
 								: ''}
 						/>
-						<p class="text-xs text-muted-foreground">0 for free tickets</p>
+						<p class="text-xs text-muted-foreground">{m.billing_form_price_help()}</p>
 					</div>
 					<div class="space-y-2">
-						<Label for="tt-currency">Currency</Label>
+						<Label for="tt-currency">{m.billing_form_currency()}</Label>
 						<select
 							id="tt-currency"
 							name="currency"
@@ -422,7 +423,7 @@ $effect(() => {
 						</select>
 					</div>
 					<div class="space-y-2">
-						<Label for="tt-quantity">Quantity *</Label>
+						<Label for="tt-quantity">{m.billing_form_quantity()} *</Label>
 						<Input
 							id="tt-quantity"
 							name="quantity"
@@ -437,7 +438,7 @@ $effect(() => {
 
 				<div class="grid gap-4 md:grid-cols-2">
 					<div class="space-y-2">
-						<Label for="tt-start">Sales Start</Label>
+						<Label for="tt-start">{m.billing_form_sales_start()}</Label>
 						<Input
 							id="tt-start"
 							name="salesStartDate"
@@ -446,7 +447,7 @@ $effect(() => {
 						/>
 					</div>
 					<div class="space-y-2">
-						<Label for="tt-end">Sales End</Label>
+						<Label for="tt-end">{m.billing_form_sales_end()}</Label>
 						<Input
 							id="tt-end"
 							name="salesEndDate"
@@ -464,16 +465,16 @@ $effect(() => {
 						checked={editingTicketType?.isActive ?? true}
 						class="h-4 w-4 rounded border-gray-300"
 					/>
-					<Label for="tt-active">Active (visible for sale)</Label>
+					<Label for="tt-active">{m.billing_form_active()}</Label>
 				</div>
 
 				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={cancelForm}>Cancel</Button>
+					<Button type="button" variant="outline" onclick={cancelForm}>{m.action_cancel()}</Button>
 					<Button type="submit" disabled={isSubmitting}>
 						{#if isSubmitting}
 							<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 						{/if}
-						{editingTicketType ? 'Update' : 'Create'}
+						{editingTicketType ? m.action_update() : m.action_create()}
 					</Button>
 				</Dialog.Footer>
 			</form>

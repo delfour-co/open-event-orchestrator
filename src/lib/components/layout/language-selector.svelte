@@ -5,10 +5,13 @@ import * as m from '$lib/paraglide/messages.js'
 import { type Locale, getLocale, locales, setLocale } from '$lib/paraglide/runtime.js'
 import { Globe } from 'lucide-svelte'
 
-// Language display names
-const languageNames: Record<Locale, string> = {
-  en: 'English',
-  fr: 'Francais'
+// Language display names - using translation functions
+const getLanguageName = (locale: Locale): string => {
+  const names: Record<Locale, () => string> = {
+    en: () => m.language_english(),
+    fr: () => m.language_french()
+  }
+  return names[locale]()
 }
 
 // Language flags/short codes
@@ -64,7 +67,7 @@ function closeDropdown(): void {
           data-sveltekit-reload
         >
           <span class="font-mono text-xs text-muted-foreground">{languageCodes[locale]}</span>
-          <span>{languageNames[locale]}</span>
+          <span>{getLanguageName(locale)}</span>
           {#if locale === currentLocale}
             <span class="ml-auto text-xs">*</span>
           {/if}
@@ -76,7 +79,7 @@ function closeDropdown(): void {
       type="button"
       class="fixed inset-0 z-40"
       onclick={closeDropdown}
-      aria-label="Close language menu"
+      aria-label={m.header_close_language_menu()}
     ></button>
   {/if}
 </div>

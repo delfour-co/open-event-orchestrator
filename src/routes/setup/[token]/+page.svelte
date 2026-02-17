@@ -3,6 +3,7 @@ import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
+import * as m from '$lib/paraglide/messages'
 import { Building2, CheckCircle2, Lock, Mail } from 'lucide-svelte'
 
 type Props = {
@@ -19,7 +20,7 @@ let isSubmitting = $state(false)
 </script>
 
 <svelte:head>
-  <title>Initial Setup - Open Event Orchestrator</title>
+  <title>{m.setup_page_title()}</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
@@ -28,17 +29,17 @@ let isSubmitting = $state(false)
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
         <CheckCircle2 class="w-8 h-8 text-primary" />
       </div>
-      <h1 class="text-3xl font-bold tracking-tight">Welcome to Open Event Orchestrator</h1>
+      <h1 class="text-3xl font-bold tracking-tight">{m.setup_welcome()}</h1>
       <p class="text-muted-foreground">
-        Complete the initial setup to create your admin account and organization
+        {m.setup_description()}
       </p>
     </div>
 
     <Card.Root class="shadow-lg">
       <Card.Header class="space-y-1 pb-4">
-        <Card.Title class="text-xl">Initial Setup</Card.Title>
+        <Card.Title class="text-xl">{m.setup_title()}</Card.Title>
         <Card.Description>
-          This setup wizard will only appear once. Make sure to save your credentials.
+          {m.setup_wizard_notice()}
         </Card.Description>
       </Card.Header>
       <Card.Content>
@@ -62,16 +63,16 @@ let isSubmitting = $state(false)
           <div class="space-y-4">
             <div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Building2 class="w-4 h-4" />
-              <span>Organization</span>
+              <span>{m.setup_organization()}</span>
             </div>
 
             <div class="space-y-2">
-              <label for="organizationName" class="text-sm font-medium">Organization Name</label>
+              <label for="organizationName" class="text-sm font-medium">{m.setup_organization_name()}</label>
               <Input
                 id="organizationName"
                 name="organizationName"
                 type="text"
-                placeholder="My Conference Organization"
+                placeholder={m.setup_organization_placeholder()}
                 value={form?.values?.organizationName ?? ''}
                 required
                 disabled={isSubmitting}
@@ -80,7 +81,7 @@ let isSubmitting = $state(false)
                 <p class="text-sm text-destructive">{form.errors.organizationName}</p>
               {/if}
               <p class="text-xs text-muted-foreground">
-                This will be the name of your main organization managing events
+                {m.setup_organization_hint()}
               </p>
             </div>
           </div>
@@ -88,16 +89,16 @@ let isSubmitting = $state(false)
           <div class="border-t pt-6 space-y-4">
             <div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Mail class="w-4 h-4" />
-              <span>Admin Account</span>
+              <span>{m.setup_admin_account()}</span>
             </div>
 
             <div class="space-y-2">
-              <label for="email" class="text-sm font-medium">Email</label>
+              <label for="email" class="text-sm font-medium">{m.auth_email()}</label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="admin@example.com"
+                placeholder={m.auth_login_email_placeholder()}
                 value={form?.values?.email ?? ''}
                 required
                 disabled={isSubmitting}
@@ -109,11 +110,11 @@ let isSubmitting = $state(false)
 
             <div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Lock class="w-4 h-4" />
-              <span>Password</span>
+              <span>{m.auth_password()}</span>
             </div>
 
             <div class="space-y-2">
-              <label for="password" class="text-sm font-medium">Password</label>
+              <label for="password" class="text-sm font-medium">{m.auth_password()}</label>
               <Input
                 id="password"
                 name="password"
@@ -125,12 +126,12 @@ let isSubmitting = $state(false)
                 <p class="text-sm text-destructive">{form.errors.password}</p>
               {/if}
               <p class="text-xs text-muted-foreground">
-                Minimum 8 characters
+                {m.setup_password_min()}
               </p>
             </div>
 
             <div class="space-y-2">
-              <label for="passwordConfirm" class="text-sm font-medium">Confirm Password</label>
+              <label for="passwordConfirm" class="text-sm font-medium">{m.auth_register_confirm_password()}</label>
               <Input
                 id="passwordConfirm"
                 name="passwordConfirm"
@@ -146,9 +147,9 @@ let isSubmitting = $state(false)
 
           <Button type="submit" class="w-full" disabled={isSubmitting}>
             {#if isSubmitting}
-              Setting up...
+              {m.setup_submitting()}
             {:else}
-              Complete Setup
+              {m.setup_submit()}
             {/if}
           </Button>
         </form>
@@ -156,7 +157,7 @@ let isSubmitting = $state(false)
     </Card.Root>
 
     <p class="text-center text-sm text-muted-foreground">
-      This link will expire in 24 hours. If expired, restart the server to generate a new link.
+      {m.setup_link_expiry()}
     </p>
   </div>
 </div>

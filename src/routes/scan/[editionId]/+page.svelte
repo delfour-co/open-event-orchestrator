@@ -3,6 +3,7 @@ import { browser } from '$app/environment'
 import { goto } from '$app/navigation'
 import { offlineSyncService } from '$lib/features/billing/services/offline-sync-service'
 import { ticketCacheService } from '$lib/features/billing/services/ticket-cache-service'
+import * as m from '$lib/paraglide/messages'
 import type { PageData } from './$types'
 
 interface Props {
@@ -243,15 +244,13 @@ async function startScanner() {
 
     // Provide user-friendly error messages
     if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
-      scanError =
-        'Camera access denied. Please allow camera access in your browser settings and reload the page.'
+      scanError = m.billing_scan_camera_denied()
     } else if (errorMessage.includes('not allowed in this document')) {
-      scanError =
-        'Camera blocked by browser policy. Try accessing the page directly (not in an iframe) or use HTTPS.'
+      scanError = m.billing_scan_camera_blocked()
     } else if (errorMessage.includes('No cameras found')) {
-      scanError = 'No camera found on this device.'
+      scanError = m.billing_scan_no_camera()
     } else if (errorMessage.includes('timed out')) {
-      scanError = 'Camera initialization timed out. Please try again.'
+      scanError = m.billing_scan_timeout()
     } else {
       scanError = errorMessage
     }
@@ -416,7 +415,7 @@ function formatTime(date: Date): string {
   <!-- Header -->
   <div class="flex items-center justify-between border-b px-4 py-3">
     <div class="flex items-center gap-3">
-      <a href="/scan" class="rounded-lg p-2 hover:bg-muted" aria-label="Back to edition selection">
+      <a href="/scan" class="rounded-lg p-2 hover:bg-muted" aria-label={m.billing_scan_back_editions()}>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m15 18-6-6 6-6"/>
         </svg>
@@ -424,9 +423,9 @@ function formatTime(date: Date): string {
       <div>
         <h1 class="font-semibold">{data.edition?.name || 'Unknown'}</h1>
         <p class="text-xs text-muted-foreground flex items-center gap-2">
-          <span>{cacheStats.total} tickets</span>
+          <span>{cacheStats.total} {m.billing_scan_tickets()}</span>
           {#if pendingCount > 0}
-            <span class="text-orange-500">({pendingCount} pending)</span>
+            <span class="text-orange-500">({pendingCount} {m.billing_scan_pending()})</span>
           {/if}
           {#if isSyncing}
             <svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -448,21 +447,21 @@ function formatTime(date: Date): string {
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <span>Downloading...</span>
+          <span>{m.billing_scan_downloading()}</span>
         {:else}
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" x2="12" y1="15" y2="3"/>
           </svg>
-          <span>Download offline</span>
+          <span>{m.billing_scan_download_offline()}</span>
         {/if}
       </button>
       <form method="POST" action="/auth/logout">
         <button
           type="submit"
           class="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm hover:bg-muted/80"
-          title="Logout"
+          title={m.billing_scan_logout()}
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -503,7 +502,7 @@ function formatTime(date: Date): string {
           onclick={() => { isInitializing = true; scanError = null; startScanner(); }}
           class="mt-4 rounded-lg bg-primary px-6 py-3 text-primary-foreground"
         >
-          Try Again
+          {m.billing_scan_try_again()}
         </button>
       </div>
     {:else if isInitializing && !isScanning}
@@ -513,7 +512,7 @@ function formatTime(date: Date): string {
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p class="mt-4 text-muted-foreground">Initializing camera...</p>
+        <p class="mt-4 text-muted-foreground">{m.billing_scan_initializing()}</p>
       </div>
     {/if}
 
@@ -535,7 +534,7 @@ function formatTime(date: Date): string {
             <p class="mt-4 text-2xl font-bold">{lastResult.attendeeName}</p>
             <p class="mt-1 text-sm opacity-80">{lastResult.ticketNumber}</p>
             {#if lastResult.offline}
-              <p class="mt-2 text-xs opacity-70">Checked in offline</p>
+              <p class="mt-2 text-xs opacity-70">{m.billing_scan_checked_offline()}</p>
             {/if}
           {:else}
             <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-20 w-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -557,15 +556,15 @@ function formatTime(date: Date): string {
   <div class="grid grid-cols-3 border-t bg-muted/30">
     <div class="flex flex-col items-center py-3 border-r">
       <span class="text-2xl font-bold">{cacheStats.total}</span>
-      <span class="text-xs text-muted-foreground">Expected</span>
+      <span class="text-xs text-muted-foreground">{m.billing_scan_expected()}</span>
     </div>
     <div class="flex flex-col items-center py-3 border-r">
       <span class="text-2xl font-bold text-green-600">{sessionScanned}</span>
-      <span class="text-xs text-muted-foreground">Scanned</span>
+      <span class="text-xs text-muted-foreground">{m.billing_scan_scanned()}</span>
     </div>
     <div class="flex flex-col items-center py-3">
       <span class="text-2xl font-bold text-red-600">{sessionErrors}</span>
-      <span class="text-xs text-muted-foreground">Errors</span>
+      <span class="text-xs text-muted-foreground">{m.billing_scan_errors()}</span>
     </div>
   </div>
 
@@ -573,7 +572,7 @@ function formatTime(date: Date): string {
   {#if scanHistory.length > 0}
     <div class="border-t">
       <div class="px-4 py-2">
-        <h2 class="text-sm font-medium text-muted-foreground">Recent Scans</h2>
+        <h2 class="text-sm font-medium text-muted-foreground">{m.billing_scan_recent_scans()}</h2>
       </div>
       <div class="max-h-40 overflow-y-auto">
         {#each scanHistory as scan}

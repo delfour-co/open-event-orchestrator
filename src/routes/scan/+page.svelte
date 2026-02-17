@@ -1,5 +1,6 @@
 <script lang="ts">
 import { goto } from '$app/navigation'
+import * as m from '$lib/paraglide/messages'
 import { onMount } from 'svelte'
 import type { PageData } from './$types'
 
@@ -25,21 +26,21 @@ onMount(() => {
 </script>
 
 <svelte:head>
-  <title>Ticket Scanner - Open Event Orchestrator</title>
+  <title>{m.billing_scan_title()} - {m.common_app_name()}</title>
 </svelte:head>
 
 <div class="flex min-h-[calc(100vh-2.5rem)] flex-col items-center justify-center p-6">
   <div class="w-full max-w-sm space-y-6">
     <div class="text-center">
-      <h1 class="text-2xl font-bold">Ticket Scanner</h1>
-      <p class="mt-2 text-muted-foreground">Select an edition to start scanning</p>
+      <h1 class="text-2xl font-bold">{m.billing_scan_title()}</h1>
+      <p class="mt-2 text-muted-foreground">{m.billing_scan_select_edition()}</p>
     </div>
 
     {#if data.editions.length === 0}
       <div class="rounded-lg border bg-muted/50 p-6 text-center">
-        <p class="text-muted-foreground">No editions available</p>
+        <p class="text-muted-foreground">{m.billing_scan_no_editions()}</p>
         <p class="mt-2 text-sm text-muted-foreground">
-          Make sure you have access to at least one edition with ticketing enabled.
+          {m.billing_scan_no_access()}
         </p>
       </div>
     {:else}
@@ -71,7 +72,7 @@ onMount(() => {
     {#if !data.user}
       <div class="text-center text-sm text-muted-foreground">
         <a href="/auth/login?redirect=/scan" class="text-primary underline">
-          Login required
+          {m.billing_scan_login_required()}
         </a>
       </div>
     {/if}

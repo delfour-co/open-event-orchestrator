@@ -1,4 +1,5 @@
 <script lang="ts">
+import * as m from '$lib/paraglide/messages.js'
 import { cn } from '$lib/utils'
 
 type Props = {
@@ -12,7 +13,7 @@ type Props = {
 
 let {
   value = $bindable(''),
-  placeholder = 'Search...',
+  placeholder = m.search_placeholder(),
   loading = false,
   onSearch,
   debounceMs = 300,
@@ -76,7 +77,7 @@ function handleClear() {
   {:else if value}
     <button
       type="button"
-      aria-label="Clear search"
+      aria-label={m.search_clear()}
       class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
       onclick={handleClear}
     >

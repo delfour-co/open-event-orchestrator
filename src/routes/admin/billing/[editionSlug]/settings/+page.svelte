@@ -5,6 +5,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { getBillingNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
@@ -37,7 +38,7 @@ function copyPublicUrl() {
 </script>
 
 <svelte:head>
-  <title>Settings - Billing - {data.edition.name}</title>
+  <title>{m.billing_settings_title()} - {m.billing_title()} - {data.edition.name}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -59,7 +60,7 @@ function copyPublicUrl() {
     <div
       class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
     >
-      {form.message || 'Settings updated successfully'}
+      {form.message || m.message_saved_successfully()}
     </div>
   {/if}
 
@@ -76,10 +77,10 @@ function copyPublicUrl() {
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <ExternalLink class="h-5 w-5" />
-        Public Ticket Page
+        {m.billing_settings_public_page()}
       </Card.Title>
       <Card.Description>
-        Share this URL with attendees to let them purchase tickets.
+        {m.billing_settings_public_page_desc()}
       </Card.Description>
     </Card.Header>
     <Card.Content>
@@ -100,8 +101,7 @@ function copyPublicUrl() {
       </div>
       {#if data.edition.status !== 'published'}
         <p class="mt-2 text-sm text-yellow-600 dark:text-yellow-400">
-          This edition is not published. The ticket page will return a 404 until the edition status
-          is set to "published".
+          {m.billing_settings_not_published()}
         </p>
       {/if}
     </Card.Content>
@@ -112,24 +112,24 @@ function copyPublicUrl() {
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <Ticket class="h-5 w-5" />
-        Sales Status
+        {m.billing_settings_sales_status()}
       </Card.Title>
-      <Card.Description>Overview of your ticket sales configuration.</Card.Description>
+      <Card.Description>{m.billing_settings_sales_status_desc()}</Card.Description>
     </Card.Header>
     <Card.Content class="space-y-4">
       <div class="grid gap-4 md:grid-cols-3">
         <div class="rounded-lg border p-4">
-          <div class="text-sm text-muted-foreground">Active Ticket Types</div>
+          <div class="text-sm text-muted-foreground">{m.billing_settings_active_types()}</div>
           <div class="mt-1 text-2xl font-bold">
             {data.settings.activeTicketTypes} / {data.settings.totalTicketTypes}
           </div>
         </div>
         <div class="rounded-lg border p-4">
-          <div class="text-sm text-muted-foreground">Total Capacity</div>
+          <div class="text-sm text-muted-foreground">{m.billing_settings_total_capacity()}</div>
           <div class="mt-1 text-2xl font-bold">{data.settings.totalCapacity}</div>
         </div>
         <div class="rounded-lg border p-4">
-          <div class="text-sm text-muted-foreground">Tickets Sold</div>
+          <div class="text-sm text-muted-foreground">{m.billing_settings_tickets_sold()}</div>
           <div class="mt-1 text-2xl font-bold">
             {data.settings.totalSold}
             <span class="text-sm font-normal text-muted-foreground">
@@ -147,22 +147,22 @@ function copyPublicUrl() {
             {#if data.settings.salesOpen}
               <span class="flex items-center gap-2 text-green-600 dark:text-green-400">
                 <Check class="h-4 w-4" />
-                Sales are open
+                {m.billing_settings_sales_open()}
               </span>
             {:else}
               <span class="flex items-center gap-2 text-red-600 dark:text-red-400">
                 <X class="h-4 w-4" />
-                Sales are closed
+                {m.billing_settings_sales_closed()}
               </span>
             {/if}
           </div>
           <p class="mt-1 text-sm text-muted-foreground">
             {#if data.edition.status !== 'published'}
-              Edition must be published for sales to be active.
+              {m.billing_settings_publish_required()}
             {:else if data.settings.activeTicketTypes === 0}
-              No active ticket types. Enable at least one ticket type.
+              {m.billing_settings_no_active_types()}
             {:else}
-              Ticket types are active and edition is published.
+              {m.billing_settings_types_active()}
             {/if}
           </p>
         </div>
@@ -172,7 +172,7 @@ function copyPublicUrl() {
               <input type="hidden" name="editionId" value={data.edition.id} />
               <input type="hidden" name="enable" value="false" />
               <Button type="submit" variant="outline" size="sm">
-                Disable All Sales
+                {m.billing_settings_disable_all()}
               </Button>
             </form>
           {/if}
@@ -180,7 +180,7 @@ function copyPublicUrl() {
             <form method="POST" action="?/toggleAllSales" use:enhance>
               <input type="hidden" name="editionId" value={data.edition.id} />
               <input type="hidden" name="enable" value="true" />
-              <Button type="submit" size="sm">Enable All Sales</Button>
+              <Button type="submit" size="sm">{m.billing_settings_enable_all()}</Button>
             </form>
           {/if}
         </div>
@@ -193,10 +193,10 @@ function copyPublicUrl() {
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <ShieldCheck class="h-5 w-5" />
-        Integration Status
+        {m.billing_settings_integrations()}
       </Card.Title>
       <Card.Description>
-        Status of external service connections. Configure via environment variables.
+        {m.billing_settings_integrations_desc()}
       </Card.Description>
     </Card.Header>
     <Card.Content>
@@ -205,9 +205,9 @@ function copyPublicUrl() {
           <div class="flex items-center gap-3">
             <CreditCard class="h-5 w-5 text-muted-foreground" />
             <div>
-              <div class="font-medium">Stripe Payments</div>
+              <div class="font-medium">{m.billing_settings_stripe()}</div>
               <p class="text-sm text-muted-foreground">
-                Process paid ticket orders via Stripe Checkout.
+                {m.billing_settings_stripe_desc()}
               </p>
             </div>
           </div>
@@ -216,13 +216,13 @@ function copyPublicUrl() {
               class="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
             >
               <Check class="h-3 w-3" />
-              Connected
+              {m.billing_settings_connected()}
             </span>
           {:else}
             <span
               class="flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
             >
-              Not configured
+              {m.billing_settings_not_configured()}
             </span>
           {/if}
         </div>
@@ -231,9 +231,9 @@ function copyPublicUrl() {
           <div class="flex items-center gap-3">
             <ShieldCheck class="h-5 w-5 text-muted-foreground" />
             <div>
-              <div class="font-medium">Stripe Webhook</div>
+              <div class="font-medium">{m.billing_settings_webhook()}</div>
               <p class="text-sm text-muted-foreground">
-                Receive payment confirmation events from Stripe.
+                {m.billing_settings_webhook_desc()}
               </p>
             </div>
           </div>
@@ -242,13 +242,13 @@ function copyPublicUrl() {
               class="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
             >
               <Check class="h-3 w-3" />
-              Connected
+              {m.billing_settings_connected()}
             </span>
           {:else}
             <span
               class="flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
             >
-              Not configured
+              {m.billing_settings_not_configured()}
             </span>
           {/if}
         </div>
@@ -257,9 +257,9 @@ function copyPublicUrl() {
           <div class="flex items-center gap-3">
             <Mail class="h-5 w-5 text-muted-foreground" />
             <div>
-              <div class="font-medium">Email Notifications</div>
+              <div class="font-medium">{m.billing_settings_email()}</div>
               <p class="text-sm text-muted-foreground">
-                Send order confirmations and tickets via email.
+                {m.billing_settings_email_desc()}
               </p>
             </div>
           </div>
@@ -268,13 +268,13 @@ function copyPublicUrl() {
               class="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
             >
               <Check class="h-3 w-3" />
-              Connected (SMTP)
+              {m.billing_settings_connected_smtp()}
             </span>
           {:else}
             <span
               class="flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
             >
-              Console only
+              {m.billing_settings_console_only()}
             </span>
           {/if}
         </div>
@@ -282,13 +282,9 @@ function copyPublicUrl() {
 
       {#if !data.settings.stripeConfigured}
         <div class="mt-4 rounded-lg bg-muted p-4">
-          <p class="text-sm font-medium">Stripe not configured</p>
+          <p class="text-sm font-medium">{m.billing_settings_stripe_info()}</p>
           <p class="mt-1 text-sm text-muted-foreground">
-            Without Stripe, paid orders are automatically completed in development mode. Set
-            <code class="rounded bg-background px-1 py-0.5 text-xs">STRIPE_SECRET_KEY</code>
-            and
-            <code class="rounded bg-background px-1 py-0.5 text-xs">STRIPE_WEBHOOK_SECRET</code>
-            environment variables for production payments.
+            {m.billing_settings_stripe_info_desc()}
           </p>
         </div>
       {/if}

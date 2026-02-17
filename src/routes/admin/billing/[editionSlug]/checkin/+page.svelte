@@ -6,6 +6,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { getBillingNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   Activity,
   ArrowLeft,
@@ -161,7 +162,7 @@ function formatTimeAgo(isoDate: string): string {
 </script>
 
 <svelte:head>
-	<title>Check-in Control - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.billing_checkin_control()} - {data.edition.name} - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -180,12 +181,12 @@ function formatTimeAgo(isoDate: string): string {
 		<div class="flex items-center gap-2">
 			<Button variant="outline" size="sm" onclick={refreshData} disabled={isRefreshing} class="gap-2">
 				<RefreshCw class="h-4 w-4 {isRefreshing ? 'animate-spin' : ''}" />
-				Refresh
+				{m.action_refresh()}
 			</Button>
 			<a href="/admin/billing/{data.edition.slug}/checkin/stats">
 				<Button variant="outline" size="sm" class="gap-2">
 					<BarChart3 class="h-4 w-4" />
-					Stats
+					{m.billing_checkin_stats()}
 				</Button>
 			</a>
 		</div>
@@ -198,17 +199,17 @@ function formatTimeAgo(isoDate: string): string {
 	<Card.Root>
 		<Card.Content class="flex items-center justify-between p-6">
 			<div>
-				<div class="text-sm text-muted-foreground">Checked in</div>
+				<div class="text-sm text-muted-foreground">{m.billing_checkin_global_stats()}</div>
 				<div class="text-3xl font-bold">
 					{data.stats.checkedIn} / {data.stats.total}
 				</div>
 			</div>
 			<div class="text-center">
-				<div class="text-sm text-muted-foreground">Active Scanners</div>
+				<div class="text-sm text-muted-foreground">{m.billing_checkin_active_scanners()}</div>
 				<div class="text-3xl font-bold">{data.scanners.length}</div>
 			</div>
 			<div class="text-right">
-				<div class="text-sm text-muted-foreground">Progress</div>
+				<div class="text-sm text-muted-foreground">{m.billing_checkin_progress()}</div>
 				<div class="text-3xl font-bold">
 					{data.stats.total > 0
 						? Math.round((data.stats.checkedIn / data.stats.total) * 100)
@@ -234,7 +235,7 @@ function formatTimeAgo(isoDate: string): string {
 		<div class="space-y-4">
 			<h3 class="flex items-center gap-2 text-lg font-semibold">
 				<Camera class="h-5 w-5" />
-				Scanner Station
+				{m.billing_checkin_scanner_station()}
 			</h3>
 
 			<!-- Mode Toggle -->
@@ -245,7 +246,7 @@ function formatTimeAgo(isoDate: string): string {
 					class="flex-1 gap-2"
 				>
 					<Keyboard class="h-4 w-4" />
-					Manual
+					{m.billing_checkin_mode_manual()}
 				</Button>
 				<Button
 					variant={mode === 'scanner' ? 'default' : 'outline'}
@@ -253,7 +254,7 @@ function formatTimeAgo(isoDate: string): string {
 					class="flex-1 gap-2"
 				>
 					<Camera class="h-4 w-4" />
-					Scan QR
+					{m.billing_checkin_mode_scan()}
 				</Button>
 			</div>
 
@@ -263,7 +264,7 @@ function formatTimeAgo(isoDate: string): string {
 					<Card.Content class="p-4">
 						<div id="qr-scanner" bind:this={scannerContainer} class="overflow-hidden rounded-lg"></div>
 						<p class="mt-2 text-center text-sm text-muted-foreground">
-							Point camera at the QR code
+							{m.billing_checkin_point_camera()}
 						</p>
 					</Card.Content>
 				</Card.Root>
@@ -288,7 +289,7 @@ function formatTimeAgo(isoDate: string): string {
 						>
 							<Input
 								name="ticketInput"
-								placeholder="Enter ticket number..."
+								placeholder={m.billing_checkin_enter_ticket()}
 								bind:value={ticketInput}
 								class="flex-1"
 								autofocus
@@ -297,7 +298,7 @@ function formatTimeAgo(isoDate: string): string {
 								{#if isSubmitting}
 									<Loader2 class="h-4 w-4 animate-spin" />
 								{:else}
-									Check In
+									{m.billing_checkin_button()}
 								{/if}
 							</Button>
 						</form>
@@ -332,7 +333,7 @@ function formatTimeAgo(isoDate: string): string {
 							<CheckCircle class="h-12 w-12 text-green-600" />
 							<div>
 								<div class="text-lg font-bold text-green-800 dark:text-green-200">
-									Check-in Successful
+									{m.billing_checkin_success()}
 								</div>
 								<div class="text-green-700 dark:text-green-300">
 									{form.attendeeName}
@@ -349,7 +350,7 @@ function formatTimeAgo(isoDate: string): string {
 							<XCircle class="h-12 w-12 text-red-600" />
 							<div>
 								<div class="text-lg font-bold text-red-800 dark:text-red-200">
-									Check-in Failed
+									{m.billing_checkin_failed()}
 								</div>
 								<div class="text-red-700 dark:text-red-300">
 									{form.error}
@@ -372,15 +373,15 @@ function formatTimeAgo(isoDate: string): string {
 			<div>
 				<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 					<Users class="h-5 w-5" />
-					Field Scanners
+					{m.billing_checkin_field_scanners()}
 				</h3>
 				<Card.Root>
 					<Card.Content class="p-0">
 						{#if data.scanners.length === 0}
 							<div class="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
 								<User class="mb-2 h-8 w-8" />
-								<p>No scanners active yet</p>
-								<p class="text-sm">Check-ins will appear here</p>
+								<p>{m.billing_checkin_no_scanners()}</p>
+								<p class="text-sm">{m.billing_checkin_scans_appear()}</p>
 							</div>
 						{:else}
 							<div class="divide-y">
@@ -393,13 +394,13 @@ function formatTimeAgo(isoDate: string): string {
 											<div>
 												<div class="font-medium">{scanner.name}</div>
 												<div class="text-xs text-muted-foreground">
-													Last: {formatTimeAgo(scanner.lastActivity)}
+													{m.billing_checkin_last_activity({ time: formatTimeAgo(scanner.lastActivity) })}
 												</div>
 											</div>
 										</div>
 										<div class="text-right">
 											<div class="text-xl font-bold text-green-600">{scanner.count}</div>
-											<div class="text-xs text-muted-foreground">scans</div>
+											<div class="text-xs text-muted-foreground">{m.billing_checkin_scans()}</div>
 										</div>
 									</div>
 								{/each}
@@ -413,14 +414,14 @@ function formatTimeAgo(isoDate: string): string {
 			<div>
 				<h3 class="mb-3 flex items-center gap-2 text-lg font-semibold">
 					<Activity class="h-5 w-5" />
-					Recent Activity
+					{m.billing_checkin_recent_activity()}
 				</h3>
 				<Card.Root>
 					<Card.Content class="p-0">
 						{#if data.recentCheckIns.length === 0}
 							<div class="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
 								<Activity class="mb-2 h-8 w-8" />
-								<p>No check-ins yet</p>
+								<p>{m.billing_checkin_no_checkins()}</p>
 							</div>
 						{:else}
 							<div class="max-h-[400px] divide-y overflow-y-auto">
@@ -440,7 +441,7 @@ function formatTimeAgo(isoDate: string): string {
 												{formatTime(checkIn.checkedInAt)}
 											</div>
 											<div class="text-xs text-muted-foreground">
-												by {checkIn.checkedInBy}
+												{m.billing_checkin_by({ name: checkIn.checkedInBy })}
 											</div>
 										</div>
 									</div>

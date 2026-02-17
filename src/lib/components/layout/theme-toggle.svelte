@@ -1,6 +1,7 @@
 <script lang="ts">
 import { browser } from '$app/environment'
 import { Button } from '$lib/components/ui/button'
+import * as m from '$lib/paraglide/messages.js'
 import { Moon, Sun } from 'lucide-svelte'
 
 let currentTheme = $state<'light' | 'dark' | 'system'>('system')
@@ -45,5 +46,5 @@ $effect(() => {
   {:else}
     <Moon class="h-5 w-5" />
   {/if}
-  <span class="sr-only">Toggle theme</span>
+  <span class="sr-only">{m.header_toggle_theme()}</span>
 </Button>
