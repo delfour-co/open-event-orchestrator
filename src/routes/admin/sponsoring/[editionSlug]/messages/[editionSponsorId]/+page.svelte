@@ -89,17 +89,76 @@ $effect(() => {
 	<title>Messages - {sponsor?.name || 'Sponsor'} - {data.edition.name}</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-8 max-w-4xl">
+<div class="space-y-6">
 	<!-- Header -->
-	<div class="mb-6">
+	<div class="flex items-center justify-between">
+		<div class="flex items-center gap-4">
+			<a href="/admin/sponsoring/{data.edition.slug}/messages">
+				<button class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10">
+					<ArrowLeft class="h-5 w-5" />
+				</button>
+			</a>
+			<div>
+				<div class="flex items-center gap-3">
+					<h2 class="text-3xl font-bold tracking-tight">{sponsor?.name || 'Sponsor'}</h2>
+					<Badge variant={getStatusBadgeVariant(data.editionSponsor.status)}>
+						{getStatusLabel(data.editionSponsor.status)}
+					</Badge>
+				</div>
+				<p class="text-muted-foreground">
+					Messages for {data.edition.name}
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Sub-navigation -->
+	<nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+		<a
+			href="/admin/sponsoring/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Dashboard
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/packages"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Packages
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/sponsors"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Sponsors
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/inquiries"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Inquiries
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/deliverables"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Deliverables
+		</a>
 		<a
 			href="/admin/sponsoring/{data.edition.slug}/messages"
-			class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4"
+			class="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm"
 		>
-			<ArrowLeft class="h-4 w-4" />
-			Back to Messages
+			Messages
 		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/assets"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Assets
+		</a>
+	</nav>
 
+	<div class="max-w-4xl mx-auto space-y-6">
 		<!-- Sponsor Info -->
 		<Card.Root class="mb-6">
 			<Card.Content class="py-4">
@@ -342,4 +401,5 @@ $effect(() => {
 			</form>
 		</Card.Content>
 	</Card.Root>
+	</div>
 </div>

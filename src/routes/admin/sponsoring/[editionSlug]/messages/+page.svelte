@@ -1,9 +1,10 @@
 <script lang="ts">
 import { Badge } from '$lib/components/ui/badge'
+import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { getStatusBadgeVariant, getStatusLabel } from '$lib/features/sponsoring/domain'
-import { ArrowRight, Building2, MessageSquare, Search } from 'lucide-svelte'
+import { ArrowLeft, ArrowRight, Building2, MessageSquare, Search } from 'lucide-svelte'
 import type { PageData } from './$types'
 
 interface Props {
@@ -28,19 +29,72 @@ const filteredConversations = $derived(
 	<title>Sponsor Messages - {data.edition.name}</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-8">
-	<div class="mb-8">
-		<h1 class="text-3xl font-bold tracking-tight flex items-center gap-3">
-			<MessageSquare class="h-8 w-8" />
-			Sponsor Messages
-		</h1>
-		<p class="text-muted-foreground mt-1">
-			{data.edition.name} - Communicate with your sponsors
-		</p>
+<div class="space-y-6">
+	<!-- Header -->
+	<div class="flex items-center justify-between">
+		<div class="flex items-center gap-4">
+			<a href="/admin/sponsoring/{data.edition.slug}">
+				<Button variant="ghost" size="icon">
+					<ArrowLeft class="h-5 w-5" />
+				</Button>
+			</a>
+			<div>
+				<h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
+				<p class="text-muted-foreground">
+					Communicate with your sponsors
+				</p>
+			</div>
+		</div>
 	</div>
 
+	<!-- Sub-navigation -->
+	<nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+		<a
+			href="/admin/sponsoring/{data.edition.slug}"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Dashboard
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/packages"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Packages
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/sponsors"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Sponsors
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/inquiries"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Inquiries
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/deliverables"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Deliverables
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/messages"
+			class="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm"
+		>
+			Messages
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/assets"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Assets
+		</a>
+	</nav>
+
 	<!-- Stats -->
-	<div class="grid gap-4 md:grid-cols-3 mb-6">
+	<div class="grid gap-4 md:grid-cols-3">
 		<Card.Root>
 			<Card.Content class="pt-6">
 				<div class="flex items-center gap-4">
@@ -87,7 +141,7 @@ const filteredConversations = $derived(
 	</div>
 
 	<!-- Search -->
-	<div class="relative mb-6">
+	<div class="relative">
 		<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 		<Input
 			type="text"
@@ -98,7 +152,7 @@ const filteredConversations = $derived(
 	</div>
 
 	<!-- Conversation List -->
-	<div class="space-y-2">
+	<div class="space-y-3">
 		{#if filteredConversations.length === 0}
 			<Card.Root>
 				<Card.Content class="py-8 text-center text-muted-foreground">

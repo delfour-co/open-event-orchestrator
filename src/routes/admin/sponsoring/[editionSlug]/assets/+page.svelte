@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Badge } from '$lib/components/ui/badge'
+import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import {
@@ -52,34 +53,78 @@ function getLogoAssetsCount(): number {
   <title>Sponsor Assets - {data.edition.name}</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-8 max-w-7xl">
+<div class="space-y-6">
   <!-- Header -->
-  <div class="mb-8">
-    <a
-      href="/admin/sponsoring/{data.edition.slug}"
-      class="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
-    >
-      <ArrowLeft class="mr-2 h-4 w-4" />
-      Back to Sponsoring
-    </a>
-    <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a href="/admin/sponsoring/{data.edition.slug}">
+        <Button variant="ghost" size="icon">
+          <ArrowLeft class="h-5 w-5" />
+        </Button>
+      </a>
       <div>
-        <h1 class="text-3xl font-bold tracking-tight">Sponsor Assets</h1>
-        <p class="text-muted-foreground mt-1">
+        <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
+        <p class="text-muted-foreground">
           View and download assets from confirmed sponsors
         </p>
       </div>
-      {#if data.totalAssets > 0}
-        <a
-          href="/api/admin/sponsoring/{data.edition.slug}/assets/download-all"
-          class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
-          <FileArchive class="mr-2 h-4 w-4" />
-          Download All ({data.totalAssets})
-        </a>
-      {/if}
     </div>
+    {#if data.totalAssets > 0}
+      <a
+        href="/api/admin/sponsoring/{data.edition.slug}/assets/download-all"
+        class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+      >
+        <FileArchive class="mr-2 h-4 w-4" />
+        Download All ({data.totalAssets})
+      </a>
+    {/if}
   </div>
+
+  <!-- Sub-navigation -->
+  <nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+    <a
+      href="/admin/sponsoring/{data.edition.slug}"
+      class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      Dashboard
+    </a>
+    <a
+      href="/admin/sponsoring/{data.edition.slug}/packages"
+      class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      Packages
+    </a>
+    <a
+      href="/admin/sponsoring/{data.edition.slug}/sponsors"
+      class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      Sponsors
+    </a>
+    <a
+      href="/admin/sponsoring/{data.edition.slug}/inquiries"
+      class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      Inquiries
+    </a>
+    <a
+      href="/admin/sponsoring/{data.edition.slug}/deliverables"
+      class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      Deliverables
+    </a>
+    <a
+      href="/admin/sponsoring/{data.edition.slug}/messages"
+      class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      Messages
+    </a>
+    <a
+      href="/admin/sponsoring/{data.edition.slug}/assets"
+      class="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm"
+    >
+      Assets
+    </a>
+  </nav>
 
   <!-- Stats -->
   <div class="grid gap-4 md:grid-cols-4 mb-8">

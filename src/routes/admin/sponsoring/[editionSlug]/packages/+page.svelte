@@ -139,6 +139,12 @@ $effect(() => {
 			Deliverables
 		</a>
 		<a
+			href="/admin/sponsoring/{data.edition.slug}/messages"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Messages
+		</a>
+		<a
 			href="/admin/sponsoring/{data.edition.slug}/assets"
 			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
 		>
