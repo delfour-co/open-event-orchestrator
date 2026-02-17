@@ -182,6 +182,18 @@ const canTakeAction = $derived(
 		>
 			Inquiries
 		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/deliverables"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Deliverables
+		</a>
+		<a
+			href="/admin/sponsoring/{data.edition.slug}/assets"
+			class="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-background hover:shadow-sm"
+		>
+			Assets
+		</a>
 	</nav>
 
 	<div class="grid gap-6 md:grid-cols-3">
