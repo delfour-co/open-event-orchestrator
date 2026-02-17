@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/public'
-import { type Notification, createNotificationRepository } from '$lib/features/notifications'
+import type { Notification } from '$lib/features/notifications'
+import { createNotificationRepository } from '$lib/features/notifications/infra'
 import { ADMIN_ROLES, type OrgRole, isReviewerOnly } from '$lib/server/permissions'
 import { error, redirect } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'

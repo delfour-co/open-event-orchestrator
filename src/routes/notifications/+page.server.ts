@@ -1,5 +1,5 @@
-import { createNotificationRepository } from '$lib/features/notifications'
 import type { NotificationType } from '$lib/features/notifications'
+import { createNotificationRepository } from '$lib/features/notifications/infra'
 import { fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 

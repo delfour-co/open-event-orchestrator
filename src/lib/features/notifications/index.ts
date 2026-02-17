@@ -17,23 +17,6 @@ export {
   type UpdateNotification
 } from './domain'
 
-// Infrastructure
-export {
-  createNotificationRepository,
-  type NotificationCountResult,
-  type NotificationListOptions,
-  type NotificationRepository
-} from './infra'
-
-// Services
-export {
-  createNotificationService,
-  type NotificationService,
-  type NotificationServiceConfig,
-  type NotificationSummary,
-  type PaginatedNotifications
-} from './services'
-
 // UI Components
 export {
   NotificationBell,
@@ -42,3 +25,6 @@ export {
   NotificationItem,
   NotificationList
 } from './ui'
+
+// NOTE: Infrastructure and Services are server-only
+// Import from '$lib/features/notifications/infra' or '$lib/features/notifications/services' directly in server code

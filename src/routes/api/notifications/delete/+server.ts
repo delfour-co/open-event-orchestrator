@@ -1,4 +1,4 @@
-import { createNotificationRepository } from '$lib/features/notifications'
+import { createNotificationRepository } from '$lib/features/notifications/infra'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
