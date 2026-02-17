@@ -1,10 +1,20 @@
+import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { svelteTesting } from '@testing-library/svelte/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit(), svelteTesting()],
+  plugins: [
+    tailwindcss(),
+    sveltekit(),
+    svelteTesting(),
+    paraglideVitePlugin({
+      project: './project.inlang',
+      outdir: './src/lib/paraglide',
+      strategy: ['cookie', 'navigatorLanguage', 'baseLocale']
+    })
+  ],
   test: {
     include: ['src/**/*.{test,spec}.{js,ts}'],
     environment: 'jsdom',

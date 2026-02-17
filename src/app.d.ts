@@ -9,6 +9,7 @@ declare global {
       apiKey?: import('$lib/features/api/domain').ApiKey
       apiKeyScope?: import('$lib/features/api/domain').ApiKeyScope
       rateLimit?: import('$lib/features/api/services').RateLimitResult
+      locale?: import('$lib/paraglide/runtime.js').Locale
     }
     // interface PageData {}
     // interface PageState {}

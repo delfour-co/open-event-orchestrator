@@ -1,10 +1,33 @@
 import { env } from '$env/dynamic/public'
 import { createApiKeyService, rateLimiter } from '$lib/features/api/services'
+import { createInitialSetupService } from '$lib/features/auth/services'
 import { type Handle, json } from '@sveltejs/kit'
 import PocketBase from 'pocketbase'
 
+// Initial setup check - runs once on server startup
+let initialSetupCheckDone = false
+
+async function runInitialSetupCheck(baseUrl: string): Promise<void> {
+  if (initialSetupCheckDone) return
+  initialSetupCheckDone = true
+
+  const pb = new PocketBase(env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090')
+  const setupService = createInitialSetupService(pb)
+
+  try {
+    await setupService.checkAndDisplaySetupLink(baseUrl)
+  } catch (err) {
+    // Silently fail - PocketBase might not be ready yet
+    console.error('[Setup] Could not check initial setup status:', err)
+  }
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
   const pb = new PocketBase(env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090')
+
+  // Run initial setup check on first request
+  const baseUrl = `${event.url.protocol}//${event.url.host}`
+  runInitialSetupCheck(baseUrl)
 
   // Load auth from cookie
   const cookie = event.request.headers.get('cookie') || ''

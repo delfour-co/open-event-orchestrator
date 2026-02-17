@@ -1,6 +1,8 @@
 <script lang="ts">
+import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
 import { Header, Sidebar } from '$lib/components/layout'
+import type { Notification } from '$lib/features/notifications'
 import type { Snippet } from 'svelte'
 
 type Props = {
@@ -12,8 +14,11 @@ type Props = {
       name: string
       role: string
       avatar?: string
+      avatarUrl: string | null
     }
     isReviewerOnly: boolean
+    notificationCount: number
+    notifications: Notification[]
   }
 }
 
@@ -43,13 +48,25 @@ const sectionTitle = $derived(() => {
   if (path.startsWith('/admin/app')) return 'Attendee App'
   return 'Dashboard'
 })
+
+async function refreshNotifications(): Promise<void> {
+  await invalidateAll()
+}
 </script>
 
 <div class="flex h-screen overflow-hidden">
   <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} isReviewerOnly={data.isReviewerOnly} />
 
   <div class="flex flex-1 flex-col overflow-hidden">
-    <Header onMenuClick={toggleSidebar} userName={data.user.name} title={sectionTitle()} />
+    <Header
+      onMenuClick={toggleSidebar}
+      userName={data.user.name}
+      userAvatar={data.user.avatarUrl}
+      title={sectionTitle()}
+      notificationCount={data.notificationCount}
+      notifications={data.notifications}
+      onRefreshNotifications={refreshNotifications}
+    />
 
     <main class="flex-1 overflow-y-auto p-4 md:p-6">
       {@render children()}
