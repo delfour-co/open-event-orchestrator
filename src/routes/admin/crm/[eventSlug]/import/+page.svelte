@@ -6,6 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getCrmNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Download, FileText, Upload } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -23,23 +24,30 @@ let isExporting = $state(false)
 
 const basePath = `/admin/crm/${data.eventSlug}`
 
-const EXPORT_FIELDS = [
-  { key: 'email', label: 'Email', checked: true },
-  { key: 'firstName', label: 'First Name', checked: true },
-  { key: 'lastName', label: 'Last Name', checked: true },
-  { key: 'company', label: 'Company', checked: true },
-  { key: 'jobTitle', label: 'Job Title', checked: true },
-  { key: 'phone', label: 'Phone', checked: true },
-  { key: 'city', label: 'City', checked: true },
-  { key: 'country', label: 'Country', checked: true },
-  { key: 'source', label: 'Source', checked: true },
-  { key: 'tags', label: 'Tags', checked: true }
-]
+const EXPORT_FIELDS = $derived([
+  { key: 'email', label: m.crm_export_field_email(), checked: true },
+  { key: 'firstName', label: m.crm_export_field_first_name(), checked: true },
+  { key: 'lastName', label: m.crm_export_field_last_name(), checked: true },
+  { key: 'company', label: m.crm_export_field_company(), checked: true },
+  { key: 'jobTitle', label: m.crm_export_field_job_title(), checked: true },
+  { key: 'phone', label: m.crm_export_field_phone(), checked: true },
+  { key: 'city', label: m.crm_export_field_city(), checked: true },
+  { key: 'country', label: m.crm_export_field_country(), checked: true },
+  { key: 'source', label: m.crm_export_field_source(), checked: true },
+  { key: 'tags', label: m.crm_export_field_tags(), checked: true }
+])
 
-let exportFields = $state(EXPORT_FIELDS.map((f) => ({ ...f })))
+let exportFieldsState = $state<Array<{ key: string; label: string; checked: boolean }>>([])
+
+// Initialize export fields state when EXPORT_FIELDS changes
+$effect(() => {
+  if (exportFieldsState.length === 0) {
+    exportFieldsState = EXPORT_FIELDS.map((f) => ({ ...f }))
+  }
+})
 
 const selectedExportFields = $derived(
-  exportFields
+  exportFieldsState
     .filter((f) => f.checked)
     .map((f) => f.key)
     .join(',')
@@ -98,7 +106,7 @@ function downloadCsv() {
 </script>
 
 <svelte:head>
-	<title>Import / Export - CRM - Open Event Orchestrator</title>
+	<title>{m.crm_import_page_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -119,21 +127,21 @@ function downloadCsv() {
 	<!-- Success / Error messages -->
 	{#if form?.success && form?.action === 'importContacts'}
 		<div class="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-			<p class="font-medium">Import Complete</p>
+			<p class="font-medium">{m.crm_import_complete()}</p>
 			<ul class="mt-2 list-inside list-disc space-y-1">
-				<li>Total processed: {form.importResult?.total ?? 0}</li>
-				<li>Created: {form.importResult?.created ?? 0}</li>
-				<li>Updated: {form.importResult?.updated ?? 0}</li>
-				<li>Skipped: {form.importResult?.skipped ?? 0}</li>
+				<li>{m.crm_import_total_processed({ total: form.importResult?.total ?? 0 })}</li>
+				<li>{m.crm_import_created({ created: form.importResult?.created ?? 0 })}</li>
+				<li>{m.crm_import_updated({ updated: form.importResult?.updated ?? 0 })}</li>
+				<li>{m.crm_import_skipped({ skipped: form.importResult?.skipped ?? 0 })}</li>
 				{#if form.importResult?.errors && form.importResult.errors.length > 0}
-					<li class="text-red-600">Errors: {form.importResult.errors.length}</li>
+					<li class="text-red-600">{m.crm_import_errors_count({ count: form.importResult.errors.length })}</li>
 				{/if}
 			</ul>
 			{#if form.importResult?.errors && form.importResult.errors.length > 0}
 				<div class="mt-3 space-y-1">
-					<p class="font-medium text-red-600">Errors:</p>
+					<p class="font-medium text-red-600">{m.crm_import_errors_title()}</p>
 					{#each form.importResult.errors as err}
-						<p class="text-xs">Row {err.row} ({err.email}): {err.error}</p>
+						<p class="text-xs">{m.crm_import_error_row({ row: err.row, email: err.email, error: err.error })}</p>
 					{/each}
 				</div>
 			{/if}
@@ -143,10 +151,10 @@ function downloadCsv() {
 	{#if form?.success && form?.action === 'exportContacts'}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
 			<div class="flex items-center justify-between">
-				<span>Export ready. Click to download.</span>
+				<span>{m.crm_export_ready()}</span>
 				<Button variant="outline" size="sm" onclick={downloadCsv} class="gap-2">
 					<Download class="h-4 w-4" />
-					Download CSV
+					{m.crm_export_download()}
 				</Button>
 			</div>
 		</div>
@@ -164,10 +172,10 @@ function downloadCsv() {
 			<Card.Header>
 				<Card.Title class="flex items-center gap-2">
 					<Upload class="h-5 w-5" />
-					Import Contacts
+					{m.crm_import_title()}
 				</Card.Title>
 				<Card.Description>
-					Upload a CSV file or paste CSV data to import contacts.
+					{m.crm_import_description()}
 				</Card.Description>
 			</Card.Header>
 			<Card.Content>
@@ -185,7 +193,7 @@ function downloadCsv() {
 				>
 					<!-- File upload -->
 					<div class="space-y-2">
-						<Label for="csv-file">Upload CSV File</Label>
+						<Label for="csv-file">{m.crm_import_upload_file()}</Label>
 						<Input
 							id="csv-file"
 							type="file"
@@ -196,24 +204,23 @@ function downloadCsv() {
 
 					<!-- Or paste CSV -->
 					<div class="space-y-2">
-						<Label for="csv-text">Or Paste CSV Data</Label>
+						<Label for="csv-text">{m.crm_import_paste_csv()}</Label>
 						<textarea
 							id="csv-text"
 							name="csvText"
 							bind:value={csvText}
 							class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							placeholder="email,firstName,lastName,company,jobTitle,phone,city,country,tags
-john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
+							placeholder={m.crm_import_csv_placeholder()}
 						></textarea>
 						<p class="text-xs text-muted-foreground">
-							Required columns: email, firstName (or first_name), lastName (or last_name). Optional: company, jobTitle, phone, city, country, tags.
+							{m.crm_import_csv_help()}
 						</p>
 					</div>
 
 					<!-- Preview -->
 					{#if previewRows().length > 0}
 						<div class="space-y-2">
-							<Label>Preview (first {previewRows().length} rows)</Label>
+							<Label>{m.crm_import_preview({ count: previewRows().length })}</Label>
 							<div class="overflow-x-auto rounded-md border">
 								<table class="w-full text-sm">
 									<thead>
@@ -239,7 +246,7 @@ john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
 
 					<!-- Duplicate Strategy -->
 					<div class="space-y-2">
-						<Label>Duplicate Strategy</Label>
+						<Label>{m.crm_import_strategy()}</Label>
 						<div class="space-y-2">
 							<label class="flex items-center gap-2">
 								<input
@@ -250,7 +257,7 @@ john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
 									onchange={() => (strategy = 'skip')}
 									class="h-4 w-4"
 								/>
-								<span class="text-sm">Skip - Do not update existing contacts</span>
+								<span class="text-sm">{m.crm_import_strategy_skip()}</span>
 							</label>
 							<label class="flex items-center gap-2">
 								<input
@@ -261,7 +268,7 @@ john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
 									onchange={() => (strategy = 'merge')}
 									class="h-4 w-4"
 								/>
-								<span class="text-sm">Merge - Only fill empty fields</span>
+								<span class="text-sm">{m.crm_import_strategy_merge()}</span>
 							</label>
 							<label class="flex items-center gap-2">
 								<input
@@ -272,14 +279,14 @@ john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
 									onchange={() => (strategy = 'overwrite')}
 									class="h-4 w-4"
 								/>
-								<span class="text-sm">Overwrite - Replace all fields</span>
+								<span class="text-sm">{m.crm_import_strategy_overwrite()}</span>
 							</label>
 						</div>
 					</div>
 
 					<Button type="submit" disabled={isImporting || !csvText.trim()} class="w-full gap-2">
 						<Upload class="h-4 w-4" />
-						{isImporting ? 'Importing...' : 'Import Contacts'}
+						{isImporting ? m.crm_import_importing() : m.crm_import_button()}
 					</Button>
 				</form>
 			</Card.Content>
@@ -290,10 +297,10 @@ john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
 			<Card.Header>
 				<Card.Title class="flex items-center gap-2">
 					<Download class="h-5 w-5" />
-					Export Contacts
+					{m.crm_export_title()}
 				</Card.Title>
 				<Card.Description>
-					Export your contacts as a CSV file.
+					{m.crm_export_description()}
 				</Card.Description>
 			</Card.Header>
 			<Card.Content>
@@ -312,13 +319,13 @@ john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
 					<input type="hidden" name="fields" value={selectedExportFields} />
 
 					<div class="space-y-2">
-						<Label>Select Fields to Export</Label>
+						<Label>{m.crm_export_select_fields()}</Label>
 						<div class="grid grid-cols-2 gap-2">
-							{#each exportFields as field, i}
+							{#each exportFieldsState as field, i}
 								<label class="flex items-center gap-2">
 									<input
 										type="checkbox"
-										bind:checked={exportFields[i].checked}
+										bind:checked={exportFieldsState[i].checked}
 										class="h-4 w-4 rounded border-gray-300"
 									/>
 									<span class="text-sm">{field.label}</span>
@@ -329,7 +336,7 @@ john@example.com,John,Doe,Acme Inc,Developer,+33612345678,Paris,France,vip"
 
 					<Button type="submit" variant="outline" disabled={isExporting} class="w-full gap-2">
 						<FileText class="h-4 w-4" />
-						{isExporting ? 'Exporting...' : 'Export All Contacts'}
+						{isExporting ? m.crm_export_exporting() : m.crm_export_button()}
 					</Button>
 				</form>
 			</Card.Content>

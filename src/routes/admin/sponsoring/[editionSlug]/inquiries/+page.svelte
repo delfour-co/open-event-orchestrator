@@ -11,6 +11,7 @@ import {
   getInquiryStatusBadgeVariant,
   getInquiryStatusLabel
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, ArrowRight, Check, Eye, Inbox, Loader2, Mail, Phone, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -52,7 +53,7 @@ function setFilter(status: string | null) {
 </script>
 
 <svelte:head>
-	<title>Inquiries - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.sponsoring_inquiries_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -80,7 +81,7 @@ function setFilter(status: string | null) {
 			size="sm"
 			onclick={() => setFilter(null)}
 		>
-			All
+			{m.sponsoring_inquiries_filter_all()}
 			<Badge variant="secondary" class="ml-2">{data.statusCounts.all}</Badge>
 		</Button>
 		<Button
@@ -88,7 +89,7 @@ function setFilter(status: string | null) {
 			size="sm"
 			onclick={() => setFilter('pending')}
 		>
-			Pending
+			{m.sponsoring_inquiries_filter_pending()}
 			<Badge variant="secondary" class="ml-2">{data.statusCounts.pending}</Badge>
 		</Button>
 		<Button
@@ -96,7 +97,7 @@ function setFilter(status: string | null) {
 			size="sm"
 			onclick={() => setFilter('contacted')}
 		>
-			Contacted
+			{m.sponsoring_inquiries_filter_contacted()}
 			<Badge variant="secondary" class="ml-2">{data.statusCounts.contacted}</Badge>
 		</Button>
 		<Button
@@ -104,7 +105,7 @@ function setFilter(status: string | null) {
 			size="sm"
 			onclick={() => setFilter('converted')}
 		>
-			Converted
+			{m.sponsoring_inquiries_filter_converted()}
 			<Badge variant="secondary" class="ml-2">{data.statusCounts.converted}</Badge>
 		</Button>
 		<Button
@@ -112,7 +113,7 @@ function setFilter(status: string | null) {
 			size="sm"
 			onclick={() => setFilter('rejected')}
 		>
-			Rejected
+			{m.sponsoring_inquiries_filter_rejected()}
 			<Badge variant="secondary" class="ml-2">{data.statusCounts.rejected}</Badge>
 		</Button>
 	</div>
@@ -122,12 +123,12 @@ function setFilter(status: string | null) {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Inbox class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No inquiries yet</h3>
+				<h3 class="text-lg font-semibold">{m.sponsoring_inquiries_empty()}</h3>
 				<p class="text-sm text-muted-foreground">
 					{#if data.currentFilter}
-						No inquiries with status "{data.currentFilter}".
+						{m.sponsoring_inquiries_empty_with_filter({ status: data.currentFilter })}
 					{:else}
-						Sponsor inquiries will appear here when submitted through the public form.
+						{m.sponsoring_inquiries_empty_hint()}
 					{/if}
 				</p>
 			</Card.Content>
@@ -137,12 +138,12 @@ function setFilter(status: string | null) {
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
-						<Table.Head>Company</Table.Head>
-						<Table.Head>Contact</Table.Head>
-						<Table.Head class="hidden md:table-cell">Package</Table.Head>
-						<Table.Head class="hidden lg:table-cell">Date</Table.Head>
-						<Table.Head>Status</Table.Head>
-						<Table.Head class="text-right">Actions</Table.Head>
+						<Table.Head>{m.sponsoring_inquiries_company()}</Table.Head>
+						<Table.Head>{m.sponsoring_inquiries_contact()}</Table.Head>
+						<Table.Head class="hidden md:table-cell">{m.sponsoring_inquiries_package()}</Table.Head>
+						<Table.Head class="hidden lg:table-cell">{m.sponsoring_inquiries_date()}</Table.Head>
+						<Table.Head>{m.sponsoring_inquiries_status()}</Table.Head>
+						<Table.Head class="text-right">{m.sponsoring_inquiries_actions()}</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -188,7 +189,7 @@ function setFilter(status: string | null) {
 							<Table.Cell class="text-right">
 								<div class="flex items-center justify-end gap-1">
 									<a href="/admin/sponsoring/{data.edition.slug}/inquiries/{inquiry.id}">
-										<Button variant="ghost" size="icon" title="View details">
+										<Button variant="ghost" size="icon" title={m.sponsoring_inquiries_view_details()}>
 											<Eye class="h-4 w-4" />
 										</Button>
 									</a>
@@ -210,7 +211,7 @@ function setFilter(status: string | null) {
 												variant="ghost"
 												size="icon"
 												type="submit"
-												title="Mark as contacted"
+												title={m.sponsoring_inquiries_mark_contacted()}
 												disabled={isSubmitting[inquiry.id]}
 											>
 												{#if isSubmitting[inquiry.id]}
@@ -239,7 +240,7 @@ function setFilter(status: string | null) {
 												variant="ghost"
 												size="icon"
 												type="submit"
-												title="Convert to sponsor"
+												title={m.sponsoring_inquiries_convert()}
 												disabled={isSubmitting[`convert-${inquiry.id}`]}
 											>
 												{#if isSubmitting[`convert-${inquiry.id}`]}
@@ -266,7 +267,7 @@ function setFilter(status: string | null) {
 												variant="ghost"
 												size="icon"
 												type="submit"
-												title="Reject inquiry"
+												title={m.sponsoring_inquiries_reject()}
 												disabled={isSubmitting[`reject-${inquiry.id}`]}
 											>
 												{#if isSubmitting[`reject-${inquiry.id}`]}

@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { ImageBlock } from '$lib/features/crm/domain/email-editor'
+import * as m from '$lib/paraglide/messages'
 import { ImageIcon } from 'lucide-svelte'
 
 interface Props {
@@ -50,7 +51,7 @@ const imageWidth = $derived(() => {
     {:else}
       <div class="placeholder">
         <ImageIcon class="h-8 w-8 text-muted-foreground" />
-        <span>Click to add image</span>
+        <span>{m.crm_email_editor_click_add_image()}</span>
       </div>
     {/if}
   </div>

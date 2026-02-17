@@ -6,6 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { getSponsoringNavItems } from '$lib/config'
 import { getStatusBadgeVariant, getStatusLabel } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, ArrowRight, Building2, MessageSquare, Search } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -28,7 +29,7 @@ const filteredConversations = $derived(
 </script>
 
 <svelte:head>
-	<title>Sponsor Messages - {data.edition.name}</title>
+	<title>{m.sponsoring_messages_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -59,7 +60,7 @@ const filteredConversations = $derived(
 					</div>
 					<div>
 						<p class="text-2xl font-bold">{data.conversations.length}</p>
-						<p class="text-sm text-muted-foreground">Total Conversations</p>
+						<p class="text-sm text-muted-foreground">{m.sponsoring_messages_stats_total()}</p>
 					</div>
 				</div>
 			</Card.Content>
@@ -73,7 +74,7 @@ const filteredConversations = $derived(
 					</div>
 					<div>
 						<p class="text-2xl font-bold">{data.totalUnread}</p>
-						<p class="text-sm text-muted-foreground">Unread Messages</p>
+						<p class="text-sm text-muted-foreground">{m.sponsoring_messages_stats_unread()}</p>
 					</div>
 				</div>
 			</Card.Content>
@@ -89,7 +90,7 @@ const filteredConversations = $derived(
 						<p class="text-2xl font-bold">
 							{data.conversations.filter((c) => c.unreadCount > 0).length}
 						</p>
-						<p class="text-sm text-muted-foreground">Active Conversations</p>
+						<p class="text-sm text-muted-foreground">{m.sponsoring_messages_stats_active()}</p>
 					</div>
 				</div>
 			</Card.Content>
@@ -101,7 +102,7 @@ const filteredConversations = $derived(
 		<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 		<Input
 			type="text"
-			placeholder="Search sponsors..."
+			placeholder={m.sponsoring_messages_search()}
 			class="pl-10"
 			bind:value={searchQuery}
 		/>
@@ -113,9 +114,9 @@ const filteredConversations = $derived(
 			<Card.Root>
 				<Card.Content class="py-8 text-center text-muted-foreground">
 					{#if searchQuery}
-						<p>No sponsors found matching "{searchQuery}"</p>
+						<p>{m.sponsoring_messages_no_sponsors_match({ query: searchQuery })}</p>
 					{:else}
-						<p>No sponsors added to this edition yet</p>
+						<p>{m.sponsoring_messages_no_sponsors()}</p>
 					{/if}
 				</Card.Content>
 			</Card.Root>
@@ -149,7 +150,7 @@ const filteredConversations = $derived(
 										<h3 class="font-semibold truncate">{sponsor?.name || 'Unknown Sponsor'}</h3>
 										{#if conversation.unreadCount > 0}
 											<Badge variant="default" class="shrink-0">
-												{conversation.unreadCount} new
+												{m.sponsoring_messages_new_badge({ count: conversation.unreadCount.toString() })}
 											</Badge>
 										{/if}
 									</div>

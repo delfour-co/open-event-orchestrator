@@ -10,6 +10,7 @@ import {
   updateBlockById
 } from '$lib/features/crm/domain/email-editor'
 import { exportToHtml, generatePlainText } from '$lib/features/crm/services/email-export-service'
+import * as m from '$lib/paraglide/messages'
 import { Code, Eye, Pencil, Save } from 'lucide-svelte'
 import BlockPalette from './BlockPalette.svelte'
 import BlockProperties from './BlockProperties.svelte'
@@ -132,7 +133,7 @@ function handleKeyDown(e: KeyboardEvent) {
   <!-- Toolbar -->
   <div class="toolbar">
     <div class="toolbar-left">
-      <span class="toolbar-title">Email Editor</span>
+      <span class="toolbar-title">{m.crm_email_editor_title()}</span>
     </div>
     <div class="toolbar-center">
       <div class="view-toggle">
@@ -143,7 +144,7 @@ function handleKeyDown(e: KeyboardEvent) {
           class="gap-1"
         >
           <Pencil class="h-4 w-4" />
-          Edit
+          {m.crm_email_editor_edit()}
         </Button>
         <Button
           variant={viewMode === 'preview' ? 'default' : 'ghost'}
@@ -152,7 +153,7 @@ function handleKeyDown(e: KeyboardEvent) {
           class="gap-1"
         >
           <Eye class="h-4 w-4" />
-          Preview
+          {m.crm_email_editor_preview()}
         </Button>
         <Button
           variant={viewMode === 'code' ? 'default' : 'ghost'}
@@ -161,14 +162,14 @@ function handleKeyDown(e: KeyboardEvent) {
           class="gap-1"
         >
           <Code class="h-4 w-4" />
-          Code
+          {m.crm_email_editor_code()}
         </Button>
       </div>
     </div>
     <div class="toolbar-right">
       <Button variant="default" size="sm" onclick={handleSave} class="gap-1">
         <Save class="h-4 w-4" />
-        Save
+        {m.crm_email_editor_save()}
       </Button>
     </div>
   </div>

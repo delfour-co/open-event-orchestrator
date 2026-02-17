@@ -11,6 +11,7 @@ import { Switch } from '$lib/components/ui/switch'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getSponsoringNavItems } from '$lib/config'
 import { type Benefit, formatPackagePrice, getTierLabel } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Check, Loader2, Package, Pencil, Plus, Trash2, Users, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -79,7 +80,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Packages - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.sponsoring_packages_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -103,10 +104,10 @@ $effect(() => {
 	<!-- Packages Section -->
 	<div class="space-y-4">
 		<div class="flex items-center justify-between">
-			<h3 class="text-xl font-semibold">Sponsorship Packages</h3>
+			<h3 class="text-xl font-semibold">{m.sponsoring_packages_title()}</h3>
 			<Button onclick={startNewPackage}>
 				<Plus class="mr-2 h-4 w-4" />
-				New Package
+				{m.sponsoring_packages_new()}
 			</Button>
 		</div>
 
@@ -114,9 +115,9 @@ $effect(() => {
 			<Card.Root>
 				<Card.Content class="flex flex-col items-center justify-center py-12">
 					<Package class="mb-4 h-12 w-12 text-muted-foreground" />
-					<h3 class="text-lg font-semibold">No packages yet</h3>
+					<h3 class="text-lg font-semibold">{m.sponsoring_packages_empty()}</h3>
 					<p class="text-sm text-muted-foreground">
-						Create sponsorship packages with different tiers and benefits.
+						{m.sponsoring_packages_empty_hint()}
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -150,7 +151,7 @@ $effect(() => {
 									<input type="hidden" name="isActive" value={(!pkg.isActive).toString()} />
 								</form>
 								<div class="flex items-center gap-2">
-									<span class="text-xs text-muted-foreground">{pkg.isActive ? 'Active' : 'Inactive'}</span>
+									<span class="text-xs text-muted-foreground">{pkg.isActive ? m.sponsoring_packages_active() : m.sponsoring_packages_inactive()}</span>
 									<Switch
 										checked={pkg.isActive}
 										onCheckedChange={() => toggleForms[pkg.id]?.requestSubmit()}
@@ -173,7 +174,7 @@ $effect(() => {
 
 						{#if pkg.benefits.length > 0}
 							<div class="space-y-2">
-								<h4 class="text-sm font-medium">Benefits</h4>
+								<h4 class="text-sm font-medium">{m.sponsoring_packages_benefits()}</h4>
 								<ul class="space-y-1 text-sm">
 									{#each pkg.benefits as benefit}
 										<li class="flex items-center gap-2">
@@ -217,9 +218,9 @@ $effect(() => {
 {#if showPackageForm}
 	<Dialog.Content class="max-w-2xl max-h-[90vh] overflow-y-auto" onClose={cancelPackageForm}>
 		<Dialog.Header>
-			<Dialog.Title>{editingPackage ? 'Edit Package' : 'New Package'}</Dialog.Title>
+			<Dialog.Title>{editingPackage ? m.sponsoring_packages_form_title_edit() : m.sponsoring_packages_form_title_new()}</Dialog.Title>
 			<Dialog.Description>
-				{editingPackage ? 'Update package details and benefits.' : 'Create a new sponsorship package.'}
+				{editingPackage ? m.sponsoring_packages_form_desc_edit() : m.sponsoring_packages_form_desc_new()}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -250,17 +251,17 @@ $effect(() => {
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for="pkg-name">Package Name *</Label>
+					<Label for="pkg-name">{m.sponsoring_packages_form_name()} *</Label>
 					<Input
 						id="pkg-name"
 						name="name"
-						placeholder="Gold, Silver, Bronze..."
+						placeholder={m.sponsoring_packages_form_name_placeholder()}
 						required
 						value={editingPackage?.name || ''}
 					/>
 				</div>
 				<div class="space-y-2">
-					<Label for="pkg-tier">Tier *</Label>
+					<Label for="pkg-tier">{m.sponsoring_packages_form_tier()} *</Label>
 					<select
 						id="pkg-tier"
 						name="tier"
@@ -278,7 +279,7 @@ $effect(() => {
 
 			<div class="grid gap-4 md:grid-cols-3">
 				<div class="space-y-2">
-					<Label for="pkg-price">Price *</Label>
+					<Label for="pkg-price">{m.sponsoring_packages_form_price()} *</Label>
 					<Input
 						id="pkg-price"
 						name="price"
@@ -291,7 +292,7 @@ $effect(() => {
 					/>
 				</div>
 				<div class="space-y-2">
-					<Label for="pkg-currency">Currency</Label>
+					<Label for="pkg-currency">{m.sponsoring_packages_form_currency()}</Label>
 					<select
 						id="pkg-currency"
 						name="currency"
@@ -303,31 +304,31 @@ $effect(() => {
 					</select>
 				</div>
 				<div class="space-y-2">
-					<Label for="pkg-max">Max Sponsors</Label>
+					<Label for="pkg-max">{m.sponsoring_packages_form_max_sponsors()}</Label>
 					<Input
 						id="pkg-max"
 						name="maxSponsors"
 						type="number"
 						min="0"
-						placeholder="Unlimited"
+						placeholder={m.sponsoring_packages_form_max_placeholder()}
 						value={editingPackage?.maxSponsors?.toString() || ''}
 					/>
 				</div>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="pkg-description">Description</Label>
+				<Label for="pkg-description">{m.sponsoring_packages_form_description()}</Label>
 				<Textarea
 					id="pkg-description"
 					name="description"
-					placeholder="Package description..."
+					placeholder={m.sponsoring_packages_form_description_placeholder()}
 					value={editingPackage?.description || ''}
 				/>
 			</div>
 
 			<!-- Benefits -->
 			<div class="space-y-4">
-				<Label>Benefits</Label>
+				<Label>{m.sponsoring_packages_form_benefits()}</Label>
 				<div class="grid gap-2 md:grid-cols-2">
 					{#each editingBenefits as benefit, i}
 						<div class="flex items-center gap-2 rounded-md border p-2">
@@ -363,7 +364,7 @@ $effect(() => {
 				<!-- Add Custom Benefit -->
 				<div class="flex gap-2">
 					<Input
-						placeholder="Add custom benefit..."
+						placeholder={m.sponsoring_packages_form_add_benefit()}
 						bind:value={customBenefitInput}
 						onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomBenefit())}
 					/>
@@ -374,12 +375,12 @@ $effect(() => {
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={cancelPackageForm}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={cancelPackageForm}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					{editingPackage ? 'Update' : 'Create'}
+					{editingPackage ? m.action_update() : m.action_create()}
 				</Button>
 			</Dialog.Footer>
 		</form>

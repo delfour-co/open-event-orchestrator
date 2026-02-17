@@ -6,6 +6,8 @@ import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import {
   ArrowLeft,
   Calendar,
@@ -68,17 +70,17 @@ let sessionTitle = $state<string>('')
 let selectedTalkId = $state<string>('')
 let selectedTrackId = $state<string>('')
 
-// Session type options
-const sessionTypeOptions = [
-  { value: 'talk', label: 'Talk' },
-  { value: 'workshop', label: 'Workshop' },
-  { value: 'keynote', label: 'Keynote' },
-  { value: 'panel', label: 'Panel' },
-  { value: 'break', label: 'Break' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'networking', label: 'Networking' },
-  { value: 'registration', label: 'Registration' },
-  { value: 'other', label: 'Other' }
+// Session type options - using function to get translated labels
+const getSessionTypeOptions = () => [
+  { value: 'talk', label: m.planning_session_type_talk() },
+  { value: 'workshop', label: m.planning_session_type_workshop() },
+  { value: 'keynote', label: m.planning_session_type_keynote() },
+  { value: 'panel', label: m.planning_session_type_panel() },
+  { value: 'break', label: m.planning_session_type_break() },
+  { value: 'lunch', label: m.planning_session_type_lunch() },
+  { value: 'networking', label: m.planning_session_type_networking() },
+  { value: 'registration', label: m.planning_session_type_registration() },
+  { value: 'other', label: m.planning_session_type_other() }
 ]
 
 // Types that require a talk
@@ -94,24 +96,25 @@ const availableTalks = $derived(() => {
   return data.acceptedTalks.filter((t) => !scheduledTalkIds.has(t.id))
 })
 
-// Equipment options
-const equipmentOptions = [
-  { value: 'projector', label: 'Projector' },
-  { value: 'screen', label: 'Screen' },
-  { value: 'microphone', label: 'Microphone' },
-  { value: 'whiteboard', label: 'Whiteboard' },
-  { value: 'video_recording', label: 'Video Recording' },
-  { value: 'live_streaming', label: 'Live Streaming' },
-  { value: 'power_outlets', label: 'Power Outlets' },
-  { value: 'wifi', label: 'WiFi' },
-  { value: 'air_conditioning', label: 'Air Conditioning' },
-  { value: 'wheelchair_accessible', label: 'Wheelchair Accessible' }
+// Equipment options - using function to get translated labels
+const getEquipmentOptions = () => [
+  { value: 'projector', label: m.planning_equipment_projector() },
+  { value: 'screen', label: m.planning_equipment_screen() },
+  { value: 'microphone', label: m.planning_equipment_microphone() },
+  { value: 'whiteboard', label: m.planning_equipment_whiteboard() },
+  { value: 'video_recording', label: m.planning_equipment_video_recording() },
+  { value: 'live_streaming', label: m.planning_equipment_live_streaming() },
+  { value: 'power_outlets', label: m.planning_equipment_power_outlets() },
+  { value: 'wifi', label: m.planning_equipment_wifi() },
+  { value: 'air_conditioning', label: m.planning_equipment_air_conditioning() },
+  { value: 'wheelchair_accessible', label: m.planning_equipment_wheelchair_accessible() }
 ]
 
 let selectedEquipment = $state<string[]>([])
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
@@ -361,7 +364,7 @@ function getSlotInfo(slotId: string) {
 
 // Get session type label
 function getSessionTypeLabel(type: string): string {
-  return sessionTypeOptions.find((o) => o.value === type)?.label || type
+  return getSessionTypeOptions().find((o) => o.value === type)?.label || type
 }
 
 // Close session form on successful submission
@@ -491,7 +494,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 </script>
 
 <svelte:head>
-  <title>Planning - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.planning_edition_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -536,7 +539,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      Schedule
+      {m.planning_tab_schedule()}
     </button>
     <button
       onclick={() => (activeTab = 'sessions')}
@@ -544,7 +547,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      Sessions ({data.sessions.length})
+      {m.planning_tab_sessions()} ({data.sessions.length})
     </button>
     <button
       onclick={() => (activeTab = 'rooms')}
@@ -552,7 +555,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      Rooms ({data.rooms.length})
+      {m.planning_tab_rooms()} ({data.rooms.length})
     </button>
     <button
       onclick={() => (activeTab = 'tracks')}
@@ -560,7 +563,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      Tracks ({data.tracks.length})
+      {m.planning_tab_tracks()} ({data.tracks.length})
     </button>
     <button
       onclick={() => (activeTab = 'slots')}
@@ -568,7 +571,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      Slots ({data.slots.length})
+      {m.planning_tab_slots()} ({data.slots.length})
     </button>
     <button
       onclick={() => (activeTab = 'staff')}
@@ -576,13 +579,13 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      Staff ({data.roomAssignments.length})
+      {m.planning_tab_staff()} ({data.roomAssignments.length})
     </button>
     <a
       href="/admin/planning/{data.edition.slug}/settings"
       class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
     >
-      Settings
+      {m.planning_tab_settings()}
     </a>
   </nav>
 
@@ -592,9 +595,9 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
       <Card.Root>
         <Card.Content class="flex flex-col items-center justify-center py-12">
           <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 class="text-lg font-semibold">No rooms configured</h3>
+          <h3 class="text-lg font-semibold">{m.planning_schedule_no_rooms()}</h3>
           <p class="text-sm text-muted-foreground">
-            Go to the Rooms tab to add rooms before creating your schedule.
+            {m.planning_schedule_no_rooms_hint()}
           </p>
         </Card.Content>
       </Card.Root>
@@ -602,16 +605,16 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
       <Card.Root>
         <Card.Content class="flex flex-col items-center justify-center py-12">
           <Clock class="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 class="text-lg font-semibold">No time slots configured</h3>
+          <h3 class="text-lg font-semibold">{m.planning_schedule_no_slots()}</h3>
           <p class="text-sm text-muted-foreground">
-            Go to the Slots tab to add time slots and start building your schedule.
+            {m.planning_schedule_no_slots_hint()}
           </p>
         </Card.Content>
       </Card.Root>
     {:else}
       <!-- View Switcher -->
       <div class="mb-4 flex items-center gap-2">
-        <span class="text-sm text-muted-foreground">View:</span>
+        <span class="text-sm text-muted-foreground">{m.planning_schedule_view()}</span>
         <div class="flex rounded-md border">
           <button
             type="button"
@@ -619,7 +622,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
             onclick={() => (scheduleView = 'by-room')}
           >
             <DoorOpen class="mr-1 inline h-4 w-4" />
-            By Room
+            {m.planning_schedule_by_room()}
           </button>
           <button
             type="button"
@@ -627,7 +630,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
             onclick={() => (scheduleView = 'by-track')}
           >
             <Layers class="mr-1 inline h-4 w-4" />
-            By Track
+            {m.planning_schedule_by_track()}
           </button>
         </div>
       </div>
@@ -638,7 +641,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
           <table class="w-full border-collapse">
             <thead>
               <tr>
-                <th class="border bg-muted p-2 text-left font-medium">Room</th>
+                <th class="border bg-muted p-2 text-left font-medium">{m.planning_schedule_room_column()}</th>
                 {#each uniqueDates() as dateStr}
                   <th class="border bg-muted p-2 text-center font-medium">
                     {formatDate(new Date(dateStr))}
@@ -691,7 +694,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                             {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
                               <div class="absolute inset-0 flex items-center justify-center rounded bg-primary/10">
                                 <span class="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
-                                  Swap
+                                  {m.planning_schedule_swap()}
                                 </span>
                               </div>
                             {/if}
@@ -699,12 +702,12 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                             {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
                               <div class="flex items-center gap-1 text-primary">
                                 <Plus class="h-3 w-3" />
-                                Drop here
+                                {m.planning_schedule_drop_here()}
                               </div>
                             {:else}
                               <div class="flex items-center gap-1 italic text-muted-foreground">
                                 <Plus class="h-3 w-3" />
-                                {isDragging ? 'Drop here' : 'Click to add session'}
+                                {isDragging ? m.planning_schedule_drop_here() : m.planning_schedule_click_to_add()}
                               </div>
                             {/if}
                           {/if}
@@ -741,7 +744,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                     </Card.Header>
                     <Card.Content>
                       {#if trackSessions.length === 0}
-                        <p class="text-sm text-muted-foreground italic">No sessions</p>
+                        <p class="text-sm text-muted-foreground italic">{m.planning_schedule_no_sessions()}</p>
                       {:else}
                         <div class="space-y-2">
                           {#each trackSessions as { session, slot, room }}
@@ -761,7 +764,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                                   {slot.startTime} - {slot.endTime}
                                 </span>
                                 <span class="text-xs text-muted-foreground">
-                                  {room?.name || 'Unknown'}
+                                  {room?.name || m.planning_schedule_unknown_room()}
                                 </span>
                               </div>
                               <div class="mt-1 font-medium">{session.title}</div>
@@ -783,7 +786,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                     <Card.Header class="pb-2">
                       <div class="flex items-center gap-2">
                         <div class="h-3 w-3 rounded-full bg-gray-400"></div>
-                        <Card.Title class="text-base">No Track</Card.Title>
+                        <Card.Title class="text-base">{m.planning_schedule_no_track()}</Card.Title>
                       </div>
                     </Card.Header>
                     <Card.Content>
@@ -805,7 +808,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                                 {slot.startTime} - {slot.endTime}
                               </span>
                               <span class="text-xs text-muted-foreground">
-                                {room?.name || 'Unknown'}
+                                {room?.name || m.planning_schedule_unknown_room()}
                               </span>
                             </div>
                             <div class="mt-1 font-medium">{session.title}</div>
@@ -834,21 +837,21 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <Mic class="h-5 w-5" />
-            Available Talks ({availableTalks().length})
+            {m.planning_sessions_available_talks()} ({availableTalks().length})
           </Card.Title>
           <Card.Description>
-            Accepted talks that have not yet been scheduled
+            {m.planning_sessions_available_talks_desc()}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           {#if availableTalks().length === 0}
             <div class="py-8 text-center text-muted-foreground">
               {#if data.acceptedTalks.length === 0}
-                <p>No accepted talks yet. Accept talks from the CFP to schedule them.</p>
+                <p>{m.planning_sessions_no_accepted_talks()}</p>
               {:else}
                 <div class="flex items-center justify-center gap-2">
                   <Check class="h-5 w-5 text-green-500" />
-                  <p>All accepted talks have been scheduled.</p>
+                  <p>{m.planning_sessions_all_scheduled()}</p>
                 </div>
               {/if}
             </div>
@@ -864,7 +867,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                       </div>
                     {/if}
                     {#if talk.duration}
-                      <div class="text-xs text-muted-foreground">{talk.duration} min</div>
+                      <div class="text-xs text-muted-foreground">{talk.duration} {m.planning_sessions_minutes()}</div>
                     {/if}
                   </div>
                   <span class="rounded bg-green-100 px-2 py-1 text-xs text-green-800">
@@ -882,16 +885,16 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <Calendar class="h-5 w-5" />
-            Scheduled Sessions ({data.sessions.length})
+            {m.planning_sessions_scheduled()} ({data.sessions.length})
           </Card.Title>
           <Card.Description>
-            All sessions currently in the schedule
+            {m.planning_sessions_scheduled_desc()}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           {#if data.sessions.length === 0}
             <div class="py-8 text-center text-muted-foreground">
-              <p>No sessions scheduled yet. Click on empty slots in the Schedule tab to add sessions.</p>
+              <p>{m.planning_sessions_no_scheduled()}</p>
             </div>
           {:else}
             <div class="space-y-2">
@@ -908,7 +911,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                     </div>
                     {#if slotInfo}
                       <div class="text-sm text-muted-foreground">
-                        {slotInfo.roomName} - {formatDate(slotInfo.date)} - {slotInfo.startTime} to {slotInfo.endTime}
+                        {slotInfo.roomName} - {formatDate(slotInfo.date)} - {slotInfo.startTime} {m.planning_sessions_to()} {slotInfo.endTime}
                       </div>
                     {/if}
                     {#if track}
@@ -945,7 +948,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         {#if !showRoomForm}
           <Button onclick={() => { showRoomForm = true; editingRoom = null; selectedEquipment = [] }}>
             <Plus class="mr-2 h-4 w-4" />
-            Add Room
+            {m.planning_rooms_add()}
           </Button>
         {/if}
       </div>
@@ -955,7 +958,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Header>
             <div class="flex items-center justify-between">
-              <Card.Title>{editingRoom ? 'Edit Room' : 'Add Room'}</Card.Title>
+              <Card.Title>{editingRoom ? m.planning_rooms_edit() : m.planning_rooms_add()}</Card.Title>
               <Button variant="ghost" size="icon" onclick={cancelRoomForm}>
                 <X class="h-4 w-4" />
               </Button>
@@ -986,41 +989,41 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 
               <div class="grid gap-4 md:grid-cols-3">
                 <div class="space-y-2">
-                  <Label for="room-name">Name *</Label>
+                  <Label for="room-name">{m.planning_rooms_name()} *</Label>
                   <Input
                     id="room-name"
                     name="name"
-                    placeholder="Main Hall"
+                    placeholder={m.planning_rooms_name_placeholder()}
                     required
                     value={editingRoom?.name || ''}
                   />
                 </div>
                 <div class="space-y-2">
-                  <Label for="room-capacity">Capacity</Label>
+                  <Label for="room-capacity">{m.planning_rooms_capacity()}</Label>
                   <Input
                     id="room-capacity"
                     name="capacity"
                     type="number"
                     min="1"
-                    placeholder="200"
+                    placeholder={m.planning_rooms_capacity_placeholder()}
                     value={editingRoom?.capacity?.toString() || ''}
                   />
                 </div>
                 <div class="space-y-2">
-                  <Label for="room-floor">Floor</Label>
+                  <Label for="room-floor">{m.planning_rooms_floor()}</Label>
                   <Input
                     id="room-floor"
                     name="floor"
-                    placeholder="Ground floor"
+                    placeholder={m.planning_rooms_floor_placeholder()}
                     value={editingRoom?.floor || ''}
                   />
                 </div>
               </div>
 
               <div class="space-y-2">
-                <Label>Equipment</Label>
+                <Label>{m.planning_rooms_equipment()}</Label>
                 <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
-                  {#each equipmentOptions as option}
+                  {#each getEquipmentOptions() as option}
                     <label class="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
@@ -1037,24 +1040,24 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
               </div>
 
               <div class="space-y-2">
-                <Label for="room-notes">Equipment Notes</Label>
+                <Label for="room-notes">{m.planning_rooms_equipment_notes()}</Label>
                 <Textarea
                   id="room-notes"
                   name="equipmentNotes"
-                  placeholder="Additional equipment details..."
+                  placeholder={m.planning_rooms_equipment_notes_placeholder()}
                   value={editingRoom?.equipmentNotes || ''}
                 />
               </div>
 
               <div class="flex justify-end gap-2">
                 <Button type="button" variant="outline" onclick={cancelRoomForm}>
-                  Cancel
+                  {m.action_cancel()}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {#if isSubmitting}
                     <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                   {/if}
-                  {editingRoom ? 'Update Room' : 'Create Room'}
+                  {editingRoom ? m.planning_rooms_update() : m.planning_rooms_create()}
                 </Button>
               </div>
             </form>
@@ -1066,8 +1069,8 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">No rooms yet</h3>
-            <p class="text-sm text-muted-foreground">Add your first room to get started.</p>
+            <h3 class="text-lg font-semibold">{m.planning_rooms_no_rooms()}</h3>
+            <p class="text-sm text-muted-foreground">{m.planning_rooms_no_rooms_hint()}</p>
           </Card.Content>
         </Card.Root>
       {:else if data.rooms.length > 0}
@@ -1079,7 +1082,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                   <div>
                     <Card.Title>{room.name}</Card.Title>
                     {#if room.floor}
-                      <Card.Description>Floor: {room.floor}</Card.Description>
+                      <Card.Description>{m.planning_rooms_floor_label()} {room.floor}</Card.Description>
                     {/if}
                   </div>
                   <div class="flex gap-1">
@@ -1103,7 +1106,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                   <div class="mt-2 flex flex-wrap gap-1">
                     {#each room.equipment as eq}
                       <span class="rounded bg-muted px-2 py-0.5 text-xs">
-                        {equipmentOptions.find((o) => o.value === eq)?.label || eq}
+                        {getEquipmentOptions().find((o) => o.value === eq)?.label || eq}
                       </span>
                     {/each}
                   </div>
@@ -1123,7 +1126,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         {#if !showTrackForm}
           <Button onclick={() => { showTrackForm = true; editingTrack = null }}>
             <Plus class="mr-2 h-4 w-4" />
-            Add Track
+            {m.planning_tracks_add()}
           </Button>
         {/if}
       </div>
@@ -1133,7 +1136,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Header>
             <div class="flex items-center justify-between">
-              <Card.Title>{editingTrack ? 'Edit Track' : 'Add Track'}</Card.Title>
+              <Card.Title>{editingTrack ? m.planning_tracks_edit() : m.planning_tracks_add()}</Card.Title>
               <Button variant="ghost" size="icon" onclick={cancelTrackForm}>
                 <X class="h-4 w-4" />
               </Button>
@@ -1164,17 +1167,17 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="space-y-2">
-                  <Label for="track-name">Name *</Label>
+                  <Label for="track-name">{m.planning_tracks_name()} *</Label>
                   <Input
                     id="track-name"
                     name="name"
-                    placeholder="Web Development"
+                    placeholder={m.planning_tracks_name_placeholder()}
                     required
                     value={editingTrack?.name || ''}
                   />
                 </div>
                 <div class="space-y-2">
-                  <Label for="track-color">Color</Label>
+                  <Label for="track-color">{m.planning_tracks_color()}</Label>
                   <div class="flex gap-2">
                     <Input
                       id="track-color"
@@ -1188,13 +1191,13 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
               </div>
               <div class="flex justify-end gap-2">
                 <Button type="button" variant="outline" onclick={cancelTrackForm}>
-                  Cancel
+                  {m.action_cancel()}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {#if isSubmitting}
                     <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                   {/if}
-                  {editingTrack ? 'Update Track' : 'Create Track'}
+                  {editingTrack ? m.planning_tracks_update() : m.planning_tracks_create()}
                 </Button>
               </div>
             </form>
@@ -1206,9 +1209,9 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <Layers class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">No tracks yet</h3>
+            <h3 class="text-lg font-semibold">{m.planning_tracks_no_tracks()}</h3>
             <p class="text-sm text-muted-foreground">
-              Create tracks to organize your sessions by topic.
+              {m.planning_tracks_no_tracks_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -1249,7 +1252,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         {#if !showSlotForm}
           <Button onclick={() => { showSlotForm = true; editingSlot = null; selectedRoomId = '' }} disabled={data.rooms.length === 0}>
             <Plus class="mr-2 h-4 w-4" />
-            Add Slot
+            {m.planning_slots_add()}
           </Button>
         {/if}
       </div>
@@ -1259,7 +1262,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Header>
             <div class="flex items-center justify-between">
-              <Card.Title>{editingSlot ? 'Edit Slot' : 'Add Slot'}</Card.Title>
+              <Card.Title>{editingSlot ? m.planning_slots_edit() : m.planning_slots_add()}</Card.Title>
               <Button variant="ghost" size="icon" onclick={cancelSlotForm}>
                 <X class="h-4 w-4" />
               </Button>
@@ -1290,7 +1293,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 
               <div class="grid gap-4 md:grid-cols-4">
                 <div class="space-y-2">
-                  <Label for="slot-room">Room *</Label>
+                  <Label for="slot-room">{m.planning_slots_room()} *</Label>
                   <select
                     id="slot-room"
                     name="roomId"
@@ -1298,14 +1301,14 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     bind:value={selectedRoomId}
                   >
-                    <option value="">Select a room</option>
+                    <option value="">{m.planning_slots_room_placeholder()}</option>
                     {#each data.rooms as room}
                       <option value={room.id}>{room.name}</option>
                     {/each}
                   </select>
                 </div>
                 <div class="space-y-2">
-                  <Label for="slot-date">Date *</Label>
+                  <Label for="slot-date">{m.planning_slots_date()} *</Label>
                   <Input
                     id="slot-date"
                     name="date"
@@ -1315,7 +1318,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                   />
                 </div>
                 <div class="space-y-2">
-                  <Label for="slot-start">Start Time *</Label>
+                  <Label for="slot-start">{m.planning_slots_start_time()} *</Label>
                   <Input
                     id="slot-start"
                     name="startTime"
@@ -1325,7 +1328,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                   />
                 </div>
                 <div class="space-y-2">
-                  <Label for="slot-end">End Time *</Label>
+                  <Label for="slot-end">{m.planning_slots_end_time()} *</Label>
                   <Input
                     id="slot-end"
                     name="endTime"
@@ -1337,13 +1340,13 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
               </div>
               <div class="flex justify-end gap-2">
                 <Button type="button" variant="outline" onclick={cancelSlotForm}>
-                  Cancel
+                  {m.action_cancel()}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {#if isSubmitting}
                     <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                   {/if}
-                  {editingSlot ? 'Update Slot' : 'Create Slot'}
+                  {editingSlot ? m.planning_slots_update() : m.planning_slots_create()}
                 </Button>
               </div>
             </form>
@@ -1355,9 +1358,9 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">Add rooms first</h3>
+            <h3 class="text-lg font-semibold">{m.planning_slots_add_rooms_first()}</h3>
             <p class="text-sm text-muted-foreground">
-              You need to create rooms before adding time slots.
+              {m.planning_slots_add_rooms_first_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -1365,9 +1368,9 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <Clock class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">No time slots yet</h3>
+            <h3 class="text-lg font-semibold">{m.planning_slots_no_slots()}</h3>
             <p class="text-sm text-muted-foreground">
-              Create time slots to define when sessions can occur.
+              {m.planning_slots_no_slots_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -1385,7 +1388,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                     {formatDate(slot.date)}
                   </div>
                   <div class="text-sm">
-                    {room?.name || 'Unknown room'}
+                    {room?.name || m.planning_slots_unknown_room()}
                   </div>
                 </div>
                 <div class="flex gap-1">
@@ -1414,7 +1417,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         {#if !showAssignmentForm}
           <Button onclick={() => (showAssignmentForm = true)}>
             <Plus class="mr-2 h-4 w-4" />
-            Add Assignment
+            {m.planning_staff_add()}
           </Button>
         {/if}
       </div>
@@ -1424,13 +1427,13 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Header>
             <div class="flex items-center justify-between">
-              <Card.Title>{editingAssignment ? 'Edit Assignment' : 'Add Staff Assignment'}</Card.Title>
+              <Card.Title>{editingAssignment ? m.planning_staff_edit() : m.planning_staff_add_assignment()}</Card.Title>
               <Button variant="ghost" size="icon" onclick={cancelAssignmentForm}>
                 <X class="h-4 w-4" />
               </Button>
             </div>
             <Card.Description>
-              Assign organization members to rooms for this edition.
+              {m.planning_staff_description()}
             </Card.Description>
           </Card.Header>
           <Card.Content>
@@ -1458,7 +1461,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="space-y-2">
-                  <Label for="assignment-room">Room *</Label>
+                  <Label for="assignment-room">{m.planning_staff_room()} *</Label>
                   <select
                     id="assignment-room"
                     name="roomId"
@@ -1466,7 +1469,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     bind:value={assignmentRoomId}
                   >
-                    <option value="">Select a room</option>
+                    <option value="">{m.planning_staff_room_placeholder()}</option>
                     {#each data.rooms as room}
                       <option value={room.id}>{room.name}</option>
                     {/each}
@@ -1474,7 +1477,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                 </div>
 
                 <div class="space-y-2">
-                  <Label for="assignment-member">Team Member *</Label>
+                  <Label for="assignment-member">{m.planning_staff_member()} *</Label>
                   <select
                     id="assignment-member"
                     name="memberId"
@@ -1482,7 +1485,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     bind:value={assignmentMemberId}
                   >
-                    <option value="">Select a team member</option>
+                    <option value="">{m.planning_staff_member_placeholder()}</option>
                     {#each data.organizationMembers as member}
                       <option value={member.id}>{member.userName} ({member.role})</option>
                     {/each}
@@ -1492,17 +1495,17 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 
               <div class="grid gap-4 md:grid-cols-3">
                 <div class="space-y-2">
-                  <Label for="assignment-date">Date (optional)</Label>
+                  <Label for="assignment-date">{m.planning_staff_date()}</Label>
                   <Input
                     id="assignment-date"
                     name="date"
                     type="date"
                     bind:value={assignmentDate}
                   />
-                  <p class="text-xs text-muted-foreground">Leave empty for all edition days</p>
+                  <p class="text-xs text-muted-foreground">{m.planning_staff_date_hint()}</p>
                 </div>
                 <div class="space-y-2">
-                  <Label for="assignment-start">Start Time (optional)</Label>
+                  <Label for="assignment-start">{m.planning_staff_start_time()}</Label>
                   <Input
                     id="assignment-start"
                     name="startTime"
@@ -1511,7 +1514,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                   />
                 </div>
                 <div class="space-y-2">
-                  <Label for="assignment-end">End Time (optional)</Label>
+                  <Label for="assignment-end">{m.planning_staff_end_time()}</Label>
                   <Input
                     id="assignment-end"
                     name="endTime"
@@ -1522,24 +1525,24 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
               </div>
 
               <div class="space-y-2">
-                <Label for="assignment-notes">Notes</Label>
+                <Label for="assignment-notes">{m.planning_staff_notes()}</Label>
                 <Textarea
                   id="assignment-notes"
                   name="notes"
-                  placeholder="Any special instructions or notes..."
+                  placeholder={m.planning_staff_notes_placeholder()}
                   bind:value={assignmentNotes}
                 />
               </div>
 
               <div class="flex justify-end gap-2">
                 <Button type="button" variant="outline" onclick={cancelAssignmentForm}>
-                  Cancel
+                  {m.action_cancel()}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {#if isSubmitting}
                     <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                   {/if}
-                  {editingAssignment ? 'Update Assignment' : 'Create Assignment'}
+                  {editingAssignment ? m.planning_staff_update() : m.planning_staff_create()}
                 </Button>
               </div>
             </form>
@@ -1551,9 +1554,9 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <Users class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">No team members</h3>
+            <h3 class="text-lg font-semibold">{m.planning_staff_no_members()}</h3>
             <p class="text-sm text-muted-foreground">
-              Add members to your organization first in organization settings.
+              {m.planning_staff_no_members_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -1561,9 +1564,9 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">Add rooms first</h3>
+            <h3 class="text-lg font-semibold">{m.planning_staff_add_rooms_first()}</h3>
             <p class="text-sm text-muted-foreground">
-              You need to create rooms before assigning staff.
+              {m.planning_staff_add_rooms_first_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -1571,9 +1574,9 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <Users class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">No staff assignments yet</h3>
+            <h3 class="text-lg font-semibold">{m.planning_staff_no_assignments()}</h3>
             <p class="text-sm text-muted-foreground">
-              Assign team members to rooms to manage who is responsible for each space.
+              {m.planning_staff_no_assignments_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -1609,7 +1612,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                                 • {assignment.startTime} - {assignment.endTime}
                               {/if}
                             {:else}
-                              All edition days
+                              {m.planning_staff_all_days()}
                             {/if}
                           </div>
                           {#if assignment.notes}
@@ -1641,8 +1644,8 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
           {#if roomsWithoutAssignments().length > 0}
             <Card.Root>
               <Card.Header>
-                <Card.Title class="text-lg">Unassigned Rooms</Card.Title>
-                <Card.Description>These rooms have no staff assigned yet.</Card.Description>
+                <Card.Title class="text-lg">{m.planning_staff_unassigned_rooms()}</Card.Title>
+                <Card.Description>{m.planning_staff_unassigned_rooms_hint()}</Card.Description>
               </Card.Header>
               <Card.Content>
                 <div class="flex flex-wrap gap-2">
@@ -1666,7 +1669,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 {#if showSessionForm}
   <Dialog.Content class="max-w-lg" onClose={cancelSessionForm}>
     <Dialog.Header>
-      <Dialog.Title>{editingSession ? 'Edit Session' : 'Create Session'}</Dialog.Title>
+      <Dialog.Title>{editingSession ? m.planning_sessions_form_edit() : m.planning_sessions_form_create()}</Dialog.Title>
       {#if selectedSlotId}
         {@const slotInfo = getSlotInfo(selectedSlotId)}
         {#if slotInfo}
@@ -1702,7 +1705,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
       {/if}
 
       <div class="space-y-2">
-        <Label for="session-type">Session Type *</Label>
+        <Label for="session-type">{m.planning_sessions_form_type()} *</Label>
         <select
           id="session-type"
           name="type"
@@ -1710,21 +1713,21 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           bind:value={sessionType}
         >
-          {#each sessionTypeOptions as option}
+          {#each getSessionTypeOptions() as option}
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>
       </div>
 
       <div class="space-y-2">
-        <Label for="session-track">Track</Label>
+        <Label for="session-track">{m.planning_sessions_form_track()}</Label>
         <select
           id="session-track"
           name="trackId"
           class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           bind:value={selectedTrackId}
         >
-          <option value="">No track</option>
+          <option value="">{m.planning_sessions_form_track_none()}</option>
           {#each data.tracks as track}
             <option value={track.id}>{track.name}</option>
           {/each}
@@ -1733,7 +1736,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
 
       {#if talkRequiredTypes.includes(sessionType)}
         <div class="space-y-2">
-          <Label for="session-talk">Talk</Label>
+          <Label for="session-talk">{m.planning_sessions_form_talk()}</Label>
           <select
             id="session-talk"
             name="talkId"
@@ -1741,7 +1744,7 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
             bind:value={selectedTalkId}
             onchange={(e) => handleTalkSelection(e.currentTarget.value)}
           >
-            <option value="">Select a talk (optional)</option>
+            <option value="">{m.planning_sessions_form_talk_placeholder()}</option>
             {#each availableTalks() as talk}
               <option value={talk.id}>
                 {talk.title}
@@ -1754,37 +1757,37 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
               {@const currentTalk = data.acceptedTalks.find((t) => t.id === editingSession?.talkId)}
               {#if currentTalk && !availableTalks().find((t) => t.id === currentTalk.id)}
                 <option value={currentTalk.id}>
-                  {currentTalk.title} (current)
+                  {currentTalk.title} {m.planning_sessions_form_talk_current()}
                 </option>
               {/if}
             {/if}
           </select>
           <p class="text-xs text-muted-foreground">
-            {availableTalks().length} accepted talk{availableTalks().length !== 1 ? 's' : ''} available
+            {m.planning_sessions_form_talks_available({ count: availableTalks().length })}
           </p>
         </div>
       {/if}
 
       <div class="space-y-2">
-        <Label for="session-title">Title *</Label>
+        <Label for="session-title">{m.planning_sessions_form_session_title()} *</Label>
         <Input
           id="session-title"
           name="title"
           required
-          placeholder={talkRequiredTypes.includes(sessionType) ? 'Auto-filled from talk or enter custom title' : 'Enter session title'}
+          placeholder={talkRequiredTypes.includes(sessionType) ? m.planning_sessions_form_title_placeholder_talk() : m.planning_sessions_form_title_placeholder()}
           bind:value={sessionTitle}
         />
       </div>
 
       <Dialog.Footer>
         <Button type="button" variant="outline" onclick={cancelSessionForm}>
-          Cancel
+          {m.action_cancel()}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
           {/if}
-          {editingSession ? 'Update Session' : 'Create Session'}
+          {editingSession ? m.planning_sessions_form_update_button() : m.planning_sessions_form_create_button()}
         </Button>
       </Dialog.Footer>
     </form>

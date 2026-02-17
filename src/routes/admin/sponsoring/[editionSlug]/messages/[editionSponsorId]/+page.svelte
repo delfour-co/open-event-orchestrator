@@ -17,6 +17,7 @@ import {
   isUnread,
   sortByCreatedAsc
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Building2,
@@ -54,7 +55,7 @@ function handleFileSelect(e: Event) {
     const newFiles = Array.from(target.files)
     const totalFiles = selectedFiles.length + newFiles.length
     if (totalFiles > 10) {
-      alert('Maximum 10 attachments allowed')
+      alert(m.sponsoring_messages_detail_max_attachments())
       return
     }
     selectedFiles = [...selectedFiles, ...newFiles]
@@ -88,7 +89,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Messages - {sponsor?.name || 'Sponsor'} - {data.edition.name}</title>
+	<title>{m.sponsoring_messages_detail_page_title({ sponsor: sponsor?.name || 'Sponsor', name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -108,7 +109,7 @@ $effect(() => {
 					</Badge>
 				</div>
 				<p class="text-muted-foreground">
-					Messages for {data.edition.name}
+					{m.sponsoring_messages_detail_for({ name: data.edition.name })}
 				</p>
 			</div>
 		</div>
@@ -143,7 +144,7 @@ $effect(() => {
 								<span class="text-sm text-muted-foreground">{pkg.name}</span>
 							{/if}
 							{#if data.unreadCount > 0}
-								<Badge variant="default">{data.unreadCount} unread</Badge>
+								<Badge variant="default">{m.sponsoring_messages_detail_unread({ count: data.unreadCount.toString() })}</Badge>
 							{/if}
 						</div>
 						{#if sponsor?.contactEmail}
@@ -168,8 +169,8 @@ $effect(() => {
 					<div class="h-full flex items-center justify-center text-muted-foreground">
 						<div class="text-center">
 							<MessageSquare class="h-12 w-12 mx-auto mb-2 opacity-50" />
-							<p>No messages yet</p>
-							<p class="text-sm">Start the conversation with this sponsor</p>
+							<p>{m.sponsoring_messages_detail_no_messages()}</p>
+							<p class="text-sm">{m.sponsoring_messages_detail_start_conversation()}</p>
 						</div>
 					</div>
 				{:else}
@@ -184,7 +185,7 @@ $effect(() => {
 								<div class="flex items-center gap-2 mb-1">
 									<span class="font-medium text-sm">{message.senderName}</span>
 									{#if isUnread(message) && fromSponsor}
-										<Badge variant="secondary" class="text-xs">New</Badge>
+										<Badge variant="secondary" class="text-xs">{m.sponsoring_messages_detail_new()}</Badge>
 									{/if}
 								</div>
 								{#if message.subject}
@@ -232,7 +233,7 @@ $effect(() => {
 			class="mb-4"
 		>
 			<Button variant="outline" type="submit" size="sm">
-				Mark all as read
+				{m.sponsoring_messages_detail_mark_read()}
 			</Button>
 		</form>
 	{/if}
@@ -240,7 +241,7 @@ $effect(() => {
 	<!-- Compose Message -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Send a Message</Card.Title>
+			<Card.Title>{m.sponsoring_messages_detail_send_title()}</Card.Title>
 		</Card.Header>
 		<Card.Content>
 			{#if form?.error}
@@ -250,7 +251,7 @@ $effect(() => {
 			{/if}
 			{#if form?.success}
 				<div class="rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-3 text-sm text-green-700 dark:text-green-400 mb-4">
-					Message sent successfully!
+					{m.sponsoring_messages_detail_sent_success()}
 				</div>
 			{/if}
 
@@ -273,22 +274,22 @@ $effect(() => {
 				class="space-y-4"
 			>
 				<div class="space-y-2">
-					<Label for="subject">Subject (optional)</Label>
+					<Label for="subject">{m.sponsoring_messages_detail_subject()}</Label>
 					<Input
 						id="subject"
 						name="subject"
-						placeholder="Message subject..."
+						placeholder={m.sponsoring_messages_detail_subject_placeholder()}
 						bind:value={subject}
 						maxlength={500}
 					/>
 				</div>
 
 				<div class="space-y-2">
-					<Label for="content">Message</Label>
+					<Label for="content">{m.sponsoring_messages_detail_message()}</Label>
 					<Textarea
 						id="content"
 						name="content"
-						placeholder="Type your message..."
+						placeholder={m.sponsoring_messages_detail_message_placeholder()}
 						rows={4}
 						bind:value={content}
 						maxlength={10000}
@@ -302,7 +303,7 @@ $effect(() => {
 				<!-- Selected Files -->
 				{#if selectedFiles.length > 0}
 					<div class="space-y-2">
-						<Label>Attachments ({selectedFiles.length}/10)</Label>
+						<Label>{m.sponsoring_messages_detail_attachments()} ({selectedFiles.length}/10)</Label>
 						<div class="flex flex-wrap gap-2">
 							{#each selectedFiles as file, i}
 								{@const FileIcon = getFileIcon(file.name)}
@@ -345,7 +346,7 @@ $effect(() => {
 						disabled={selectedFiles.length >= 10}
 					>
 						<Paperclip class="mr-2 h-4 w-4" />
-						Attach Files
+						{m.sponsoring_messages_detail_attach_files()}
 					</Button>
 
 					<Button type="submit" disabled={isSubmitting || !content.trim()}>
@@ -354,7 +355,7 @@ $effect(() => {
 						{:else}
 							<Send class="mr-2 h-4 w-4" />
 						{/if}
-						Send Message
+						{m.sponsoring_messages_detail_send()}
 					</Button>
 				</div>
 			</form>

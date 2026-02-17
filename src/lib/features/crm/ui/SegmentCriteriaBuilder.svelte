@@ -4,6 +4,7 @@ import * as Card from '$lib/components/ui/card'
 import { Label } from '$lib/components/ui/label'
 import { Select } from '$lib/components/ui/select'
 import type { SegmentCriteria, SegmentRule } from '$lib/features/crm/domain/segment'
+import * as m from '$lib/paraglide/messages'
 import { Loader2, Plus, Users } from 'lucide-svelte'
 import { SegmentRuleBuilder } from './index'
 
@@ -63,10 +64,10 @@ function handleMatchChange(e: Event) {
 <div class="space-y-4">
   <!-- Match Logic Selector -->
   <div class="flex items-center gap-3">
-    <Label class="text-sm font-medium">Match logic:</Label>
+    <Label class="text-sm font-medium">{m.crm_segments_match_logic()}</Label>
     <Select value={criteria.match} onchange={handleMatchChange} class="w-[220px]">
-      <option value="all">Match ALL rules (AND)</option>
-      <option value="any">Match ANY rule (OR)</option>
+      <option value="all">{m.crm_segments_match_all()}</option>
+      <option value="any">{m.crm_segments_match_any()}</option>
     </Select>
   </div>
 
@@ -75,7 +76,7 @@ function handleMatchChange(e: Event) {
     <Card.Content class="p-4">
       {#if criteria.rules.length === 0}
         <div class="py-6 text-center text-muted-foreground">
-          <p class="text-sm">No rules defined. Add a rule to filter contacts.</p>
+          <p class="text-sm">{m.crm_segments_no_rules()}</p>
         </div>
       {:else}
         <div class="space-y-3">
@@ -87,7 +88,7 @@ function handleMatchChange(e: Event) {
                 </span>
               {:else}
                 <span class="w-12 text-center text-xs font-medium text-muted-foreground">
-                  Where
+                  {m.crm_segments_where()}
                 </span>
               {/if}
               <SegmentRuleBuilder
@@ -104,7 +105,7 @@ function handleMatchChange(e: Event) {
       <div class="mt-4 flex items-center justify-between border-t border-border pt-4">
         <Button variant="outline" size="sm" onclick={addRule} class="gap-1">
           <Plus class="h-3 w-3" />
-          Add Rule
+          {m.crm_segments_add_rule()}
         </Button>
 
         {#if previewCount !== null || isLoadingPreview}
@@ -112,10 +113,10 @@ function handleMatchChange(e: Event) {
             <Users class="h-4 w-4 text-muted-foreground" />
             {#if isLoadingPreview}
               <Loader2 class="h-4 w-4 animate-spin" />
-              <span class="text-muted-foreground">Calculating...</span>
+              <span class="text-muted-foreground">{m.crm_segments_calculating()}</span>
             {:else}
               <span class="font-medium">{previewCount}</span>
-              <span class="text-muted-foreground">contacts match</span>
+              <span class="text-muted-foreground">{m.crm_segments_contacts_match()}</span>
               {#if onRefreshPreview}
                 <Button
                   variant="ghost"
@@ -123,7 +124,7 @@ function handleMatchChange(e: Event) {
                   onclick={onRefreshPreview}
                   class="h-6 px-2 text-xs"
                 >
-                  Refresh
+                  {m.crm_segments_refresh()}
                 </Button>
               {/if}
             {/if}

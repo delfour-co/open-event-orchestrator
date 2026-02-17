@@ -10,6 +10,7 @@ import {
   getInquiryStatusBadgeVariant,
   getInquiryStatusLabel
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   ArrowRight,
@@ -60,7 +61,7 @@ const canTakeAction = $derived(
 </script>
 
 <svelte:head>
-	<title>{data.inquiry.companyName} - Inquiry - Open Event Orchestrator</title>
+	<title>{data.inquiry.companyName} - {m.sponsoring_inquiries_title()} - Open Event Orchestrator</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -80,7 +81,7 @@ const canTakeAction = $derived(
 					</Badge>
 				</div>
 				<p class="text-muted-foreground">
-					Sponsor inquiry for {data.edition.name}
+					{m.sponsoring_inquiry_detail_title({ name: data.edition.name })}
 				</p>
 			</div>
 		</div>
@@ -106,7 +107,7 @@ const canTakeAction = $derived(
 							{:else}
 								<Mail class="mr-2 h-4 w-4" />
 							{/if}
-							Mark Contacted
+							{m.sponsoring_inquiry_detail_mark_contacted()}
 						</Button>
 					</form>
 				{/if}
@@ -129,7 +130,7 @@ const canTakeAction = $derived(
 						{:else}
 							<ArrowRight class="mr-2 h-4 w-4" />
 						{/if}
-						Convert to Sponsor
+						{m.sponsoring_inquiry_detail_convert()}
 					</Button>
 				</form>
 
@@ -151,7 +152,7 @@ const canTakeAction = $derived(
 						{:else}
 							<X class="mr-2 h-4 w-4" />
 						{/if}
-						Reject
+						{m.sponsoring_inquiry_detail_reject()}
 					</Button>
 				</form>
 			</div>
@@ -169,13 +170,13 @@ const canTakeAction = $derived(
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<Building2 class="h-5 w-5" />
-						Company Information
+						{m.sponsoring_inquiry_detail_company_info()}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content class="space-y-4">
 					<div class="grid gap-4 md:grid-cols-2">
 						<div>
-							<div class="text-sm font-medium text-muted-foreground">Company Name</div>
+							<div class="text-sm font-medium text-muted-foreground">{m.sponsoring_inquiry_detail_company_name()}</div>
 							<div class="text-lg font-medium">{data.inquiry.companyName}</div>
 						</div>
 					</div>
@@ -185,15 +186,15 @@ const canTakeAction = $derived(
 					<div class="space-y-3">
 						<div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
 							<User class="h-4 w-4" />
-							Contact Person
+							{m.sponsoring_inquiry_detail_contact_person()}
 						</div>
 						<div class="grid gap-4 md:grid-cols-2">
 							<div>
-								<div class="text-sm text-muted-foreground">Name</div>
+								<div class="text-sm text-muted-foreground">{m.sponsoring_inquiry_detail_name()}</div>
 								<div class="font-medium">{data.inquiry.contactName}</div>
 							</div>
 							<div>
-								<div class="text-sm text-muted-foreground">Email</div>
+								<div class="text-sm text-muted-foreground">{m.sponsoring_inquiry_detail_email()}</div>
 								<a
 									href="mailto:{data.inquiry.contactEmail}"
 									class="font-medium text-primary hover:underline flex items-center gap-1"
@@ -204,7 +205,7 @@ const canTakeAction = $derived(
 							</div>
 							{#if data.inquiry.contactPhone}
 								<div>
-									<div class="text-sm text-muted-foreground">Phone</div>
+									<div class="text-sm text-muted-foreground">{m.sponsoring_inquiry_detail_phone()}</div>
 									<div class="font-medium flex items-center gap-1">
 										<Phone class="h-4 w-4" />
 										{data.inquiry.contactPhone}
@@ -221,7 +222,7 @@ const canTakeAction = $derived(
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<MessageSquare class="h-5 w-5" />
-						Message
+						{m.sponsoring_inquiry_detail_message()}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
@@ -234,7 +235,7 @@ const canTakeAction = $derived(
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<Calendar class="h-5 w-5" />
-						History
+						{m.sponsoring_inquiry_detail_history()}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
@@ -242,7 +243,7 @@ const canTakeAction = $derived(
 						<div class="flex items-start gap-3">
 							<div class="h-2 w-2 rounded-full bg-primary mt-2"></div>
 							<div>
-								<div class="text-sm font-medium">Inquiry submitted</div>
+								<div class="text-sm font-medium">{m.sponsoring_inquiry_detail_submitted()}</div>
 								<div class="text-xs text-muted-foreground">
 									{formatDate(data.inquiry.createdAt)}
 								</div>
@@ -253,7 +254,7 @@ const canTakeAction = $derived(
 								<div class="h-2 w-2 rounded-full bg-muted-foreground mt-2"></div>
 								<div>
 									<div class="text-sm font-medium">
-										Status changed to {getInquiryStatusLabel(data.inquiry.status)}
+										{m.sponsoring_inquiry_detail_status_changed({ status: getInquiryStatusLabel(data.inquiry.status) })}
 									</div>
 									<div class="text-xs text-muted-foreground">
 										{formatDate(data.inquiry.updatedAt)}
@@ -274,7 +275,7 @@ const canTakeAction = $derived(
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2">
 							<Package class="h-5 w-5" />
-							Interested Package
+							{m.sponsoring_inquiry_detail_interested_package()}
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
@@ -296,12 +297,12 @@ const canTakeAction = $derived(
 					<Card.Header>
 						<Card.Title class="flex items-center gap-2">
 							<Package class="h-5 w-5" />
-							Interested Package
+							{m.sponsoring_inquiry_detail_interested_package()}
 						</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-sm text-muted-foreground">
-							No specific package selected
+							{m.sponsoring_inquiry_detail_no_package()}
 						</p>
 					</Card.Content>
 				</Card.Root>
@@ -310,21 +311,21 @@ const canTakeAction = $derived(
 			<!-- Metadata -->
 			<Card.Root>
 				<Card.Header>
-					<Card.Title>Details</Card.Title>
+					<Card.Title>{m.sponsoring_inquiry_detail_details()}</Card.Title>
 				</Card.Header>
 				<Card.Content class="space-y-4">
 					<div>
-						<div class="text-sm text-muted-foreground">Status</div>
+						<div class="text-sm text-muted-foreground">{m.sponsoring_inquiries_status()}</div>
 						<Badge variant={getInquiryStatusBadgeVariant(data.inquiry.status)} class="mt-1">
 							{getInquiryStatusLabel(data.inquiry.status)}
 						</Badge>
 					</div>
 					<div>
-						<div class="text-sm text-muted-foreground">Submitted</div>
+						<div class="text-sm text-muted-foreground">{m.sponsoring_inquiry_detail_submitted_date()}</div>
 						<div class="text-sm font-medium">{formatShortDate(data.inquiry.createdAt)}</div>
 					</div>
 					<div>
-						<div class="text-sm text-muted-foreground">Last Updated</div>
+						<div class="text-sm text-muted-foreground">{m.sponsoring_inquiry_detail_last_updated()}</div>
 						<div class="text-sm font-medium">{formatShortDate(data.inquiry.updatedAt)}</div>
 					</div>
 				</Card.Content>
@@ -333,14 +334,14 @@ const canTakeAction = $derived(
 			<!-- Danger Zone -->
 			<Card.Root class="border-destructive/50">
 				<Card.Header>
-					<Card.Title class="text-destructive">Danger Zone</Card.Title>
+					<Card.Title class="text-destructive">{m.sponsoring_inquiry_detail_danger_zone()}</Card.Title>
 				</Card.Header>
 				<Card.Content>
 					<form
 						method="POST"
 						action="?/delete"
 						use:enhance={() => {
-							if (!confirm('Are you sure you want to delete this inquiry? This action cannot be undone.')) {
+							if (!confirm(m.sponsoring_inquiry_detail_delete_confirm())) {
 								return () => {}
 							}
 							isSubmitting.delete = true
@@ -357,7 +358,7 @@ const canTakeAction = $derived(
 							{:else}
 								<Trash2 class="mr-2 h-4 w-4" />
 							{/if}
-							Delete Inquiry
+							{m.sponsoring_inquiry_detail_delete()}
 						</Button>
 					</form>
 				</Card.Content>

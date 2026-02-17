@@ -14,6 +14,7 @@ import {
   getCategoryLabel,
   isImageMimeType
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Download, FileArchive, FileImage, FileText, Image } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -52,7 +53,7 @@ function getLogoAssetsCount(): number {
 </script>
 
 <svelte:head>
-  <title>Sponsor Assets - {data.edition.name}</title>
+  <title>{m.sponsoring_assets_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -74,7 +75,7 @@ function getLogoAssetsCount(): number {
         class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
       >
         <FileArchive class="mr-2 h-4 w-4" />
-        Download All ({data.totalAssets})
+        {m.sponsoring_assets_download_all()} ({data.totalAssets})
       </a>
     {/if}
   </div>
@@ -90,7 +91,7 @@ function getLogoAssetsCount(): number {
           <FileImage class="h-5 w-5 text-muted-foreground" />
           <div>
             <p class="text-2xl font-bold">{data.totalAssets}</p>
-            <p class="text-sm text-muted-foreground">Total Assets</p>
+            <p class="text-sm text-muted-foreground">{m.sponsoring_assets_stats_total()}</p>
           </div>
         </div>
       </Card.Content>
@@ -102,7 +103,7 @@ function getLogoAssetsCount(): number {
           <Image class="h-5 w-5 text-muted-foreground" />
           <div>
             <p class="text-2xl font-bold">{getLogoAssetsCount()}</p>
-            <p class="text-sm text-muted-foreground">Logos</p>
+            <p class="text-sm text-muted-foreground">{m.sponsoring_assets_stats_logos()}</p>
           </div>
         </div>
       </Card.Content>
@@ -114,7 +115,7 @@ function getLogoAssetsCount(): number {
           <FileImage class="h-5 w-5 text-muted-foreground" />
           <div>
             <p class="text-2xl font-bold">{data.assetsByCategory.visual}</p>
-            <p class="text-sm text-muted-foreground">Visuals</p>
+            <p class="text-sm text-muted-foreground">{m.sponsoring_assets_stats_visuals()}</p>
           </div>
         </div>
       </Card.Content>
@@ -126,7 +127,7 @@ function getLogoAssetsCount(): number {
           <FileText class="h-5 w-5 text-muted-foreground" />
           <div>
             <p class="text-2xl font-bold">{data.assetsByCategory.document}</p>
-            <p class="text-sm text-muted-foreground">Documents</p>
+            <p class="text-sm text-muted-foreground">{m.sponsoring_assets_stats_documents()}</p>
           </div>
         </div>
       </Card.Content>
@@ -141,14 +142,14 @@ function getLogoAssetsCount(): number {
         class="py-2 px-1 border-b-2 text-sm font-medium {activeTab === 'by-sponsor' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
         onclick={() => (activeTab = 'by-sponsor')}
       >
-        By Sponsor
+        {m.sponsoring_assets_tab_by_sponsor()}
       </button>
       <button
         type="button"
         class="py-2 px-1 border-b-2 text-sm font-medium {activeTab === 'by-category' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
         onclick={() => (activeTab = 'by-category')}
       >
-        By Category
+        {m.sponsoring_assets_tab_by_category()}
       </button>
     </nav>
   </div>
@@ -159,9 +160,9 @@ function getLogoAssetsCount(): number {
       <Card.Root>
         <Card.Content class="flex flex-col items-center justify-center py-12">
           <FileImage class="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 class="text-lg font-semibold mb-2">No assets yet</h3>
+          <h3 class="text-lg font-semibold mb-2">{m.sponsoring_assets_empty()}</h3>
           <p class="text-muted-foreground text-center max-w-md">
-            Confirmed sponsors have not uploaded any assets yet.
+            {m.sponsoring_assets_empty_hint()}
           </p>
         </Card.Content>
       </Card.Root>
@@ -188,14 +189,14 @@ function getLogoAssetsCount(): number {
                     {#if sponsorAsset.packageName}
                       <Badge variant="outline">{sponsorAsset.packageName}</Badge>
                     {/if}
-                    <span>{sponsorAsset.assets.length} asset{sponsorAsset.assets.length !== 1 ? 's' : ''}</span>
+                    <span>{sponsorAsset.assets.length} {sponsorAsset.assets.length !== 1 ? m.sponsoring_assets_assets() : m.sponsoring_assets_asset()}</span>
                   </Card.Description>
                 </div>
               </div>
             </Card.Header>
             <Card.Content>
               {#if sponsorAsset.assets.length === 0}
-                <p class="text-sm text-muted-foreground">No assets uploaded yet</p>
+                <p class="text-sm text-muted-foreground">{m.sponsoring_assets_no_assets()}</p>
               {:else}
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   {#each sponsorAsset.assets as asset}
@@ -317,9 +318,9 @@ function getLogoAssetsCount(): number {
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <FileImage class="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 class="text-lg font-semibold mb-2">No assets yet</h3>
+            <h3 class="text-lg font-semibold mb-2">{m.sponsoring_assets_empty()}</h3>
             <p class="text-muted-foreground text-center max-w-md">
-              Confirmed sponsors have not uploaded any assets yet.
+              {m.sponsoring_assets_empty_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -347,39 +348,39 @@ function getLogoAssetsCount(): number {
         {:else}
           <div class="text-center">
             <FileText class="h-24 w-24 text-muted-foreground mx-auto mb-4" />
-            <p class="text-muted-foreground">Preview not available for this file type</p>
+            <p class="text-muted-foreground">{m.sponsoring_assets_preview_not_available()}</p>
           </div>
         {/if}
       </div>
 
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
-          <p class="text-muted-foreground">Category</p>
+          <p class="text-muted-foreground">{m.sponsoring_assets_category()}</p>
           <p class="font-medium">{getCategoryLabel(selectedAsset.category)}</p>
         </div>
         <div>
-          <p class="text-muted-foreground">File Size</p>
+          <p class="text-muted-foreground">{m.sponsoring_assets_file_size()}</p>
           <p class="font-medium">{formatFileSize(selectedAsset.fileSize)}</p>
         </div>
         {#if selectedAsset.width && selectedAsset.height}
           <div>
-            <p class="text-muted-foreground">Dimensions</p>
+            <p class="text-muted-foreground">{m.sponsoring_assets_dimensions()}</p>
             <p class="font-medium">{formatDimensions(selectedAsset.width, selectedAsset.height)}</p>
           </div>
         {/if}
         <div>
-          <p class="text-muted-foreground">Format</p>
+          <p class="text-muted-foreground">{m.sponsoring_assets_format()}</p>
           <p class="font-medium">{selectedAsset.mimeType}</p>
         </div>
         {#if selectedAsset.description}
           <div class="col-span-2">
-            <p class="text-muted-foreground">Description</p>
+            <p class="text-muted-foreground">{m.sponsoring_assets_description()}</p>
             <p class="font-medium">{selectedAsset.description}</p>
           </div>
         {/if}
         {#if selectedAsset.usage}
           <div class="col-span-2">
-            <p class="text-muted-foreground">Usage Instructions</p>
+            <p class="text-muted-foreground">{m.sponsoring_assets_usage()}</p>
             <p class="font-medium">{selectedAsset.usage}</p>
           </div>
         {/if}
@@ -392,7 +393,7 @@ function getLogoAssetsCount(): number {
           class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           <Download class="mr-2 h-4 w-4" />
-          Download
+          {m.action_download()}
         </a>
       </Dialog.Footer>
     </div>

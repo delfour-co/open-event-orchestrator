@@ -10,6 +10,7 @@ import {
   isSimpleBlockType,
   moveBlock
 } from '$lib/features/crm/domain/email-editor'
+import * as m from '$lib/paraglide/messages'
 import BlockRenderer from './BlockRenderer.svelte'
 
 interface Props {
@@ -125,9 +126,9 @@ const canvasStyle = $derived(
       ondragover={(e) => handleDragOver(e, 0)}
       ondragleave={handleDragLeave}
       role="region"
-      aria-label="Drop zone"
+      aria-label={m.crm_email_editor_drop_zone()}
     >
-      <span class="drop-hint">Drop block here</span>
+      <span class="drop-hint">{m.crm_email_editor_drop_hint()}</span>
     </div>
 
     {#each document.blocks as block, index (block.id)}
@@ -156,15 +157,15 @@ const canvasStyle = $derived(
         ondragover={(e) => handleDragOver(e, index + 1)}
         ondragleave={handleDragLeave}
         role="region"
-        aria-label="Drop zone"
+        aria-label={m.crm_email_editor_drop_zone()}
       >
-        <span class="drop-hint">Drop block here</span>
+        <span class="drop-hint">{m.crm_email_editor_drop_hint()}</span>
       </div>
     {/each}
 
     {#if document.blocks.length === 0}
       <div class="empty-canvas">
-        <p>Drag and drop blocks here to start building your email</p>
+        <p>{m.crm_email_editor_empty_canvas()}</p>
       </div>
     {/if}
   </div>

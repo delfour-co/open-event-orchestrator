@@ -15,6 +15,7 @@ import type {
 } from '$lib/features/crm/domain/email-editor'
 import { COLUMN_LAYOUT_LABELS, getColumnCount } from '$lib/features/crm/domain/email-editor'
 import type { ColumnLayout } from '$lib/features/crm/domain/email-editor'
+import * as m from '$lib/paraglide/messages'
 import { Copy, Trash2 } from 'lucide-svelte'
 
 interface Props {
@@ -60,20 +61,20 @@ function handleLayoutChange(layout: ColumnLayout) {
   <Card.Header class="pb-3">
     <Card.Title class="text-sm font-medium">
       {#if block}
-        {block.type.charAt(0).toUpperCase() + block.type.slice(1)} Properties
+        {block.type.charAt(0).toUpperCase() + block.type.slice(1)} {m.crm_email_editor_properties()}
       {:else}
-        Properties
+        {m.crm_email_editor_properties()}
       {/if}
     </Card.Title>
   </Card.Header>
   <Card.Content>
     {#if !block}
-      <p class="text-sm text-muted-foreground">Select a block to edit its properties</p>
+      <p class="text-sm text-muted-foreground">{m.crm_email_editor_select_block()}</p>
     {:else}
       <div class="space-y-4">
         <!-- Common properties -->
         <div class="space-y-2">
-          <Label class="text-xs font-medium">Background Color</Label>
+          <Label class="text-xs font-medium">{m.crm_email_editor_bg_color()}</Label>
           <div class="flex gap-2">
             <Input
               type="color"
@@ -93,10 +94,10 @@ function handleLayoutChange(layout: ColumnLayout) {
 
         <!-- Padding -->
         <div class="space-y-2">
-          <Label class="text-xs font-medium">Padding (px)</Label>
+          <Label class="text-xs font-medium">{m.crm_email_editor_padding()}</Label>
           <div class="grid grid-cols-4 gap-2">
             <div>
-              <Label class="text-[10px] text-muted-foreground">Top</Label>
+              <Label class="text-[10px] text-muted-foreground">{m.crm_email_editor_padding_top()}</Label>
               <Input
                 type="number"
                 value={String(block.padding.top)}
@@ -107,7 +108,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               />
             </div>
             <div>
-              <Label class="text-[10px] text-muted-foreground">Right</Label>
+              <Label class="text-[10px] text-muted-foreground">{m.crm_email_editor_padding_right()}</Label>
               <Input
                 type="number"
                 value={String(block.padding.right)}
@@ -119,7 +120,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               />
             </div>
             <div>
-              <Label class="text-[10px] text-muted-foreground">Bottom</Label>
+              <Label class="text-[10px] text-muted-foreground">{m.crm_email_editor_padding_bottom()}</Label>
               <Input
                 type="number"
                 value={String(block.padding.bottom)}
@@ -131,7 +132,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               />
             </div>
             <div>
-              <Label class="text-[10px] text-muted-foreground">Left</Label>
+              <Label class="text-[10px] text-muted-foreground">{m.crm_email_editor_padding_left()}</Label>
               <Input
                 type="number"
                 value={String(block.padding.left)}
@@ -148,7 +149,7 @@ function handleLayoutChange(layout: ColumnLayout) {
         {#if block.type === 'text'}
           {@const textBlock = block as TextBlock}
           <div class="space-y-2">
-            <Label class="text-xs font-medium">Content</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_content()}</Label>
             <Textarea
               value={textBlock.content}
               onchange={(e) => onUpdate({ content: (e.target as HTMLTextAreaElement).value })}
@@ -159,7 +160,7 @@ function handleLayoutChange(layout: ColumnLayout) {
 
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Font Size</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_font_size()}</Label>
               <Input
                 type="number"
                 value={String(textBlock.fontSize)}
@@ -171,22 +172,22 @@ function handleLayoutChange(layout: ColumnLayout) {
               />
             </div>
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Font Weight</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_font_weight()}</Label>
               <Select
                 value={textBlock.fontWeight}
                 onchange={(e) =>
                   onUpdate({ fontWeight: (e.target as HTMLSelectElement).value as 'normal' | 'bold' })}
                 class="h-8 text-xs"
               >
-                <option value="normal">Normal</option>
-                <option value="bold">Bold</option>
+                <option value="normal">{m.crm_email_editor_font_weight_normal()}</option>
+                <option value="bold">{m.crm_email_editor_font_weight_bold()}</option>
               </Select>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Text Color</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_text_color()}</Label>
               <div class="flex gap-1">
                 <Input
                   type="color"
@@ -203,16 +204,16 @@ function handleLayoutChange(layout: ColumnLayout) {
               </div>
             </div>
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Alignment</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_alignment()}</Label>
               <Select
                 value={textBlock.textAlign}
                 onchange={(e) =>
                   onUpdate({ textAlign: (e.target as HTMLSelectElement).value as 'left' | 'center' | 'right' })}
                 class="h-8 text-xs"
               >
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
+                <option value="left">{m.crm_email_editor_align_left()}</option>
+                <option value="center">{m.crm_email_editor_align_center()}</option>
+                <option value="right">{m.crm_email_editor_align_right()}</option>
               </Select>
             </div>
           </div>
@@ -222,7 +223,7 @@ function handleLayoutChange(layout: ColumnLayout) {
         {#if block.type === 'image'}
           {@const imageBlock = block as ImageBlock}
           <div class="space-y-2">
-            <Label class="text-xs font-medium">Image URL</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_image_url()}</Label>
             <Input
               type="url"
               value={imageBlock.src}
@@ -233,48 +234,48 @@ function handleLayoutChange(layout: ColumnLayout) {
           </div>
 
           <div class="space-y-2">
-            <Label class="text-xs font-medium">Alt Text</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_alt_text()}</Label>
             <Input
               type="text"
               value={imageBlock.alt}
               onchange={(e) => onUpdate({ alt: (e.target as HTMLInputElement).value })}
-              placeholder="Image description"
+              placeholder={m.crm_email_editor_alt_placeholder()}
               class="h-8 text-xs"
             />
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Width</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_width()}</Label>
               <Select
                 value={imageBlock.width}
                 onchange={(e) =>
                   onUpdate({ width: (e.target as HTMLSelectElement).value as 'auto' | 'full' | '50%' | '75%' })}
                 class="h-8 text-xs"
               >
-                <option value="full">Full width</option>
+                <option value="full">{m.crm_email_editor_width_full()}</option>
                 <option value="75%">75%</option>
                 <option value="50%">50%</option>
-                <option value="auto">Auto</option>
+                <option value="auto">{m.crm_email_editor_width_auto()}</option>
               </Select>
             </div>
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Alignment</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_alignment()}</Label>
               <Select
                 value={imageBlock.align}
                 onchange={(e) =>
                   onUpdate({ align: (e.target as HTMLSelectElement).value as 'left' | 'center' | 'right' })}
                 class="h-8 text-xs"
               >
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
+                <option value="left">{m.crm_email_editor_align_left()}</option>
+                <option value="center">{m.crm_email_editor_align_center()}</option>
+                <option value="right">{m.crm_email_editor_align_right()}</option>
               </Select>
             </div>
           </div>
 
           <div class="space-y-2">
-            <Label class="text-xs font-medium">Link URL (optional)</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_link_url()}</Label>
             <Input
               type="url"
               value={imageBlock.linkUrl}
@@ -289,7 +290,7 @@ function handleLayoutChange(layout: ColumnLayout) {
         {#if block.type === 'button'}
           {@const buttonBlock = block as ButtonBlock}
           <div class="space-y-2">
-            <Label class="text-xs font-medium">Button Text</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_button_text()}</Label>
             <Input
               type="text"
               value={buttonBlock.text}
@@ -299,7 +300,7 @@ function handleLayoutChange(layout: ColumnLayout) {
           </div>
 
           <div class="space-y-2">
-            <Label class="text-xs font-medium">Link URL</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_button_link()}</Label>
             <Input
               type="url"
               value={buttonBlock.url}
@@ -311,36 +312,36 @@ function handleLayoutChange(layout: ColumnLayout) {
 
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Style</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_button_style()}</Label>
               <Select
                 value={buttonBlock.style}
                 onchange={(e) =>
                   onUpdate({ style: (e.target as HTMLSelectElement).value as 'filled' | 'outline' | 'ghost' })}
                 class="h-8 text-xs"
               >
-                <option value="filled">Filled</option>
-                <option value="outline">Outline</option>
-                <option value="ghost">Ghost</option>
+                <option value="filled">{m.crm_email_editor_button_style_filled()}</option>
+                <option value="outline">{m.crm_email_editor_button_style_outline()}</option>
+                <option value="ghost">{m.crm_email_editor_button_style_ghost()}</option>
               </Select>
             </div>
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Alignment</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_alignment()}</Label>
               <Select
                 value={buttonBlock.align}
                 onchange={(e) =>
                   onUpdate({ align: (e.target as HTMLSelectElement).value as 'left' | 'center' | 'right' })}
                 class="h-8 text-xs"
               >
-                <option value="left">Left</option>
-                <option value="center">Center</option>
-                <option value="right">Right</option>
+                <option value="left">{m.crm_email_editor_align_left()}</option>
+                <option value="center">{m.crm_email_editor_align_center()}</option>
+                <option value="right">{m.crm_email_editor_align_right()}</option>
               </Select>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Button Color</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_button_color()}</Label>
               <div class="flex gap-1">
                 <Input
                   type="color"
@@ -352,7 +353,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               </div>
             </div>
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Text Color</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_text_color()}</Label>
               <div class="flex gap-1">
                 <Input
                   type="color"
@@ -366,7 +367,7 @@ function handleLayoutChange(layout: ColumnLayout) {
 
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Border Radius</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_border_radius()}</Label>
               <Input
                 type="number"
                 value={String(buttonBlock.borderRadius)}
@@ -385,7 +386,7 @@ function handleLayoutChange(layout: ColumnLayout) {
                   onchange={(e) =>
                     onUpdate({ fullWidth: (e.target as HTMLInputElement).checked })}
                 />
-                Full width
+                {m.crm_email_editor_full_width()}
               </label>
             </div>
           </div>
@@ -396,27 +397,27 @@ function handleLayoutChange(layout: ColumnLayout) {
           {@const dividerBlock = block as DividerBlock}
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Style</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_divider_style()}</Label>
               <Select
                 value={dividerBlock.style}
                 onchange={(e) =>
                   onUpdate({ style: (e.target as HTMLSelectElement).value as 'solid' | 'dashed' | 'dotted' })}
                 class="h-8 text-xs"
               >
-                <option value="solid">Solid</option>
-                <option value="dashed">Dashed</option>
-                <option value="dotted">Dotted</option>
+                <option value="solid">{m.crm_email_editor_divider_solid()}</option>
+                <option value="dashed">{m.crm_email_editor_divider_dashed()}</option>
+                <option value="dotted">{m.crm_email_editor_divider_dotted()}</option>
               </Select>
             </div>
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Width</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_width()}</Label>
               <Select
                 value={dividerBlock.width}
                 onchange={(e) =>
                   onUpdate({ width: (e.target as HTMLSelectElement).value as 'full' | '75%' | '50%' | '25%' })}
                 class="h-8 text-xs"
               >
-                <option value="full">Full</option>
+                <option value="full">{m.crm_email_editor_width_full()}</option>
                 <option value="75%">75%</option>
                 <option value="50%">50%</option>
                 <option value="25%">25%</option>
@@ -426,7 +427,7 @@ function handleLayoutChange(layout: ColumnLayout) {
 
           <div class="grid grid-cols-2 gap-2">
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Color</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_color()}</Label>
               <div class="flex gap-1">
                 <Input
                   type="color"
@@ -437,7 +438,7 @@ function handleLayoutChange(layout: ColumnLayout) {
               </div>
             </div>
             <div class="space-y-1">
-              <Label class="text-xs font-medium">Thickness</Label>
+              <Label class="text-xs font-medium">{m.crm_email_editor_thickness()}</Label>
               <Input
                 type="number"
                 value={String(dividerBlock.thickness)}
@@ -455,7 +456,7 @@ function handleLayoutChange(layout: ColumnLayout) {
         {#if block.type === 'columns'}
           {@const columnsBlock = block as ColumnsBlock}
           <div class="space-y-2">
-            <Label class="text-xs font-medium">Layout</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_layout()}</Label>
             <Select
               value={columnsBlock.layout}
               onchange={(e) => handleLayoutChange((e.target as HTMLSelectElement).value as ColumnLayout)}
@@ -468,7 +469,7 @@ function handleLayoutChange(layout: ColumnLayout) {
           </div>
 
           <div class="space-y-1">
-            <Label class="text-xs font-medium">Column Gap (px)</Label>
+            <Label class="text-xs font-medium">{m.crm_email_editor_column_gap()}</Label>
             <Input
               type="number"
               value={String(columnsBlock.gap)}
@@ -484,11 +485,11 @@ function handleLayoutChange(layout: ColumnLayout) {
         <div class="flex gap-2 border-t pt-4">
           <Button variant="outline" size="sm" onclick={onDuplicate} class="flex-1 gap-1">
             <Copy class="h-3 w-3" />
-            Duplicate
+            {m.crm_email_editor_duplicate()}
           </Button>
           <Button variant="destructive" size="sm" onclick={onDelete} class="flex-1 gap-1">
             <Trash2 class="h-3 w-3" />
-            Delete
+            {m.crm_email_editor_delete()}
           </Button>
         </div>
       </div>

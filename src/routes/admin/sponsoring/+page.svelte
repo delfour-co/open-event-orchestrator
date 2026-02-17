@@ -2,6 +2,7 @@
 import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { ArrowRight, Calendar, Eye, EyeOff, Handshake, Settings } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -31,25 +32,25 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-	<title>Sponsoring - Open Event Orchestrator</title>
+	<title>{m.sponsoring_page_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Sponsoring</h2>
+			<h2 class="text-3xl font-bold tracking-tight">{m.sponsoring_title()}</h2>
 			<p class="text-muted-foreground">
-				Select an edition to manage sponsors, packages, and sponsorship pipeline.
+				{m.sponsoring_select_edition()}
 			</p>
 		</div>
 		{#if archivedCount > 0}
 			<Button variant="outline" onclick={() => (showArchived = !showArchived)}>
 				{#if showArchived}
 					<EyeOff class="mr-2 h-4 w-4" />
-					Hide Archived ({archivedCount})
+					{m.sponsoring_hide_archived()} ({archivedCount})
 				{:else}
 					<Eye class="mr-2 h-4 w-4" />
-					Show Archived ({archivedCount})
+					{m.sponsoring_show_archived()} ({archivedCount})
 				{/if}
 			</Button>
 		{/if}
@@ -59,15 +60,15 @@ const formatDate = (date: Date) => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Handshake class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No editions available</h3>
+				<h3 class="text-lg font-semibold">{m.sponsoring_no_editions()}</h3>
 				<p class="text-sm text-muted-foreground">
 					{#if !showArchived && archivedCount > 0}
-						All editions are archived.
+						{m.sponsoring_all_archived()}
 						<button class="text-primary underline" onclick={() => (showArchived = true)}>
-							Show archived editions
+							{m.sponsoring_show_archived_editions()}
 						</button>
 					{:else}
-						Create an edition to start managing sponsors.
+						{m.sponsoring_create_edition()}
 					{/if}
 				</p>
 			</Card.Content>
@@ -86,7 +87,7 @@ const formatDate = (date: Date) => {
 								<a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
 									<StatusBadge status={edition.status} size="sm" />
 								</a>
-								<a href="/admin/sponsoring/{edition.slug}/packages" title="Sponsoring Packages">
+								<a href="/admin/sponsoring/{edition.slug}/packages" title={m.sponsoring_packages()}>
 									<Button variant="ghost" size="icon" class="h-8 w-8">
 										<Settings class="h-4 w-4" />
 									</Button>
@@ -100,7 +101,7 @@ const formatDate = (date: Date) => {
 					<Card.Content>
 						<a href="/admin/sponsoring/{edition.slug}">
 							<Button class="w-full" variant="outline">
-								Manage Sponsors
+								{m.sponsoring_manage_sponsors()}
 								<ArrowRight class="ml-2 h-4 w-4" />
 							</Button>
 						</a>

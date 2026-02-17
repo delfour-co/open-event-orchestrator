@@ -16,6 +16,7 @@ import {
   getStatusBadgeVariant,
   getStatusLabel
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Building2,
@@ -149,7 +150,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Sponsoring - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.sponsoring_edition_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">

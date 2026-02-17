@@ -2,6 +2,8 @@
 import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import { ArrowRight, Calendar, Eye, EyeOff, LayoutGrid, Settings } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -22,7 +24,8 @@ const filteredEditions = $derived(
 const archivedCount = $derived(data.editions.filter((e) => e.status === 'archived').length)
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -31,25 +34,25 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-  <title>Planning - Open Event Orchestrator</title>
+  <title>{m.planning_page_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Planning</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.planning_title()}</h2>
       <p class="text-muted-foreground">
-        Select an edition to manage its schedule, rooms, and tracks.
+        {m.planning_description()}
       </p>
     </div>
     {#if archivedCount > 0}
       <Button variant="outline" onclick={() => (showArchived = !showArchived)}>
         {#if showArchived}
           <EyeOff class="mr-2 h-4 w-4" />
-          Hide Archived ({archivedCount})
+          {m.planning_hide_archived()} ({archivedCount})
         {:else}
           <Eye class="mr-2 h-4 w-4" />
-          Show Archived ({archivedCount})
+          {m.planning_show_archived()} ({archivedCount})
         {/if}
       </Button>
     {/if}
@@ -59,15 +62,15 @@ const formatDate = (date: Date) => {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <LayoutGrid class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No editions available</h3>
+        <h3 class="text-lg font-semibold">{m.planning_no_editions()}</h3>
         <p class="text-sm text-muted-foreground">
           {#if !showArchived && archivedCount > 0}
-            All editions are archived.
+            {m.planning_all_archived()}
             <button class="text-primary underline" onclick={() => (showArchived = true)}>
-              Show archived editions
+              {m.planning_show_archived_editions()}
             </button>
           {:else}
-            Create an edition to start building your event schedule.
+            {m.planning_create_edition_hint()}
           {/if}
         </p>
       </Card.Content>
@@ -86,7 +89,7 @@ const formatDate = (date: Date) => {
                 <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
                   <StatusBadge status={edition.status} size="sm" />
                 </a>
-                <a href="/admin/planning/{edition.slug}/settings" title="Planning Settings">
+                <a href="/admin/planning/{edition.slug}/settings" title="{m.planning_tab_settings()}">
                   <Button variant="ghost" size="icon" class="h-8 w-8">
                     <Settings class="h-4 w-4" />
                   </Button>
@@ -100,7 +103,7 @@ const formatDate = (date: Date) => {
           <Card.Content>
             <a href="/admin/planning/{edition.slug}">
               <Button class="w-full" variant="outline">
-                Manage Schedule
+                {m.planning_manage_schedule()}
                 <ArrowRight class="ml-2 h-4 w-4" />
               </Button>
             </a>

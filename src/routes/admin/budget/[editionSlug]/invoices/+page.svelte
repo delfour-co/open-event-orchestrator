@@ -8,6 +8,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, ExternalLink, FileText, FileUp, Loader2, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -53,7 +54,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Invoices - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.budget_invoices_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -75,7 +76,7 @@ $effect(() => {
 			}}
 		>
 			<FileUp class="mr-2 h-4 w-4" />
-			Upload Invoice
+			{m.budget_invoices_upload()}
 		</Button>
 	</div>
 
@@ -93,13 +94,13 @@ $effect(() => {
 	<div class="grid gap-4 md:grid-cols-1">
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Total Invoices</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.budget_invoices_total()}</Card.Title>
 				<FileText class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{data.invoices.length}</div>
 				<p class="text-xs text-muted-foreground">
-					invoices attached to transactions
+					{m.budget_invoices_attached()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -110,9 +111,9 @@ $effect(() => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No invoices yet</h3>
+				<h3 class="text-lg font-semibold">{m.budget_invoices_no_invoices()}</h3>
 				<p class="text-sm text-muted-foreground">
-					Upload an invoice to attach it to a transaction.
+					{m.budget_invoices_no_invoices_hint()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -122,14 +123,14 @@ $effect(() => {
 				<table class="w-full">
 					<thead>
 						<tr class="border-b text-left text-sm text-muted-foreground">
-							<th class="px-4 py-3 font-medium">Invoice #</th>
-							<th class="px-4 py-3 font-medium">Transaction</th>
-							<th class="px-4 py-3 font-medium">Vendor</th>
-							<th class="px-4 py-3 font-medium text-right">Amount</th>
-							<th class="px-4 py-3 font-medium">Issue Date</th>
-							<th class="px-4 py-3 font-medium">Due Date</th>
-							<th class="px-4 py-3 font-medium">File</th>
-							<th class="px-4 py-3 font-medium">Actions</th>
+							<th class="px-4 py-3 font-medium">{m.budget_invoices_number()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_invoices_transaction()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_invoices_vendor()}</th>
+							<th class="px-4 py-3 font-medium text-right">{m.budget_invoices_amount()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_invoices_issue_date()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_invoices_due_date()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_invoices_file()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_invoices_actions()}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -157,7 +158,7 @@ $effect(() => {
 											{formatDate(invoice.dueDate)}
 											{#if overdue}
 												<span class="ml-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-200">
-													Overdue
+													{m.budget_invoices_overdue()}
 												</span>
 											{/if}
 										</span>
@@ -177,7 +178,7 @@ $effect(() => {
 											{invoice.file}
 										</a>
 									{:else}
-										<span class="text-muted-foreground">No file</span>
+										<span class="text-muted-foreground">{m.budget_invoices_no_file()}</span>
 									{/if}
 								</td>
 								<td class="px-4 py-3">
@@ -215,9 +216,9 @@ $effect(() => {
 {#if showUploadDialog}
 	<Dialog.Content class="max-w-lg" onClose={closeUploadDialog}>
 			<Dialog.Header>
-				<Dialog.Title>Upload Invoice</Dialog.Title>
+				<Dialog.Title>{m.budget_invoices_upload()}</Dialog.Title>
 				<Dialog.Description>
-					Attach an invoice to a budget transaction.
+					{m.budget_invoices_attach()}
 				</Dialog.Description>
 			</Dialog.Header>
 
@@ -241,14 +242,14 @@ $effect(() => {
 				class="space-y-4"
 			>
 				<div class="space-y-2">
-					<Label for="inv-transaction">Transaction *</Label>
+					<Label for="inv-transaction">{m.budget_invoices_transaction()} *</Label>
 					<select
 						id="inv-transaction"
 						name="transactionId"
 						required
 						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					>
-						<option value="">Select a transaction</option>
+						<option value="">{m.budget_invoices_select_transaction()}</option>
 						{#each data.transactions as tx}
 							<option value={tx.id}>
 								{tx.description} - {tx.vendor ? tx.vendor + ' - ' : ''}{formatAmount(tx.amount)}
@@ -258,17 +259,17 @@ $effect(() => {
 				</div>
 
 				<div class="space-y-2">
-					<Label for="inv-number">Invoice Number *</Label>
+					<Label for="inv-number">{m.budget_invoices_number()} *</Label>
 					<Input
 						id="inv-number"
 						name="invoiceNumber"
-						placeholder="INV-2025-001"
+						placeholder={m.budget_transaction_invoice_placeholder()}
 						required
 					/>
 				</div>
 
 				<div class="space-y-2">
-					<Label for="inv-file">File</Label>
+					<Label for="inv-file">{m.budget_invoices_file()}</Label>
 					<Input
 						id="inv-file"
 						name="file"
@@ -276,13 +277,13 @@ $effect(() => {
 						accept=".pdf,.jpg,.jpeg,.png"
 					/>
 					<p class="text-xs text-muted-foreground">
-						Accepted formats: PDF, JPG, PNG
+						{m.budget_invoices_accepted_formats()}
 					</p>
 				</div>
 
 				<div class="grid gap-4 md:grid-cols-2">
 					<div class="space-y-2">
-						<Label for="inv-issue-date">Issue Date *</Label>
+						<Label for="inv-issue-date">{m.budget_invoices_issue_date()} *</Label>
 						<Input
 							id="inv-issue-date"
 							name="issueDate"
@@ -292,7 +293,7 @@ $effect(() => {
 						/>
 					</div>
 					<div class="space-y-2">
-						<Label for="inv-due-date">Due Date</Label>
+						<Label for="inv-due-date">{m.budget_invoices_due_date()}</Label>
 						<Input
 							id="inv-due-date"
 							name="dueDate"
@@ -302,7 +303,7 @@ $effect(() => {
 				</div>
 
 				<div class="space-y-2">
-					<Label for="inv-amount">Amount *</Label>
+					<Label for="inv-amount">{m.budget_invoices_amount()} *</Label>
 					<Input
 						id="inv-amount"
 						name="amount"
@@ -315,21 +316,21 @@ $effect(() => {
 				</div>
 
 				<div class="space-y-2">
-					<Label for="inv-notes">Notes</Label>
+					<Label for="inv-notes">{m.budget_category_notes()}</Label>
 					<Textarea
 						id="inv-notes"
 						name="notes"
-						placeholder="Invoice notes..."
+						placeholder={m.budget_category_notes_placeholder()}
 					/>
 				</div>
 
 				<Dialog.Footer>
-					<Button type="button" variant="outline" onclick={closeUploadDialog}>Cancel</Button>
+					<Button type="button" variant="outline" onclick={closeUploadDialog}>{m.action_cancel()}</Button>
 					<Button type="submit" disabled={isSubmitting}>
 						{#if isSubmitting}
 							<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 						{/if}
-						Upload
+						{m.budget_invoices_upload()}
 					</Button>
 				</Dialog.Footer>
 			</form>

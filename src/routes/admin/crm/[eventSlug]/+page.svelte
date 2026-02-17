@@ -7,6 +7,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getCrmNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   ExternalLink,
@@ -86,7 +87,7 @@ const getSourceColor = (source: string) => {
 </script>
 
 <svelte:head>
-	<title>Contacts - {data.eventName} - CRM - Open Event Orchestrator</title>
+	<title>{m.crm_contacts_page_title({ eventName: data.eventName })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -111,18 +112,18 @@ const getSourceColor = (source: string) => {
 			}}>
 				<Button type="submit" variant="outline" class="gap-2" disabled={isSyncing}>
 					<RefreshCw class="h-4 w-4 {isSyncing ? 'animate-spin' : ''}" />
-					Sync Contacts
+					{m.crm_contacts_sync()}
 				</Button>
 			</form>
 			<a href="{basePath}/import">
 				<Button variant="outline" class="gap-2">
 					<UserPlus class="h-4 w-4" />
-					Import
+					{m.crm_contacts_import()}
 				</Button>
 			</a>
 			<Button onclick={() => (showCreateForm = !showCreateForm)} class="gap-2">
 				<Plus class="h-4 w-4" />
-				New Contact
+				{m.crm_contacts_new()}
 			</Button>
 		</div>
 	</div>
@@ -133,22 +134,22 @@ const getSourceColor = (source: string) => {
 	<!-- Success / Error messages -->
 	{#if form?.success && form?.action === 'syncContacts'}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-			Sync complete: {form.syncResult?.created ?? 0} created, {form.syncResult?.updated ?? 0} updated, {form.syncResult?.linked ?? 0} linked.
+			{m.crm_contacts_sync_complete({ created: form.syncResult?.created ?? 0, updated: form.syncResult?.updated ?? 0, linked: form.syncResult?.linked ?? 0 })}
 			{#if form.syncResult?.errors && form.syncResult.errors.length > 0}
-				<br />{form.syncResult.errors.length} error(s) occurred.
+				<br />{m.crm_contacts_sync_errors({ count: form.syncResult.errors.length })}
 			{/if}
 		</div>
 	{/if}
 
 	{#if form?.success && form?.action === 'createContact'}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-			Contact created successfully.
+			{m.crm_contacts_created()}
 		</div>
 	{/if}
 
 	{#if form?.success && form?.action === 'deleteContact'}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-			Contact deleted successfully.
+			{m.crm_contacts_deleted()}
 		</div>
 	{/if}
 
@@ -162,8 +163,8 @@ const getSourceColor = (source: string) => {
 	{#if showCreateForm}
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>New Contact</Card.Title>
-				<Card.Description>Add a contact manually.</Card.Description>
+				<Card.Title>{m.crm_contacts_new_title()}</Card.Title>
+				<Card.Description>{m.crm_contacts_new_description()}</Card.Description>
 			</Card.Header>
 			<Card.Content>
 				<form
@@ -180,64 +181,64 @@ const getSourceColor = (source: string) => {
 				>
 					<div class="grid gap-4 md:grid-cols-3">
 						<div class="space-y-2">
-							<Label for="ct-firstName">First Name *</Label>
+							<Label for="ct-firstName">{m.crm_contacts_first_name()} *</Label>
 							<Input id="ct-firstName" name="firstName" placeholder="Jane" required />
 						</div>
 						<div class="space-y-2">
-							<Label for="ct-lastName">Last Name *</Label>
+							<Label for="ct-lastName">{m.crm_contacts_last_name()} *</Label>
 							<Input id="ct-lastName" name="lastName" placeholder="Doe" required />
 						</div>
 						<div class="space-y-2">
-							<Label for="ct-email">Email *</Label>
+							<Label for="ct-email">{m.crm_contacts_email()} *</Label>
 							<Input id="ct-email" name="email" type="email" placeholder="jane@example.com" required />
 						</div>
 					</div>
 
 					<div class="grid gap-4 md:grid-cols-3">
 						<div class="space-y-2">
-							<Label for="ct-company">Company</Label>
+							<Label for="ct-company">{m.crm_contacts_company()}</Label>
 							<Input id="ct-company" name="company" placeholder="Acme Corp" />
 						</div>
 						<div class="space-y-2">
-							<Label for="ct-jobTitle">Job Title</Label>
+							<Label for="ct-jobTitle">{m.crm_contacts_job_title()}</Label>
 							<Input id="ct-jobTitle" name="jobTitle" placeholder="CTO" />
 						</div>
 						<div class="space-y-2">
-							<Label for="ct-phone">Phone</Label>
+							<Label for="ct-phone">{m.crm_contacts_phone()}</Label>
 							<Input id="ct-phone" name="phone" placeholder="+33 6 12 34 56 78" />
 						</div>
 					</div>
 
 					<div class="grid gap-4 md:grid-cols-3">
 						<div class="space-y-2">
-							<Label for="ct-source">Source</Label>
+							<Label for="ct-source">{m.crm_contacts_source()}</Label>
 							<select
 								id="ct-source"
 								name="source"
 								class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							>
-								<option value="manual">Manual</option>
-								<option value="sponsor">Sponsor</option>
-								<option value="speaker">Speaker</option>
-								<option value="attendee">Attendee</option>
+								<option value="manual">{m.crm_contacts_source_manual()}</option>
+								<option value="sponsor">{m.crm_contacts_source_sponsor()}</option>
+								<option value="speaker">{m.crm_contacts_source_speaker()}</option>
+								<option value="attendee">{m.crm_contacts_source_attendee()}</option>
 							</select>
 						</div>
 						<div class="space-y-2">
-							<Label for="ct-tags">Tags</Label>
-							<Input id="ct-tags" name="tags" placeholder="vip, partner (comma-separated)" />
+							<Label for="ct-tags">{m.crm_contacts_tags()}</Label>
+							<Input id="ct-tags" name="tags" placeholder={m.crm_contacts_tags_placeholder()} />
 						</div>
 						<div class="space-y-2">
-							<Label for="ct-notes">Notes</Label>
-							<Input id="ct-notes" name="notes" placeholder="Any notes..." />
+							<Label for="ct-notes">{m.crm_contacts_notes()}</Label>
+							<Input id="ct-notes" name="notes" placeholder={m.crm_contacts_notes_placeholder()} />
 						</div>
 					</div>
 
 					<div class="flex justify-end gap-2">
 						<Button type="button" variant="outline" onclick={() => (showCreateForm = false)}>
-							Cancel
+							{m.action_cancel()}
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{isSubmitting ? 'Creating...' : 'Create Contact'}
+							{isSubmitting ? m.crm_contacts_creating() : m.crm_contacts_create()}
 						</Button>
 					</div>
 				</form>
@@ -249,7 +250,7 @@ const getSourceColor = (source: string) => {
 	<div class="grid gap-4 md:grid-cols-5">
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Total Contacts</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.crm_contacts_total()}</Card.Title>
 				<Users class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
@@ -259,7 +260,7 @@ const getSourceColor = (source: string) => {
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Speakers</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.crm_contacts_speakers()}</Card.Title>
 				<Users class="h-4 w-4 text-purple-500" />
 			</Card.Header>
 			<Card.Content>
@@ -269,7 +270,7 @@ const getSourceColor = (source: string) => {
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Attendees</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.crm_contacts_attendees()}</Card.Title>
 				<Users class="h-4 w-4 text-blue-500" />
 			</Card.Header>
 			<Card.Content>
@@ -279,7 +280,7 @@ const getSourceColor = (source: string) => {
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Sponsors</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.crm_contacts_sponsors()}</Card.Title>
 				<Users class="h-4 w-4 text-amber-500" />
 			</Card.Header>
 			<Card.Content>
@@ -289,7 +290,7 @@ const getSourceColor = (source: string) => {
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Manual</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.crm_contacts_manual()}</Card.Title>
 				<Users class="h-4 w-4 text-green-500" />
 			</Card.Header>
 			<Card.Content>
@@ -303,7 +304,7 @@ const getSourceColor = (source: string) => {
 		<form onsubmit={handleSearch} class="relative flex-1">
 			<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 			<Input
-				placeholder="Search by name, email, or company..."
+				placeholder={m.crm_contacts_search_placeholder()}
 				bind:value={searchValue}
 				class="pl-9"
 			/>
@@ -313,16 +314,16 @@ const getSourceColor = (source: string) => {
 			value={data.source}
 			onchange={handleSourceFilter}
 		>
-			<option value="">All Sources</option>
-			<option value="speaker">Speaker</option>
-			<option value="attendee">Attendee</option>
-			<option value="sponsor">Sponsor</option>
-			<option value="manual">Manual</option>
-			<option value="import">Import</option>
+			<option value="">{m.crm_contacts_all_sources()}</option>
+			<option value="speaker">{m.crm_contacts_source_speaker()}</option>
+			<option value="attendee">{m.crm_contacts_source_attendee()}</option>
+			<option value="sponsor">{m.crm_contacts_source_sponsor()}</option>
+			<option value="manual">{m.crm_contacts_source_manual()}</option>
+			<option value="import">{m.crm_contacts_source_import()}</option>
 		</select>
 		<div class="flex gap-2">
 			<a href="{basePath}/segments">
-				<Button variant="outline" size="sm">Segments</Button>
+				<Button variant="outline" size="sm">{m.crm_segments_title()}</Button>
 			</a>
 		</div>
 	</div>
@@ -332,12 +333,12 @@ const getSourceColor = (source: string) => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Users class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No contacts found</h3>
+				<h3 class="text-lg font-semibold">{m.crm_contacts_no_contacts()}</h3>
 				<p class="text-sm text-muted-foreground">
 					{#if data.search || data.source}
-						Try adjusting your search or filter.
+						{m.crm_contacts_adjust_filter()}
 					{:else}
-						Sync from your events or import contacts to get started.
+						{m.crm_contacts_sync_or_import()}
 					{/if}
 				</p>
 			</Card.Content>
@@ -347,12 +348,12 @@ const getSourceColor = (source: string) => {
 			<table class="w-full">
 				<thead>
 					<tr class="border-b bg-muted/50">
-						<th class="p-3 text-left text-sm font-medium">Name</th>
-						<th class="p-3 text-left text-sm font-medium">Email</th>
-						<th class="p-3 text-left text-sm font-medium">Company</th>
-						<th class="p-3 text-left text-sm font-medium">Source</th>
-						<th class="p-3 text-left text-sm font-medium">Tags</th>
-						<th class="p-3 text-right text-sm font-medium">Actions</th>
+						<th class="p-3 text-left text-sm font-medium">{m.crm_contacts_table_name()}</th>
+						<th class="p-3 text-left text-sm font-medium">{m.crm_contacts_table_email()}</th>
+						<th class="p-3 text-left text-sm font-medium">{m.crm_contacts_table_company()}</th>
+						<th class="p-3 text-left text-sm font-medium">{m.crm_contacts_table_source()}</th>
+						<th class="p-3 text-left text-sm font-medium">{m.crm_contacts_table_tags()}</th>
+						<th class="p-3 text-right text-sm font-medium">{m.crm_contacts_table_actions()}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -389,7 +390,7 @@ const getSourceColor = (source: string) => {
 							<td class="p-3 text-right">
 								<div class="flex items-center justify-end gap-1">
 									<a href="{basePath}/{contact.id}">
-										<Button variant="ghost" size="sm" title="View contact">
+										<Button variant="ghost" size="sm" title={m.crm_contacts_view()}>
 											<ExternalLink class="h-3 w-3" />
 										</Button>
 									</a>
@@ -400,7 +401,7 @@ const getSourceColor = (source: string) => {
 											variant="ghost"
 											size="sm"
 											class="text-destructive hover:text-destructive"
-											title="Delete contact"
+											title={m.crm_contacts_delete()}
 										>
 											<Trash2 class="h-3 w-3" />
 										</Button>
@@ -417,7 +418,7 @@ const getSourceColor = (source: string) => {
 		{#if data.totalPages > 1}
 			<div class="flex items-center justify-between">
 				<p class="text-sm text-muted-foreground">
-					Showing {(data.currentPage - 1) * 20 + 1} to {Math.min(data.currentPage * 20, data.totalItems)} of {data.totalItems} contacts
+					{m.crm_contacts_showing({ from: (data.currentPage - 1) * 20 + 1, to: Math.min(data.currentPage * 20, data.totalItems), total: data.totalItems })}
 				</p>
 				<div class="flex items-center gap-2">
 					<Button

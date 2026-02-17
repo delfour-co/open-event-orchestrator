@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { ColumnsBlock } from '$lib/features/crm/domain/email-editor'
 import { getColumnWidths } from '$lib/features/crm/domain/email-editor'
+import * as m from '$lib/paraglide/messages'
 import BlockRenderer from '../BlockRenderer.svelte'
 
 interface Props {
@@ -61,11 +62,11 @@ function handleDragOver(e: DragEvent) {
           ondrop={(e) => handleColumnDrop(colIndex, e)}
           ondragover={handleDragOver}
           role="region"
-          aria-label="Column {colIndex + 1}"
+          aria-label={m.crm_email_editor_column_label({ index: colIndex + 1 })}
         >
           {#if column.blocks.length === 0}
             <div class="empty-column">
-              <span>Drop blocks here</span>
+              <span>{m.crm_email_editor_drop_blocks_here()}</span>
             </div>
           {:else}
             {#each column.blocks as nestedBlock (nestedBlock.id)}

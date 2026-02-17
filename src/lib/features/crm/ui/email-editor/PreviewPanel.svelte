@@ -7,6 +7,7 @@ import {
   type PreviewDevice
 } from '$lib/features/crm/domain/email-preview'
 import { exportToHtml } from '$lib/features/crm/services/email-export-service'
+import * as m from '$lib/paraglide/messages'
 import { Monitor, Smartphone, Tablet } from 'lucide-svelte'
 
 interface Props {
@@ -20,17 +21,17 @@ let device = $state<PreviewDevice>('desktop')
 const dimensions = $derived(DEFAULT_DEVICE_DIMENSIONS[device])
 const previewHtml = $derived(exportToHtml(document))
 
-const devices: { id: PreviewDevice; icon: typeof Monitor; label: string }[] = [
-  { id: 'desktop', icon: Monitor, label: 'Desktop' },
-  { id: 'tablet', icon: Tablet, label: 'Tablet' },
-  { id: 'mobile', icon: Smartphone, label: 'Mobile' }
-]
+const devices = $derived([
+  { id: 'desktop' as PreviewDevice, icon: Monitor, label: m.crm_email_editor_preview_desktop() },
+  { id: 'tablet' as PreviewDevice, icon: Tablet, label: m.crm_email_editor_preview_tablet() },
+  { id: 'mobile' as PreviewDevice, icon: Smartphone, label: m.crm_email_editor_preview_mobile() }
+])
 </script>
 
 <Card.Root class="flex h-full flex-col">
   <Card.Header class="flex-none pb-3">
     <div class="flex items-center justify-between">
-      <Card.Title class="text-sm font-medium">Preview</Card.Title>
+      <Card.Title class="text-sm font-medium">{m.crm_email_editor_preview_title()}</Card.Title>
       <div class="flex gap-1">
         {#each devices as { id, icon: Icon, label }}
           <Button
@@ -53,7 +54,7 @@ const devices: { id: PreviewDevice; icon: typeof Monitor; label: string }[] = [
         style="width: {dimensions.width}px; max-width: 100%;"
       >
         <iframe
-          title="Email Preview"
+          title={m.crm_email_editor_preview_frame()}
           srcdoc={previewHtml}
           class="preview-iframe"
           sandbox="allow-same-origin"

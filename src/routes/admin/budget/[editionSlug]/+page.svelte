@@ -8,6 +8,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Calculator,
@@ -94,7 +95,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Budget - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.budget_dashboard_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -118,12 +119,12 @@ $effect(() => {
 					<input type="hidden" name="currency" value="EUR" />
 					<Button type="submit">
 						<Plus class="mr-2 h-4 w-4" />
-						Initialize Budget
+						{m.budget_initialize()}
 					</Button>
 				</form>
 			{:else}
 				<a href="/admin/budget/{data.edition.slug}/simulator">
-					<Button variant="outline" size="icon" title="Budget Simulator">
+					<Button variant="outline" size="icon" title={m.budget_simulator()}>
 						<Calculator class="h-4 w-4" />
 					</Button>
 				</a>
@@ -140,7 +141,7 @@ $effect(() => {
 		<div class="grid gap-4 md:grid-cols-4">
 			<Card.Root>
 				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-					<Card.Title class="text-sm font-medium">Total Budget</Card.Title>
+					<Card.Title class="text-sm font-medium">{m.budget_total_budget()}</Card.Title>
 					<Wallet class="h-4 w-4 text-muted-foreground" />
 				</Card.Header>
 				<Card.Content>
@@ -154,40 +155,40 @@ $effect(() => {
 						></div>
 					</div>
 					<p class="mt-1 text-xs text-muted-foreground">
-						{usagePercent.toFixed(0)}% used
+						{m.budget_used_percent({ percent: usagePercent.toFixed(0) })}
 					</p>
 				</Card.Content>
 			</Card.Root>
 
 			<Card.Root>
 				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-					<Card.Title class="text-sm font-medium">Expenses</Card.Title>
+					<Card.Title class="text-sm font-medium">{m.budget_expenses()}</Card.Title>
 					<TrendingDown class="h-4 w-4 text-muted-foreground" />
 				</Card.Header>
 				<Card.Content>
 					<div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
 						{formatAmount(data.stats.totalExpenses, currency)}
 					</div>
-					<p class="text-xs text-muted-foreground">paid expenses</p>
+					<p class="text-xs text-muted-foreground">{m.budget_paid_expenses()}</p>
 				</Card.Content>
 			</Card.Root>
 
 			<Card.Root>
 				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-					<Card.Title class="text-sm font-medium">Income</Card.Title>
+					<Card.Title class="text-sm font-medium">{m.budget_income()}</Card.Title>
 					<TrendingUp class="h-4 w-4 text-muted-foreground" />
 				</Card.Header>
 				<Card.Content>
 					<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
 						{formatAmount(data.stats.totalIncome, currency)}
 					</div>
-					<p class="text-xs text-muted-foreground">paid income</p>
+					<p class="text-xs text-muted-foreground">{m.budget_paid_income()}</p>
 				</Card.Content>
 			</Card.Root>
 
 			<Card.Root>
 				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-					<Card.Title class="text-sm font-medium">Balance</Card.Title>
+					<Card.Title class="text-sm font-medium">{m.budget_balance()}</Card.Title>
 					<DollarSign class="h-4 w-4 text-muted-foreground" />
 				</Card.Header>
 				<Card.Content>
@@ -195,7 +196,7 @@ $effect(() => {
 						{formatAmount(balance, currency)}
 					</div>
 					<p class="text-xs text-muted-foreground">
-						budget - expenses + income
+						{m.budget_balance_formula()}
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -204,7 +205,7 @@ $effect(() => {
 		<!-- Categories Section -->
 		<div class="space-y-4">
 			<div class="flex items-center justify-between">
-				<h3 class="text-xl font-semibold">Categories</h3>
+				<h3 class="text-xl font-semibold">{m.budget_categories()}</h3>
 				<Button
 					onclick={() => {
 						editingCategory = null
@@ -212,7 +213,7 @@ $effect(() => {
 					}}
 				>
 					<Plus class="mr-2 h-4 w-4" />
-					Add Category
+					{m.budget_add_category()}
 				</Button>
 			</div>
 
@@ -220,9 +221,9 @@ $effect(() => {
 				<Card.Root>
 					<Card.Content class="flex flex-col items-center justify-center py-12">
 						<Wallet class="mb-4 h-12 w-12 text-muted-foreground" />
-						<h3 class="text-lg font-semibold">No categories yet</h3>
+						<h3 class="text-lg font-semibold">{m.budget_no_categories()}</h3>
 						<p class="text-sm text-muted-foreground">
-							Add a category to start tracking budget items.
+							{m.budget_no_categories_hint()}
 						</p>
 					</Card.Content>
 				</Card.Root>
@@ -232,13 +233,13 @@ $effect(() => {
 						<table class="w-full">
 							<thead>
 								<tr class="border-b text-left text-sm text-muted-foreground">
-									<th class="px-4 py-3 font-medium">Category</th>
-									<th class="px-4 py-3 font-medium text-right">Planned</th>
-									<th class="px-4 py-3 font-medium text-right">Spent</th>
-									<th class="px-4 py-3 font-medium text-right">Remaining</th>
-									<th class="px-4 py-3 font-medium">Progress</th>
-									<th class="px-4 py-3 font-medium text-right">Transactions</th>
-									<th class="px-4 py-3 font-medium">Actions</th>
+									<th class="px-4 py-3 font-medium">{m.budget_category_column()}</th>
+									<th class="px-4 py-3 font-medium text-right">{m.budget_planned()}</th>
+									<th class="px-4 py-3 font-medium text-right">{m.budget_spent()}</th>
+									<th class="px-4 py-3 font-medium text-right">{m.budget_remaining()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_progress()}</th>
+									<th class="px-4 py-3 font-medium text-right">{m.budget_transactions_column()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_actions()}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -315,7 +316,7 @@ $effect(() => {
 		<!-- Transactions Section -->
 		<div class="space-y-4">
 			<div class="flex items-center justify-between">
-				<h3 class="text-xl font-semibold">Transactions</h3>
+				<h3 class="text-xl font-semibold">{m.budget_transactions()}</h3>
 				<Button
 					onclick={() => {
 						editingTransaction = null
@@ -323,7 +324,7 @@ $effect(() => {
 					}}
 				>
 					<Plus class="mr-2 h-4 w-4" />
-					Add Transaction
+					{m.budget_add_transaction()}
 				</Button>
 			</div>
 
@@ -331,9 +332,9 @@ $effect(() => {
 				<Card.Root>
 					<Card.Content class="flex flex-col items-center justify-center py-12">
 						<DollarSign class="mb-4 h-12 w-12 text-muted-foreground" />
-						<h3 class="text-lg font-semibold">No transactions yet</h3>
+						<h3 class="text-lg font-semibold">{m.budget_no_transactions()}</h3>
 						<p class="text-sm text-muted-foreground">
-							Add a transaction to start tracking expenses and income.
+							{m.budget_no_transactions_hint()}
 						</p>
 					</Card.Content>
 				</Card.Root>
@@ -343,14 +344,14 @@ $effect(() => {
 						<table class="w-full">
 							<thead>
 								<tr class="border-b text-left text-sm text-muted-foreground">
-									<th class="px-4 py-3 font-medium">Date</th>
-									<th class="px-4 py-3 font-medium">Description</th>
-									<th class="px-4 py-3 font-medium">Category</th>
-									<th class="px-4 py-3 font-medium">Vendor</th>
-									<th class="px-4 py-3 font-medium text-right">Amount</th>
-									<th class="px-4 py-3 font-medium">Type</th>
-									<th class="px-4 py-3 font-medium">Status</th>
-									<th class="px-4 py-3 font-medium">Actions</th>
+									<th class="px-4 py-3 font-medium">{m.budget_date()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_description()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_transaction_category()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_vendor()}</th>
+									<th class="px-4 py-3 font-medium text-right">{m.budget_amount()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_type()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_status()}</th>
+									<th class="px-4 py-3 font-medium">{m.budget_actions()}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -411,9 +412,9 @@ $effect(() => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Wallet class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No budget initialized</h3>
+				<h3 class="text-lg font-semibold">{m.budget_no_budget()}</h3>
 				<p class="text-sm text-muted-foreground">
-					Initialize a budget to start tracking expenses and income for this edition.
+					{m.budget_no_budget_hint()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -424,9 +425,9 @@ $effect(() => {
 {#if showCategoryForm && data.budget}
 	<Dialog.Content class="max-w-lg" onClose={cancelCategoryForm}>
 		<Dialog.Header>
-			<Dialog.Title>{editingCategory ? 'Edit Category' : 'Add Category'}</Dialog.Title>
+			<Dialog.Title>{editingCategory ? m.budget_edit_category() : m.budget_add_category()}</Dialog.Title>
 			<Dialog.Description>
-				{editingCategory ? 'Update the category details.' : 'Add a new budget category.'}
+				{editingCategory ? m.budget_checklist_update_item() : m.budget_no_categories_hint()}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -455,18 +456,18 @@ $effect(() => {
 			{/if}
 
 			<div class="space-y-2">
-				<Label for="cat-name">Name *</Label>
+				<Label for="cat-name">{m.budget_category_name()} *</Label>
 				<Input
 					id="cat-name"
 					name="name"
-					placeholder="Category name"
+					placeholder={m.budget_category_name_placeholder()}
 					required
 					value={editingCategory?.name || ''}
 				/>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="cat-planned">Planned Amount</Label>
+				<Label for="cat-planned">{m.budget_category_planned_amount()}</Label>
 				<Input
 					id="cat-planned"
 					name="plannedAmount"
@@ -479,22 +480,22 @@ $effect(() => {
 			</div>
 
 			<div class="space-y-2">
-				<Label for="cat-notes">Notes</Label>
+				<Label for="cat-notes">{m.budget_category_notes()}</Label>
 				<Textarea
 					id="cat-notes"
 					name="notes"
-					placeholder="Category notes..."
+					placeholder={m.budget_category_notes_placeholder()}
 					value={editingCategory?.notes || ''}
 				/>
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={cancelCategoryForm}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={cancelCategoryForm}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					{editingCategory ? 'Update' : 'Create'}
+					{editingCategory ? m.action_edit() : m.action_create()}
 				</Button>
 			</Dialog.Footer>
 		</form>
@@ -505,9 +506,9 @@ $effect(() => {
 {#if showTransactionForm && data.budget}
 	<Dialog.Content class="max-w-lg" onClose={cancelTransactionForm}>
 		<Dialog.Header>
-			<Dialog.Title>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</Dialog.Title>
+			<Dialog.Title>{editingTransaction ? m.budget_edit_transaction() : m.budget_add_transaction()}</Dialog.Title>
 			<Dialog.Description>
-				{editingTransaction ? 'Update the transaction details.' : 'Record a new expense or income.'}
+				{editingTransaction ? m.budget_checklist_update_item() : m.budget_no_transactions_hint()}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -534,7 +535,7 @@ $effect(() => {
 			{/if}
 
 			<div class="space-y-2">
-				<Label for="tx-category">Category *</Label>
+				<Label for="tx-category">{m.budget_transaction_category()} *</Label>
 				<select
 					id="tx-category"
 					name="categoryId"
@@ -552,19 +553,19 @@ $effect(() => {
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for="tx-type">Type *</Label>
+					<Label for="tx-type">{m.budget_transaction_type()} *</Label>
 					<select
 						id="tx-type"
 						name="type"
 						required
 						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					>
-						<option value="expense" selected={!editingTransaction || editingTransaction.type === 'expense'}>Expense</option>
-						<option value="income" selected={editingTransaction?.type === 'income'}>Income</option>
+						<option value="expense" selected={!editingTransaction || editingTransaction.type === 'expense'}>{m.budget_transaction_expense()}</option>
+						<option value="income" selected={editingTransaction?.type === 'income'}>{m.budget_transaction_income()}</option>
 					</select>
 				</div>
 				<div class="space-y-2">
-					<Label for="tx-amount">Amount *</Label>
+					<Label for="tx-amount">{m.budget_amount()} *</Label>
 					<Input
 						id="tx-amount"
 						name="amount"
@@ -579,11 +580,11 @@ $effect(() => {
 			</div>
 
 			<div class="space-y-2">
-				<Label for="tx-description">Description *</Label>
+				<Label for="tx-description">{m.budget_transaction_description()} *</Label>
 				<Input
 					id="tx-description"
 					name="description"
-					placeholder="What is this transaction for?"
+					placeholder={m.budget_transaction_description_placeholder()}
 					required
 					value={editingTransaction?.description || ''}
 				/>
@@ -591,20 +592,20 @@ $effect(() => {
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for="tx-vendor">Vendor</Label>
+					<Label for="tx-vendor">{m.budget_transaction_vendor()}</Label>
 					<Input
 						id="tx-vendor"
 						name="vendor"
-						placeholder="Vendor name"
+						placeholder={m.budget_transaction_vendor_placeholder()}
 						value={editingTransaction?.vendor || ''}
 					/>
 				</div>
 				<div class="space-y-2">
-					<Label for="tx-invoice">Invoice Number</Label>
+					<Label for="tx-invoice">{m.budget_transaction_invoice_number()}</Label>
 					<Input
 						id="tx-invoice"
 						name="invoiceNumber"
-						placeholder="INV-2025-001"
+						placeholder={m.budget_transaction_invoice_placeholder()}
 						value={editingTransaction?.invoiceNumber || ''}
 					/>
 				</div>
@@ -612,7 +613,7 @@ $effect(() => {
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for="tx-date">Date</Label>
+					<Label for="tx-date">{m.budget_transaction_date()}</Label>
 					<Input
 						id="tx-date"
 						name="date"
@@ -621,26 +622,26 @@ $effect(() => {
 					/>
 				</div>
 				<div class="space-y-2">
-					<Label for="tx-status">Status</Label>
+					<Label for="tx-status">{m.budget_transaction_status()}</Label>
 					<select
 						id="tx-status"
 						name="status"
 						class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					>
-						<option value="pending" selected={!editingTransaction || editingTransaction.status === 'pending'}>Pending</option>
-						<option value="paid" selected={editingTransaction?.status === 'paid'}>Paid</option>
-						<option value="cancelled" selected={editingTransaction?.status === 'cancelled'}>Cancelled</option>
+						<option value="pending" selected={!editingTransaction || editingTransaction.status === 'pending'}>{m.budget_transaction_status_pending()}</option>
+						<option value="paid" selected={editingTransaction?.status === 'paid'}>{m.budget_transaction_status_paid()}</option>
+						<option value="cancelled" selected={editingTransaction?.status === 'cancelled'}>{m.budget_transaction_status_cancelled()}</option>
 					</select>
 				</div>
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={cancelTransactionForm}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={cancelTransactionForm}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					{editingTransaction ? 'Update' : 'Create'}
+					{editingTransaction ? m.action_edit() : m.action_create()}
 				</Button>
 			</Dialog.Footer>
 		</form>

@@ -5,6 +5,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Calendar, Save, Shield, Tag, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -21,11 +22,11 @@ let showDeleteConfirm = $state(false)
 
 const basePath = `/admin/crm/${data.eventSlug}`
 
-const CONSENT_TYPES = [
-  { key: 'marketing_email', label: 'Marketing Emails' },
-  { key: 'data_sharing', label: 'Data Sharing' },
-  { key: 'analytics', label: 'Analytics' }
-]
+const CONSENT_TYPES = $derived([
+  { key: 'marketing_email', label: m.crm_contact_gdpr_marketing() },
+  { key: 'data_sharing', label: m.crm_contact_gdpr_data_sharing() },
+  { key: 'analytics', label: m.crm_contact_gdpr_analytics() }
+])
 
 const getConsentStatus = (type: string): boolean => {
   const consent = data.consents.find((c) => c.type === type)
@@ -69,7 +70,7 @@ const initials =
 </script>
 
 <svelte:head>
-	<title>{data.contact.firstName} {data.contact.lastName} - CRM - Open Event Orchestrator</title>
+	<title>{m.crm_contact_page_title({ firstName: data.contact.firstName, lastName: data.contact.lastName })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -101,12 +102,12 @@ const initials =
 	<!-- Success / Error messages -->
 	{#if form?.success}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-			{#if form.action === 'updateContact'}Contact updated successfully.
-			{:else if form.action === 'addTag'}Tag added.
-			{:else if form.action === 'removeTag'}Tag removed.
-			{:else if form.action === 'grantConsent'}Consent granted.
-			{:else if form.action === 'withdrawConsent'}Consent withdrawn.
-			{:else}Action completed.{/if}
+			{#if form.action === 'updateContact'}{m.crm_contact_updated()}
+			{:else if form.action === 'addTag'}{m.crm_contact_tag_added()}
+			{:else if form.action === 'removeTag'}{m.crm_contact_tag_removed()}
+			{:else if form.action === 'grantConsent'}{m.crm_contact_consent_granted()}
+			{:else if form.action === 'withdrawConsent'}{m.crm_contact_consent_withdrawn()}
+			{:else}{m.crm_contact_action_completed()}{/if}
 		</div>
 	{/if}
 
@@ -124,9 +125,9 @@ const initials =
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<Save class="h-5 w-5" />
-						Contact Details
+						{m.crm_contact_details()}
 					</Card.Title>
-					<Card.Description>Update contact information.</Card.Description>
+					<Card.Description>{m.crm_contact_details_description()}</Card.Description>
 				</Card.Header>
 				<Card.Content>
 					<form
@@ -143,82 +144,82 @@ const initials =
 					>
 						<div class="grid gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<Label for="firstName">First Name *</Label>
+								<Label for="firstName">{m.crm_contacts_first_name()} *</Label>
 								<Input id="firstName" name="firstName" required value={data.contact.firstName} />
 							</div>
 							<div class="space-y-2">
-								<Label for="lastName">Last Name *</Label>
+								<Label for="lastName">{m.crm_contacts_last_name()} *</Label>
 								<Input id="lastName" name="lastName" required value={data.contact.lastName} />
 							</div>
 						</div>
 
 						<div class="space-y-2">
-							<Label for="email">Email *</Label>
+							<Label for="email">{m.crm_contacts_email()} *</Label>
 							<Input id="email" name="email" type="email" required value={data.contact.email} />
 						</div>
 
 						<div class="grid gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<Label for="company">Company</Label>
+								<Label for="company">{m.crm_contacts_company()}</Label>
 								<Input id="company" name="company" value={data.contact.company} />
 							</div>
 							<div class="space-y-2">
-								<Label for="jobTitle">Job Title</Label>
+								<Label for="jobTitle">{m.crm_contacts_job_title()}</Label>
 								<Input id="jobTitle" name="jobTitle" value={data.contact.jobTitle} />
 							</div>
 						</div>
 
 						<div class="grid gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<Label for="phone">Phone</Label>
+								<Label for="phone">{m.crm_contacts_phone()}</Label>
 								<Input id="phone" name="phone" value={data.contact.phone} />
 							</div>
 							<div class="space-y-2">
-								<Label for="address">Address</Label>
+								<Label for="address">{m.crm_contact_address()}</Label>
 								<Input id="address" name="address" value={data.contact.address} />
 							</div>
 						</div>
 
 						<div class="grid gap-4 md:grid-cols-2">
 							<div class="space-y-2">
-								<Label for="city">City</Label>
+								<Label for="city">{m.crm_contact_city()}</Label>
 								<Input id="city" name="city" value={data.contact.city} />
 							</div>
 							<div class="space-y-2">
-								<Label for="country">Country</Label>
+								<Label for="country">{m.crm_contact_country()}</Label>
 								<Input id="country" name="country" value={data.contact.country} />
 							</div>
 						</div>
 
 						<div class="grid gap-4 md:grid-cols-3">
 							<div class="space-y-2">
-								<Label for="twitter">Twitter</Label>
-								<Input id="twitter" name="twitter" placeholder="@handle" value={data.contact.twitter} />
+								<Label for="twitter">{m.crm_contact_twitter()}</Label>
+								<Input id="twitter" name="twitter" placeholder={m.crm_contact_twitter_placeholder()} value={data.contact.twitter} />
 							</div>
 							<div class="space-y-2">
-								<Label for="linkedin">LinkedIn</Label>
-								<Input id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/..." value={data.contact.linkedin} />
+								<Label for="linkedin">{m.crm_contact_linkedin()}</Label>
+								<Input id="linkedin" name="linkedin" placeholder={m.crm_contact_linkedin_placeholder()} value={data.contact.linkedin} />
 							</div>
 							<div class="space-y-2">
-								<Label for="github">GitHub</Label>
-								<Input id="github" name="github" placeholder="username" value={data.contact.github} />
+								<Label for="github">{m.crm_contact_github()}</Label>
+								<Input id="github" name="github" placeholder={m.crm_contact_github_placeholder()} value={data.contact.github} />
 							</div>
 						</div>
 
 						<div class="space-y-2">
-							<Label for="bio">Bio</Label>
+							<Label for="bio">{m.crm_contact_bio()}</Label>
 							<Textarea id="bio" name="bio" rows={3} value={data.contact.bio} />
 						</div>
 
 						<div class="space-y-2">
-							<Label for="notes">Notes</Label>
+							<Label for="notes">{m.crm_contacts_notes()}</Label>
 							<Textarea id="notes" name="notes" rows={3} value={data.contact.notes} />
 						</div>
 
 						<div class="flex justify-end">
 							<Button type="submit" disabled={isSubmitting} class="gap-2">
 								<Save class="h-4 w-4" />
-								{isSubmitting ? 'Saving...' : 'Save Changes'}
+								{isSubmitting ? m.crm_contact_saving() : m.crm_contact_save()}
 							</Button>
 						</div>
 					</form>
@@ -233,7 +234,7 @@ const initials =
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<Tag class="h-5 w-5" />
-						Tags
+						{m.crm_contact_tags_title()}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content class="space-y-3">
@@ -251,17 +252,17 @@ const initials =
 							</form>
 						{/each}
 						{#if data.contact.tags.length === 0}
-							<p class="text-sm text-muted-foreground">No tags yet.</p>
+							<p class="text-sm text-muted-foreground">{m.crm_contact_tags_none()}</p>
 						{/if}
 					</div>
 					<form method="POST" action="?/addTag" use:enhance class="flex gap-2">
 						<Input
 							name="tag"
-							placeholder="Add a tag..."
+							placeholder={m.crm_contact_tags_add_placeholder()}
 							bind:value={newTag}
 							class="flex-1"
 						/>
-						<Button type="submit" size="sm" disabled={!newTag.trim()}>Add</Button>
+						<Button type="submit" size="sm" disabled={!newTag.trim()}>{m.crm_contact_tags_add()}</Button>
 					</form>
 				</Card.Content>
 			</Card.Root>
@@ -271,7 +272,7 @@ const initials =
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<Shield class="h-5 w-5" />
-						GDPR Consents
+						{m.crm_contact_gdpr_title()}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content class="space-y-4">
@@ -281,21 +282,21 @@ const initials =
 							<div>
 								<p class="text-sm font-medium">{consent.label}</p>
 								<p class="text-xs text-muted-foreground">
-									{isGranted ? 'Granted' : 'Not granted'}
+									{isGranted ? m.crm_contact_gdpr_granted() : m.crm_contact_gdpr_not_granted()}
 								</p>
 							</div>
 							{#if isGranted}
 								<form method="POST" action="?/withdrawConsent" use:enhance>
 									<input type="hidden" name="consentType" value={consent.key} />
 									<Button type="submit" variant="outline" size="sm" class="text-orange-600">
-										Withdraw
+										{m.crm_contact_gdpr_withdraw()}
 									</Button>
 								</form>
 							{:else}
 								<form method="POST" action="?/grantConsent" use:enhance>
 									<input type="hidden" name="consentType" value={consent.key} />
 									<Button type="submit" variant="outline" size="sm" class="text-green-600">
-										Grant
+										{m.crm_contact_gdpr_grant()}
 									</Button>
 								</form>
 							{/if}
@@ -309,12 +310,12 @@ const initials =
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2">
 						<Calendar class="h-5 w-5" />
-						Edition History
+						{m.crm_contact_history_title()}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
 					{#if data.editionLinks.length === 0}
-						<p class="text-sm text-muted-foreground">No edition history.</p>
+						<p class="text-sm text-muted-foreground">{m.crm_contact_history_none()}</p>
 					{:else}
 						<div class="space-y-3">
 							{#each data.editionLinks as link}
@@ -339,23 +340,23 @@ const initials =
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2 text-destructive">
 						<Trash2 class="h-5 w-5" />
-						Danger Zone
+						{m.crm_contact_danger_title()}
 					</Card.Title>
 				</Card.Header>
 				<Card.Content>
 					{#if showDeleteConfirm}
 						<div class="space-y-3">
 							<p class="text-sm text-muted-foreground">
-								This will permanently delete this contact and all associated data (consents, edition links). This action cannot be undone.
+								{m.crm_contact_danger_confirm_text()}
 							</p>
 							<div class="flex gap-2">
 								<form method="POST" action="?/deleteContact" use:enhance>
 									<Button type="submit" variant="destructive" size="sm">
-										Confirm Delete
+										{m.crm_contact_danger_confirm()}
 									</Button>
 								</form>
 								<Button variant="outline" size="sm" onclick={() => (showDeleteConfirm = false)}>
-									Cancel
+									{m.action_cancel()}
 								</Button>
 							</div>
 						</div>
@@ -366,7 +367,7 @@ const initials =
 							onclick={() => (showDeleteConfirm = true)}
 						>
 							<Trash2 class="h-4 w-4" />
-							Delete Contact
+							{m.crm_contact_danger_delete()}
 						</Button>
 					{/if}
 				</Card.Content>

@@ -13,6 +13,7 @@ import {
   getDeliverableStatusBadgeVariant,
   getDeliverableStatusLabel
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -86,7 +87,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Deliverables - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.sponsoring_deliverables_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -106,7 +107,7 @@ $effect(() => {
 			{#if data.confirmedSponsors.length > 0}
 				<Button onclick={() => (showGenerateAll = true)}>
 					<Wand2 class="mr-2 h-4 w-4" />
-					Generate All Deliverables
+					{m.sponsoring_deliverables_generate_all()}
 				</Button>
 			{/if}
 		</div>
@@ -119,57 +120,57 @@ $effect(() => {
 	<div class="grid gap-4 md:grid-cols-5">
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Total</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.sponsoring_deliverables_stats_total()}</Card.Title>
 				<Gift class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{data.stats.total}</div>
-				<p class="text-xs text-muted-foreground">deliverables</p>
+				<p class="text-xs text-muted-foreground">{m.sponsoring_deliverables_stats_deliverables()}</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Pending</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.sponsoring_deliverables_stats_pending()}</Card.Title>
 				<Clock class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold text-muted-foreground">{data.stats.pending}</div>
-				<p class="text-xs text-muted-foreground">to start</p>
+				<p class="text-xs text-muted-foreground">{m.sponsoring_deliverables_stats_to_start()}</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">In Progress</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.sponsoring_deliverables_stats_in_progress()}</Card.Title>
 				<RefreshCw class="h-4 w-4 text-blue-600" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold text-blue-600">{data.stats.inProgress}</div>
-				<p class="text-xs text-muted-foreground">being worked on</p>
+				<p class="text-xs text-muted-foreground">{m.sponsoring_deliverables_stats_being_worked()}</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Delivered</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.sponsoring_deliverables_stats_delivered()}</Card.Title>
 				<CheckCircle2 class="h-4 w-4 text-green-600" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold text-green-600">{data.stats.delivered}</div>
-				<p class="text-xs text-muted-foreground">{data.stats.completionPercent}% complete</p>
+				<p class="text-xs text-muted-foreground">{m.sponsoring_deliverables_stats_complete({ percent: data.stats.completionPercent.toString() })}</p>
 			</Card.Content>
 		</Card.Root>
 
 		{#if data.stats.overdue > 0}
 			<Card.Root class="border-destructive">
 				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-					<Card.Title class="text-sm font-medium">Overdue</Card.Title>
+					<Card.Title class="text-sm font-medium">{m.sponsoring_deliverables_stats_overdue()}</Card.Title>
 					<AlertTriangle class="h-4 w-4 text-destructive" />
 				</Card.Header>
 				<Card.Content>
 					<div class="text-2xl font-bold text-destructive">{data.stats.overdue}</div>
-					<p class="text-xs text-muted-foreground">past due date</p>
+					<p class="text-xs text-muted-foreground">{m.sponsoring_deliverables_stats_past_due()}</p>
 				</Card.Content>
 			</Card.Root>
 		{/if}
@@ -180,7 +181,7 @@ $effect(() => {
 		<Card.Root>
 			<Card.Content class="py-4">
 				<div class="flex items-center justify-between mb-2">
-					<span class="text-sm font-medium">Overall Progress</span>
+					<span class="text-sm font-medium">{m.sponsoring_deliverables_overall_progress()}</span>
 					<span class="text-sm text-muted-foreground">{data.stats.completionPercent}%</span>
 				</div>
 				<div class="h-2 w-full bg-muted rounded-full overflow-hidden">
@@ -195,15 +196,15 @@ $effect(() => {
 
 	<!-- Deliverables by Sponsor -->
 	<div class="space-y-4">
-		<h3 class="text-xl font-semibold">Deliverables by Sponsor</h3>
+		<h3 class="text-xl font-semibold">{m.sponsoring_deliverables_by_sponsor()}</h3>
 
 		{#if data.confirmedSponsors.length === 0}
 			<Card.Root>
 				<Card.Content class="flex flex-col items-center justify-center py-12">
 					<Gift class="mb-4 h-12 w-12 text-muted-foreground" />
-					<h3 class="text-lg font-semibold">No confirmed sponsors</h3>
+					<h3 class="text-lg font-semibold">{m.sponsoring_deliverables_no_confirmed()}</h3>
 					<p class="text-sm text-muted-foreground text-center max-w-md">
-						Deliverables can only be created for confirmed sponsors. Confirm sponsors in the pipeline first.
+						{m.sponsoring_deliverables_no_confirmed_hint()}
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -238,7 +239,7 @@ $effect(() => {
 										<input type="hidden" name="editionSponsorId" value={group.editionSponsorId} />
 										<Button variant="outline" size="sm" type="submit">
 											<Wand2 class="mr-2 h-4 w-4" />
-											Generate
+											{m.sponsoring_deliverables_generate()}
 										</Button>
 									</form>
 									<Button
@@ -247,7 +248,7 @@ $effect(() => {
 										onclick={() => openCreateDeliverable(group.editionSponsorId)}
 									>
 										<Plus class="mr-2 h-4 w-4" />
-										Add Custom
+										{m.sponsoring_deliverables_add_custom()}
 									</Button>
 								</div>
 							</div>
@@ -255,7 +256,7 @@ $effect(() => {
 						<Card.Content>
 							{#if group.deliverables.length === 0}
 								<p class="text-sm text-muted-foreground py-4 text-center">
-									No deliverables yet. Click "Generate" to create from package benefits.
+									{m.sponsoring_deliverables_no_deliverables()}
 								</p>
 							{:else}
 								<div class="space-y-2">
@@ -281,7 +282,7 @@ $effect(() => {
 													</div>
 													{#if deliverable.dueDate}
 														<p class="text-xs text-muted-foreground ml-6">
-															Due: {formatDate(deliverable.dueDate)}
+															{m.sponsoring_deliverables_due({ date: formatDate(deliverable.dueDate) })}
 														</p>
 													{/if}
 												</div>
@@ -307,15 +308,15 @@ $effect(() => {
 {#if showGenerateAll}
 	<Dialog.Content class="max-w-md" onClose={cancelGenerateAll}>
 		<Dialog.Header>
-			<Dialog.Title>Generate All Deliverables</Dialog.Title>
+			<Dialog.Title>{m.sponsoring_deliverables_generate_all_title()}</Dialog.Title>
 			<Dialog.Description>
-				Create deliverables for all confirmed sponsors based on their package benefits.
+				{m.sponsoring_deliverables_generate_all_desc()}
 			</Dialog.Description>
 		</Dialog.Header>
 
 		{#if form?.success && form?.action === 'generateForAll'}
 			<div class="rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-3 text-sm text-green-700 dark:text-green-400">
-				Created {form.deliverablesCreated} deliverables for {form.sponsorsProcessed} sponsors.
+				{m.sponsoring_deliverables_generate_all_success({ created: form.deliverablesCreated, sponsors: form.sponsorsProcessed })}
 			</div>
 		{/if}
 
@@ -338,20 +339,20 @@ $effect(() => {
 			class="space-y-4"
 		>
 			<div class="space-y-2">
-				<Label for="gen-all-due">Default Due Date (optional)</Label>
+				<Label for="gen-all-due">{m.sponsoring_deliverables_generate_all_due_date()}</Label>
 				<Input id="gen-all-due" name="dueDate" type="date" />
 				<p class="text-xs text-muted-foreground">
-					Set a default due date for all generated deliverables.
+					{m.sponsoring_deliverables_generate_all_due_hint()}
 				</p>
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={cancelGenerateAll}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={cancelGenerateAll}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Generate
+					{m.sponsoring_deliverables_generate()}
 				</Button>
 			</Dialog.Footer>
 		</form>
@@ -362,9 +363,9 @@ $effect(() => {
 {#if showCreateDeliverable && selectedSponsorId}
 	<Dialog.Content class="max-w-md" onClose={cancelCreateDeliverable}>
 		<Dialog.Header>
-			<Dialog.Title>Add Custom Deliverable</Dialog.Title>
+			<Dialog.Title>{m.sponsoring_deliverables_add_custom_title()}</Dialog.Title>
 			<Dialog.Description>
-				Create a custom deliverable for this sponsor.
+				{m.sponsoring_deliverables_add_custom_desc()}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -389,27 +390,27 @@ $effect(() => {
 			<input type="hidden" name="editionSponsorId" value={selectedSponsorId} />
 
 			<div class="space-y-2">
-				<Label for="create-name">Benefit Name *</Label>
-				<Input id="create-name" name="benefitName" required placeholder="e.g., Logo on website" />
+				<Label for="create-name">{m.sponsoring_deliverables_form_benefit_name()} *</Label>
+				<Input id="create-name" name="benefitName" required placeholder={m.sponsoring_deliverables_form_benefit_placeholder()} />
 			</div>
 
 			<div class="space-y-2">
-				<Label for="create-desc">Description</Label>
-				<Textarea id="create-desc" name="description" placeholder="Details about this deliverable..." />
+				<Label for="create-desc">{m.sponsoring_deliverables_form_description()}</Label>
+				<Textarea id="create-desc" name="description" placeholder={m.sponsoring_deliverables_form_description_placeholder()} />
 			</div>
 
 			<div class="space-y-2">
-				<Label for="create-due">Due Date</Label>
+				<Label for="create-due">{m.sponsoring_deliverables_form_due_date()}</Label>
 				<Input id="create-due" name="dueDate" type="date" />
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={cancelCreateDeliverable}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={cancelCreateDeliverable}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Create
+					{m.action_create()}
 				</Button>
 			</Dialog.Footer>
 		</form>
@@ -454,17 +455,17 @@ $effect(() => {
 				<input type="hidden" name="deliverableId" value={selectedDeliverable.id} />
 
 				<div class="space-y-2">
-					<Label for="edit-desc">Description</Label>
+					<Label for="edit-desc">{m.sponsoring_deliverables_form_description()}</Label>
 					<Textarea
 						id="edit-desc"
 						name="description"
-						placeholder="Details..."
+						placeholder={m.sponsoring_deliverables_form_description_placeholder()}
 						value={selectedDeliverable.description || ''}
 					/>
 				</div>
 
 				<div class="space-y-2">
-					<Label for="edit-due">Due Date</Label>
+					<Label for="edit-due">{m.sponsoring_deliverables_form_due_date()}</Label>
 					<Input
 						id="edit-due"
 						name="dueDate"
@@ -474,11 +475,11 @@ $effect(() => {
 				</div>
 
 				<div class="space-y-2">
-					<Label for="edit-notes">Notes</Label>
+					<Label for="edit-notes">{m.sponsoring_deliverables_form_notes()}</Label>
 					<Textarea
 						id="edit-notes"
 						name="notes"
-						placeholder="Internal notes..."
+						placeholder={m.sponsoring_deliverables_form_notes_placeholder()}
 						value={selectedDeliverable.notes || ''}
 					/>
 				</div>
@@ -487,14 +488,14 @@ $effect(() => {
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Save Details
+					{m.sponsoring_deliverables_save_details()}
 				</Button>
 			</form>
 
 			<!-- Right: Status & Actions -->
 			<div class="space-y-4">
 				<div>
-					<h4 class="text-sm font-medium mb-2">Change Status</h4>
+					<h4 class="text-sm font-medium mb-2">{m.sponsoring_deliverables_change_status()}</h4>
 					<div class="space-y-2">
 						<form method="POST" action="?/updateStatus" use:enhance>
 							<input type="hidden" name="deliverableId" value={selectedDeliverable.id} />
@@ -506,7 +507,7 @@ $effect(() => {
 								disabled={selectedDeliverable.status === 'pending'}
 							>
 								<Clock class="mr-2 h-4 w-4" />
-								Pending
+								{m.sponsoring_deliverables_status_pending()}
 							</Button>
 						</form>
 						<form method="POST" action="?/updateStatus" use:enhance>
@@ -519,7 +520,7 @@ $effect(() => {
 								disabled={selectedDeliverable.status === 'in_progress'}
 							>
 								<RefreshCw class="mr-2 h-4 w-4" />
-								In Progress
+								{m.sponsoring_deliverables_status_in_progress()}
 							</Button>
 						</form>
 						<form method="POST" action="?/updateStatus" use:enhance>
@@ -532,19 +533,19 @@ $effect(() => {
 								disabled={selectedDeliverable.status === 'delivered'}
 							>
 								<CheckCircle2 class="mr-2 h-4 w-4" />
-								Delivered
+								{m.sponsoring_deliverables_status_delivered()}
 							</Button>
 						</form>
 					</div>
 					<p class="text-xs text-muted-foreground mt-2">
-						Marking as "Delivered" will send an email notification to the sponsor.
+						{m.sponsoring_deliverables_delivered_notification()}
 					</p>
 				</div>
 
 				{#if selectedDeliverable.deliveredAt}
 					<div class="pt-4 border-t">
 						<p class="text-sm">
-							<span class="text-muted-foreground">Delivered on:</span>
+							<span class="text-muted-foreground">{m.sponsoring_deliverables_delivered_on()}</span>
 							<span class="font-medium ml-1">{formatDate(selectedDeliverable.deliveredAt)}</span>
 						</p>
 					</div>
@@ -555,7 +556,7 @@ $effect(() => {
 						<input type="hidden" name="deliverableId" value={selectedDeliverable.id} />
 						<Button type="submit" variant="destructive" class="w-full">
 							<Trash2 class="mr-2 h-4 w-4" />
-							Delete Deliverable
+							{m.sponsoring_deliverables_delete()}
 						</Button>
 					</form>
 				</div>
@@ -568,6 +569,6 @@ $effect(() => {
 	<div
 		class="fixed bottom-4 right-4 rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-4 text-sm text-green-700 dark:text-green-400 shadow-lg"
 	>
-		Created {form.created} deliverables ({form.skipped} already existed).
+		{m.sponsoring_deliverables_generate_success({ created: form.created, skipped: form.skipped })}
 	</div>
 {/if}

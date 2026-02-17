@@ -2,13 +2,12 @@
 import { Button } from '$lib/components/ui/button'
 import { Input } from '$lib/components/ui/input'
 import { Select } from '$lib/components/ui/select'
-import {
-  RULE_FIELD_LABELS,
-  RULE_OPERATOR_LABELS,
-  type SegmentRule,
-  type SegmentRuleField,
-  type SegmentRuleOperator
+import type {
+  SegmentRule,
+  SegmentRuleField,
+  SegmentRuleOperator
 } from '$lib/features/crm/domain/segment'
+import * as m from '$lib/paraglide/messages'
 import { X } from 'lucide-svelte'
 
 interface Props {
@@ -20,28 +19,73 @@ interface Props {
 
 const { rule, onUpdate, onRemove, showRemove = true }: Props = $props()
 
+// Reactive field labels
+const RULE_FIELD_LABELS = $derived({
+  source: m.crm_segments_field_source(),
+  tags: m.crm_segments_field_tags(),
+  company: m.crm_segments_field_company(),
+  city: m.crm_segments_field_city(),
+  country: m.crm_segments_field_country(),
+  edition_role: m.crm_segments_field_edition_role(),
+  edition_id: m.crm_segments_field_edition_id(),
+  consent_marketing: m.crm_segments_field_consent_marketing(),
+  has_checked_in: m.crm_segments_field_has_checked_in(),
+  email_opened: m.crm_segments_field_email_opened(),
+  email_clicked: m.crm_segments_field_email_clicked(),
+  email_opened_any: m.crm_segments_field_email_opened_any(),
+  email_clicked_any: m.crm_segments_field_email_clicked_any(),
+  has_purchased: m.crm_segments_field_has_purchased(),
+  purchase_total_gte: m.crm_segments_field_purchase_total_gte(),
+  purchased_ticket_type: m.crm_segments_field_purchased_ticket_type(),
+  cfp_submitted: m.crm_segments_field_cfp_submitted(),
+  cfp_accepted: m.crm_segments_field_cfp_accepted(),
+  cfp_rejected: m.crm_segments_field_cfp_rejected()
+} as Record<SegmentRuleField, string>)
+
+// Reactive operator labels
+const RULE_OPERATOR_LABELS = $derived({
+  equals: m.crm_segments_operator_equals(),
+  not_equals: m.crm_segments_operator_not_equals(),
+  contains: m.crm_segments_operator_contains(),
+  not_contains: m.crm_segments_operator_not_contains(),
+  is_empty: m.crm_segments_operator_is_empty(),
+  is_not_empty: m.crm_segments_operator_is_not_empty(),
+  in: m.crm_segments_operator_in(),
+  not_in: m.crm_segments_operator_not_in()
+} as Record<SegmentRuleOperator, string>)
+
 // Field categories for grouping in select
-const FIELD_CATEGORIES = {
-  'Contact Profile': ['source', 'tags', 'company', 'city', 'country'] as SegmentRuleField[],
-  Edition: [
+const FIELD_CATEGORIES = $derived({
+  [m.crm_segments_category_contact_profile()]: [
+    'source',
+    'tags',
+    'company',
+    'city',
+    'country'
+  ] as SegmentRuleField[],
+  [m.crm_segments_category_edition()]: [
     'edition_role',
     'edition_id',
     'consent_marketing',
     'has_checked_in'
   ] as SegmentRuleField[],
-  'Email Behavior': [
+  [m.crm_segments_category_email_behavior()]: [
     'email_opened',
     'email_clicked',
     'email_opened_any',
     'email_clicked_any'
   ] as SegmentRuleField[],
-  'Purchase History': [
+  [m.crm_segments_category_purchase_history()]: [
     'has_purchased',
     'purchase_total_gte',
     'purchased_ticket_type'
   ] as SegmentRuleField[],
-  'CFP Engagement': ['cfp_submitted', 'cfp_accepted', 'cfp_rejected'] as SegmentRuleField[]
-}
+  [m.crm_segments_category_cfp_engagement()]: [
+    'cfp_submitted',
+    'cfp_accepted',
+    'cfp_rejected'
+  ] as SegmentRuleField[]
+})
 
 // Operators that don't require a value
 const NO_VALUE_OPERATORS: SegmentRuleOperator[] = ['is_empty', 'is_not_empty']
@@ -162,13 +206,13 @@ function handleInputChange(e: Event) {
   {#if showValueInput}
     {#if isBooleanField}
       <Select value={String(rule.value ?? true)} onchange={handleBooleanChange} class="w-[100px]">
-        <option value="true">Yes</option>
-        <option value="false">No</option>
+        <option value="true">{m.crm_segments_yes()}</option>
+        <option value="false">{m.crm_segments_no()}</option>
       </Select>
     {:else}
       <Input
         type={NUMERIC_FIELDS.includes(rule.field) ? 'number' : 'text'}
-        placeholder="Value..."
+        placeholder={m.crm_segments_value_placeholder()}
         value={String(rule.value ?? '')}
         oninput={handleInputChange}
         class="w-[200px]"

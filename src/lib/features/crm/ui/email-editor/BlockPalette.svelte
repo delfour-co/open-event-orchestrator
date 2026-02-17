@@ -1,7 +1,7 @@
 <script lang="ts">
 import * as Card from '$lib/components/ui/card'
 import type { BlockType } from '$lib/features/crm/domain/email-editor'
-import { BLOCK_TYPE_LABELS } from '$lib/features/crm/domain/email-editor'
+import * as m from '$lib/paraglide/messages'
 import { Columns, Image, Minus, MousePointer2, Type } from 'lucide-svelte'
 
 interface Props {
@@ -10,13 +10,38 @@ interface Props {
 
 const { onAddBlock }: Props = $props()
 
-const blockTypes: { type: BlockType; icon: typeof Type; description: string }[] = [
-  { type: 'text', icon: Type, description: 'Add formatted text' },
-  { type: 'image', icon: Image, description: 'Add an image' },
-  { type: 'button', icon: MousePointer2, description: 'Add a call-to-action button' },
-  { type: 'divider', icon: Minus, description: 'Add a horizontal divider' },
-  { type: 'columns', icon: Columns, description: 'Add a multi-column layout' }
-]
+const blockTypes = $derived([
+  {
+    type: 'text' as BlockType,
+    icon: Type,
+    description: m.crm_email_editor_block_text_desc(),
+    label: m.crm_email_editor_block_text()
+  },
+  {
+    type: 'image' as BlockType,
+    icon: Image,
+    description: m.crm_email_editor_block_image_desc(),
+    label: m.crm_email_editor_block_image()
+  },
+  {
+    type: 'button' as BlockType,
+    icon: MousePointer2,
+    description: m.crm_email_editor_block_button_desc(),
+    label: m.crm_email_editor_block_button()
+  },
+  {
+    type: 'divider' as BlockType,
+    icon: Minus,
+    description: m.crm_email_editor_block_divider_desc(),
+    label: m.crm_email_editor_block_divider()
+  },
+  {
+    type: 'columns' as BlockType,
+    icon: Columns,
+    description: m.crm_email_editor_block_columns_desc(),
+    label: m.crm_email_editor_block_columns()
+  }
+])
 
 function handleDragStart(e: DragEvent, type: BlockType) {
   e.dataTransfer?.setData('text/plain', type)
@@ -26,11 +51,11 @@ function handleDragStart(e: DragEvent, type: BlockType) {
 
 <Card.Root>
   <Card.Header class="pb-3">
-    <Card.Title class="text-sm font-medium">Blocks</Card.Title>
-    <Card.Description class="text-xs">Drag and drop to add blocks</Card.Description>
+    <Card.Title class="text-sm font-medium">{m.crm_email_editor_blocks()}</Card.Title>
+    <Card.Description class="text-xs">{m.crm_email_editor_blocks_hint()}</Card.Description>
   </Card.Header>
   <Card.Content class="grid grid-cols-2 gap-2">
-    {#each blockTypes as { type, icon: Icon, description }}
+    {#each blockTypes as { type, icon: Icon, description, label }}
       <button
         type="button"
         class="block-item"
@@ -40,7 +65,7 @@ function handleDragStart(e: DragEvent, type: BlockType) {
         title={description}
       >
         <Icon class="h-5 w-5" />
-        <span class="text-xs">{BLOCK_TYPE_LABELS[type]}</span>
+        <span class="text-xs">{label}</span>
       </button>
     {/each}
   </Card.Content>

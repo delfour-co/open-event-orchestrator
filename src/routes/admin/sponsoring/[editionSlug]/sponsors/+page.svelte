@@ -3,6 +3,7 @@ import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { getSponsoringNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Building2, ExternalLink, Mail, Phone } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -14,7 +15,7 @@ const { data }: Props = $props()
 </script>
 
 <svelte:head>
-	<title>All Sponsors - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.sponsoring_sponsors_page_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -38,16 +39,16 @@ const { data }: Props = $props()
 	<!-- Sponsors Section -->
 	<div class="space-y-4">
 		<div class="flex items-center justify-between">
-			<h3 class="text-xl font-semibold">All Sponsors</h3>
+			<h3 class="text-xl font-semibold">{m.sponsoring_sponsors_title()}</h3>
 		</div>
 
 		{#if data.sponsors.length === 0}
 			<Card.Root>
 				<Card.Content class="flex flex-col items-center justify-center py-12">
 					<Building2 class="mb-4 h-12 w-12 text-muted-foreground" />
-					<h3 class="text-lg font-semibold">No sponsors in your organization</h3>
+					<h3 class="text-lg font-semibold">{m.sponsoring_sponsors_empty()}</h3>
 					<p class="text-sm text-muted-foreground">
-						Create sponsors from the dashboard to manage your sponsor database.
+						{m.sponsoring_sponsors_empty_hint()}
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -77,7 +78,7 @@ const { data }: Props = $props()
 										rel="noopener noreferrer"
 										class="text-sm text-primary hover:underline inline-flex items-center gap-1"
 									>
-										Website
+										{m.sponsoring_detail_website()}
 										<ExternalLink class="h-3 w-3" />
 									</a>
 								{/if}
