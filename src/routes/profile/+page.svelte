@@ -5,9 +5,28 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import {
+  formatSessionDate,
+  getSessionDisplayName,
+  getSessionLocation
+} from '$lib/features/auth/domain/user-session'
 import * as m from '$lib/paraglide/messages'
 import { getLocale } from '$lib/paraglide/runtime'
-import { ArrowLeft, Camera, Check, Eye, EyeOff, Key, Trash2, Upload, User } from 'lucide-svelte'
+import {
+  ArrowLeft,
+  Camera,
+  Check,
+  Eye,
+  EyeOff,
+  Key,
+  Laptop,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Trash2,
+  Upload,
+  User
+} from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -29,6 +48,8 @@ let showConfirmPassword = $state(false)
 let newPassword = $state('')
 let avatarInput: HTMLInputElement
 let isUploadingAvatar = $state(false)
+let isRevokingSession = $state<string | null>(null)
+let isRevokingAll = $state(false)
 
 // Format creation date based on current language
 const formatDate = (dateStr: string): string => {
@@ -50,6 +71,22 @@ const getInitials = (name: string): string => {
     .toUpperCase()
     .slice(0, 2)
 }
+
+// Get device icon based on device type
+function getDeviceIcon(device: string | undefined) {
+  switch (device) {
+    case 'Mobile':
+      return Smartphone
+    case 'Tablet':
+      return Tablet
+    default:
+      return Monitor
+  }
+}
+
+// Current session and other sessions
+const currentSession = $derived(data.sessions.find((s) => s.id === data.currentSessionId))
+const otherSessions = $derived(data.sessions.filter((s) => s.id !== data.currentSessionId))
 </script>
 
 <svelte:head>
@@ -87,6 +124,14 @@ const getInitials = (name: string): string => {
 
       {#if form?.success && form?.action === 'changePassword'}
         <Alert variant="success">{m.profile_success_password_changed()}</Alert>
+      {/if}
+
+      {#if form?.success && form?.action === 'revokeSession'}
+        <Alert variant="success">{m.profile_sessions_revoked()}</Alert>
+      {/if}
+
+      {#if form?.success && form?.action === 'revokeAllSessions'}
+        <Alert variant="success">{m.profile_sessions_all_revoked()}</Alert>
       {/if}
 
       {#if form?.error && !form?.errors}
@@ -367,6 +412,128 @@ const getInitials = (name: string): string => {
               </Button>
             </div>
           </form>
+        </Card.Content>
+      </Card.Root>
+
+      <!-- Active Sessions -->
+      <Card.Root>
+        <Card.Header>
+          <div class="flex items-center justify-between">
+            <div>
+              <Card.Title class="flex items-center gap-2">
+                <Laptop class="h-5 w-5" />
+                {m.profile_sessions_title()}
+              </Card.Title>
+              <Card.Description>
+                {m.profile_sessions_description()}
+              </Card.Description>
+            </div>
+            {#if otherSessions.length > 0}
+              <form
+                method="POST"
+                action="?/revokeAllSessions"
+                use:enhance={() => {
+                  if (!confirm(m.profile_sessions_revoke_all_confirm())) {
+                    return () => {}
+                  }
+                  isRevokingAll = true
+                  return async ({ update }) => {
+                    isRevokingAll = false
+                    await update()
+                  }
+                }}
+              >
+                <Button type="submit" variant="outline" size="sm" disabled={isRevokingAll}>
+                  {m.profile_sessions_revoke_all()}
+                </Button>
+              </form>
+            {/if}
+          </div>
+        </Card.Header>
+        <Card.Content class="space-y-4">
+          <!-- Current Session -->
+          {#if currentSession}
+            {@const DeviceIcon = getDeviceIcon(currentSession.device)}
+            <div class="rounded-lg border border-primary/20 bg-primary/5 p-4">
+              <div class="flex items-start gap-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <DeviceIcon class="h-5 w-5 text-primary" />
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium">{getSessionDisplayName(currentSession)}</span>
+                    <span class="rounded bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                      {m.profile_sessions_current()}
+                    </span>
+                  </div>
+                  <div class="mt-1 text-sm text-muted-foreground">
+                    {#if getSessionLocation(currentSession)}
+                      <span>{m.profile_sessions_location({ location: getSessionLocation(currentSession) ?? '' })}</span>
+                      <span class="mx-2">•</span>
+                    {/if}
+                    <span>{m.profile_sessions_last_active({ date: formatSessionDate(currentSession.lastActive) })}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {/if}
+
+          <!-- Other Sessions -->
+          {#if otherSessions.length > 0}
+            <div class="space-y-3">
+              <h4 class="text-sm font-medium text-muted-foreground">{m.profile_sessions_other()}</h4>
+              {#each otherSessions as session (session.id)}
+                {@const DeviceIcon = getDeviceIcon(session.device)}
+                <div class="flex items-start gap-4 rounded-lg border p-4">
+                  <div class="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                    <DeviceIcon class="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div class="flex-1">
+                    <div class="font-medium">
+                      {getSessionDisplayName(session)}
+                    </div>
+                    <div class="mt-1 text-sm text-muted-foreground">
+                      {#if getSessionLocation(session)}
+                        <span>{m.profile_sessions_location({ location: getSessionLocation(session) ?? '' })}</span>
+                        <span class="mx-2">•</span>
+                      {/if}
+                      <span>{m.profile_sessions_last_active({ date: formatSessionDate(session.lastActive) })}</span>
+                    </div>
+                  </div>
+                  <form
+                    method="POST"
+                    action="?/revokeSession"
+                    use:enhance={() => {
+                      if (!confirm(m.profile_sessions_revoke_confirm())) {
+                        return () => {}
+                      }
+                      isRevokingSession = session.id
+                      return async ({ update }) => {
+                        isRevokingSession = null
+                        await update()
+                      }
+                    }}
+                  >
+                    <input type="hidden" name="sessionId" value={session.id} />
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="sm"
+                      class="text-destructive hover:text-destructive"
+                      disabled={isRevokingSession === session.id}
+                    >
+                      <Trash2 class="mr-1 h-4 w-4" />
+                      {m.profile_sessions_revoke()}
+                    </Button>
+                  </form>
+                </div>
+              {/each}
+            </div>
+          {:else if !currentSession}
+            <p class="text-center text-sm text-muted-foreground py-4">
+              {m.profile_sessions_none()}
+            </p>
+          {/if}
         </Card.Content>
       </Card.Root>
     </div>

@@ -1,10 +1,12 @@
 import { env } from '$env/dynamic/public'
 import { changePasswordSchema, updateProfileSchema } from '$lib/features/auth/domain'
+import { type UserSession, hashToken } from '$lib/features/auth/domain/user-session'
+import { createUserSessionRepository } from '$lib/features/auth/infra'
 import { validateImageFile } from '$lib/server/file-validation'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, cookies }) => {
   if (!locals.user) {
     throw redirect(303, '/auth/login')
   }
@@ -18,6 +20,32 @@ export const load: PageServerLoad = async ({ locals }) => {
     avatarUrl = `${pbUrl}/api/files/users/${user.id}/${user.avatar}`
   }
 
+  // Get user sessions
+  let sessions: UserSession[] = []
+  let currentSessionId: string | null = null
+
+  try {
+    const sessionRepo = createUserSessionRepository(locals.pb)
+    sessions = await sessionRepo.getSessionsForUser(user.id)
+
+    // Get current session token from cookie
+    const authCookie = cookies.get('pb_auth')
+    if (authCookie) {
+      try {
+        const parsed = JSON.parse(authCookie)
+        if (parsed.token) {
+          const currentTokenHash = hashToken(parsed.token)
+          const currentSession = sessions.find((s) => s.tokenHash === currentTokenHash)
+          currentSessionId = currentSession?.id || null
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load sessions:', err)
+  }
+
   return {
     user: {
       id: user.id as string,
@@ -27,7 +55,9 @@ export const load: PageServerLoad = async ({ locals }) => {
       avatarUrl,
       role: user.role as string,
       created: user.created as string
-    }
+    },
+    sessions,
+    currentSessionId
   }
 }
 
@@ -164,6 +194,58 @@ export const actions: Actions = {
         })
       }
       return fail(500, { error: 'Failed to change password', action: 'changePassword' })
+    }
+  },
+
+  revokeSession: async ({ request, locals }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const formData = await request.formData()
+    const sessionId = formData.get('sessionId') as string
+
+    if (!sessionId) {
+      return fail(400, { error: 'Session ID is required', action: 'revokeSession' })
+    }
+
+    try {
+      const sessionRepo = createUserSessionRepository(locals.pb)
+      await sessionRepo.deleteSession(sessionId)
+
+      return { success: true, action: 'revokeSession' }
+    } catch (err) {
+      console.error('Session revoke error:', err)
+      return fail(500, { error: 'Failed to revoke session', action: 'revokeSession' })
+    }
+  },
+
+  revokeAllSessions: async ({ locals, cookies }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    try {
+      const sessionRepo = createUserSessionRepository(locals.pb)
+
+      // Get current token from cookie
+      const authCookie = cookies.get('pb_auth')
+      let currentToken = ''
+      if (authCookie) {
+        try {
+          const parsed = JSON.parse(authCookie)
+          currentToken = parsed.token || ''
+        } catch {
+          // Ignore parse errors
+        }
+      }
+
+      const count = await sessionRepo.deleteOtherSessions(locals.user.id, currentToken)
+
+      return { success: true, action: 'revokeAllSessions', revokedCount: count }
+    } catch (err) {
+      console.error('Revoke all sessions error:', err)
+      return fail(500, { error: 'Failed to revoke sessions', action: 'revokeAllSessions' })
     }
   }
 }

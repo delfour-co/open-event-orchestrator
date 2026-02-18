@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/public'
 import { createApiKeyService, rateLimiter } from '$lib/features/api/services'
+import { createUserSessionRepository } from '$lib/features/auth/infra'
 import { createInitialSetupService } from '$lib/features/auth/services'
 import { type Handle, json } from '@sveltejs/kit'
 import PocketBase from 'pocketbase'
@@ -37,6 +38,29 @@ export const handle: Handle = async ({ event, resolve }) => {
     // Refresh auth if valid
     if (pb.authStore.isValid) {
       await pb.collection('users').authRefresh()
+
+      // Track user session (fire and forget - don't block the request)
+      const user = pb.authStore.model
+      const token = pb.authStore.token
+      if (user && token) {
+        const userAgent = event.request.headers.get('user-agent') || ''
+        const ipAddress =
+          event.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+          event.getClientAddress()
+
+        // Track session asynchronously to avoid blocking
+        const sessionRepo = createUserSessionRepository(pb)
+        sessionRepo
+          .upsertSession({
+            userId: user.id,
+            token,
+            userAgent,
+            ipAddress
+          })
+          .catch((err) => {
+            console.error('[Session] Failed to track session:', err)
+          })
+      }
     }
   } catch {
     pb.authStore.clear()
