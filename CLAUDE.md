@@ -194,6 +194,13 @@ pnpm format
 | PocketBase | 8090 | Backend API + admin UI |
 | Mailpit | 8025 | Email testing web UI |
 | Mailpit SMTP | 1025 | SMTP server for local email capture |
+| LocalStripe | 8420 | Stripe mock API (stateful) |
+
+### Stripe Testing
+
+LocalStripe provides a stateful mock of the Stripe API for local development.
+Point your app to `http://localhost:8420` instead of the real Stripe API.
+Use any `sk_test_...` key — LocalStripe accepts all test keys.
 
 ### Email Testing
 

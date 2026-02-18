@@ -25,5 +25,17 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
+  localstripe:
+    image: adrienverge/localstripe:latest
+    container_name: oeo-localstripe
+    restart: unless-stopped
+    ports:
+      - "8420:8420"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8420"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pb_data:
