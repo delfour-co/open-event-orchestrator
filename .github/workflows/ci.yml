@@ -6,10 +6,18 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -30,6 +38,7 @@ jobs:
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +57,7 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -77,6 +87,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
+          retention-days: 7
 
   # E2E tests are run locally due to PocketBase Docker requirements.
   # Run with: pnpm test:e2e
@@ -84,6 +95,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     if: false # Disabled: requires PocketBase Docker setup. Run locally with pnpm test:e2e
     steps:
       - uses: actions/checkout@v4
@@ -135,10 +147,12 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
+          retention-days: 7
 
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -159,3 +173,4 @@ jobs:
         with:
           name: build
           path: build/
+          retention-days: 7

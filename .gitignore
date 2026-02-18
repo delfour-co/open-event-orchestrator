@@ -45,3 +45,12 @@ storybook-static
 
 # Setup token (temporary file for first-run setup)
 .setup-token.json
+
+# Secrets & credentials
+*.key
+*.pem
+
+# Package manager caches
+.npm/
+.yarn/
+.pnpm-store/

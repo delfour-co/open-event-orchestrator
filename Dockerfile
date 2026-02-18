@@ -60,10 +60,15 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built application
 COPY --from=builder /app/build ./build
+
+# Create non-root user
+RUN addgroup -g 1001 app && adduser -D -u 1001 -G app app
+RUN chown -R app:app /app
+USER app
 
 # =============================================================================
 # Environment Variables
