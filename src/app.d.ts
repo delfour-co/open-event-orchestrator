@@ -10,6 +10,7 @@ declare global {
       apiKeyScope?: import('$lib/features/api/domain').ApiKeyScope
       rateLimit?: import('$lib/features/api/services').RateLimitResult
       locale?: import('$lib/paraglide/runtime.js').Locale
+      sessionId?: string
     }
     // interface PageData {}
     // interface PageState {}

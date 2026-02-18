@@ -39,7 +39,7 @@ describe('UserSessionRepository', () => {
       )
       const result = await repo.upsertSession({
         userId: 'user1',
-        token: 'test-token',
+        sessionId: 'session-uuid-123',
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
         ipAddress: '192.168.1.1'
       })
@@ -55,7 +55,7 @@ describe('UserSessionRepository', () => {
       const mockUpdate = vi.fn().mockResolvedValue({
         id: 'session1',
         userId: 'user1',
-        tokenHash: 'abc123',
+        tokenHash: 'session-uuid-123',
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
         ipAddress: '192.168.1.2',
         browser: 'Chrome',
@@ -78,7 +78,7 @@ describe('UserSessionRepository', () => {
       )
       const result = await repo.upsertSession({
         userId: 'user1',
-        token: 'test-token',
+        sessionId: 'session-uuid-123',
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
         ipAddress: '192.168.1.2'
       })
@@ -134,13 +134,13 @@ describe('UserSessionRepository', () => {
   })
 
   describe('getCurrentSession', () => {
-    it('should return the current session by token hash', async () => {
+    it('should return the current session by session ID', async () => {
       const mockPb = createMockPb()
       mockPb._mockCollection.mockReturnValue({
         getFirstListItem: vi.fn().mockResolvedValue({
           id: 'session1',
           userId: 'user1',
-          tokenHash: 'abc123',
+          tokenHash: 'session-uuid-123',
           userAgent: 'Chrome',
           ipAddress: '192.168.1.1',
           browser: 'Chrome',
@@ -155,7 +155,7 @@ describe('UserSessionRepository', () => {
       const repo = createUserSessionRepository(
         mockPb as unknown as Parameters<typeof createUserSessionRepository>[0]
       )
-      const session = await repo.getCurrentSession('user1', 'test-token')
+      const session = await repo.getCurrentSession('user1', 'session-uuid-123')
 
       expect(session).not.toBeNull()
       expect(session?.id).toBe('session1')
@@ -170,7 +170,7 @@ describe('UserSessionRepository', () => {
       const repo = createUserSessionRepository(
         mockPb as unknown as Parameters<typeof createUserSessionRepository>[0]
       )
-      const session = await repo.getCurrentSession('user1', 'invalid-token')
+      const session = await repo.getCurrentSession('user1', 'invalid-session-id')
 
       expect(session).toBeNull()
     })
@@ -205,7 +205,7 @@ describe('UserSessionRepository', () => {
       const repo = createUserSessionRepository(
         mockPb as unknown as Parameters<typeof createUserSessionRepository>[0]
       )
-      const count = await repo.deleteOtherSessions('user1', 'current-token')
+      const count = await repo.deleteOtherSessions('user1', 'current-session-id')
 
       expect(count).toBe(2)
       expect(mockDelete).toHaveBeenCalledTimes(2)

@@ -1,18 +1,13 @@
 import type PocketBase from 'pocketbase'
-import {
-  type UserSession,
-  hashToken,
-  parseUserAgent,
-  userSessionSchema
-} from '../domain/user-session'
+import { type UserSession, parseUserAgent, userSessionSchema } from '../domain/user-session'
 
 export interface UserSessionRepository {
   /**
-   * Find or create a session for the current auth token
+   * Find or create a session using a stable session ID
    */
   upsertSession(params: {
     userId: string
-    token: string
+    sessionId: string
     userAgent: string
     ipAddress: string
   }): Promise<UserSession>
@@ -23,9 +18,9 @@ export interface UserSessionRepository {
   getSessionsForUser(userId: string): Promise<UserSession[]>
 
   /**
-   * Get the current session by token hash
+   * Get the current session by session ID
    */
-  getCurrentSession(userId: string, token: string): Promise<UserSession | null>
+  getCurrentSession(userId: string, sessionId: string): Promise<UserSession | null>
 
   /**
    * Delete a specific session
@@ -35,7 +30,7 @@ export interface UserSessionRepository {
   /**
    * Delete all sessions for a user except the current one
    */
-  deleteOtherSessions(userId: string, currentToken: string): Promise<number>
+  deleteOtherSessions(userId: string, currentSessionId: string): Promise<number>
 
   /**
    * Delete all sessions for a user (on logout)
@@ -88,15 +83,14 @@ function mapToUserSession(record: PocketBaseSession): UserSession {
 
 export function createUserSessionRepository(pb: PocketBase): UserSessionRepository {
   return {
-    async upsertSession({ userId, token, userAgent, ipAddress }) {
-      const tokenH = hashToken(token)
+    async upsertSession({ userId, sessionId, userAgent, ipAddress }) {
       const parsed = parseUserAgent(userAgent)
 
-      // Try to find existing session
+      // Try to find existing session by sessionId (stored in tokenHash field)
       try {
         const existing = await pb
           .collection('user_sessions')
-          .getFirstListItem<PocketBaseSession>(`userId = "${userId}" && tokenHash = "${tokenH}"`)
+          .getFirstListItem<PocketBaseSession>(`userId = "${userId}" && tokenHash = "${sessionId}"`)
 
         // Update last active
         const updated = await pb
@@ -113,7 +107,7 @@ export function createUserSessionRepository(pb: PocketBase): UserSessionReposito
         // Session doesn't exist, create new one
         const created = await pb.collection('user_sessions').create<PocketBaseSession>({
           userId,
-          tokenHash: tokenH,
+          tokenHash: sessionId, // Store sessionId in tokenHash field
           userAgent,
           ipAddress,
           lastActive: new Date().toISOString(),
@@ -133,13 +127,11 @@ export function createUserSessionRepository(pb: PocketBase): UserSessionReposito
       return records.map(mapToUserSession)
     },
 
-    async getCurrentSession(userId, token) {
-      const tokenH = hashToken(token)
-
+    async getCurrentSession(userId, sessionId) {
       try {
         const record = await pb
           .collection('user_sessions')
-          .getFirstListItem<PocketBaseSession>(`userId = "${userId}" && tokenHash = "${tokenH}"`)
+          .getFirstListItem<PocketBaseSession>(`userId = "${userId}" && tokenHash = "${sessionId}"`)
         return mapToUserSession(record)
       } catch {
         return null
@@ -150,11 +142,9 @@ export function createUserSessionRepository(pb: PocketBase): UserSessionReposito
       await pb.collection('user_sessions').delete(sessionId)
     },
 
-    async deleteOtherSessions(userId, currentToken) {
-      const tokenH = hashToken(currentToken)
-
+    async deleteOtherSessions(userId, currentSessionId) {
       const sessions = await pb.collection('user_sessions').getFullList<PocketBaseSession>({
-        filter: `userId = "${userId}" && tokenHash != "${tokenH}"`
+        filter: `userId = "${userId}" && tokenHash != "${currentSessionId}"`
       })
 
       for (const session of sessions) {

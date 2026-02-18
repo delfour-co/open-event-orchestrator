@@ -1,10 +1,12 @@
 import { env } from '$env/dynamic/public'
 import { changePasswordSchema, updateProfileSchema } from '$lib/features/auth/domain'
-import { type UserSession, hashToken } from '$lib/features/auth/domain/user-session'
+import type { UserSession } from '$lib/features/auth/domain/user-session'
 import { createUserSessionRepository } from '$lib/features/auth/infra'
 import { validateImageFile } from '$lib/server/file-validation'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
+
+const SESSION_COOKIE_NAME = 'oeo_session_id'
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
   if (!locals.user) {
@@ -28,19 +30,12 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     const sessionRepo = createUserSessionRepository(locals.pb)
     sessions = await sessionRepo.getSessionsForUser(user.id)
 
-    // Get current session token from cookie
-    const authCookie = cookies.get('pb_auth')
-    if (authCookie) {
-      try {
-        const parsed = JSON.parse(authCookie)
-        if (parsed.token) {
-          const currentTokenHash = hashToken(parsed.token)
-          const currentSession = sessions.find((s) => s.tokenHash === currentTokenHash)
-          currentSessionId = currentSession?.id || null
-        }
-      } catch {
-        // Ignore parse errors
-      }
+    // Get current session from session ID cookie
+    const sessionIdFromCookie = cookies.get(SESSION_COOKIE_NAME)
+    if (sessionIdFromCookie) {
+      // Find the session with matching tokenHash (which stores the sessionId)
+      const currentSession = sessions.find((s) => s.tokenHash === sessionIdFromCookie)
+      currentSessionId = currentSession?.id || null
     }
   } catch (err) {
     console.error('Failed to load sessions:', err)
@@ -228,19 +223,10 @@ export const actions: Actions = {
     try {
       const sessionRepo = createUserSessionRepository(locals.pb)
 
-      // Get current token from cookie
-      const authCookie = cookies.get('pb_auth')
-      let currentToken = ''
-      if (authCookie) {
-        try {
-          const parsed = JSON.parse(authCookie)
-          currentToken = parsed.token || ''
-        } catch {
-          // Ignore parse errors
-        }
-      }
+      // Get current session ID from cookie
+      const currentSessionId = cookies.get(SESSION_COOKIE_NAME) || ''
 
-      const count = await sessionRepo.deleteOtherSessions(locals.user.id, currentToken)
+      const count = await sessionRepo.deleteOtherSessions(locals.user.id, currentSessionId)
 
       return { success: true, action: 'revokeAllSessions', revokedCount: count }
     } catch (err) {

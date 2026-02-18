@@ -1,9 +1,20 @@
+import { randomUUID } from 'node:crypto'
 import { env } from '$env/dynamic/public'
 import { createApiKeyService, rateLimiter } from '$lib/features/api/services'
 import { createUserSessionRepository } from '$lib/features/auth/infra'
 import { createInitialSetupService } from '$lib/features/auth/services'
 import { type Handle, json } from '@sveltejs/kit'
 import PocketBase from 'pocketbase'
+
+const SESSION_COOKIE_NAME = 'oeo_session_id'
+
+/**
+ * Parse a specific cookie value from a cookie string
+ */
+function getCookieValue(cookieString: string, name: string): string | null {
+  const match = cookieString.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
 
 // Initial setup check - runs once on server startup
 let initialSetupCheckDone = false
@@ -41,19 +52,27 @@ export const handle: Handle = async ({ event, resolve }) => {
 
       // Track user session (fire and forget - don't block the request)
       const user = pb.authStore.model
-      const token = pb.authStore.token
-      if (user && token) {
+      if (user) {
         const userAgent = event.request.headers.get('user-agent') || ''
         const ipAddress =
           event.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
           event.getClientAddress()
+
+        // Get or create a stable session ID from cookie
+        let sessionId = getCookieValue(cookie, SESSION_COOKIE_NAME)
+        if (!sessionId) {
+          sessionId = randomUUID()
+        }
+
+        // Store session ID in event.locals for cookie setting later
+        event.locals.sessionId = sessionId
 
         // Track session asynchronously to avoid blocking
         const sessionRepo = createUserSessionRepository(pb)
         sessionRepo
           .upsertSession({
             userId: user.id,
-            token,
+            sessionId,
             userAgent,
             ipAddress
           })
@@ -151,6 +170,16 @@ export const handle: Handle = async ({ event, resolve }) => {
       'set-cookie',
       pb.authStore.exportToCookie({ httpOnly: true, secure: true, sameSite: 'lax' })
     )
+
+    // Set session ID cookie if we have one
+    if (event.locals.sessionId) {
+      const isSecure = !event.url.hostname.includes('localhost')
+      const maxAge = 365 * 24 * 60 * 60 // 1 year
+      response.headers.append(
+        'set-cookie',
+        `${SESSION_COOKIE_NAME}=${event.locals.sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${isSecure ? '; Secure' : ''}`
+      )
+    }
   }
 
   return response
