@@ -3,6 +3,7 @@ import { goto } from '$app/navigation'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { QuickSetupWizard } from '$lib/features/core/ui'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -119,7 +120,7 @@ const getOrderStatusColor = (status: string) => {
 </script>
 
 <svelte:head>
-  <title>Dashboard - Open Event Orchestrator</title>
+  <title>{m.admin_dashboard_title()}</title>
 </svelte:head>
 
 <!-- Quick Setup Wizard -->

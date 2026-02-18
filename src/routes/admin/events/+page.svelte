@@ -7,6 +7,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
 import {
   Building2,
   Calendar,
@@ -106,19 +107,19 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
 </script>
 
 <svelte:head>
-  <title>Events - Open Event Orchestrator</title>
+  <title>{m.admin_events_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Events</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.admin_events_heading()}</h2>
       <p class="text-muted-foreground">
-        Manage your events and their editions.
+        {m.admin_events_description()}
         {#if selectedOrg}
-          Filtered by <strong>{selectedOrg.name}</strong>.
+          {m.admin_events_filtered_by({ name: selectedOrg.name })}
           <button class="text-primary underline" onclick={() => (selectedOrgId = '')}>
-            Show all
+            {m.admin_events_show_all()}
           </button>
         {/if}
       </p>
@@ -128,16 +129,16 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
         <Button variant="outline" onclick={() => (showArchived = !showArchived)}>
           {#if showArchived}
             <EyeOff class="mr-2 h-4 w-4" />
-            Hide Archived ({archivedCount()})
+            {m.admin_events_hide_archived({ count: archivedCount() })}
           {:else}
             <Eye class="mr-2 h-4 w-4" />
-            Show Archived ({archivedCount()})
+            {m.admin_events_show_archived({ count: archivedCount() })}
           {/if}
         </Button>
       {/if}
       <Button onclick={() => (showNewEvent = !showNewEvent)}>
         <Plus class="mr-2 h-4 w-4" />
-        New Event
+        {m.admin_events_new()}
       </Button>
     </div>
   </div>
@@ -156,10 +157,10 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
           <div>
             <Card.Title class="flex items-center gap-2">
               <CalendarDays class="h-5 w-5" />
-              Create Event
+              {m.admin_events_create_title()}
             </Card.Title>
             <Card.Description>
-              Events can have multiple editions (yearly occurrences).
+              {m.admin_events_create_description()}
             </Card.Description>
           </div>
           <Button variant="ghost" size="icon" onclick={() => (showNewEvent = false)}>
@@ -172,10 +173,10 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
           <div class="flex flex-col items-center py-6">
             <Building2 class="mb-2 h-8 w-8 text-muted-foreground" />
             <p class="mb-4 text-center text-muted-foreground">
-              Please create an organization first before creating an event.
+              {m.admin_events_create_org_first()}
             </p>
             <a href="/admin/organizations">
-              <Button variant="outline">Go to Organizations</Button>
+              <Button variant="outline">{m.admin_events_go_to_orgs()}</Button>
             </a>
           </div>
         {:else}
@@ -191,7 +192,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
             class="space-y-4"
           >
             <div class="space-y-2">
-              <Label for="event-org">Organization</Label>
+              <Label for="event-org">{m.admin_events_organization()}</Label>
               <select
                 id="event-org"
                 name="organizationId"
@@ -205,7 +206,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
             </div>
             <div class="grid gap-4 md:grid-cols-2">
               <div class="space-y-2">
-                <Label for="event-name">Event Name</Label>
+                <Label for="event-name">{m.admin_events_name()}</Label>
                 <Input
                   id="event-name"
                   name="name"
@@ -219,22 +220,22 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 />
               </div>
               <div class="space-y-2">
-                <Label for="event-slug">Slug</Label>
+                <Label for="event-slug">{m.admin_events_slug()}</Label>
                 <Input id="event-slug" name="slug" placeholder="devfest" required />
               </div>
             </div>
             <div class="space-y-2">
-              <Label for="event-description">Description</Label>
+              <Label for="event-description">{m.admin_events_description_label()}</Label>
               <Textarea
                 id="event-description"
                 name="description"
-                placeholder="The biggest developer festival..."
+                placeholder={m.admin_events_description_placeholder()}
               />
             </div>
             <div class="flex gap-2">
-              <Button type="submit">Create Event</Button>
+              <Button type="submit">{m.admin_events_create_button()}</Button>
               <Button type="button" variant="ghost" onclick={() => (showNewEvent = false)}>
-                Cancel
+                {m.action_cancel()}
               </Button>
             </div>
           </form>
@@ -253,10 +254,10 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
             <div>
               <Card.Title class="flex items-center gap-2">
                 <Calendar class="h-5 w-5" />
-                New Edition for {event.name}
+                {m.admin_events_new_edition_for({ name: event.name })}
               </Card.Title>
               <Card.Description>
-                Create a new edition (yearly occurrence) for this event.
+                {m.admin_events_new_edition_description()}
               </Card.Description>
             </div>
             <Button variant="ghost" size="icon" onclick={() => (showNewEdition = null)}>
@@ -279,7 +280,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
             <input type="hidden" name="eventId" value={event.id} />
             <div class="grid gap-4 md:grid-cols-3">
               <div class="space-y-2">
-                <Label for="edition-name">Name</Label>
+                <Label for="edition-name">{m.admin_events_edition_name()}</Label>
                 <Input
                   id="edition-name"
                   name="name"
@@ -293,11 +294,11 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 />
               </div>
               <div class="space-y-2">
-                <Label for="edition-slug">Slug</Label>
+                <Label for="edition-slug">{m.admin_events_edition_slug()}</Label>
                 <Input id="edition-slug" name="slug" placeholder="{event.slug}-paris-2025" required />
               </div>
               <div class="space-y-2">
-                <Label for="edition-year">Year</Label>
+                <Label for="edition-year">{m.admin_events_edition_year()}</Label>
                 <Input
                   id="edition-year"
                   name="year"
@@ -310,32 +311,32 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
             </div>
             <div class="grid gap-4 md:grid-cols-2">
               <div class="space-y-2">
-                <Label for="edition-start">Start Date</Label>
+                <Label for="edition-start">{m.admin_events_edition_start()}</Label>
                 <Input id="edition-start" name="startDate" type="date" required />
               </div>
               <div class="space-y-2">
-                <Label for="edition-end">End Date</Label>
+                <Label for="edition-end">{m.admin_events_edition_end()}</Label>
                 <Input id="edition-end" name="endDate" type="date" required />
               </div>
             </div>
             <div class="grid gap-4 md:grid-cols-3">
               <div class="space-y-2">
-                <Label for="edition-venue">Venue</Label>
+                <Label for="edition-venue">{m.admin_events_edition_venue()}</Label>
                 <Input id="edition-venue" name="venue" placeholder="Convention Center" />
               </div>
               <div class="space-y-2">
-                <Label for="edition-city">City</Label>
+                <Label for="edition-city">{m.admin_events_edition_city()}</Label>
                 <Input id="edition-city" name="city" placeholder="Paris" />
               </div>
               <div class="space-y-2">
-                <Label for="edition-country">Country</Label>
+                <Label for="edition-country">{m.admin_events_edition_country()}</Label>
                 <Input id="edition-country" name="country" placeholder="France" />
               </div>
             </div>
             <div class="flex gap-2">
-              <Button type="submit">Create Edition</Button>
+              <Button type="submit">{m.admin_events_create_edition()}</Button>
               <Button type="button" variant="ghost" onclick={() => (showNewEdition = null)}>
-                Cancel
+                {m.action_cancel()}
               </Button>
             </div>
           </form>
@@ -348,13 +349,13 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
   {#if data.organizations.length > 1}
     <div class="flex items-center gap-4">
       <div class="flex items-center gap-2">
-        <Label class="text-sm text-muted-foreground">Organization:</Label>
+        <Label class="text-sm text-muted-foreground">{m.admin_events_filter_organization()}</Label>
         <select
           class="rounded-md border border-input bg-background px-3 py-1 text-sm"
           value={selectedOrgId}
           onchange={(e) => (selectedOrgId = (e.target as HTMLSelectElement).value)}
         >
-          <option value="">All organizations</option>
+          <option value="">{m.admin_events_all_organizations()}</option>
           {#each data.organizations as org}
             <option value={org.id}>{org.name}</option>
           {/each}
@@ -368,42 +369,42 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <CalendarDays class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No editions yet</h3>
+        <h3 class="text-lg font-semibold">{m.admin_events_empty_title()}</h3>
         <p class="mb-4 text-sm text-muted-foreground">
           {#if data.organizations.length === 0}
-            Create an organization first, then add events.
+            {m.admin_events_empty_create_org()}
           {:else if data.events.length === 0}
-            Create your first event to get started.
+            {m.admin_events_empty_create_event()}
           {:else if !showArchived && archivedCount() > 0}
-            All editions are archived.
+            {m.admin_events_empty_all_archived()}
             <button class="text-primary underline" onclick={() => (showArchived = true)}>
-              Show archived editions
+              {m.admin_events_empty_show_archived()}
             </button>
           {:else}
-            Create an edition for one of your events.
+            {m.admin_events_empty_create_edition()}
           {/if}
         </p>
         {#if data.organizations.length === 0}
           <a href="/admin/organizations">
             <Button>
               <Building2 class="mr-2 h-4 w-4" />
-              Create Organization
+              {m.admin_organizations_create_button()}
             </Button>
           </a>
         {:else if data.events.length === 0}
           <Button onclick={() => (showNewEvent = true)}>
             <Plus class="mr-2 h-4 w-4" />
-            Create Event
+            {m.admin_events_create_button()}
           </Button>
         {:else}
           <div class="flex gap-2">
             <Button variant="outline" onclick={() => (showNewEvent = true)}>
               <Plus class="mr-2 h-4 w-4" />
-              New Event
+              {m.admin_events_new()}
             </Button>
             <Button onclick={() => (showNewEdition = data.events[0].id)}>
               <Plus class="mr-2 h-4 w-4" />
-              New Edition
+              {m.admin_events_create_edition()}
             </Button>
           </div>
         {/if}
@@ -428,17 +429,17 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
                   <StatusBadge status={edition.status} size="sm" />
                 </a>
-                <a href="/admin/app/{edition.slug}" title="Attendee App Settings">
+                <a href="/admin/app/{edition.slug}" title={m.admin_events_attendee_app()}>
                   <Button variant="ghost" size="icon" class="h-8 w-8">
                     <Smartphone class="h-4 w-4" />
                   </Button>
                 </a>
-                <a href="/admin/editions/{edition.slug}/settings" title="Edition Settings">
+                <a href="/admin/editions/{edition.slug}/settings" title={m.admin_events_edition_settings()}>
                   <Button variant="ghost" size="icon" class="h-8 w-8">
                     <Settings class="h-4 w-4" />
                   </Button>
                 </a>
-                <a href="/admin/editions/{edition.slug}/team" title="Team Members">
+                <a href="/admin/editions/{edition.slug}/team" title={m.admin_events_team_members()}>
                   <Button variant="ghost" size="icon" class="h-8 w-8">
                     <Users class="h-4 w-4" />
                   </Button>
@@ -483,7 +484,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
         <Card.Root class="border-dashed">
           <Card.Content class="flex h-full min-h-[200px] flex-col items-center justify-center py-6">
             <Plus class="mb-2 h-8 w-8 text-muted-foreground" />
-            <p class="mb-4 text-sm text-muted-foreground">Add a new edition</p>
+            <p class="mb-4 text-sm text-muted-foreground">{m.admin_events_add_edition()}</p>
             <select
               class="rounded-md border border-input bg-background px-3 py-2 text-sm"
               value=""
@@ -495,7 +496,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 }
               }}
             >
-              <option value="" disabled>Select event...</option>
+              <option value="" disabled>{m.admin_events_select_event()}</option>
               {#each data.events as event}
                 <option value={event.id}>{event.name}</option>
               {/each}

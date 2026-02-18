@@ -10,6 +10,16 @@ export const userRoleSchema = z.enum([
 
 export type UserRole = z.infer<typeof userRoleSchema>
 
+export const themePreferenceSchema = z.enum(['light', 'dark', 'system'])
+
+export type ThemePreference = z.infer<typeof themePreferenceSchema>
+
+export const userPreferencesSchema = z.object({
+  theme: themePreferenceSchema.optional()
+})
+
+export type UserPreferences = z.infer<typeof userPreferencesSchema>
+
 export const userSchema = z.object({
   id: z.string(),
   email: z.string().email(),
@@ -17,11 +27,25 @@ export const userSchema = z.object({
   avatar: z.string().url().optional(),
   role: userRoleSchema,
   verified: z.boolean(),
+  preferences: userPreferencesSchema.optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })
 
 export type User = z.infer<typeof userSchema>
+
+export const updatePreferencesSchema = z.object({
+  theme: themePreferenceSchema.optional()
+})
+
+export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>
+
+/**
+ * Check if a user's email is verified
+ */
+export function isUserVerified(user: User | { verified?: boolean }): boolean {
+  return user.verified === true
+}
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),

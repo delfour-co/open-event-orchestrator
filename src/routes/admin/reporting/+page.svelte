@@ -2,6 +2,8 @@
 import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import { ArrowRight, BarChart3, Calendar, Eye, EyeOff } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -22,7 +24,8 @@ const filteredEditions = $derived(
 const archivedCount = $derived(data.editions.filter((e) => e.status === 'archived').length)
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -31,25 +34,25 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-  <title>Reporting - Open Event Orchestrator</title>
+  <title>{m.reporting_page_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Reporting</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.reporting_title()}</h2>
       <p class="text-muted-foreground">
-        Select an edition to view its dashboard and metrics.
+        {m.reporting_subtitle()}
       </p>
     </div>
     {#if archivedCount > 0}
       <Button variant="outline" onclick={() => (showArchived = !showArchived)}>
         {#if showArchived}
           <EyeOff class="mr-2 h-4 w-4" />
-          Hide Archived ({archivedCount})
+          {m.reporting_hide_archived({ count: archivedCount })}
         {:else}
           <Eye class="mr-2 h-4 w-4" />
-          Show Archived ({archivedCount})
+          {m.reporting_show_archived({ count: archivedCount })}
         {/if}
       </Button>
     {/if}
@@ -59,15 +62,15 @@ const formatDate = (date: Date) => {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <BarChart3 class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No editions available</h3>
+        <h3 class="text-lg font-semibold">{m.reporting_no_editions()}</h3>
         <p class="text-sm text-muted-foreground">
           {#if !showArchived && archivedCount > 0}
-            All editions are archived.
+            {m.reporting_all_archived()}
             <button class="text-primary underline" onclick={() => (showArchived = true)}>
-              Show archived editions
+              {m.reporting_show_archived_link()}
             </button>
           {:else}
-            Create and publish an edition to start tracking metrics.
+            {m.reporting_create_hint()}
           {/if}
         </p>
       </Card.Content>
@@ -86,7 +89,7 @@ const formatDate = (date: Date) => {
                 <Calendar class="h-5 w-5" />
                 {edition.name}
               </Card.Title>
-              <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
+              <a href="/admin/editions/{edition.slug}/settings" title={m.reporting_change_status()}>
                 <StatusBadge status={edition.status} size="sm" />
               </a>
             </div>
@@ -98,7 +101,7 @@ const formatDate = (date: Date) => {
             <a href="/admin/reporting/{edition.slug}">
               <Button class="w-full" variant="outline">
                 <BarChart3 class="mr-2 h-4 w-4" />
-                View Dashboard
+                {m.reporting_view_dashboard()}
                 <ArrowRight class="ml-2 h-4 w-4" />
               </Button>
             </a>

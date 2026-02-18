@@ -5,6 +5,8 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import type { NavItem } from '$lib/config'
 import { DashboardGrid, HorizontalBarChart, MetricCard } from '$lib/features/reporting/ui'
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import {
   ArrowLeft,
   Bell,
@@ -34,15 +36,15 @@ let isRefreshing = $state(false)
 
 // Navigation items with badges
 const navItems = $derived<NavItem[]>([
-  { href: `/admin/reporting/${data.edition.slug}`, label: 'Dashboard' },
+  { href: `/admin/reporting/${data.edition.slug}`, label: m.reporting_dashboard_nav() },
   {
     href: `/admin/reporting/${data.edition.slug}/alerts`,
-    label: 'Alerts',
+    label: m.reporting_alerts_nav(),
     badge: data.navBadges?.alerts ?? 0
   },
   {
     href: `/admin/reporting/${data.edition.slug}/reports`,
-    label: 'Reports',
+    label: m.reporting_reports_nav(),
     badge: data.navBadges?.reports ?? 0
   }
 ])
@@ -80,9 +82,21 @@ const ticketTypeChartData = $derived(
 const cfpStatusChartData = $derived(
   data.metrics
     ? [
-        { label: 'Accepted', value: data.metrics.cfp.acceptedTalks, color: 'hsl(142 76% 36%)' },
-        { label: 'Pending', value: data.metrics.cfp.pendingReviews, color: 'hsl(48 96% 53%)' },
-        { label: 'Rejected', value: data.metrics.cfp.rejectedTalks, color: 'hsl(0 84% 60%)' }
+        {
+          label: m.reporting_chart_status_accepted(),
+          value: data.metrics.cfp.acceptedTalks,
+          color: 'hsl(142 76% 36%)'
+        },
+        {
+          label: m.reporting_chart_status_pending(),
+          value: data.metrics.cfp.pendingReviews,
+          color: 'hsl(48 96% 53%)'
+        },
+        {
+          label: m.reporting_chart_status_rejected(),
+          value: data.metrics.cfp.rejectedTalks,
+          color: 'hsl(0 84% 60%)'
+        }
       ]
     : []
 )
@@ -119,12 +133,12 @@ const sponsorStatusChartData = $derived(
   data.metrics
     ? [
         {
-          label: 'Confirmed',
+          label: m.reporting_metric_confirmed(),
           value: data.metrics.sponsoring.confirmedSponsors,
           color: 'hsl(142 76% 36%)'
         },
         {
-          label: 'Pending',
+          label: m.reporting_metric_pending(),
           value: data.metrics.sponsoring.pendingSponsors,
           color: 'hsl(48 96% 53%)'
         }
@@ -146,12 +160,12 @@ const revenueChartItems = $derived(
   data.metrics
     ? [
         {
-          label: 'Ticket Revenue',
+          label: m.reporting_chart_ticket_revenue(),
           value: data.metrics.billing.totalRevenue,
           color: 'hsl(221 83% 53%)'
         },
         {
-          label: 'Sponsorship Value',
+          label: m.reporting_metric_sponsorship_value(),
           value: data.metrics.sponsoring.totalSponsorshipValue,
           color: 'hsl(142 76% 36%)'
         }
@@ -164,12 +178,12 @@ const checkInChartData = $derived(
   data.metrics
     ? [
         {
-          label: 'Checked In',
+          label: m.reporting_chart_checked_in(),
           value: data.metrics.billing.ticketsCheckedIn,
           color: 'hsl(142 76% 36%)'
         },
         {
-          label: 'Not Checked In',
+          label: m.reporting_chart_not_checked_in(),
           value: data.metrics.billing.ticketsSold - data.metrics.billing.ticketsCheckedIn,
           color: 'hsl(var(--muted))'
         }
@@ -182,12 +196,12 @@ const sessionsScheduledChartData = $derived(
   data.metrics
     ? [
         {
-          label: 'Scheduled',
+          label: m.reporting_chart_scheduled(),
           value: data.metrics.planning.scheduledSessions,
           color: 'hsl(221 83% 53%)'
         },
         {
-          label: 'Unscheduled',
+          label: m.reporting_metric_unscheduled(),
           value: data.metrics.planning.unscheduledSessions,
           color: 'hsl(48 96% 53%)'
         }
@@ -199,15 +213,23 @@ const sessionsScheduledChartData = $derived(
 const budgetUsageChartData = $derived(
   data.metrics
     ? [
-        { label: 'Spent', value: data.metrics.budget.spent, color: 'hsl(221 83% 53%)' },
-        { label: 'Remaining', value: data.metrics.budget.remaining, color: 'hsl(142 76% 36%)' }
+        {
+          label: m.reporting_metric_spent(),
+          value: data.metrics.budget.spent,
+          color: 'hsl(221 83% 53%)'
+        },
+        {
+          label: m.reporting_metric_remaining(),
+          value: data.metrics.budget.remaining,
+          color: 'hsl(142 76% 36%)'
+        }
       ]
     : []
 )
 </script>
 
 <svelte:head>
-  <title>Dashboard - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.reporting_dashboard_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -230,7 +252,7 @@ const budgetUsageChartData = $derived(
       {:else}
         <RefreshCw class="mr-2 h-4 w-4" />
       {/if}
-      Refresh
+      {m.reporting_refresh()}
     </Button>
   </div>
 
@@ -243,7 +265,7 @@ const budgetUsageChartData = $derived(
       <div class="flex items-center justify-between">
         <Card.Title class="flex items-center gap-2 text-base font-medium">
           <Settings class="h-4 w-4" />
-          Notification Settings
+          {m.reporting_notification_settings()}
         </Card.Title>
       </div>
     </Card.Header>
@@ -258,16 +280,15 @@ const budgetUsageChartData = $derived(
               <Bell class="h-5 w-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div class="flex-1">
-              <h4 class="font-medium group-hover:underline">Alert Thresholds</h4>
+              <h4 class="font-medium group-hover:underline">{m.reporting_alert_thresholds()}</h4>
               <p class="text-sm text-muted-foreground">
                 {#if data.notifications.alertThresholds.total === 0}
-                  No alerts configured
+                  {m.reporting_no_alerts_configured()}
                 {:else}
-                  {data.notifications.alertThresholds.enabled} active / {data.notifications
-                    .alertThresholds.total} configured
+                  {m.reporting_alerts_active_total({ enabled: data.notifications.alertThresholds.enabled, total: data.notifications.alertThresholds.total })}
                   {#if data.notifications.alertThresholds.withEmail > 0}
                     <span class="ml-1 text-xs"
-                      >({data.notifications.alertThresholds.withEmail} with email)</span
+                      >{m.reporting_alerts_with_email({ count: data.notifications.alertThresholds.withEmail })}</span
                     >
                   {/if}
                 {/if}
@@ -288,27 +309,25 @@ const budgetUsageChartData = $derived(
               <Mail class="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div class="flex-1">
-              <h4 class="font-medium group-hover:underline">Automated Reports</h4>
+              <h4 class="font-medium group-hover:underline">{m.reporting_automated_reports()}</h4>
               <p class="text-sm text-muted-foreground">
                 {#if data.notifications.reportConfigs.total === 0}
-                  No reports configured
+                  {m.reporting_no_reports_configured()}
                 {:else}
-                  {data.notifications.reportConfigs.enabled} active / {data.notifications
-                    .reportConfigs.total} configured
+                  {m.reporting_reports_active_total({ enabled: data.notifications.reportConfigs.enabled, total: data.notifications.reportConfigs.total })}
                   {#if data.notifications.reportConfigs.enabled > 0}
                     <span class="ml-1 text-xs">
                       ({#if data.notifications.reportConfigs.daily > 0}
-                        {data.notifications.reportConfigs.daily} daily
+                        {m.reporting_reports_daily({ count: data.notifications.reportConfigs.daily })}
                       {/if}
                       {#if data.notifications.reportConfigs.weekly > 0}
-                        {data.notifications.reportConfigs.daily > 0 ? ', ' : ''}{data.notifications
-                          .reportConfigs.weekly} weekly
+                        {data.notifications.reportConfigs.daily > 0 ? ', ' : ''}{m.reporting_reports_weekly({ count: data.notifications.reportConfigs.weekly })}
                       {/if}
                       {#if data.notifications.reportConfigs.monthly > 0}
                         {data.notifications.reportConfigs.daily > 0 ||
                         data.notifications.reportConfigs.weekly > 0
                           ? ', '
-                          : ''}{data.notifications.reportConfigs.monthly} monthly
+                          : ''}{m.reporting_reports_monthly({ count: data.notifications.reportConfigs.monthly })}
                       {/if})
                     </span>
                   {/if}
@@ -328,21 +347,21 @@ const budgetUsageChartData = $derived(
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <Calendar class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No data available</h3>
+        <h3 class="text-lg font-semibold">{m.reporting_no_data()}</h3>
         <p class="text-sm text-muted-foreground">
-          Metrics will be available once data has been added.
+          {m.reporting_no_data_hint()}
         </p>
       </Card.Content>
     </Card.Root>
   {:else}
     <!-- Ticketing Section -->
     <section>
-      <h3 class="mb-4 text-lg font-semibold">Ticketing</h3>
+      <h3 class="mb-4 text-lg font-semibold">{m.reporting_section_ticketing()}</h3>
       <DashboardGrid columns={4}>
         <MetricCard
           data={{
             value: data.metrics.billing.totalRevenue,
-            label: 'Revenue',
+            label: m.reporting_metric_revenue(),
             format: 'currency',
             unit: data.metrics.billing.currency
           }}
@@ -355,7 +374,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.billing.ticketsSold,
-            label: 'Tickets Sold',
+            label: m.reporting_metric_tickets_sold(),
             format: 'number'
           }}
         >
@@ -367,7 +386,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.billing.checkInRate,
-            label: 'Check-in Rate',
+            label: m.reporting_metric_check_in_rate(),
             format: 'percentage'
           }}
         >
@@ -379,7 +398,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.billing.ordersCount,
-            label: 'Orders',
+            label: m.reporting_metric_orders(),
             format: 'number'
           }}
         >
@@ -391,7 +410,7 @@ const budgetUsageChartData = $derived(
 
       <div class="mt-4 grid gap-4 md:grid-cols-2">
         {#if ticketTypeChartData.length > 0}
-          <HorizontalBarChart title="Tickets by Type" items={ticketTypeChartData}>
+          <HorizontalBarChart title={m.reporting_chart_tickets_by_type()} items={ticketTypeChartData}>
             {#snippet icon()}
               <Ticket class="h-4 w-4" />
             {/snippet}
@@ -399,15 +418,15 @@ const budgetUsageChartData = $derived(
         {:else}
           <Card.Root>
             <Card.Header class="pb-2">
-              <Card.Title class="text-sm font-medium">Tickets by Type</Card.Title>
+              <Card.Title class="text-sm font-medium">{m.reporting_chart_tickets_by_type()}</Card.Title>
             </Card.Header>
             <Card.Content class="flex items-center justify-center py-8">
-              <p class="text-sm text-muted-foreground">No ticket sales yet</p>
+              <p class="text-sm text-muted-foreground">{m.reporting_chart_no_sales()}</p>
             </Card.Content>
           </Card.Root>
         {/if}
 
-        <HorizontalBarChart title="Check-in Progress" items={checkInChartData}>
+        <HorizontalBarChart title={m.reporting_chart_check_in_progress()} items={checkInChartData}>
           {#snippet icon()}
             <Check class="h-4 w-4" />
           {/snippet}
@@ -417,12 +436,12 @@ const budgetUsageChartData = $derived(
 
     <!-- CFP Section -->
     <section>
-      <h3 class="mb-4 text-lg font-semibold">Call for Papers</h3>
+      <h3 class="mb-4 text-lg font-semibold">{m.reporting_section_cfp()}</h3>
       <DashboardGrid columns={4}>
         <MetricCard
           data={{
             value: data.metrics.cfp.totalSubmissions,
-            label: 'Submissions',
+            label: m.reporting_metric_submissions(),
             format: 'number'
           }}
         >
@@ -434,7 +453,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.cfp.pendingReviews,
-            label: 'Pending Reviews',
+            label: m.reporting_metric_pending_reviews(),
             format: 'number'
           }}
         >
@@ -446,7 +465,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.cfp.acceptedTalks,
-            label: 'Accepted',
+            label: m.reporting_metric_accepted(),
             format: 'number'
           }}
         >
@@ -458,7 +477,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.cfp.speakersCount,
-            label: 'Speakers',
+            label: m.reporting_metric_speakers(),
             format: 'number'
           }}
         >
@@ -469,14 +488,14 @@ const budgetUsageChartData = $derived(
       </DashboardGrid>
 
       <div class="mt-4 grid gap-4 md:grid-cols-3">
-        <HorizontalBarChart title="Submission Status" items={cfpStatusChartData}>
+        <HorizontalBarChart title={m.reporting_chart_submission_status()} items={cfpStatusChartData}>
           {#snippet icon()}
             <FileText class="h-4 w-4" />
           {/snippet}
         </HorizontalBarChart>
 
         {#if talkCategoryChartData.length > 0}
-          <HorizontalBarChart title="Talks by Category" items={talkCategoryChartData}>
+          <HorizontalBarChart title={m.reporting_chart_talks_by_category()} items={talkCategoryChartData}>
             {#snippet icon()}
               <Target class="h-4 w-4" />
             {/snippet}
@@ -484,16 +503,16 @@ const budgetUsageChartData = $derived(
         {:else}
           <Card.Root>
             <Card.Header class="pb-2">
-              <Card.Title class="text-sm font-medium">Talks by Category</Card.Title>
+              <Card.Title class="text-sm font-medium">{m.reporting_chart_talks_by_category()}</Card.Title>
             </Card.Header>
             <Card.Content class="flex items-center justify-center py-8">
-              <p class="text-sm text-muted-foreground">No categories defined</p>
+              <p class="text-sm text-muted-foreground">{m.reporting_chart_no_categories()}</p>
             </Card.Content>
           </Card.Root>
         {/if}
 
         {#if talkFormatChartData.length > 0}
-          <HorizontalBarChart title="Talks by Format" items={talkFormatChartData}>
+          <HorizontalBarChart title={m.reporting_chart_talks_by_format()} items={talkFormatChartData}>
             {#snippet icon()}
               <Calendar class="h-4 w-4" />
             {/snippet}
@@ -501,10 +520,10 @@ const budgetUsageChartData = $derived(
         {:else}
           <Card.Root>
             <Card.Header class="pb-2">
-              <Card.Title class="text-sm font-medium">Talks by Format</Card.Title>
+              <Card.Title class="text-sm font-medium">{m.reporting_chart_talks_by_format()}</Card.Title>
             </Card.Header>
             <Card.Content class="flex items-center justify-center py-8">
-              <p class="text-sm text-muted-foreground">No formats defined</p>
+              <p class="text-sm text-muted-foreground">{m.reporting_chart_no_formats()}</p>
             </Card.Content>
           </Card.Root>
         {/if}
@@ -513,12 +532,12 @@ const budgetUsageChartData = $derived(
 
     <!-- Planning Section -->
     <section>
-      <h3 class="mb-4 text-lg font-semibold">Planning</h3>
+      <h3 class="mb-4 text-lg font-semibold">{m.reporting_section_planning()}</h3>
       <DashboardGrid columns={4}>
         <MetricCard
           data={{
             value: data.metrics.planning.totalSessions,
-            label: 'Total Sessions',
+            label: m.reporting_metric_total_sessions(),
             format: 'number'
           }}
         >
@@ -530,7 +549,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.planning.tracksCount,
-            label: 'Tracks',
+            label: m.reporting_metric_tracks(),
             format: 'number'
           }}
         >
@@ -542,7 +561,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.planning.roomsCount,
-            label: 'Rooms',
+            label: m.reporting_metric_rooms(),
             format: 'number'
           }}
         />
@@ -550,21 +569,21 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.planning.unscheduledSessions,
-            label: 'Unscheduled',
+            label: m.reporting_metric_unscheduled(),
             format: 'number'
           }}
         />
       </DashboardGrid>
 
       <div class="mt-4 grid gap-4 md:grid-cols-2">
-        <HorizontalBarChart title="Scheduling Progress" items={sessionsScheduledChartData}>
+        <HorizontalBarChart title={m.reporting_chart_scheduling_progress()} items={sessionsScheduledChartData}>
           {#snippet icon()}
             <Calendar class="h-4 w-4" />
           {/snippet}
         </HorizontalBarChart>
 
         {#if sessionTrackChartData.length > 0}
-          <HorizontalBarChart title="Sessions by Track" items={sessionTrackChartData}>
+          <HorizontalBarChart title={m.reporting_chart_sessions_by_track()} items={sessionTrackChartData}>
             {#snippet icon()}
               <Target class="h-4 w-4" />
             {/snippet}
@@ -572,10 +591,10 @@ const budgetUsageChartData = $derived(
         {:else}
           <Card.Root>
             <Card.Header class="pb-2">
-              <Card.Title class="text-sm font-medium">Sessions by Track</Card.Title>
+              <Card.Title class="text-sm font-medium">{m.reporting_chart_sessions_by_track()}</Card.Title>
             </Card.Header>
             <Card.Content class="flex items-center justify-center py-8">
-              <p class="text-sm text-muted-foreground">No tracks defined</p>
+              <p class="text-sm text-muted-foreground">{m.reporting_chart_no_tracks()}</p>
             </Card.Content>
           </Card.Root>
         {/if}
@@ -584,12 +603,12 @@ const budgetUsageChartData = $derived(
 
     <!-- Sponsoring Section -->
     <section>
-      <h3 class="mb-4 text-lg font-semibold">Sponsoring</h3>
+      <h3 class="mb-4 text-lg font-semibold">{m.reporting_section_sponsoring()}</h3>
       <DashboardGrid columns={4}>
         <MetricCard
           data={{
             value: data.metrics.sponsoring.totalSponsorshipValue,
-            label: 'Sponsorship Value',
+            label: m.reporting_metric_sponsorship_value(),
             format: 'currency',
             unit: data.metrics.sponsoring.currency
           }}
@@ -602,7 +621,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.sponsoring.confirmedSponsors,
-            label: 'Confirmed',
+            label: m.reporting_metric_confirmed(),
             format: 'number'
           }}
         >
@@ -614,7 +633,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.sponsoring.pendingSponsors,
-            label: 'Pending',
+            label: m.reporting_metric_pending(),
             format: 'number'
           }}
         />
@@ -622,27 +641,27 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.sponsoring.totalSponsors,
-            label: 'Total Sponsors',
+            label: m.reporting_metric_total_sponsors(),
             format: 'number'
           }}
         />
       </DashboardGrid>
 
       <div class="mt-4 grid gap-4 md:grid-cols-2">
-        <HorizontalBarChart title="Sponsor Status" items={sponsorStatusChartData}>
+        <HorizontalBarChart title={m.reporting_chart_sponsor_status()} items={sponsorStatusChartData}>
           {#snippet icon()}
             <Users class="h-4 w-4" />
           {/snippet}
         </HorizontalBarChart>
 
         {#if sponsorTierChartData.length > 0}
-          <HorizontalBarChart title="Sponsors by Tier" items={sponsorTierChartData}>
+          <HorizontalBarChart title={m.reporting_chart_sponsors_by_tier()} items={sponsorTierChartData}>
             {#snippet icon()}
               <Target class="h-4 w-4" />
             {/snippet}
           </HorizontalBarChart>
         {:else}
-          <HorizontalBarChart title="Revenue Sources" items={revenueChartItems} unit="EUR">
+          <HorizontalBarChart title={m.reporting_chart_revenue_sources()} items={revenueChartItems} unit="EUR">
             {#snippet icon()}
               <DollarSign class="h-4 w-4" />
             {/snippet}
@@ -653,12 +672,12 @@ const budgetUsageChartData = $derived(
 
     <!-- Budget Section -->
     <section>
-      <h3 class="mb-4 text-lg font-semibold">Budget</h3>
+      <h3 class="mb-4 text-lg font-semibold">{m.reporting_section_budget()}</h3>
       <DashboardGrid columns={4}>
         <MetricCard
           data={{
             value: data.metrics.budget.totalBudget,
-            label: 'Total Budget',
+            label: m.reporting_metric_total_budget(),
             format: 'currency',
             unit: data.metrics.budget.currency
           }}
@@ -671,7 +690,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.budget.spent,
-            label: 'Spent',
+            label: m.reporting_metric_spent(),
             format: 'currency',
             unit: data.metrics.budget.currency
           }}
@@ -680,7 +699,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.budget.remaining,
-            label: 'Remaining',
+            label: m.reporting_metric_remaining(),
             format: 'currency',
             unit: data.metrics.budget.currency
           }}
@@ -689,7 +708,7 @@ const budgetUsageChartData = $derived(
         <MetricCard
           data={{
             value: data.metrics.crm.totalContacts,
-            label: 'Contacts (CRM)',
+            label: m.reporting_metric_contacts_crm(),
             format: 'number'
           }}
         >
@@ -700,13 +719,13 @@ const budgetUsageChartData = $derived(
       </DashboardGrid>
 
       <div class="mt-4 grid gap-4 md:grid-cols-2">
-        <HorizontalBarChart title="Budget Usage" items={budgetUsageChartData} unit="EUR">
+        <HorizontalBarChart title={m.reporting_chart_budget_usage()} items={budgetUsageChartData} unit="EUR">
           {#snippet icon()}
             <DollarSign class="h-4 w-4" />
           {/snippet}
         </HorizontalBarChart>
 
-        <HorizontalBarChart title="Revenue Sources" items={revenueChartItems} unit="EUR">
+        <HorizontalBarChart title={m.reporting_chart_revenue_sources()} items={revenueChartItems} unit="EUR">
           {#snippet icon()}
             <DollarSign class="h-4 w-4" />
           {/snippet}
@@ -716,11 +735,12 @@ const budgetUsageChartData = $derived(
 
     <!-- Last Updated -->
     {#if data.metrics.lastUpdated}
+      {@const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'}
       <p class="text-right text-xs text-muted-foreground">
-        Last updated: {new Intl.DateTimeFormat('en-US', {
+        {m.reporting_last_updated({ date: new Intl.DateTimeFormat(locale, {
           dateStyle: 'medium',
           timeStyle: 'short'
-        }).format(data.metrics.lastUpdated)}
+        }).format(data.metrics.lastUpdated) })}
       </p>
     {/if}
   {/if}

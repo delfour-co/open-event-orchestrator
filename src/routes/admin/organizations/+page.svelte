@@ -5,6 +5,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
 import { Building2, CalendarDays, Plus, Settings, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -26,20 +27,20 @@ const generateSlug = (name: string) => {
 </script>
 
 <svelte:head>
-  <title>Organizations - Open Event Orchestrator</title>
+  <title>{m.admin_organizations_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Organizations</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.admin_organizations_heading()}</h2>
       <p class="text-muted-foreground">
-        Manage your organizations. Each organization can have multiple events.
+        {m.admin_organizations_description()}
       </p>
     </div>
     <Button onclick={() => (showNewOrg = !showNewOrg)}>
       <Plus class="mr-2 h-4 w-4" />
-      New Organization
+      {m.admin_organizations_new()}
     </Button>
   </div>
 
@@ -55,11 +56,10 @@ const generateSlug = (name: string) => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Building2 class="h-5 w-5" />
-          Create Organization
+          {m.admin_organizations_create_title()}
         </Card.Title>
         <Card.Description>
-          Organizations group related events together. You can add team members and manage
-          permissions per organization.
+          {m.admin_organizations_create_description()}
         </Card.Description>
       </Card.Header>
       <Card.Content>
@@ -76,7 +76,7 @@ const generateSlug = (name: string) => {
         >
           <div class="grid gap-4 md:grid-cols-2">
             <div class="space-y-2">
-              <Label for="org-name">Name</Label>
+              <Label for="org-name">{m.admin_organizations_name()}</Label>
               <Input
                 id="org-name"
                 name="name"
@@ -90,22 +90,22 @@ const generateSlug = (name: string) => {
               />
             </div>
             <div class="space-y-2">
-              <Label for="org-slug">Slug</Label>
+              <Label for="org-slug">{m.admin_organizations_slug()}</Label>
               <Input id="org-slug" name="slug" placeholder="my-conference-org" required />
             </div>
           </div>
           <div class="space-y-2">
-            <Label for="org-description">Description</Label>
+            <Label for="org-description">{m.admin_organizations_description_label()}</Label>
             <Textarea
               id="org-description"
               name="description"
-              placeholder="A brief description of the organization..."
+              placeholder={m.admin_organizations_description_placeholder()}
             />
           </div>
           <div class="flex gap-2">
-            <Button type="submit">Create Organization</Button>
+            <Button type="submit">{m.admin_organizations_create_button()}</Button>
             <Button type="button" variant="ghost" onclick={() => (showNewOrg = false)}>
-              Cancel
+              {m.action_cancel()}
             </Button>
           </div>
         </form>
@@ -118,13 +118,13 @@ const generateSlug = (name: string) => {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <Building2 class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No organizations yet</h3>
+        <h3 class="text-lg font-semibold">{m.admin_organizations_empty_title()}</h3>
         <p class="mb-4 text-sm text-muted-foreground">
-          Create your first organization to start managing events.
+          {m.admin_organizations_empty_description()}
         </p>
         <Button onclick={() => (showNewOrg = true)}>
           <Plus class="mr-2 h-4 w-4" />
-          Create Organization
+          {m.admin_organizations_create_button()}
         </Button>
       </Card.Content>
     </Card.Root>
@@ -143,7 +143,7 @@ const generateSlug = (name: string) => {
                 <div>
                   <Card.Title>{org.name}</Card.Title>
                   <Card.Description>
-                    /{org.slug} - {org.eventsCount} event(s)
+                    /{org.slug} - {m.admin_organizations_events_count({ count: org.eventsCount })}
                   </Card.Description>
                 </div>
               </div>
@@ -151,10 +151,10 @@ const generateSlug = (name: string) => {
                 <a href="/admin/events?org={org.id}">
                   <Button variant="outline" size="sm">
                     <CalendarDays class="mr-2 h-4 w-4" />
-                    View Events
+                    {m.admin_organizations_view_events()}
                   </Button>
                 </a>
-                <a href="/admin/organizations/{org.slug}/settings" title="Organization Settings">
+                <a href="/admin/organizations/{org.slug}/settings" title={m.admin_organizations_settings()}>
                   <Button variant="ghost" size="icon" class="h-8 w-8">
                     <Settings class="h-4 w-4" />
                   </Button>
@@ -167,9 +167,9 @@ const generateSlug = (name: string) => {
                     size="icon"
                     class="h-8 w-8 text-destructive hover:text-destructive"
                     disabled={org.eventsCount > 0}
-                    title={org.eventsCount > 0 ? 'Delete events first' : 'Delete organization'}
+                    title={org.eventsCount > 0 ? m.admin_organizations_delete_events_first() : m.admin_organizations_delete()}
                     onclick={(e) => {
-                      if (!confirm('Delete this organization?')) {
+                      if (!confirm(m.admin_organizations_delete_confirm())) {
                         e.preventDefault()
                       }
                     }}

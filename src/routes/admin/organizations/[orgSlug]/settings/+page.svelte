@@ -6,6 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -55,7 +56,7 @@ const getRoleBadgeColor = (role: string) => {
 </script>
 
 <svelte:head>
-  <title>Organization Settings - {data.organization.name} - Open Event Orchestrator</title>
+  <title>{m.admin_org_settings_title({ name: data.organization.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -68,7 +69,7 @@ const getRoleBadgeColor = (role: string) => {
     </a>
     <div>
       <h2 class="text-3xl font-bold tracking-tight">{data.organization.name}</h2>
-      <p class="text-muted-foreground">Organization settings</p>
+      <p class="text-muted-foreground">{m.admin_org_settings_heading()}</p>
     </div>
   </div>
 

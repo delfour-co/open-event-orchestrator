@@ -5,6 +5,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Select } from '$lib/components/ui/select'
 import { Switch } from '$lib/components/ui/switch'
+import * as m from '$lib/paraglide/messages'
 import { cn } from '$lib/utils'
 import { AlertCircle, AlertTriangle, Info, Plus, Sparkles, Trash2, X } from 'lucide-svelte'
 import {
@@ -15,55 +16,106 @@ import {
   type MetricSource,
   alertLevelSchema,
   comparisonOperatorSchema,
-  getAlertLevelLabel,
-  getComparisonOperatorLabel,
-  getMetricSourceLabel,
   metricSourceSchema
 } from '../domain/alert-threshold'
 
-// Preset threshold templates
-const THRESHOLD_PRESETS = [
+// Localized label functions
+const getLocalizedAlertLevelLabel = (level: AlertLevel): string => {
+  const labels: Record<AlertLevel, string> = {
+    info: m.reporting_alert_level_info(),
+    warning: m.reporting_alert_level_warning(),
+    critical: m.reporting_alert_level_critical()
+  }
+  return labels[level]
+}
+
+const getLocalizedMetricSourceLabel = (source: MetricSource): string => {
+  const labels: Record<MetricSource, string> = {
+    cfp_submissions: m.reporting_metric_source_cfp_submissions(),
+    cfp_reviews: m.reporting_metric_source_cfp_reviews(),
+    cfp_acceptance_rate: m.reporting_metric_source_cfp_acceptance_rate(),
+    cfp_pending_reviews: m.reporting_metric_source_cfp_pending_reviews(),
+    billing_sales: m.reporting_metric_source_billing_sales(),
+    billing_revenue: m.reporting_metric_source_billing_revenue(),
+    billing_stock: m.reporting_metric_source_billing_stock(),
+    crm_contacts: m.reporting_metric_source_crm_contacts(),
+    crm_engagement: m.reporting_metric_source_crm_engagement(),
+    crm_campaigns: m.reporting_metric_source_crm_campaigns(),
+    budget_variance: m.reporting_metric_source_budget_variance(),
+    budget_cashflow: m.reporting_metric_source_budget_cashflow(),
+    budget_utilization: m.reporting_metric_source_budget_utilization(),
+    planning_sessions: m.reporting_metric_source_planning_sessions(),
+    planning_conflicts: m.reporting_metric_source_planning_conflicts(),
+    planning_occupancy: m.reporting_metric_source_planning_occupancy(),
+    sponsoring_revenue: m.reporting_metric_source_sponsoring_revenue(),
+    sponsoring_pipeline: m.reporting_metric_source_sponsoring_pipeline()
+  }
+  return labels[source]
+}
+
+const getLocalizedComparisonOperatorLabel = (operator: ComparisonOperator): string => {
+  const labels: Record<ComparisonOperator, string> = {
+    gt: m.reporting_operator_gt(),
+    gte: m.reporting_operator_gte(),
+    lt: m.reporting_operator_lt(),
+    lte: m.reporting_operator_lte(),
+    eq: m.reporting_operator_eq(),
+    neq: m.reporting_operator_neq()
+  }
+  return labels[operator]
+}
+
+// Preset threshold templates - translations are applied dynamically
+const getThresholdPresets = () => [
   {
-    name: 'Low Ticket Sales',
-    description: 'Alert when ticket sales are below target',
+    key: 'low_sales',
+    name: m.reporting_thresholds_preset_low_sales(),
+    description: m.reporting_thresholds_preset_low_sales_desc(),
     metricSource: 'billing_sales' as MetricSource,
     operator: 'lt' as ComparisonOperator,
     thresholdValue: 50,
     level: 'warning' as AlertLevel
   },
   {
-    name: 'Low Revenue',
-    description: 'Alert when revenue drops below threshold',
+    key: 'low_revenue',
+    name: m.reporting_thresholds_preset_low_revenue(),
+    description: m.reporting_thresholds_preset_low_revenue_desc(),
     metricSource: 'billing_revenue' as MetricSource,
     operator: 'lt' as ComparisonOperator,
     thresholdValue: 10000,
     level: 'critical' as AlertLevel
   },
   {
-    name: 'Pending Reviews Backlog',
-    description: 'Alert when too many talks await review',
+    key: 'pending_reviews',
+    name: m.reporting_thresholds_preset_pending_reviews(),
+    description: m.reporting_thresholds_preset_pending_reviews_desc(),
     metricSource: 'cfp_pending_reviews' as MetricSource,
     operator: 'gt' as ComparisonOperator,
     thresholdValue: 20,
     level: 'info' as AlertLevel
   },
   {
-    name: 'Low Acceptance Rate',
-    description: 'Alert when CFP acceptance rate is low',
+    key: 'low_acceptance',
+    name: m.reporting_thresholds_preset_low_acceptance(),
+    description: m.reporting_thresholds_preset_low_acceptance_desc(),
     metricSource: 'cfp_acceptance_rate' as MetricSource,
     operator: 'lt' as ComparisonOperator,
     thresholdValue: 25,
     level: 'warning' as AlertLevel
   },
   {
-    name: 'Budget Overrun',
-    description: 'Alert when budget utilization exceeds limit',
+    key: 'budget_overrun',
+    name: m.reporting_thresholds_preset_budget_overrun(),
+    description: m.reporting_thresholds_preset_budget_overrun_desc(),
     metricSource: 'budget_utilization' as MetricSource,
     operator: 'gt' as ComparisonOperator,
     thresholdValue: 90,
     level: 'critical' as AlertLevel
   }
-] as const
+]
+
+// Derived presets to get translations reactively
+const thresholdPresets = $derived(getThresholdPresets())
 
 type Props = {
   thresholds: AlertThreshold[]
@@ -159,7 +211,7 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
+function applyPreset(preset: ReturnType<typeof getThresholdPresets>[number]) {
   newName = preset.name
   newDescription = preset.description
   newMetricSource = preset.metricSource
@@ -173,13 +225,13 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
   <!-- Header with Add button -->
   <div class="flex items-center justify-between">
     <div>
-      <h3 class="text-lg font-semibold">Alert Thresholds</h3>
-      <p class="text-sm text-muted-foreground">Configure alerts based on metric values</p>
+      <h3 class="text-lg font-semibold">{m.reporting_thresholds_title()}</h3>
+      <p class="text-sm text-muted-foreground">{m.reporting_thresholds_subtitle()}</p>
     </div>
     {#if !isAddingNew}
       <Button onclick={() => (isAddingNew = true)}>
         <Plus class="mr-2 h-4 w-4" />
-        Add Threshold
+        {m.reporting_thresholds_add()}
       </Button>
     {/if}
   </div>
@@ -188,17 +240,17 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
   {#if isAddingNew}
     <Card.Root class="border-dashed">
       <Card.Header>
-        <Card.Title class="text-base">New Alert Threshold</Card.Title>
+        <Card.Title class="text-base">{m.reporting_thresholds_new()}</Card.Title>
       </Card.Header>
       <Card.Content class="space-y-4">
         <!-- Presets -->
         <div class="space-y-2">
           <div class="flex items-center gap-2 text-sm text-muted-foreground">
             <Sparkles class="h-4 w-4" />
-            <span>Quick presets</span>
+            <span>{m.reporting_thresholds_presets()}</span>
           </div>
           <div class="flex flex-wrap gap-2">
-            {#each THRESHOLD_PRESETS as preset}
+            {#each thresholdPresets as preset}
               <Button
                 type="button"
                 variant="outline"
@@ -214,15 +266,15 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
-            <Input id="name" placeholder="e.g., Low ticket sales" bind:value={newName} />
+            <Label for="name">{m.reporting_thresholds_name()}</Label>
+            <Input id="name" placeholder={m.reporting_thresholds_name_placeholder()} bind:value={newName} />
           </div>
 
           <div class="space-y-2">
-            <Label for="metric">Metric</Label>
+            <Label for="metric">{m.reporting_thresholds_metric()}</Label>
             <Select id="metric" bind:value={newMetricSource}>
               {#each metricSources as source}
-                <option value={source}>{getMetricSourceLabel(source)}</option>
+                <option value={source}>{getLocalizedMetricSourceLabel(source)}</option>
               {/each}
             </Select>
           </div>
@@ -230,16 +282,16 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
 
         <div class="grid gap-4 sm:grid-cols-3">
           <div class="space-y-2">
-            <Label for="operator">Condition</Label>
+            <Label for="operator">{m.reporting_thresholds_condition()}</Label>
             <Select id="operator" bind:value={newOperator}>
               {#each operators as op}
-                <option value={op}>{getComparisonOperatorLabel(op)}</option>
+                <option value={op}>{getLocalizedComparisonOperatorLabel(op)}</option>
               {/each}
             </Select>
           </div>
 
           <div class="space-y-2">
-            <Label for="value">Value</Label>
+            <Label for="value">{m.reporting_thresholds_value()}</Label>
             <Input
               id="value"
               type="number"
@@ -248,30 +300,30 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
           </div>
 
           <div class="space-y-2">
-            <Label for="level">Alert Level</Label>
+            <Label for="level">{m.reporting_thresholds_level()}</Label>
             <Select id="level" bind:value={newLevel}>
               {#each levels as level}
-                <option value={level}>{getAlertLevelLabel(level)}</option>
+                <option value={level}>{getLocalizedAlertLevelLabel(level)}</option>
               {/each}
             </Select>
           </div>
         </div>
 
         <div class="space-y-2">
-          <Label for="description">Description (optional)</Label>
+          <Label for="description">{m.reporting_thresholds_description()}</Label>
           <Input
             id="description"
-            placeholder="Describe what this alert monitors..."
+            placeholder={m.reporting_thresholds_description_placeholder()}
             bind:value={newDescription}
           />
         </div>
 
         <!-- Notification settings -->
         <div class="space-y-4 rounded-lg border p-4">
-          <h4 class="text-sm font-medium">Notification Settings</h4>
+          <h4 class="text-sm font-medium">{m.reporting_thresholds_notification_settings()}</h4>
 
           <div class="flex items-center justify-between">
-            <Label for="notifyInApp" class="cursor-pointer">In-app notifications</Label>
+            <Label for="notifyInApp" class="cursor-pointer">{m.reporting_thresholds_in_app()}</Label>
             <Switch
               id="notifyInApp"
               checked={newNotifyInApp}
@@ -280,7 +332,7 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
           </div>
 
           <div class="flex items-center justify-between">
-            <Label for="notifyByEmail" class="cursor-pointer">Email notifications</Label>
+            <Label for="notifyByEmail" class="cursor-pointer">{m.reporting_thresholds_email()}</Label>
             <Switch
               id="notifyByEmail"
               checked={newNotifyByEmail}
@@ -290,16 +342,16 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
 
           {#if newNotifyByEmail}
             <div class="space-y-2">
-              <Label for="emails">Email Recipients</Label>
+              <Label for="emails">{m.reporting_thresholds_email_recipients()}</Label>
               <div class="flex gap-2">
                 <Input
                   id="emails"
                   type="email"
-                  placeholder="user@example.com"
+                  placeholder={m.reporting_thresholds_email_placeholder()}
                   bind:value={newEmailInput}
                   onkeydown={handleKeyDown}
                 />
-                <Button type="button" variant="outline" onclick={addEmailRecipient}>Add</Button>
+                <Button type="button" variant="outline" onclick={addEmailRecipient}>{m.action_add()}</Button>
               </div>
               {#if newEmailRecipients.length > 0}
                 <div class="flex flex-wrap gap-2">
@@ -324,9 +376,9 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
         </div>
 
         <div class="flex justify-end gap-2">
-          <Button variant="ghost" onclick={resetNewForm}>Cancel</Button>
+          <Button variant="ghost" onclick={resetNewForm}>{m.action_cancel()}</Button>
           <Button onclick={handleAddThreshold} disabled={!newName}>
-            Create Threshold
+            {m.reporting_thresholds_create()}
           </Button>
         </div>
       </Card.Content>
@@ -338,9 +390,9 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-8 text-center">
         <AlertTriangle class="mb-2 h-10 w-10 text-muted-foreground" />
-        <p class="text-sm text-muted-foreground">No alert thresholds configured</p>
+        <p class="text-sm text-muted-foreground">{m.reporting_thresholds_empty()}</p>
         <p class="text-xs text-muted-foreground">
-          Add thresholds to receive alerts when metrics cross certain values
+          {m.reporting_thresholds_empty_hint()}
         </p>
       </Card.Content>
     </Card.Root>
@@ -360,13 +412,13 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
                     <h4 class="font-medium">{threshold.name}</h4>
                     {#if !threshold.enabled}
                       <span class="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                        Disabled
+                        {m.reporting_thresholds_disabled()}
                       </span>
                     {/if}
                   </div>
                   <p class="mt-1 text-sm text-muted-foreground">
-                    {getMetricSourceLabel(threshold.metricSource)}
-                    {getComparisonOperatorLabel(threshold.operator).toLowerCase()}
+                    {getLocalizedMetricSourceLabel(threshold.metricSource)}
+                    {getLocalizedComparisonOperatorLabel(threshold.operator).toLowerCase()}
                     {threshold.thresholdValue}
                   </p>
                   {#if threshold.description}
@@ -374,11 +426,11 @@ function applyPreset(preset: (typeof THRESHOLD_PRESETS)[number]) {
                   {/if}
                   <div class="mt-2 flex flex-wrap gap-2 text-xs">
                     {#if threshold.notifyInApp}
-                      <span class="rounded bg-muted px-1.5 py-0.5">In-app</span>
+                      <span class="rounded bg-muted px-1.5 py-0.5">{m.reporting_thresholds_in_app_tag()}</span>
                     {/if}
                     {#if threshold.notifyByEmail}
                       <span class="rounded bg-muted px-1.5 py-0.5">
-                        Email ({threshold.emailRecipients.length})
+                        {m.reporting_thresholds_email_tag({ count: threshold.emailRecipients.length })}
                       </span>
                     {/if}
                   </div>

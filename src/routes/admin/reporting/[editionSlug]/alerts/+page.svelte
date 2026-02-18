@@ -12,6 +12,7 @@ import type {
 } from '$lib/features/reporting/domain/alert-threshold'
 import { AlertList } from '$lib/features/reporting/ui'
 import AlertThresholdConfig from '$lib/features/reporting/ui/AlertThresholdConfig.svelte'
+import * as m from '$lib/paraglide/messages'
 import { cn } from '$lib/utils'
 import { AlertCircle, AlertTriangle, ArrowLeft, Bell, Info, Settings } from 'lucide-svelte'
 import type { PageData } from './$types'
@@ -93,22 +94,22 @@ const resolvedAlerts = $derived(
 
 // Navigation items with badges
 const navItems = $derived<NavItem[]>([
-  { href: `/admin/reporting/${data.edition?.slug}`, label: 'Dashboard' },
+  { href: `/admin/reporting/${data.edition?.slug}`, label: m.reporting_dashboard_nav() },
   {
     href: `/admin/reporting/${data.edition?.slug}/alerts`,
-    label: 'Alerts',
+    label: m.reporting_alerts_nav(),
     badge: data.navBadges.alerts
   },
   {
     href: `/admin/reporting/${data.edition?.slug}/reports`,
-    label: 'Reports',
+    label: m.reporting_reports_nav(),
     badge: data.navBadges.reports
   }
 ])
 </script>
 
 <svelte:head>
-  <title>Alerts - {data.edition?.name ?? 'Reporting'} - Open Event Orchestrator</title>
+  <title>{m.reporting_alerts_title({ name: data.edition?.name ?? m.reporting_title() })}</title>
 </svelte:head>
 
 <!-- Hidden forms for programmatic submission -->
@@ -233,9 +234,9 @@ const navItems = $derived<NavItem[]>([
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <Bell class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No edition available</h3>
+        <h3 class="text-lg font-semibold">{m.reporting_alerts_no_edition()}</h3>
         <p class="text-sm text-muted-foreground">
-          Create an edition for this event to configure alerts.
+          {m.reporting_alerts_create_edition_hint()}
         </p>
       </Card.Content>
     </Card.Root>
@@ -248,7 +249,7 @@ const navItems = $derived<NavItem[]>([
             <Bell class="h-5 w-5 text-muted-foreground" />
             <span class="text-2xl font-bold">{data.alertCounts.active}</span>
           </div>
-          <p class="text-sm text-muted-foreground">Active Alerts</p>
+          <p class="text-sm text-muted-foreground">{m.reporting_alerts_active()}</p>
         </Card.Content>
       </Card.Root>
 
@@ -258,7 +259,7 @@ const navItems = $derived<NavItem[]>([
             <Info class="h-5 w-5 text-blue-500" />
             <span class="text-2xl font-bold">{data.alertCounts.byLevel.info}</span>
           </div>
-          <p class="text-sm text-muted-foreground">Info</p>
+          <p class="text-sm text-muted-foreground">{m.reporting_alerts_info()}</p>
         </Card.Content>
       </Card.Root>
 
@@ -268,7 +269,7 @@ const navItems = $derived<NavItem[]>([
             <AlertTriangle class="h-5 w-5 text-yellow-500" />
             <span class="text-2xl font-bold">{data.alertCounts.byLevel.warning}</span>
           </div>
-          <p class="text-sm text-muted-foreground">Warning</p>
+          <p class="text-sm text-muted-foreground">{m.reporting_alerts_warning()}</p>
         </Card.Content>
       </Card.Root>
 
@@ -278,7 +279,7 @@ const navItems = $derived<NavItem[]>([
             <AlertCircle class="h-5 w-5 text-red-500" />
             <span class="text-2xl font-bold">{data.alertCounts.byLevel.critical}</span>
           </div>
-          <p class="text-sm text-muted-foreground">Critical</p>
+          <p class="text-sm text-muted-foreground">{m.reporting_alerts_critical()}</p>
         </Card.Content>
       </Card.Root>
     </div>
@@ -296,7 +297,7 @@ const navItems = $derived<NavItem[]>([
           )}
         >
           <Bell class="h-4 w-4" />
-          Alerts
+          {m.reporting_alerts_tab()}
           {#if activeAlerts.length > 0}
             <span class="rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
               {activeAlerts.length}
@@ -313,7 +314,7 @@ const navItems = $derived<NavItem[]>([
           )}
         >
           <Settings class="h-4 w-4" />
-          Thresholds
+          {m.reporting_alerts_thresholds_tab()}
           <span class="rounded-full bg-muted px-2 py-0.5 text-xs">
             {data.thresholds.length}
           </span>
@@ -327,7 +328,7 @@ const navItems = $derived<NavItem[]>([
               : 'border-transparent text-muted-foreground hover:text-foreground'
           )}
         >
-          History
+          {m.reporting_alerts_history_tab()}
           <span class="rounded-full bg-muted px-2 py-0.5 text-xs">
             {resolvedAlerts.length}
           </span>
@@ -355,7 +356,7 @@ const navItems = $derived<NavItem[]>([
             <Card.Root>
               <Card.Content class="flex flex-col items-center justify-center py-8 text-center">
                 <Bell class="mb-2 h-10 w-10 text-muted-foreground" />
-                <p class="text-sm text-muted-foreground">No resolved alerts yet</p>
+                <p class="text-sm text-muted-foreground">{m.reporting_alerts_no_resolved()}</p>
               </Card.Content>
             </Card.Root>
           {:else}

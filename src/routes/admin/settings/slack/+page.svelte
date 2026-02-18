@@ -5,6 +5,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertCircle,
   ArrowLeft,
@@ -32,7 +33,7 @@ let testing = $state(false)
 </script>
 
 <svelte:head>
-  <title>Slack Settings - Open Event Orchestrator</title>
+  <title>{m.admin_slack_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -44,9 +45,9 @@ let testing = $state(false)
         </Button>
       </a>
       <div>
-        <h2 class="text-3xl font-bold tracking-tight">Slack Configuration</h2>
+        <h2 class="text-3xl font-bold tracking-tight">{m.admin_slack_heading()}</h2>
         <p class="text-muted-foreground">
-          Configure Slack webhook notifications for your events.
+          {m.admin_slack_description()}
         </p>
       </div>
     </div>
@@ -54,12 +55,12 @@ let testing = $state(false)
       {#if data.slack.isConfigured}
         <Badge variant="default">
           <CheckCircle2 class="mr-1 h-3 w-3" />
-          Configured
+          {m.admin_slack_configured()}
         </Badge>
       {:else}
         <Badge variant="secondary">
           <AlertCircle class="mr-1 h-3 w-3" />
-          Not configured
+          {m.admin_slack_not_configured()}
         </Badge>
       {/if}
     </div>
@@ -70,7 +71,7 @@ let testing = $state(false)
       class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
     >
       <CheckCircle2 class="mr-2 inline h-4 w-4" />
-      Slack settings saved successfully.
+      {m.admin_slack_saved()}
     </div>
   {/if}
 
@@ -79,7 +80,7 @@ let testing = $state(false)
       class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
     >
       <CheckCircle2 class="mr-2 inline h-4 w-4" />
-      {form.message}
+      {m.admin_slack_test_success()}
     </div>
   {/if}
 
@@ -96,11 +97,10 @@ let testing = $state(false)
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <Hash class="h-5 w-5" />
-        Webhook Settings
+        {m.admin_slack_webhook_title()}
       </Card.Title>
       <Card.Description>
-        Enter your Slack webhook URL. You can create a webhook in your Slack workspace
-        under Apps &gt; Incoming Webhooks.
+        {m.admin_slack_webhook_description()}
       </Card.Description>
     </Card.Header>
     <Card.Content>
@@ -108,9 +108,9 @@ let testing = $state(false)
         <!-- Enabled toggle -->
         <div class="flex items-center justify-between rounded-lg border p-4">
           <div>
-            <div class="font-medium">Enable Slack</div>
+            <div class="font-medium">{m.admin_slack_enable()}</div>
             <p class="text-sm text-muted-foreground">
-              When disabled, Slack notifications will not be sent.
+              {m.admin_slack_enable_hint()}
             </p>
           </div>
           <label class="relative inline-flex cursor-pointer items-center">
@@ -125,7 +125,7 @@ let testing = $state(false)
         <div class="space-y-4">
           <!-- Webhook URL -->
           <div class="space-y-2">
-            <Label for="slackWebhookUrl">Webhook URL</Label>
+            <Label for="slackWebhookUrl">{m.admin_slack_webhook_url()}</Label>
             <div class="relative">
               <Webhook
                 class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -153,15 +153,13 @@ let testing = $state(false)
               </button>
             </div>
             <p class="text-xs text-muted-foreground">
-              Format: <code class="rounded bg-muted px-1"
-                >https://hooks.slack.com/services/T00/B00/XXX</code
-              >
+              {m.admin_slack_webhook_url_hint()}
             </p>
           </div>
 
           <!-- Default Channel -->
           <div class="space-y-2">
-            <Label for="slackDefaultChannel">Default Channel (optional)</Label>
+            <Label for="slackDefaultChannel">{m.admin_slack_default_channel()}</Label>
             <div class="relative">
               <Hash
                 class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -176,21 +174,21 @@ let testing = $state(false)
               />
             </div>
             <p class="text-xs text-muted-foreground">
-              The default channel for notifications. Leave empty for webhook default.
+              {m.admin_slack_default_channel_hint()}
             </p>
           </div>
         </div>
 
         {#if data.slack.hasWebhookUrl}
           <p class="text-xs text-muted-foreground">
-            Leave webhook URL field empty to keep the current value.
+            {m.admin_slack_keep_current()}
           </p>
         {/if}
 
         <div class="flex justify-end">
           <Button type="submit">
             <Check class="mr-2 h-4 w-4" />
-            Save Settings
+            {m.admin_slack_save()}
           </Button>
         </div>
       </form>
@@ -202,10 +200,10 @@ let testing = $state(false)
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <TestTube class="h-5 w-5" />
-        Test Connection
+        {m.admin_slack_test_title()}
       </Card.Title>
       <Card.Description>
-        Send a test message to verify your Slack webhook is working correctly.
+        {m.admin_slack_test_description()}
       </Card.Description>
     </Card.Header>
     <Card.Content>
@@ -223,15 +221,15 @@ let testing = $state(false)
         <Button type="submit" variant="outline" disabled={!data.slack.hasWebhookUrl || testing}>
           {#if testing}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-            Testing...
+            {m.admin_slack_testing()}
           {:else}
             <TestTube class="mr-2 h-4 w-4" />
-            Send Test Message
+            {m.admin_slack_test_button()}
           {/if}
         </Button>
         {#if !data.slack.hasWebhookUrl}
           <p class="mt-2 text-xs text-muted-foreground">
-            Save a webhook URL first to test the connection.
+            {m.admin_slack_save_first()}
           </p>
         {/if}
       </form>
@@ -243,21 +241,20 @@ let testing = $state(false)
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <Hash class="h-5 w-5" />
-        How to Create a Slack Webhook
+        {m.admin_slack_setup_title()}
       </Card.Title>
     </Card.Header>
     <Card.Content>
       <ol class="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
-        <li>Go to <strong>api.slack.com/apps</strong> and create or select an app</li>
-        <li>Enable <strong>Incoming Webhooks</strong> for your app</li>
-        <li>Click <strong>Add New Webhook to Workspace</strong></li>
-        <li>Select the channel where you want notifications to appear</li>
-        <li>Click <strong>Allow</strong> to authorize the webhook</li>
-        <li>Copy the <strong>Webhook URL</strong> and paste it above</li>
+        <li>{m.admin_slack_setup_step1()}</li>
+        <li>{m.admin_slack_setup_step2()}</li>
+        <li>{m.admin_slack_setup_step3()}</li>
+        <li>{m.admin_slack_setup_step4()}</li>
+        <li>{m.admin_slack_setup_step5()}</li>
+        <li>{m.admin_slack_setup_step6()}</li>
       </ol>
       <div class="mt-4 rounded-md bg-muted p-3 text-sm">
-        <strong>Note:</strong> Slack webhooks are tied to a specific channel during creation.
-        You can override this with the Default Channel setting above.
+        {m.admin_slack_setup_note()}
       </div>
     </Card.Content>
   </Card.Root>

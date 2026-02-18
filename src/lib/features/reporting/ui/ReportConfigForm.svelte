@@ -4,6 +4,7 @@ import { Checkbox } from '$lib/components/ui/checkbox'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Select } from '$lib/components/ui/select'
+import * as m from '$lib/paraglide/messages'
 import { Clock, Sparkles, Users } from 'lucide-svelte'
 import type {
   CreateReportConfig,
@@ -12,13 +13,13 @@ import type {
   ReportFrequency,
   ReportSection
 } from '../domain/report-config'
-import { RECIPIENT_ROLE_LABELS } from '../domain/report-config'
 
-// Preset report templates
-const REPORT_PRESETS = [
+// Preset report templates - translations are applied dynamically
+const getReportPresets = () => [
   {
-    name: 'Weekly Summary',
-    label: 'Weekly Summary',
+    key: 'weekly',
+    name: m.reporting_reports_preset_weekly(),
+    label: m.reporting_reports_preset_weekly(),
     frequency: 'weekly' as ReportFrequency,
     dayOfWeek: 'monday' as DayOfWeek,
     timeOfDay: '09:00',
@@ -26,16 +27,18 @@ const REPORT_PRESETS = [
     sections: ['cfp', 'billing', 'planning'] as ReportSection[]
   },
   {
-    name: 'Daily Sales',
-    label: 'Daily Sales',
+    key: 'daily_sales',
+    name: m.reporting_reports_preset_daily_sales(),
+    label: m.reporting_reports_preset_daily_sales(),
     frequency: 'daily' as ReportFrequency,
     timeOfDay: '08:00',
     recipientRoles: ['admin'] as RecipientRole[],
     sections: ['billing'] as ReportSection[]
   },
   {
-    name: 'Monthly Overview',
-    label: 'Monthly Overview',
+    key: 'monthly',
+    name: m.reporting_reports_preset_monthly(),
+    label: m.reporting_reports_preset_monthly(),
     frequency: 'monthly' as ReportFrequency,
     dayOfMonth: 1,
     timeOfDay: '10:00',
@@ -43,15 +46,19 @@ const REPORT_PRESETS = [
     sections: ['cfp', 'billing', 'planning', 'budget', 'sponsoring'] as ReportSection[]
   },
   {
-    name: 'CFP Weekly',
-    label: 'CFP Weekly',
+    key: 'cfp_weekly',
+    name: m.reporting_reports_preset_cfp_weekly(),
+    label: m.reporting_reports_preset_cfp_weekly(),
     frequency: 'weekly' as ReportFrequency,
     dayOfWeek: 'friday' as DayOfWeek,
     timeOfDay: '17:00',
     recipientRoles: ['admin', 'organizer'] as RecipientRole[],
     sections: ['cfp'] as ReportSection[]
   }
-] as const
+]
+
+// Derived presets to get translations reactively
+const reportPresets = $derived(getReportPresets())
 
 interface Props {
   initialData?: Partial<CreateReportConfig>
@@ -83,36 +90,43 @@ let timezone = $state(initTimezone)
 let recipientRoles = $state<RecipientRole[]>(initRecipientRoles)
 let sections = $state<ReportSection[]>(initSections)
 
-const frequencyOptions = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' }
+// Options with translations - computed as derived values
+const getFrequencyOptions = () => [
+  { value: 'daily', label: m.reporting_reports_form_frequency_daily() },
+  { value: 'weekly', label: m.reporting_reports_form_frequency_weekly() },
+  { value: 'monthly', label: m.reporting_reports_form_frequency_monthly() }
 ]
 
-const dayOfWeekOptions = [
-  { value: 'monday', label: 'Mon' },
-  { value: 'tuesday', label: 'Tue' },
-  { value: 'wednesday', label: 'Wed' },
-  { value: 'thursday', label: 'Thu' },
-  { value: 'friday', label: 'Fri' },
-  { value: 'saturday', label: 'Sat' },
-  { value: 'sunday', label: 'Sun' }
+const getDayOfWeekOptions = () => [
+  { value: 'monday', label: m.reporting_reports_form_day_mon() },
+  { value: 'tuesday', label: m.reporting_reports_form_day_tue() },
+  { value: 'wednesday', label: m.reporting_reports_form_day_wed() },
+  { value: 'thursday', label: m.reporting_reports_form_day_thu() },
+  { value: 'friday', label: m.reporting_reports_form_day_fri() },
+  { value: 'saturday', label: m.reporting_reports_form_day_sat() },
+  { value: 'sunday', label: m.reporting_reports_form_day_sun() }
 ]
 
-const roleOptions: { value: RecipientRole; label: string }[] = [
-  { value: 'owner', label: RECIPIENT_ROLE_LABELS.owner },
-  { value: 'admin', label: RECIPIENT_ROLE_LABELS.admin },
-  { value: 'organizer', label: RECIPIENT_ROLE_LABELS.organizer }
+const getRoleOptions = (): { value: RecipientRole; label: string }[] => [
+  { value: 'owner', label: m.reporting_reports_form_role_owner() },
+  { value: 'admin', label: m.reporting_reports_form_role_admin() },
+  { value: 'organizer', label: m.reporting_reports_form_role_organizer() }
 ]
 
-const sectionOptions: { value: ReportSection; label: string }[] = [
-  { value: 'cfp', label: 'CFP' },
-  { value: 'billing', label: 'Billing' },
-  { value: 'planning', label: 'Planning' },
-  { value: 'crm', label: 'CRM' },
-  { value: 'budget', label: 'Budget' },
-  { value: 'sponsoring', label: 'Sponsoring' }
+const getSectionOptions = (): { value: ReportSection; label: string }[] => [
+  { value: 'cfp', label: m.reporting_reports_form_section_cfp() },
+  { value: 'billing', label: m.reporting_reports_form_section_billing() },
+  { value: 'planning', label: m.reporting_reports_form_section_planning() },
+  { value: 'crm', label: m.reporting_reports_form_section_crm() },
+  { value: 'budget', label: m.reporting_reports_form_section_budget() },
+  { value: 'sponsoring', label: m.reporting_reports_form_section_sponsoring() }
 ]
+
+// Derived options for reactive translations
+const frequencyOptions = $derived(getFrequencyOptions())
+const dayOfWeekOptions = $derived(getDayOfWeekOptions())
+const roleOptions = $derived(getRoleOptions())
+const sectionOptions = $derived(getSectionOptions())
 
 const timezoneOptions = [
   { value: 'Europe/Paris', label: 'Paris' },
@@ -170,7 +184,7 @@ function handleTimezoneChange(e: Event) {
   timezone = target.value
 }
 
-function applyPreset(preset: (typeof REPORT_PRESETS)[number]) {
+function applyPreset(preset: ReturnType<typeof getReportPresets>[number]) {
   name = preset.name
   frequency = preset.frequency
   if ('dayOfWeek' in preset) dayOfWeek = preset.dayOfWeek
@@ -200,10 +214,10 @@ const isValid = $derived(
   <div class="space-y-2">
     <div class="flex items-center gap-2 text-sm text-muted-foreground">
       <Sparkles class="h-4 w-4" />
-      <span>Quick presets</span>
+      <span>{m.reporting_reports_form_presets()}</span>
     </div>
     <div class="flex flex-wrap gap-2">
-      {#each REPORT_PRESETS as preset}
+      {#each reportPresets as preset}
         <Button
           type="button"
           variant="outline"
@@ -220,12 +234,12 @@ const isValid = $derived(
   <!-- Name & Enabled -->
   <div class="flex items-end gap-3">
     <div class="flex-1 space-y-1">
-      <Label for="name">Name</Label>
-      <Input id="name" bind:value={name} placeholder="Weekly Summary" required />
+      <Label for="name">{m.reporting_reports_form_name()}</Label>
+      <Input id="name" bind:value={name} placeholder={m.reporting_reports_form_name_placeholder()} required />
     </div>
     <div class="flex items-center gap-2 pb-2">
       <Checkbox id="enabled" bind:checked={enabled} />
-      <Label for="enabled" class="cursor-pointer text-sm">Enabled</Label>
+      <Label for="enabled" class="cursor-pointer text-sm">{m.reporting_reports_form_enabled()}</Label>
     </div>
   </div>
 
@@ -233,12 +247,12 @@ const isValid = $derived(
   <div class="space-y-3 rounded-lg border p-3">
     <h3 class="flex items-center gap-2 text-sm font-medium">
       <Clock class="h-4 w-4" />
-      Schedule
+      {m.reporting_reports_form_schedule()}
     </h3>
 
     <div class="grid gap-3 sm:grid-cols-4">
       <div class="space-y-1">
-        <Label for="frequency" class="text-xs">Frequency</Label>
+        <Label for="frequency" class="text-xs">{m.reporting_reports_form_frequency()}</Label>
         <Select id="frequency" value={frequency} onchange={handleFrequencyChange}>
           {#each frequencyOptions as option}
             <option value={option.value}>{option.label}</option>
@@ -248,7 +262,7 @@ const isValid = $derived(
 
       {#if frequency === 'weekly'}
         <div class="space-y-1">
-          <Label for="dayOfWeek" class="text-xs">Day</Label>
+          <Label for="dayOfWeek" class="text-xs">{m.reporting_reports_form_day()}</Label>
           <Select id="dayOfWeek" value={dayOfWeek} onchange={handleDayOfWeekChange}>
             {#each dayOfWeekOptions as option}
               <option value={option.value}>{option.label}</option>
@@ -259,7 +273,7 @@ const isValid = $derived(
 
       {#if frequency === 'monthly'}
         <div class="space-y-1">
-          <Label for="dayOfMonth" class="text-xs">Day</Label>
+          <Label for="dayOfMonth" class="text-xs">{m.reporting_reports_form_day()}</Label>
           <Input
             id="dayOfMonth"
             type="number"
@@ -272,12 +286,12 @@ const isValid = $derived(
       {/if}
 
       <div class="space-y-1">
-        <Label for="timeOfDay" class="text-xs">Time</Label>
+        <Label for="timeOfDay" class="text-xs">{m.reporting_reports_form_time()}</Label>
         <Input id="timeOfDay" type="time" bind:value={timeOfDay} />
       </div>
 
       <div class="space-y-1">
-        <Label for="timezone" class="text-xs">Timezone</Label>
+        <Label for="timezone" class="text-xs">{m.reporting_reports_form_timezone()}</Label>
         <Select id="timezone" value={timezone} onchange={handleTimezoneChange}>
           {#each timezoneOptions as option}
             <option value={option.value}>{option.label}</option>
@@ -291,10 +305,10 @@ const isValid = $derived(
   <div class="space-y-2 rounded-lg border p-3">
     <h3 class="flex items-center gap-2 text-sm font-medium">
       <Users class="h-4 w-4" />
-      Recipients
+      {m.reporting_reports_form_recipients()}
     </h3>
     <p class="text-xs text-muted-foreground">
-      Select which roles receive the report
+      {m.reporting_reports_form_recipients_hint()}
     </p>
     <div class="flex flex-wrap gap-4">
       {#each roleOptions as option}
@@ -312,7 +326,7 @@ const isValid = $derived(
 
   <!-- Sections -->
   <div class="space-y-2 rounded-lg border p-3">
-    <h3 class="text-sm font-medium">Sections</h3>
+    <h3 class="text-sm font-medium">{m.reporting_reports_form_sections()}</h3>
     <div class="flex flex-wrap gap-4">
       {#each sectionOptions as option}
         <div class="flex items-center gap-2">
@@ -330,10 +344,10 @@ const isValid = $derived(
   <!-- Actions -->
   <div class="flex justify-end gap-2 pt-2">
     <Button type="button" variant="outline" size="sm" onclick={onCancel} disabled={isLoading}>
-      Cancel
+      {m.action_cancel()}
     </Button>
     <Button type="submit" size="sm" disabled={!isValid || isLoading}>
-      {isLoading ? 'Saving...' : 'Save'}
+      {isLoading ? m.reporting_reports_form_saving() : m.action_save()}
     </Button>
   </div>
 </form>

@@ -1,5 +1,7 @@
 <script lang="ts">
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import { cn } from '$lib/utils'
 import { Loader2 } from 'lucide-svelte'
 import type { Snippet } from 'svelte'
@@ -22,8 +24,10 @@ const formatValue = (
 ): string => {
   if (typeof value === 'string') return value
 
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+
   if (format === 'currency') {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: unit || 'EUR'
     }).format(value)
@@ -34,7 +38,7 @@ const formatValue = (
   }
 
   if (format === 'number' || !format) {
-    return new Intl.NumberFormat('fr-FR').format(value)
+    return new Intl.NumberFormat(locale).format(value)
   }
 
   return String(value)
@@ -54,7 +58,7 @@ const formatValue = (
     {#if loading}
       <div class="flex items-center gap-2">
         <Loader2 class="h-4 w-4 animate-spin" />
-        <span class="text-muted-foreground">Loading...</span>
+        <span class="text-muted-foreground">{m.status_loading()}</span>
       </div>
     {:else}
       <div class="text-2xl font-bold">

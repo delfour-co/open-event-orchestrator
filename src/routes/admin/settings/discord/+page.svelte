@@ -5,6 +5,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertCircle,
   ArrowLeft,
@@ -33,7 +34,7 @@ let testing = $state(false)
 </script>
 
 <svelte:head>
-  <title>Discord Settings - Open Event Orchestrator</title>
+  <title>{m.admin_discord_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -45,9 +46,9 @@ let testing = $state(false)
         </Button>
       </a>
       <div>
-        <h2 class="text-3xl font-bold tracking-tight">Discord Configuration</h2>
+        <h2 class="text-3xl font-bold tracking-tight">{m.admin_discord_heading()}</h2>
         <p class="text-muted-foreground">
-          Configure Discord webhook notifications for your events.
+          {m.admin_discord_description()}
         </p>
       </div>
     </div>
@@ -55,12 +56,12 @@ let testing = $state(false)
       {#if data.discord.isConfigured}
         <Badge variant="default">
           <CheckCircle2 class="mr-1 h-3 w-3" />
-          Configured
+          {m.admin_discord_configured()}
         </Badge>
       {:else}
         <Badge variant="secondary">
           <AlertCircle class="mr-1 h-3 w-3" />
-          Not configured
+          {m.admin_discord_not_configured()}
         </Badge>
       {/if}
     </div>
@@ -71,7 +72,7 @@ let testing = $state(false)
       class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
     >
       <CheckCircle2 class="mr-2 inline h-4 w-4" />
-      Discord settings saved successfully.
+      {m.admin_discord_saved()}
     </div>
   {/if}
 
@@ -80,7 +81,7 @@ let testing = $state(false)
       class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
     >
       <CheckCircle2 class="mr-2 inline h-4 w-4" />
-      {form.message}
+      {m.admin_discord_test_success()}
     </div>
   {/if}
 
@@ -97,11 +98,10 @@ let testing = $state(false)
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <MessageCircle class="h-5 w-5" />
-        Webhook Settings
+        {m.admin_discord_webhook_title()}
       </Card.Title>
       <Card.Description>
-        Enter your Discord webhook URL. You can create a webhook in your Discord server settings
-        under Integrations &gt; Webhooks.
+        {m.admin_discord_webhook_description()}
       </Card.Description>
     </Card.Header>
     <Card.Content>
@@ -109,9 +109,9 @@ let testing = $state(false)
         <!-- Enabled toggle -->
         <div class="flex items-center justify-between rounded-lg border p-4">
           <div>
-            <div class="font-medium">Enable Discord</div>
+            <div class="font-medium">{m.admin_discord_enable()}</div>
             <p class="text-sm text-muted-foreground">
-              When disabled, Discord notifications will not be sent.
+              {m.admin_discord_enable_hint()}
             </p>
           </div>
           <label class="relative inline-flex cursor-pointer items-center">
@@ -126,7 +126,7 @@ let testing = $state(false)
         <div class="space-y-4">
           <!-- Webhook URL -->
           <div class="space-y-2">
-            <Label for="discordWebhookUrl">Webhook URL</Label>
+            <Label for="discordWebhookUrl">{m.admin_discord_webhook_url()}</Label>
             <div class="relative">
               <Webhook
                 class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -154,15 +154,13 @@ let testing = $state(false)
               </button>
             </div>
             <p class="text-xs text-muted-foreground">
-              Format: <code class="rounded bg-muted px-1"
-                >https://discord.com/api/webhooks/ID/TOKEN</code
-              >
+              {m.admin_discord_webhook_url_hint()}
             </p>
           </div>
 
           <!-- Bot Username -->
           <div class="space-y-2">
-            <Label for="discordUsername">Bot Username (optional)</Label>
+            <Label for="discordUsername">{m.admin_discord_bot_username()}</Label>
             <div class="relative">
               <User
                 class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -177,21 +175,21 @@ let testing = $state(false)
               />
             </div>
             <p class="text-xs text-muted-foreground">
-              The display name for notifications in Discord. Leave empty for default.
+              {m.admin_discord_bot_username_hint()}
             </p>
           </div>
         </div>
 
         {#if data.discord.hasWebhookUrl}
           <p class="text-xs text-muted-foreground">
-            Leave webhook URL field empty to keep the current value.
+            {m.admin_discord_keep_current()}
           </p>
         {/if}
 
         <div class="flex justify-end">
           <Button type="submit">
             <Check class="mr-2 h-4 w-4" />
-            Save Settings
+            {m.admin_discord_save()}
           </Button>
         </div>
       </form>
@@ -203,10 +201,10 @@ let testing = $state(false)
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <TestTube class="h-5 w-5" />
-        Test Connection
+        {m.admin_discord_test_title()}
       </Card.Title>
       <Card.Description>
-        Send a test message to verify your Discord webhook is working correctly.
+        {m.admin_discord_test_description()}
       </Card.Description>
     </Card.Header>
     <Card.Content>
@@ -224,15 +222,15 @@ let testing = $state(false)
         <Button type="submit" variant="outline" disabled={!data.discord.hasWebhookUrl || testing}>
           {#if testing}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-            Testing...
+            {m.admin_discord_testing()}
           {:else}
             <TestTube class="mr-2 h-4 w-4" />
-            Send Test Message
+            {m.admin_discord_test_button()}
           {/if}
         </Button>
         {#if !data.discord.hasWebhookUrl}
           <p class="mt-2 text-xs text-muted-foreground">
-            Save a webhook URL first to test the connection.
+            {m.admin_discord_save_first()}
           </p>
         {/if}
       </form>
@@ -244,20 +242,19 @@ let testing = $state(false)
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <MessageCircle class="h-5 w-5" />
-        How to Create a Discord Webhook
+        {m.admin_discord_setup_title()}
       </Card.Title>
     </Card.Header>
     <Card.Content>
       <ol class="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
-        <li>Open your Discord server and go to <strong>Server Settings</strong></li>
-        <li>Navigate to <strong>Integrations</strong> &gt; <strong>Webhooks</strong></li>
-        <li>Click <strong>New Webhook</strong> or select an existing one</li>
-        <li>Choose the channel where you want notifications to appear</li>
-        <li>Click <strong>Copy Webhook URL</strong> and paste it above</li>
+        <li>{m.admin_discord_setup_step1()}</li>
+        <li>{m.admin_discord_setup_step2()}</li>
+        <li>{m.admin_discord_setup_step3()}</li>
+        <li>{m.admin_discord_setup_step4()}</li>
+        <li>{m.admin_discord_setup_step5()}</li>
       </ol>
       <div class="mt-4 rounded-md bg-muted p-3 text-sm">
-        <strong>Note:</strong> Discord webhooks are specific to a channel. Create separate webhooks
-        for different notification channels if needed.
+        {m.admin_discord_setup_note()}
       </div>
     </Card.Content>
   </Card.Root>

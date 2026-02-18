@@ -1,5 +1,6 @@
 <script lang="ts">
 import * as Card from '$lib/components/ui/card'
+import { getLocale } from '$lib/paraglide/runtime'
 import { cn } from '$lib/utils'
 import type { Snippet } from 'svelte'
 
@@ -22,14 +23,15 @@ const { title, items, icon, unit, class: className }: Props = $props()
 const maxValue = $derived(Math.max(...items.map((i) => i.value), 1))
 
 const formatValue = (value: number): string => {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
   if (unit === 'EUR') {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 0
     }).format(value)
   }
-  return new Intl.NumberFormat('en-US').format(value)
+  return new Intl.NumberFormat(locale).format(value)
 }
 </script>
 

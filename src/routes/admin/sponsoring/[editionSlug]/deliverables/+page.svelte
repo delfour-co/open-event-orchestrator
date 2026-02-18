@@ -316,7 +316,7 @@ $effect(() => {
 
 		{#if form?.success && form?.action === 'generateForAll'}
 			<div class="rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-3 text-sm text-green-700 dark:text-green-400">
-				{m.sponsoring_deliverables_generate_all_success({ created: form.deliverablesCreated, sponsors: form.sponsorsProcessed })}
+				{m.sponsoring_deliverables_generate_all_success({ created: form.deliverablesCreated ?? 0, sponsors: form.sponsorsProcessed ?? 0 })}
 			</div>
 		{/if}
 
@@ -569,6 +569,6 @@ $effect(() => {
 	<div
 		class="fixed bottom-4 right-4 rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-4 text-sm text-green-700 dark:text-green-400 shadow-lg"
 	>
-		{m.sponsoring_deliverables_generate_success({ created: form.created, skipped: form.skipped })}
+		{m.sponsoring_deliverables_generate_success({ created: form.created ?? 0, skipped: form.skipped ?? 0 })}
 	</div>
 {/if}

@@ -1,15 +1,22 @@
 export {
   userSchema,
   userRoleSchema,
+  themePreferenceSchema,
+  userPreferencesSchema,
+  updatePreferencesSchema,
   loginSchema,
   registerSchema,
   updateProfileSchema,
   changePasswordSchema,
-  calculatePasswordStrength
+  calculatePasswordStrength,
+  isUserVerified
 } from './user'
 export type {
   User,
   UserRole,
+  ThemePreference,
+  UserPreferences,
+  UpdatePreferencesInput,
   LoginInput,
   RegisterInput,
   UpdateProfileInput,

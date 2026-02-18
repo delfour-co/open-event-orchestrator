@@ -11,11 +11,47 @@ import { Switch } from '$lib/components/ui/switch'
 import type { NavItem } from '$lib/config'
 import type {
   CreateReportConfig,
+  DayOfWeek,
   ReportConfig,
   UpdateReportConfig
 } from '$lib/features/reporting/domain/report-config'
-import { getScheduleDescription } from '$lib/features/reporting/domain/report-config'
 import { ReportConfigForm } from '$lib/features/reporting/ui'
+
+// Localized schedule description
+const getLocalizedScheduleDescription = (
+  config: Pick<ReportConfig, 'frequency' | 'dayOfWeek' | 'dayOfMonth' | 'timeOfDay'>
+): string => {
+  const time = config.timeOfDay
+
+  const getDayOfWeekLabel = (day: DayOfWeek): string => {
+    const labels: Record<DayOfWeek, string> = {
+      monday: m.reporting_reports_form_day_mon(),
+      tuesday: m.reporting_reports_form_day_tue(),
+      wednesday: m.reporting_reports_form_day_wed(),
+      thursday: m.reporting_reports_form_day_thu(),
+      friday: m.reporting_reports_form_day_fri(),
+      saturday: m.reporting_reports_form_day_sat(),
+      sunday: m.reporting_reports_form_day_sun()
+    }
+    return labels[day]
+  }
+
+  switch (config.frequency) {
+    case 'daily':
+      return m.reporting_schedule_daily({ time })
+    case 'weekly':
+      return m.reporting_schedule_weekly({
+        day: config.dayOfWeek ? getDayOfWeekLabel(config.dayOfWeek) : '',
+        time
+      })
+    case 'monthly':
+      return m.reporting_schedule_monthly({ day: String(config.dayOfMonth), time })
+    default:
+      return m.reporting_schedule_unknown()
+  }
+}
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import { cn } from '$lib/utils'
 import {
   ArrowLeft,
@@ -144,8 +180,9 @@ async function submitTest() {
 }
 
 function formatDate(date: Date | undefined): string {
-  if (!date) return 'Never'
-  return new Intl.DateTimeFormat('en-US', {
+  if (!date) return m.reporting_reports_never()
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(date)
@@ -153,43 +190,43 @@ function formatDate(date: Date | undefined): string {
 
 function getSectionLabels(sections: string[]): string {
   const labels: Record<string, string> = {
-    cfp: 'CFP',
-    billing: 'Billing',
-    planning: 'Planning',
-    crm: 'CRM',
-    budget: 'Budget',
-    sponsoring: 'Sponsoring'
+    cfp: m.reporting_reports_form_section_cfp(),
+    billing: m.reporting_reports_form_section_billing(),
+    planning: m.reporting_reports_form_section_planning(),
+    crm: m.reporting_reports_form_section_crm(),
+    budget: m.reporting_reports_form_section_budget(),
+    sponsoring: m.reporting_reports_form_section_sponsoring()
   }
   return sections.map((s) => labels[s] || s).join(', ')
 }
 
 function getRoleLabels(roles: string[]): string {
   const labels: Record<string, string> = {
-    owner: 'Owner',
-    admin: 'Admin',
-    organizer: 'Organizer'
+    owner: m.reporting_reports_form_role_owner(),
+    admin: m.reporting_reports_form_role_admin(),
+    organizer: m.reporting_reports_form_role_organizer()
   }
   return roles.map((r) => labels[r] || r).join(', ')
 }
 
 // Navigation items with badges
 const navItems = $derived<NavItem[]>([
-  { href: `/admin/reporting/${data.edition?.slug}`, label: 'Dashboard' },
+  { href: `/admin/reporting/${data.edition?.slug}`, label: m.reporting_dashboard_nav() },
   {
     href: `/admin/reporting/${data.edition?.slug}/alerts`,
-    label: 'Alerts',
+    label: m.reporting_alerts_nav(),
     badge: data.navBadges.alerts
   },
   {
     href: `/admin/reporting/${data.edition?.slug}/reports`,
-    label: 'Reports',
+    label: m.reporting_reports_nav(),
     badge: data.navBadges.reports
   }
 ])
 </script>
 
 <svelte:head>
-  <title>Reports - {data.edition?.name ?? 'Reporting'} - Open Event Orchestrator</title>
+  <title>{m.reporting_reports_title({ name: data.edition?.name ?? m.reporting_title() })}</title>
 </svelte:head>
 
 <!-- Hidden forms for programmatic submission -->
@@ -303,7 +340,7 @@ const navItems = $derived<NavItem[]>([
 
     <Button onclick={handleCreate}>
       <Plus class="mr-2 h-4 w-4" />
-      New Report
+      {m.reporting_reports_new()}
     </Button>
   </div>
 
@@ -316,9 +353,9 @@ const navItems = $derived<NavItem[]>([
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No edition available</h3>
+        <h3 class="text-lg font-semibold">{m.reporting_reports_no_edition()}</h3>
         <p class="text-sm text-muted-foreground">
-          Create an edition for this event to configure reports.
+          {m.reporting_reports_create_edition_hint()}
         </p>
       </Card.Content>
     </Card.Root>
@@ -326,13 +363,13 @@ const navItems = $derived<NavItem[]>([
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No reports configured</h3>
+        <h3 class="text-lg font-semibold">{m.reporting_reports_empty()}</h3>
         <p class="mb-4 text-sm text-muted-foreground">
-          Create automated reports to receive regular updates by email.
+          {m.reporting_reports_empty_hint()}
         </p>
         <Button onclick={handleCreate}>
           <Plus class="mr-2 h-4 w-4" />
-          Create your first report
+          {m.reporting_reports_create_first()}
         </Button>
       </Card.Content>
     </Card.Root>
@@ -347,7 +384,7 @@ const navItems = $derived<NavItem[]>([
                   <h3 class="text-lg font-semibold">{config.name}</h3>
                   {#if !config.enabled}
                     <span class="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      Disabled
+                      {m.reporting_reports_disabled()}
                     </span>
                   {/if}
                 </div>
@@ -355,7 +392,7 @@ const navItems = $derived<NavItem[]>([
                 <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <div class="flex items-center gap-1.5">
                     <Clock class="h-4 w-4" />
-                    <span>{getScheduleDescription(config)}</span>
+                    <span>{getLocalizedScheduleDescription(config)}</span>
                   </div>
                   <div class="flex items-center gap-1.5">
                     <Users class="h-4 w-4" />
@@ -369,12 +406,12 @@ const navItems = $derived<NavItem[]>([
 
                 <div class="flex items-center gap-4 text-xs text-muted-foreground">
                   {#if config.lastSentAt}
-                    <span>Last sent: {formatDate(config.lastSentAt)}</span>
+                    <span>{m.reporting_reports_last_sent({ date: formatDate(config.lastSentAt) })}</span>
                   {/if}
                   {#if config.nextScheduledAt && config.enabled}
                     <span class="flex items-center gap-1">
                       <Calendar class="h-3 w-3" />
-                      Next: {formatDate(config.nextScheduledAt)}
+                      {m.reporting_reports_next({ date: formatDate(config.nextScheduledAt) })}
                     </span>
                   {/if}
                 </div>
@@ -404,7 +441,7 @@ const navItems = $derived<NavItem[]>([
 {#if showCreateDialog}
   <Dialog.Content class="max-w-lg" onClose={closeCreateDialog}>
     <Dialog.Header>
-      <Dialog.Title>New Report</Dialog.Title>
+      <Dialog.Title>{m.reporting_reports_dialog_new()}</Dialog.Title>
     </Dialog.Header>
     <ReportConfigForm
       initialData={{ editionId: data.edition?.id ?? '' }}
@@ -419,7 +456,7 @@ const navItems = $derived<NavItem[]>([
 {#if showEditDialog && selectedConfig}
   <Dialog.Content class="max-w-lg" onClose={closeEditDialog}>
     <Dialog.Header>
-      <Dialog.Title>Edit Report</Dialog.Title>
+      <Dialog.Title>{m.reporting_reports_dialog_edit()}</Dialog.Title>
     </Dialog.Header>
     <ReportConfigForm
       initialData={{
@@ -445,15 +482,15 @@ const navItems = $derived<NavItem[]>([
 {#if showDeleteDialog && selectedConfig}
   <Dialog.Content onClose={closeDeleteDialog}>
     <Dialog.Header>
-      <Dialog.Title>Delete Report Configuration</Dialog.Title>
+      <Dialog.Title>{m.reporting_reports_dialog_delete()}</Dialog.Title>
       <Dialog.Description>
-        Are you sure you want to delete "{selectedConfig.name}"? This action cannot be undone.
+        {m.reporting_reports_dialog_delete_confirm({ name: selectedConfig.name })}
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer>
-      <Button variant="outline" onclick={closeDeleteDialog}>Cancel</Button>
+      <Button variant="outline" onclick={closeDeleteDialog}>{m.action_cancel()}</Button>
       <Button variant="destructive" onclick={submitDelete} disabled={isSubmitting}>
-        {isSubmitting ? 'Deleting...' : 'Delete'}
+        {isSubmitting ? m.reporting_reports_dialog_deleting() : m.action_delete()}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
@@ -463,21 +500,21 @@ const navItems = $derived<NavItem[]>([
 {#if showTestDialog && selectedConfig}
   <Dialog.Content onClose={closeTestDialog}>
     <Dialog.Header>
-      <Dialog.Title>Send Test Report</Dialog.Title>
+      <Dialog.Title>{m.reporting_reports_dialog_test()}</Dialog.Title>
       <Dialog.Description>
-        Send a test report to verify the configuration is working correctly.
+        {m.reporting_reports_dialog_test_desc()}
       </Dialog.Description>
     </Dialog.Header>
     <div class="space-y-4 py-4">
       <div class="space-y-2">
-        <Label for="testEmail">Email Address</Label>
-        <Input id="testEmail" type="email" bind:value={testEmail} placeholder="your@email.com" />
+        <Label for="testEmail">{m.reporting_reports_test_email()}</Label>
+        <Input id="testEmail" type="email" bind:value={testEmail} placeholder={m.reporting_reports_test_email_placeholder()} />
       </div>
     </div>
     <Dialog.Footer>
-      <Button variant="outline" onclick={closeTestDialog}>Cancel</Button>
+      <Button variant="outline" onclick={closeTestDialog}>{m.action_cancel()}</Button>
       <Button onclick={submitTest} disabled={!testEmail || isSubmitting}>
-        {isSubmitting ? 'Sending...' : 'Send Test'}
+        {isSubmitting ? m.reporting_reports_test_sending() : m.reporting_reports_test_send()}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

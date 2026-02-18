@@ -2,6 +2,7 @@
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import type { IntegrationEntry } from '$lib/server/integration-registry'
 import {
   AlertCircle,
@@ -57,11 +58,11 @@ function getStatusColor(status: string): 'default' | 'secondary' | 'destructive'
 function getStatusLabel(status: string): string {
   switch (status) {
     case 'connected':
-      return 'Connected'
+      return m.admin_integrations_status_connected()
     case 'error':
-      return 'Error'
+      return m.admin_integrations_status_error()
     default:
-      return 'Not configured'
+      return m.admin_integrations_status_not_configured()
   }
 }
 
@@ -84,7 +85,7 @@ function getConfigPath(integration: IntegrationEntry): string | null {
 </script>
 
 <svelte:head>
-  <title>Integrations - Settings - Open Event Orchestrator</title>
+  <title>{m.admin_integrations_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -95,9 +96,9 @@ function getConfigPath(integration: IntegrationEntry): string | null {
       </Button>
     </a>
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Integrations</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.admin_integrations_heading()}</h2>
       <p class="text-muted-foreground">
-        Connect and manage third-party services for your event platform.
+        {m.admin_integrations_description()}
       </p>
     </div>
   </div>
@@ -112,7 +113,7 @@ function getConfigPath(integration: IntegrationEntry): string | null {
             <p class="text-2xl font-bold">
               {data.integrations.filter((i) => i.status.status === 'connected').length}
             </p>
-            <p class="text-sm text-muted-foreground">Connected</p>
+            <p class="text-sm text-muted-foreground">{m.admin_integrations_connected()}</p>
           </div>
         </div>
       </Card.Content>
@@ -125,7 +126,7 @@ function getConfigPath(integration: IntegrationEntry): string | null {
             <p class="text-2xl font-bold">
               {data.integrations.filter((i) => i.status.status === 'not_configured').length}
             </p>
-            <p class="text-sm text-muted-foreground">Not configured</p>
+            <p class="text-sm text-muted-foreground">{m.admin_integrations_not_configured()}</p>
           </div>
         </div>
       </Card.Content>
@@ -138,7 +139,7 @@ function getConfigPath(integration: IntegrationEntry): string | null {
             <p class="text-2xl font-bold">
               {data.integrations.filter((i) => i.status.status === 'error').length}
             </p>
-            <p class="text-sm text-muted-foreground">Errors</p>
+            <p class="text-sm text-muted-foreground">{m.admin_integrations_errors()}</p>
           </div>
         </div>
       </Card.Content>
@@ -197,13 +198,13 @@ function getConfigPath(integration: IntegrationEntry): string | null {
             <a href={configPath} class="w-full">
               <Button variant="outline" size="sm" class="w-full">
                 <Settings2 class="mr-2 h-4 w-4" />
-                Configure
+                {m.admin_integrations_configure()}
               </Button>
             </a>
           {:else}
             <Button variant="outline" size="sm" class="w-full" disabled>
               <ExternalLink class="mr-2 h-4 w-4" />
-              Coming soon
+              {m.admin_integrations_coming_soon()}
             </Button>
           {/if}
         </Card.Footer>
