@@ -84,10 +84,7 @@
     "zod": "^3.25.76"
   },
   "lint-staged": {
-    "*.{ts,svelte,js}": [
-      "biome check --fix",
-      "biome format --write"
-    ]
+    "*.{ts,svelte,js}": ["biome check --fix", "biome format --write"]
   },
   "pnpm": {
     "overrides": {

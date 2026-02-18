@@ -18,6 +18,7 @@ describe('SponsorEmailService', () => {
     updatedAt: new Date(),
     sponsor: {
       id: 'sponsor-1',
+      organizationId: 'org-1',
       name: 'Acme Corp',
       contactName: 'John Doe',
       contactEmail: 'john@acme.com',
@@ -26,13 +27,13 @@ describe('SponsorEmailService', () => {
     },
     package: {
       id: 'pkg-1',
+      editionId: 'edition-1',
       name: 'Gold',
       price: 500000,
       currency: 'EUR',
-      tier: 'gold',
+      tier: 1,
       benefits: [],
       isActive: true,
-      isGlobal: false,
       createdAt: new Date(),
       updatedAt: new Date()
     }

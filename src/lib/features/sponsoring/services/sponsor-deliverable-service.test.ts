@@ -2,6 +2,7 @@ import type { EmailService } from '$lib/features/cfp/services/email-service'
 import type PocketBase from 'pocketbase'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SponsorDeliverable, SponsorDeliverableExpanded } from '../domain'
+import type { EditionSponsorRepository, SponsorDeliverableRepository } from '../infra'
 import { createSponsorDeliverableService } from './sponsor-deliverable-service'
 
 // Mock the repositories
@@ -14,8 +15,8 @@ import { createEditionSponsorRepository, createSponsorDeliverableRepository } fr
 
 describe('SponsorDeliverableService', () => {
   let mockPb: PocketBase
-  let mockDeliverableRepo: ReturnType<typeof vi.fn>
-  let mockEditionSponsorRepo: ReturnType<typeof vi.fn>
+  let mockDeliverableRepo: Record<string, ReturnType<typeof vi.fn>>
+  let mockEditionSponsorRepo: Record<string, ReturnType<typeof vi.fn>>
   let mockEmailService: EmailService
   let service: ReturnType<typeof createSponsorDeliverableService>
 
@@ -41,6 +42,7 @@ describe('SponsorDeliverableService', () => {
       updatedAt: new Date(),
       sponsor: {
         id: 'sponsor-1',
+        organizationId: 'org-1',
         name: 'Acme Corp',
         contactName: 'John Doe',
         contactEmail: 'john@acme.com',
@@ -59,9 +61,9 @@ describe('SponsorDeliverableService', () => {
       id: 'pkg-1',
       name: 'Gold',
       benefits: [
-        { name: 'Logo on website', description: 'Website placement', included: true },
-        { name: 'Social media post', description: 'Twitter mention', included: true },
-        { name: 'Booth space', description: 'Optional add-on', included: false }
+        { name: 'Logo on website', included: true },
+        { name: 'Social media post', included: true },
+        { name: 'Booth space', included: false }
       ]
     }
   }
@@ -89,8 +91,12 @@ describe('SponsorDeliverableService', () => {
       send: vi.fn().mockResolvedValue({ success: true })
     } as unknown as EmailService
 
-    vi.mocked(createSponsorDeliverableRepository).mockReturnValue(mockDeliverableRepo)
-    vi.mocked(createEditionSponsorRepository).mockReturnValue(mockEditionSponsorRepo)
+    vi.mocked(createSponsorDeliverableRepository).mockReturnValue(
+      mockDeliverableRepo as unknown as SponsorDeliverableRepository
+    )
+    vi.mocked(createEditionSponsorRepository).mockReturnValue(
+      mockEditionSponsorRepo as unknown as EditionSponsorRepository
+    )
 
     service = createSponsorDeliverableService(mockPb, mockEmailService)
   })

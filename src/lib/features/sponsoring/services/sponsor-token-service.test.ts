@@ -1,5 +1,7 @@
 import type PocketBase from 'pocketbase'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { EditionSponsorRepository } from '../infra/edition-sponsor-repository'
+import type { SponsorTokenRepository } from '../infra/sponsor-token-repository'
 import { createSponsorTokenService } from './sponsor-token-service'
 
 // Mock the repositories
@@ -16,8 +18,8 @@ import { createSponsorTokenRepository } from '../infra/sponsor-token-repository'
 
 describe('SponsorTokenService', () => {
   let mockPb: PocketBase
-  let mockTokenRepo: ReturnType<typeof vi.fn>
-  let mockEditionSponsorRepo: ReturnType<typeof vi.fn>
+  let mockTokenRepo: Record<string, ReturnType<typeof vi.fn>>
+  let mockEditionSponsorRepo: Record<string, ReturnType<typeof vi.fn>>
   let service: ReturnType<typeof createSponsorTokenService>
 
   const mockToken = {
@@ -57,8 +59,12 @@ describe('SponsorTokenService', () => {
       findByIdWithExpand: vi.fn()
     }
 
-    vi.mocked(createSponsorTokenRepository).mockReturnValue(mockTokenRepo)
-    vi.mocked(createEditionSponsorRepository).mockReturnValue(mockEditionSponsorRepo)
+    vi.mocked(createSponsorTokenRepository).mockReturnValue(
+      mockTokenRepo as unknown as SponsorTokenRepository
+    )
+    vi.mocked(createEditionSponsorRepository).mockReturnValue(
+      mockEditionSponsorRepo as unknown as EditionSponsorRepository
+    )
 
     service = createSponsorTokenService(mockPb)
   })

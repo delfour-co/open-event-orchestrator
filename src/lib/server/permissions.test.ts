@@ -310,8 +310,6 @@ describe('Permissions', () => {
   })
 
   describe('role hierarchy consistency', () => {
-    const roles = ['super_admin', 'admin', 'organizer', 'reviewer'] as const
-
     it('super_admin should have all permissions', () => {
       expect(canAccessSettings('super_admin')).toBe(true)
       expect(canManageOrganizations('super_admin')).toBe(true)

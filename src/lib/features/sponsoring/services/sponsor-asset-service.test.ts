@@ -1,5 +1,6 @@
 import type PocketBase from 'pocketbase'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { SponsorAssetRepository } from '../infra/sponsor-asset-repository'
 import { createSponsorAssetService } from './sponsor-asset-service'
 
 // Mock the repository
@@ -11,13 +12,13 @@ import { createSponsorAssetRepository } from '../infra/sponsor-asset-repository'
 
 describe('SponsorAssetService', () => {
   let mockPb: PocketBase
-  let mockAssetRepo: ReturnType<typeof vi.fn>
+  let mockAssetRepo: { [K in keyof SponsorAssetRepository]: ReturnType<typeof vi.fn> }
   let service: ReturnType<typeof createSponsorAssetService>
 
   const mockAsset = {
     id: 'asset-1',
     editionSponsorId: 'es-1',
-    category: 'logo' as const,
+    category: 'logo_color' as const,
     name: 'Primary Logo',
     description: 'Main logo for website',
     file: 'logo.png',
@@ -36,15 +37,19 @@ describe('SponsorAssetService', () => {
       findById: vi.fn(),
       findByEditionSponsor: vi.fn(),
       findByEditionSponsorAndCategory: vi.fn(),
+      findByEdition: vi.fn(),
       create: vi.fn().mockResolvedValue(mockAsset),
       update: vi.fn(),
       delete: vi.fn(),
+      deleteByEditionSponsor: vi.fn(),
       getFileUrl: vi.fn().mockReturnValue('https://example.com/files/logo.png'),
       getThumbUrl: vi.fn().mockReturnValue('https://example.com/files/logo_200x200.png'),
       getFileBlob: vi.fn()
     }
 
-    vi.mocked(createSponsorAssetRepository).mockReturnValue(mockAssetRepo)
+    vi.mocked(createSponsorAssetRepository).mockReturnValue(
+      mockAssetRepo as unknown as SponsorAssetRepository
+    )
 
     service = createSponsorAssetService(mockPb)
   })
@@ -120,7 +125,7 @@ describe('SponsorAssetService', () => {
       const result = await service.uploadAsset(
         {
           editionSponsorId: 'es-1',
-          category: 'logo',
+          category: 'logo_color',
           name: 'Primary Logo'
         },
         file
@@ -138,7 +143,7 @@ describe('SponsorAssetService', () => {
         service.uploadAsset(
           {
             editionSponsorId: 'es-1',
-            category: 'logo',
+            category: 'logo_color',
             name: 'Invalid'
           },
           file
@@ -162,10 +167,13 @@ describe('SponsorAssetService', () => {
     it('should return assets filtered by category', async () => {
       mockAssetRepo.findByEditionSponsorAndCategory.mockResolvedValue([mockAsset])
 
-      const result = await service.getAssetsByCategory('es-1', 'logo')
+      const result = await service.getAssetsByCategory('es-1', 'logo_color')
 
       expect(result).toEqual([mockAsset])
-      expect(mockAssetRepo.findByEditionSponsorAndCategory).toHaveBeenCalledWith('es-1', 'logo')
+      expect(mockAssetRepo.findByEditionSponsorAndCategory).toHaveBeenCalledWith(
+        'es-1',
+        'logo_color'
+      )
     })
   })
 

@@ -16,6 +16,7 @@ describe('SponsorMessageService', () => {
     senderName: 'Event Organizer',
     subject: 'Welcome',
     content: 'Welcome to our event!',
+    attachments: [],
     readAt: undefined,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -30,6 +31,7 @@ describe('SponsorMessageService', () => {
     updatedAt: new Date(),
     sponsor: {
       id: 'sponsor-1',
+      organizationId: 'org-1',
       name: 'Acme Corp',
       contactName: 'John Doe',
       contactEmail: 'john@acme.com',
@@ -61,7 +63,8 @@ describe('SponsorMessageService', () => {
         editionSponsorId: 'es-1',
         senderType: 'organizer',
         senderName: 'Event Organizer',
-        content: 'Hello!'
+        content: 'Hello!',
+        attachments: []
       })
 
       expect(result).toEqual(mockMessage)
@@ -77,7 +80,8 @@ describe('SponsorMessageService', () => {
           editionSponsorId: 'es-1',
           senderType: 'organizer',
           senderName: 'Event Organizer',
-          content: 'Hello with attachment!'
+          content: 'Hello with attachment!',
+          attachments: []
         },
         [mockFile]
       )
@@ -96,7 +100,8 @@ describe('SponsorMessageService', () => {
           senderType: 'organizer',
           senderName: 'Event Organizer',
           subject: 'Welcome',
-          content: 'Welcome to our event!'
+          content: 'Welcome to our event!',
+          attachments: []
         },
         [],
         mockEditionSponsor,
@@ -120,7 +125,8 @@ describe('SponsorMessageService', () => {
           editionSponsorId: 'es-1',
           senderType: 'sponsor',
           senderName: 'John Doe',
-          content: 'Question about benefits'
+          content: 'Question about benefits',
+          attachments: []
         },
         [],
         mockEditionSponsor,
@@ -146,7 +152,8 @@ describe('SponsorMessageService', () => {
           editionSponsorId: 'es-1',
           senderType: 'organizer',
           senderName: 'Event Organizer',
-          content: 'Hello!'
+          content: 'Hello!',
+          attachments: []
         },
         [],
         sponsorWithoutEmail,
@@ -165,7 +172,8 @@ describe('SponsorMessageService', () => {
           editionSponsorId: 'es-1',
           senderType: 'organizer',
           senderName: 'Event Organizer',
-          content: 'This is the message content that should appear in preview'
+          content: 'This is the message content that should appear in preview',
+          attachments: []
         },
         [],
         mockEditionSponsor,

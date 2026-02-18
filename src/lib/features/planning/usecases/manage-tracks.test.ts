@@ -35,8 +35,7 @@ describe('ManageTracksUseCase', () => {
       findByEdition: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
-      delete: vi.fn(),
-      reorder: vi.fn()
+      delete: vi.fn()
     }
 
     mockSessionRepository = {

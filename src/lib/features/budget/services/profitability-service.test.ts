@@ -1,15 +1,9 @@
 import type PocketBase from 'pocketbase'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createProfitabilityService } from './profitability-service'
 
 describe('ProfitabilityService', () => {
   describe('calculateBreakEven', () => {
-    let mockPb: PocketBase
-
-    beforeEach(() => {
-      mockPb = {} as PocketBase
-    })
-
     const service = createProfitabilityService({} as PocketBase)
 
     it('should calculate basic break-even point', () => {
