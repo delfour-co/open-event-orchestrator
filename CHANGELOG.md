@@ -7,12 +7,7 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
-### Ajouté
-- Documentation de sécurité (SECURITY.md)
-- Code de conduite (CODE_OF_CONDUCT.md)
-- Changelog (CHANGELOG.md)
-
-## [1.0.0] - 2025-XX-XX
+## [1.0.0] - 2026-02-18
 
 ### Ajouté
 
@@ -24,6 +19,10 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - Git hooks (Husky, commitlint) et CI/CD (GitHub Actions)
 - Modèle de données de base : Organization, Event, Edition
 - Assistant de configuration rapide (Organization → Event → Edition en un flux)
+- Documentation de sécurité (SECURITY.md), code de conduite (CODE_OF_CONDUCT.md), changelog
+- Durcissement CI/CD (permissions, concurrency, timeouts, retention)
+- Docker non-root user et `.dockerignore`
+- Internationalisation complète (français et anglais)
 
 #### CFP (Call for Papers)
 - Formulaire de soumission de talk avec catégories et formats
@@ -102,33 +101,8 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - PWA Mobile Participants (agenda personnel, favoris)
 - PWA Mobile Scanner avec synchronisation offline et tour de contrôle
 
-### Modifié
-- (À compléter avec les modifications futures)
-
-### Déprécié
-- (À compléter avec les dépréciations futures)
-
-### Supprimé
-- (À compléter avec les suppressions futures)
-
-### Corrigé
-- (À compléter avec les corrections futures)
-
 ### Sécurité
-- (À compléter avec les corrections de sécurité futures)
-
----
-
-## Format des Entrées
-
-Chaque version doit lister les changements dans les catégories suivantes :
-
-- **Ajouté** : pour les nouvelles fonctionnalités
-- **Modifié** : pour les changements dans les fonctionnalités existantes
-- **Déprécié** : pour les fonctionnalités qui seront bientôt supprimées
-- **Supprimé** : pour les fonctionnalités supprimées
-- **Corrigé** : pour les corrections de bugs
-- **Sécurité** : pour les vulnérabilités corrigées
+- Override pnpm pour `cookie>=0.7.0` (CVE dans `@sveltejs/kit`)
 
 [Non publié]: https://github.com/delfour-co/open-event-orchestrator/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/delfour-co/open-event-orchestrator/releases/tag/v1.0.0
