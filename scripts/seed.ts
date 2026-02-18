@@ -1579,6 +1579,30 @@ const collectionSchemas: Array<{
       autodateField('created', true, false),
       autodateField('updated', true, true)
     ]
+  },
+  {
+    name: 'user_sessions',
+    type: 'base',
+    listRule: '',
+    viewRule: '',
+    createRule: null,
+    updateRule: null,
+    deleteRule: '',
+    fields: [
+      textField('tokenHash', true),
+      textField('userAgent'),
+      textField('ipAddress'),
+      textField('browser'),
+      textField('browserVersion'),
+      textField('os'),
+      textField('osVersion'),
+      textField('device'),
+      textField('city'),
+      textField('country'),
+      dateField('lastActive', true),
+      autodateField('created', true, false),
+      autodateField('updated', true, true)
+    ]
   }
 ]
 
@@ -1683,7 +1707,9 @@ const relationDefinitions = [
   },
   // Financial Audit Log relations
   { collection: 'financial_audit_log', field: 'editionId', target: 'editions', maxSelect: 1 },
-  { collection: 'financial_audit_log', field: 'userId', target: 'users', maxSelect: 1 }
+  { collection: 'financial_audit_log', field: 'userId', target: 'users', maxSelect: 1 },
+  // User Sessions relations
+  { collection: 'user_sessions', field: 'userId', target: 'users', maxSelect: 1 }
 ]
 
 // ============================================================================

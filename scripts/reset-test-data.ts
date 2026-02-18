@@ -66,6 +66,9 @@ const collectionsToReset = [
   // Team
   'team_members',
 
+  // Auth
+  'user_sessions',
+
   // Core
   'editions',
   'events',
