@@ -2649,5 +2649,30 @@
   "admin_discord_setup_step3": "Cliquez sur Nouveau webhook ou selectionnez-en un existant",
   "admin_discord_setup_step4": "Choisissez le canal ou vous souhaitez recevoir les notifications",
   "admin_discord_setup_step5": "Cliquez sur Copier l'URL du webhook et collez-la ci-dessus",
-  "admin_discord_setup_note": "Note : Les webhooks Discord sont specifiques a un canal. Creez des webhooks separes pour differents canaux de notification si necessaire."
+  "admin_discord_setup_note": "Note : Les webhooks Discord sont specifiques a un canal. Creez des webhooks separes pour differents canaux de notification si necessaire.",
+
+  "verify_email_title": "Verification d'email - Open Event Orchestrator",
+  "verify_email_success_heading": "Email verifie !",
+  "verify_email_success_message": "Votre adresse email a ete verifiee avec succes. Vous pouvez maintenant acceder a toutes les fonctionnalites de votre compte.",
+  "verify_email_error_heading": "Echec de la verification",
+  "verify_email_error_message": "Nous n'avons pas pu verifier votre adresse email. Le lien a peut-etre expire ou est invalide.",
+  "verify_email_login": "Aller a la connexion",
+  "verify_email_dashboard": "Aller au tableau de bord",
+  "verify_email_request_new": "Demander un nouveau lien",
+
+  "profile_sessions_title": "Sessions actives",
+  "profile_sessions_description": "Gerez vos sessions actives sur differents appareils et navigateurs.",
+  "profile_sessions_current": "Session actuelle",
+  "profile_sessions_other": "Autres sessions",
+  "profile_sessions_last_active": "Derniere activite {date}",
+  "profile_sessions_location": "Localisation : {location}",
+  "profile_sessions_revoke": "Revoquer",
+  "profile_sessions_revoke_all": "Revoquer toutes les autres sessions",
+  "profile_sessions_revoke_confirm": "Etes-vous sur de vouloir revoquer cette session ? L'appareil sera deconnecte.",
+  "profile_sessions_revoke_all_confirm": "Etes-vous sur de vouloir revoquer toutes les autres sessions ? Tous les autres appareils seront deconnectes.",
+  "profile_sessions_revoked": "Session revoquee avec succes",
+  "profile_sessions_all_revoked": "Toutes les autres sessions ont ete revoquees avec succes",
+  "profile_sessions_none": "Aucune autre session active",
+  "profile_sessions_unknown_device": "Appareil inconnu",
+  "profile_sessions_unknown_location": "Localisation inconnue"
 }

@@ -2649,5 +2649,30 @@
   "admin_discord_setup_step3": "Click New Webhook or select an existing one",
   "admin_discord_setup_step4": "Choose the channel where you want notifications to appear",
   "admin_discord_setup_step5": "Click Copy Webhook URL and paste it above",
-  "admin_discord_setup_note": "Note: Discord webhooks are specific to a channel. Create separate webhooks for different notification channels if needed."
+  "admin_discord_setup_note": "Note: Discord webhooks are specific to a channel. Create separate webhooks for different notification channels if needed.",
+
+  "verify_email_title": "Email Verification - Open Event Orchestrator",
+  "verify_email_success_heading": "Email Verified!",
+  "verify_email_success_message": "Your email address has been successfully verified. You can now access all features of your account.",
+  "verify_email_error_heading": "Verification Failed",
+  "verify_email_error_message": "We couldn't verify your email address. The link may have expired or is invalid.",
+  "verify_email_login": "Go to Login",
+  "verify_email_dashboard": "Go to Dashboard",
+  "verify_email_request_new": "Request New Link",
+
+  "profile_sessions_title": "Active Sessions",
+  "profile_sessions_description": "Manage your active sessions across different devices and browsers.",
+  "profile_sessions_current": "Current Session",
+  "profile_sessions_other": "Other Sessions",
+  "profile_sessions_last_active": "Last active {date}",
+  "profile_sessions_location": "Location: {location}",
+  "profile_sessions_revoke": "Revoke",
+  "profile_sessions_revoke_all": "Revoke All Other Sessions",
+  "profile_sessions_revoke_confirm": "Are you sure you want to revoke this session? The device will be logged out.",
+  "profile_sessions_revoke_all_confirm": "Are you sure you want to revoke all other sessions? All other devices will be logged out.",
+  "profile_sessions_revoked": "Session revoked successfully",
+  "profile_sessions_all_revoked": "All other sessions revoked successfully",
+  "profile_sessions_none": "No other active sessions",
+  "profile_sessions_unknown_device": "Unknown device",
+  "profile_sessions_unknown_location": "Unknown location"
 }
