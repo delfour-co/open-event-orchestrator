@@ -4,6 +4,7 @@ import { page } from '$app/stores'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
@@ -44,8 +45,8 @@ const copyDocsUrl = async () => {
 }
 
 const formatDate = (date: Date | null) => {
-  if (!date) return 'Never'
-  return new Intl.DateTimeFormat('en-US', {
+  if (!date) return m.api_keys_never()
+  return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -62,24 +63,27 @@ const isExpired = (expiresAt: Date | null): boolean => {
 const getStatusBadge = (key: (typeof data.apiKeys)[0]) => {
   if (!key.isActive) {
     return {
-      label: 'Revoked',
+      label: m.api_keys_status_revoked(),
       class: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
     }
   }
   if (isExpired(key.expiresAt)) {
-    return { label: 'Expired', class: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }
+    return {
+      label: m.api_keys_status_expired(),
+      class: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    }
   }
   return {
-    label: 'Active',
+    label: m.api_keys_status_active(),
     class: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
   }
 }
 
 const getScopeBadge = (key: (typeof data.apiKeys)[0]) => {
-  if (key.edition) return `Edition: ${key.edition.name}`
-  if (key.event) return `Event: ${key.event.name}`
-  if (key.organization) return `Org: ${key.organization.name}`
-  return 'Global'
+  if (key.edition) return m.api_keys_scope_edition({ name: key.edition.name })
+  if (key.event) return m.api_keys_scope_event({ name: key.event.name })
+  if (key.organization) return m.api_keys_scope_organization({ name: key.organization.name })
+  return m.api_keys_scope_global()
 }
 
 $effect(() => {
@@ -91,7 +95,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-  <title>API Keys - Open Event Orchestrator</title>
+  <title>{m.api_keys_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -103,9 +107,9 @@ $effect(() => {
         </Button>
       </a>
       <div>
-        <h2 class="text-3xl font-bold tracking-tight">API Keys</h2>
+        <h2 class="text-3xl font-bold tracking-tight">{m.api_keys_heading()}</h2>
         <p class="text-muted-foreground">
-          Manage API authentication tokens
+          {m.api_keys_description()}
         </p>
       </div>
     </div>
@@ -113,29 +117,29 @@ $effect(() => {
       <!-- Public API Docs URL -->
       <div class="flex items-center gap-2">
         <div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-          <span class="text-sm text-muted-foreground">Public URL:</span>
+          <span class="text-sm text-muted-foreground">{m.api_keys_public_url()}</span>
           <code class="text-sm">/api/docs</code>
         </div>
         <Button variant="outline" size="sm" onclick={copyDocsUrl} class="gap-2">
           {#if copiedUrl}
             <Check class="h-4 w-4 text-green-500" />
-            Copied
+            {m.api_keys_copied()}
           {:else}
             <Copy class="h-4 w-4" />
-            Copy
+            {m.action_copy()}
           {/if}
         </Button>
         <a href="/api/docs" target="_blank">
           <Button variant="outline" size="sm" class="gap-2">
             <ExternalLink class="h-4 w-4" />
-            Open
+            {m.api_keys_open()}
           </Button>
         </a>
       </div>
       <a href="/admin/api/keys/new">
         <Button>
           <Plus class="mr-2 h-4 w-4" />
-          New API Key
+          {m.api_keys_new()}
         </Button>
       </a>
     </div>
@@ -145,14 +149,14 @@ $effect(() => {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <Key class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No API keys yet</h3>
+        <h3 class="text-lg font-semibold">{m.api_keys_no_keys_title()}</h3>
         <p class="text-sm text-muted-foreground mb-4">
-          Create your first API key to start using the API.
+          {m.api_keys_no_keys_description()}
         </p>
         <a href="/admin/api/keys/new">
           <Button>
             <Plus class="mr-2 h-4 w-4" />
-            Create API Key
+            {m.api_keys_create()}
           </Button>
         </a>
       </Card.Content>
@@ -175,19 +179,19 @@ $effect(() => {
 
                 <div class="grid gap-2 text-sm text-muted-foreground md:grid-cols-2 lg:grid-cols-4">
                   <div>
-                    <span class="font-medium">Key:</span>
+                    <span class="font-medium">{m.api_keys_field_key()}</span>
                     <code class="ml-1 rounded bg-muted px-1">{key.keyPrefix}...</code>
                   </div>
                   <div>
-                    <span class="font-medium">Scope:</span>
+                    <span class="font-medium">{m.api_keys_field_scope()}</span>
                     <span class="ml-1">{getScopeBadge(key)}</span>
                   </div>
                   <div>
-                    <span class="font-medium">Rate Limit:</span>
-                    <span class="ml-1">{key.rateLimit}/min</span>
+                    <span class="font-medium">{m.api_keys_field_rate_limit()}</span>
+                    <span class="ml-1">{m.api_keys_rate_limit_format({ limit: key.rateLimit })}</span>
                   </div>
                   <div>
-                    <span class="font-medium">Last Used:</span>
+                    <span class="font-medium">{m.api_keys_field_last_used()}</span>
                     <span class="ml-1">{formatDate(key.lastUsedAt)}</span>
                   </div>
                 </div>
@@ -200,18 +204,18 @@ $effect(() => {
                   {/each}
                   {#if key.permissions.length > 5}
                     <span class="rounded bg-muted px-1.5 py-0.5 text-xs">
-                      +{key.permissions.length - 5} more
+                      {m.api_keys_more_permissions({ count: key.permissions.length - 5 })}
                     </span>
                   {/if}
                 </div>
 
                 <div class="mt-2 text-xs text-muted-foreground">
-                  Created {formatDate(key.createdAt)}
+                  {m.api_keys_created_at({ date: formatDate(key.createdAt) })}
                   {#if key.createdBy}
-                    by {key.createdBy.name}
+                    {m.api_keys_created_by({ name: key.createdBy.name })}
                   {/if}
                   {#if key.expiresAt}
-                    {' '} - Expires {formatDate(key.expiresAt)}
+                    {' '}{m.api_keys_expires_at({ date: formatDate(key.expiresAt) })}
                   {/if}
                 </div>
               </div>
@@ -224,14 +228,14 @@ $effect(() => {
                     onclick={() => confirmingRevoke = key.id}
                   >
                     <X class="mr-1 h-4 w-4" />
-                    Revoke
+                    {m.api_keys_revoke()}
                   </Button>
                 {:else if !key.isActive}
                   <form method="POST" action="?/reactivateKey" use:enhance>
                     <input type="hidden" name="id" value={key.id} />
                     <Button variant="outline" size="sm" type="submit">
                       <RefreshCw class="mr-1 h-4 w-4" />
-                      Reactivate
+                      {m.api_keys_reactivate()}
                     </Button>
                   </form>
                 {/if}
@@ -256,9 +260,9 @@ $effect(() => {
 {#if confirmingRevoke}
   <Dialog.Content onClose={() => confirmingRevoke = null}>
     <Dialog.Header>
-      <Dialog.Title>Revoke API Key</Dialog.Title>
+      <Dialog.Title>{m.api_keys_revoke_dialog_title()}</Dialog.Title>
       <Dialog.Description>
-        Are you sure you want to revoke this API key? Applications using this key will immediately lose access. You can reactivate it later.
+        {m.api_keys_revoke_dialog_description()}
       </Dialog.Description>
     </Dialog.Header>
     <form
@@ -275,13 +279,13 @@ $effect(() => {
       <input type="hidden" name="id" value={confirmingRevoke} />
       <Dialog.Footer>
         <Button type="button" variant="outline" onclick={() => confirmingRevoke = null}>
-          Cancel
+          {m.action_cancel()}
         </Button>
         <Button type="submit" variant="destructive" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
           {/if}
-          Revoke Key
+          {m.api_keys_revoke_confirm()}
         </Button>
       </Dialog.Footer>
     </form>
@@ -292,9 +296,9 @@ $effect(() => {
 {#if confirmingDelete}
   <Dialog.Content onClose={() => confirmingDelete = null}>
     <Dialog.Header>
-      <Dialog.Title>Delete API Key</Dialog.Title>
+      <Dialog.Title>{m.api_keys_delete_dialog_title()}</Dialog.Title>
       <Dialog.Description>
-        Are you sure you want to permanently delete this API key? This action cannot be undone.
+        {m.api_keys_delete_dialog_description()}
       </Dialog.Description>
     </Dialog.Header>
     <form
@@ -311,13 +315,13 @@ $effect(() => {
       <input type="hidden" name="id" value={confirmingDelete} />
       <Dialog.Footer>
         <Button type="button" variant="outline" onclick={() => confirmingDelete = null}>
-          Cancel
+          {m.action_cancel()}
         </Button>
         <Button type="submit" variant="destructive" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
           {/if}
-          Delete Permanently
+          {m.api_keys_delete_confirm()}
         </Button>
       </Dialog.Footer>
     </form>

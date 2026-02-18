@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { ArrowRight, Calendar, Mail } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -12,14 +13,14 @@ const { data }: Props = $props()
 </script>
 
 <svelte:head>
-	<title>Email Campaigns - Open Event Orchestrator</title>
+	<title>{m.emails_index_page_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<div>
-		<h2 class="text-3xl font-bold tracking-tight">Email Campaigns</h2>
+		<h2 class="text-3xl font-bold tracking-tight">{m.emails_index_heading()}</h2>
 		<p class="text-muted-foreground">
-			Select an event to manage its email campaigns and templates.
+			{m.emails_index_description()}
 		</p>
 	</div>
 
@@ -27,9 +28,9 @@ const { data }: Props = $props()
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Mail class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No events available</h3>
+				<h3 class="text-lg font-semibold">{m.emails_index_no_events_title()}</h3>
 				<p class="text-sm text-muted-foreground">
-					Create an event to start managing email campaigns.
+					{m.emails_index_no_events_desc()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -46,7 +47,7 @@ const { data }: Props = $props()
 					<Card.Content>
 						<a href="/admin/emails/{event.slug}">
 							<Button class="w-full" variant="outline">
-								Manage Campaigns
+								{m.emails_index_manage_campaigns()}
 								<ArrowRight class="ml-2 h-4 w-4" />
 							</Button>
 						</a>

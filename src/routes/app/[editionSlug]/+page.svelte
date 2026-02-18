@@ -9,6 +9,7 @@ import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { RatingInput } from '$lib/features/feedback/ui'
 import { scheduleCacheService } from '$lib/features/planning/services/schedule-cache-service'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertCircle,
   Calendar,
@@ -601,10 +602,10 @@ function toggleTheme(): void {
 </script>
 
 <svelte:head>
-	<title>{data.appSettings?.title || data.edition.name} - Attendee App</title>
+	<title>{data.appSettings?.title || data.edition.name} - {m.app_title_suffix()}</title>
 	<meta
 		name="description"
-		content="View the schedule and build your agenda for {data.appSettings?.title || data.edition.name}"
+		content={m.app_meta_description({ title: data.appSettings?.title || data.edition.name })}
 	/>
 </svelte:head>
 
@@ -645,7 +646,7 @@ function toggleTheme(): void {
 					{:else}
 						<Moon class="h-5 w-5" />
 					{/if}
-					<span class="sr-only">Toggle theme</span>
+					<span class="sr-only">{m.app_toggle_theme()}</span>
 				</Button>
 			</div>
 			<div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -696,7 +697,7 @@ function toggleTheme(): void {
 								class="rounded-full px-3 py-1 text-xs font-medium transition-colors {selectedTrackId === null ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'}"
 								onclick={() => (selectedTrackId = null)}
 							>
-								All
+								{m.app_filter_all()}
 							</button>
 							{#each data.tracks as track}
 								<button
@@ -720,9 +721,9 @@ function toggleTheme(): void {
 					{#if sessionsForDay().length === 0}
 						<Card class="p-12 text-center">
 							<Calendar class="mx-auto h-12 w-12 text-muted-foreground" />
-							<h3 class="mt-4 text-lg font-semibold">No sessions</h3>
+							<h3 class="mt-4 text-lg font-semibold">{m.app_schedule_empty_title()}</h3>
 							<p class="mt-2 text-sm text-muted-foreground">
-								No sessions scheduled for this day.
+								{m.app_schedule_empty_description()}
 							</p>
 						</Card>
 					{:else}
@@ -751,7 +752,7 @@ function toggleTheme(): void {
 												data-testid="favorite-button-{session.id}"
 												class="rounded-full p-1.5 transition-colors hover:bg-muted"
 												onclick={() => toggleFavorite(session.id)}
-												title={favorites.has(session.id) ? 'Remove from favorites' : 'Add to favorites'}
+												title={favorites.has(session.id) ? m.app_favorite_remove() : m.app_favorite_add()}
 											>
 												<Heart
 													class="h-4 w-4 {favorites.has(session.id) ? 'fill-red-500 text-red-500' : 'text-muted-foreground hover:text-red-500'}"
@@ -796,9 +797,9 @@ function toggleTheme(): void {
 												onclick={() => openSessionRatingDialog(session.id, session.title)}
 											>
 												{#if userFeedback.has(session.id)}
-													Modify my feedback
+													{m.app_feedback_modify()}
 												{:else}
-													Give feedback
+													{m.app_feedback_give()}
 												{/if}
 											</Button>
 										{/if}
@@ -814,9 +815,9 @@ function toggleTheme(): void {
 				{#if uniqueSpeakers().length === 0}
 					<Card class="p-12 text-center">
 						<Users class="mx-auto h-12 w-12 text-muted-foreground" />
-						<h3 class="mt-4 text-lg font-semibold">No speakers yet</h3>
+						<h3 class="mt-4 text-lg font-semibold">{m.app_speakers_empty_title()}</h3>
 						<p class="mt-2 text-sm text-muted-foreground">
-							Speakers will appear here once sessions are scheduled.
+							{m.app_speakers_empty_description()}
 						</p>
 					</Card>
 				{:else}
@@ -877,9 +878,9 @@ function toggleTheme(): void {
 				{#if favoriteSessions().length === 0}
 					<Card class="p-12 text-center">
 						<Heart class="mx-auto h-12 w-12 text-muted-foreground" />
-						<h3 class="mt-4 text-lg font-semibold">No favorites yet</h3>
+						<h3 class="mt-4 text-lg font-semibold">{m.app_favorites_empty_title()}</h3>
 						<p class="mt-2 text-sm text-muted-foreground">
-							Tap the heart icon on sessions to add them to your favorites.
+							{m.app_favorites_empty_description()}
 						</p>
 					</Card>
 				{:else}
@@ -922,7 +923,7 @@ function toggleTheme(): void {
 													type="button"
 													class="rounded-full p-1.5 transition-colors hover:bg-muted"
 													onclick={() => toggleFavorite(session.id)}
-													title="Remove from agenda"
+													title={m.app_favorite_remove_agenda()}
 												>
 													<Heart class="h-4 w-4 fill-red-500 text-red-500" />
 												</button>
@@ -948,9 +949,9 @@ function toggleTheme(): void {
 														onclick={() => openSessionRatingDialog(session.id, session.title)}
 													>
 														{#if userFeedback.has(session.id)}
-															Modify my feedback
+															{m.app_feedback_modify()}
 														{:else}
-															Give feedback
+															{m.app_feedback_give()}
 														{/if}
 													</Button>
 												</div>
@@ -976,9 +977,9 @@ function toggleTheme(): void {
 								<div class="flex items-start gap-3">
 									<MessageSquare class="mt-0.5 h-5 w-5 text-primary" />
 									<div class="flex-1">
-										<h3 class="font-semibold">General Feedback</h3>
+										<h3 class="font-semibold">{m.app_feedback_general()}</h3>
 										<p class="mt-1 text-sm text-muted-foreground">
-											Share your thoughts about the event
+											{m.app_feedback_general_description()}
 										</p>
 									</div>
 									<ChevronRight class="h-5 w-5 text-muted-foreground" />
@@ -995,9 +996,9 @@ function toggleTheme(): void {
 								<div class="flex items-start gap-3">
 									<AlertCircle class="mt-0.5 h-5 w-5 text-orange-600" />
 									<div class="flex-1">
-										<h3 class="font-semibold">Report a Problem</h3>
+										<h3 class="font-semibold">{m.app_feedback_problem()}</h3>
 										<p class="mt-1 text-sm text-muted-foreground">
-											Let us know about any issues at the event
+											{m.app_feedback_problem_description()}
 										</p>
 									</div>
 									<ChevronRight class="h-5 w-5 text-muted-foreground" />
@@ -1014,17 +1015,17 @@ function toggleTheme(): void {
 				{:else if showSessionFeedback}
 					<div class="text-center py-8">
 						<MessageSquare class="mx-auto h-12 w-12 text-muted-foreground/50" />
-						<h3 class="mt-4 text-lg font-medium">Session Feedback</h3>
+						<h3 class="mt-4 text-lg font-medium">{m.app_feedback_session_title()}</h3>
 						<p class="mt-2 text-sm text-muted-foreground">
-							You can give feedback on individual sessions from the Schedule tab
+							{m.app_feedback_session_description()}
 						</p>
 					</div>
 				{:else}
 					<div class="text-center py-8">
 						<MessageSquare class="mx-auto h-12 w-12 text-muted-foreground/50" />
-						<h3 class="mt-4 text-lg font-medium">Feedback not available</h3>
+						<h3 class="mt-4 text-lg font-medium">{m.app_feedback_unavailable_title()}</h3>
 						<p class="mt-2 text-sm text-muted-foreground">
-							Feedback collection is not enabled for this event
+							{m.app_feedback_unavailable_description()}
 						</p>
 					</div>
 				{/if}
@@ -1038,20 +1039,20 @@ function toggleTheme(): void {
 							<div class="flex items-center gap-3">
 								<Ticket class="h-6 w-6 text-primary" />
 								<div>
-									<h3 class="font-semibold">Find Your Ticket</h3>
+									<h3 class="font-semibold">{m.app_ticket_find_title()}</h3>
 									<p class="text-sm text-muted-foreground">
-										Enter the email used for your ticket purchase
+										{m.app_ticket_find_description()}
 									</p>
 								</div>
 							</div>
 
 							<div class="space-y-2">
-								<Label for="ticket-email">Email Address</Label>
+								<Label for="ticket-email">{m.app_ticket_email_label()}</Label>
 								<div class="flex gap-2">
 									<Input
 										id="ticket-email"
 										type="email"
-										placeholder="your@email.com"
+										placeholder={m.app_ticket_email_placeholder()}
 										bind:value={ticketEmail}
 										class="flex-1"
 										onkeydown={(e) => e.key === 'Enter' && lookupTickets()}
@@ -1078,12 +1079,12 @@ function toggleTheme(): void {
 					<!-- No Tickets Found -->
 					<Card class="p-12 text-center">
 						<Ticket class="mx-auto h-12 w-12 text-muted-foreground" />
-						<h3 class="mt-4 text-lg font-semibold">No tickets found</h3>
+						<h3 class="mt-4 text-lg font-semibold">{m.app_ticket_not_found_title()}</h3>
 						<p class="mt-2 text-sm text-muted-foreground">
-							No tickets were found for {ticketEmail}
+							{m.app_ticket_not_found_description({ email: ticketEmail })}
 						</p>
 						<Button class="mt-4" variant="outline" onclick={resetTicketLookup}>
-							Try Another Email
+							{m.app_ticket_try_another()}
 						</Button>
 					</Card>
 				{:else}
@@ -1091,10 +1092,12 @@ function toggleTheme(): void {
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
 							<p class="text-sm text-muted-foreground">
-								{ticketResults.length} ticket{ticketResults.length > 1 ? 's' : ''} found for {ticketEmail}
+								{ticketResults.length === 1
+									? m.app_ticket_found_one({ email: ticketEmail })
+									: m.app_ticket_found_many({ count: ticketResults.length, email: ticketEmail })}
 							</p>
 							<Button variant="ghost" size="sm" onclick={resetTicketLookup}>
-								Change Email
+								{m.app_ticket_change_email()}
 							</Button>
 						</div>
 
@@ -1103,13 +1106,13 @@ function toggleTheme(): void {
 								<div class="bg-primary p-4 text-primary-foreground">
 									<div class="flex items-center justify-between">
 										<div>
-											<p class="text-xs opacity-80">Ticket #{ticket.ticketNumber}</p>
+											<p class="text-xs opacity-80">{m.app_ticket_number({ number: ticket.ticketNumber })}</p>
 											<p class="text-lg font-bold">
 												{ticket.attendeeFirstName} {ticket.attendeeLastName}
 											</p>
 										</div>
 										<div class="rounded-full bg-white/20 px-3 py-1 text-xs font-medium">
-											{ticket.status === 'valid' ? 'Valid' : ticket.status === 'used' ? 'Checked In' : ticket.status}
+											{ticket.status === 'valid' ? m.app_ticket_status_valid() : ticket.status === 'used' ? m.app_ticket_status_checked_in() : ticket.status}
 										</div>
 									</div>
 								</div>
@@ -1126,16 +1129,16 @@ function toggleTheme(): void {
 
 									<div class="grid grid-cols-2 gap-4 text-sm">
 										<div>
-											<p class="text-muted-foreground">Event</p>
+											<p class="text-muted-foreground">{m.app_ticket_event()}</p>
 											<p class="font-medium">{data.edition.name}</p>
 										</div>
 										<div>
-											<p class="text-muted-foreground">Date</p>
+											<p class="text-muted-foreground">{m.app_ticket_date()}</p>
 											<p class="font-medium">{formatDate(data.edition.startDate)}</p>
 										</div>
 										{#if data.edition.venue}
 											<div class="col-span-2">
-												<p class="text-muted-foreground">Venue</p>
+												<p class="text-muted-foreground">{m.app_ticket_venue()}</p>
 												<p class="font-medium">{data.edition.venue}</p>
 											</div>
 										{/if}
@@ -1144,7 +1147,7 @@ function toggleTheme(): void {
 									{#if ticket.qrCode && ticket.status === 'valid'}
 										<div class="flex flex-col items-center border-t pt-4">
 											<QrCode class="h-6 w-6 text-muted-foreground mb-2" />
-											<p class="text-xs text-muted-foreground mb-2">Tap to enlarge</p>
+											<p class="text-xs text-muted-foreground mb-2">{m.app_ticket_qr_tap_enlarge()}</p>
 											<button
 												type="button"
 												class="bg-white p-4 rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
@@ -1152,7 +1155,7 @@ function toggleTheme(): void {
 											>
 												<img
 													src={ticket.qrCode}
-													alt="Ticket QR Code"
+													alt={m.app_qr_code_alt()}
 													class="h-48 w-48"
 												/>
 											</button>
@@ -1163,7 +1166,7 @@ function toggleTheme(): void {
 									{#if ticket.checkedInAt}
 										<div class="rounded-md bg-green-50 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
 											<CheckCircle2 class="mr-2 inline h-4 w-4" />
-											Checked in on {new Date(ticket.checkedInAt).toLocaleString()}
+											{m.app_ticket_checked_in_on({ date: new Date(ticket.checkedInAt).toLocaleString() })}
 										</div>
 									{/if}
 								</div>
@@ -1185,7 +1188,7 @@ function toggleTheme(): void {
 				onclick={() => (currentView = 'schedule')}
 			>
 				<Calendar class="h-5 w-5" />
-				<span>Schedule</span>
+				<span>{m.app_nav_schedule()}</span>
 			</button>
 			{#if showFavorites}
 				<button
@@ -1195,7 +1198,7 @@ function toggleTheme(): void {
 					onclick={() => (currentView = 'favorites')}
 				>
 					<Heart class="h-5 w-5" />
-					<span>Favorites</span>
+					<span>{m.app_nav_favorites()}</span>
 					{#if favorites.size > 0}
 						<span class="absolute right-1/4 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">{favorites.size}</span>
 					{/if}
@@ -1209,7 +1212,7 @@ function toggleTheme(): void {
 					onclick={() => (currentView = 'speakers')}
 				>
 					<Users class="h-5 w-5" />
-					<span>Speakers</span>
+					<span>{m.app_nav_speakers()}</span>
 				</button>
 			{/if}
 			{#if showTickets}
@@ -1220,7 +1223,7 @@ function toggleTheme(): void {
 					onclick={() => (currentView = 'ticket')}
 				>
 					<Ticket class="h-5 w-5" />
-					<span>My Ticket</span>
+					<span>{m.app_nav_my_ticket()}</span>
 				</button>
 			{/if}
 			{#if showFeedback}
@@ -1231,7 +1234,7 @@ function toggleTheme(): void {
 					onclick={() => (currentView = 'feedback')}
 				>
 					<MessageSquare class="h-5 w-5" />
-					<span>Feedback</span>
+					<span>{m.app_nav_feedback()}</span>
 				</button>
 			{/if}
 		</div>
@@ -1242,7 +1245,7 @@ function toggleTheme(): void {
 {#if showSessionRatingDialog && data.feedbackSettings?.sessionRatingMode}
 	<Dialog.Content class="max-w-md" onClose={closeSessionRatingDialog}>
 		<Dialog.Header>
-			<Dialog.Title>{isEditingFeedback ? 'Edit Your Feedback' : 'Rate Session'}</Dialog.Title>
+			<Dialog.Title>{isEditingFeedback ? m.app_feedback_edit_title() : m.app_feedback_rate_session()}</Dialog.Title>
 			<Dialog.Description>
 				{ratingSessionTitle}
 			</Dialog.Description>
@@ -1252,7 +1255,7 @@ function toggleTheme(): void {
 			<div class="flex flex-col items-center py-8">
 				<CheckCircle2 class="h-12 w-12 text-green-500" />
 				<p class="mt-4 font-medium">
-					{isEditingFeedback ? 'Your feedback has been updated!' : 'Thank you for your feedback!'}
+					{isEditingFeedback ? m.app_feedback_updated() : m.app_feedback_thank_you()}
 				</p>
 			</div>
 		{:else}
@@ -1265,14 +1268,14 @@ function toggleTheme(): void {
 
 				<div class="space-y-2">
 					<Label for="session-comment">
-						Comment
+						{m.app_feedback_comment()}
 						{#if data.feedbackSettings.sessionCommentRequired}
 							<span class="text-destructive">*</span>
 						{/if}
 					</Label>
 					<Textarea
 						id="session-comment"
-						placeholder="Share your thoughts about this session..."
+						placeholder={m.app_feedback_comment_placeholder()}
 						bind:value={sessionRatingComment}
 						rows={3}
 					/>
@@ -1288,7 +1291,7 @@ function toggleTheme(): void {
 
 			<Dialog.Footer>
 				<Button variant="outline" onclick={closeSessionRatingDialog}>
-					Cancel
+					{m.action_cancel()}
 				</Button>
 				<Button
 					onclick={submitSessionRating}
@@ -1296,9 +1299,9 @@ function toggleTheme(): void {
 				>
 					{#if isSubmittingSessionRating}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-						{isEditingFeedback ? 'Updating...' : 'Submitting...'}
+						{isEditingFeedback ? m.app_feedback_updating() : m.app_feedback_submitting()}
 					{:else}
-						{isEditingFeedback ? 'Update Feedback' : 'Submit Feedback'}
+						{isEditingFeedback ? m.app_feedback_update() : m.app_feedback_submit()}
 					{/if}
 				</Button>
 			</Dialog.Footer>
@@ -1311,28 +1314,28 @@ function toggleTheme(): void {
 	<Dialog.Content class="max-w-md" onClose={closeEventFeedbackDialog}>
 		<Dialog.Header>
 			<Dialog.Title>
-				{eventFeedbackType === 'general' ? 'General Feedback' : 'Report a Problem'}
+				{eventFeedbackType === 'general' ? m.app_feedback_general() : m.app_feedback_problem()}
 			</Dialog.Title>
 			<Dialog.Description>
 				{eventFeedbackType === 'general'
-					? 'Share your thoughts about the event'
-					: 'Let us know about any issues you encountered'}
+					? m.app_feedback_general_description()
+					: m.app_feedback_dialog_description_problem()}
 			</Dialog.Description>
 		</Dialog.Header>
 
 		{#if eventFeedbackSuccess}
 			<div class="flex flex-col items-center py-8">
 				<CheckCircle2 class="h-12 w-12 text-green-500" />
-				<p class="mt-4 font-medium">Thank you for your feedback!</p>
-				<p class="mt-1 text-sm text-muted-foreground">We appreciate you taking the time.</p>
+				<p class="mt-4 font-medium">{m.app_feedback_thank_you()}</p>
+				<p class="mt-1 text-sm text-muted-foreground">{m.app_feedback_thank_you_time()}</p>
 			</div>
 		{:else}
 			<div class="space-y-4 py-4">
 				<div class="space-y-2">
-					<Label for="feedback-subject">Subject (optional)</Label>
+					<Label for="feedback-subject">{m.app_feedback_subject()}</Label>
 					<Input
 						id="feedback-subject"
-						placeholder={eventFeedbackType === 'general' ? 'What is your feedback about?' : 'Brief description of the issue'}
+						placeholder={eventFeedbackType === 'general' ? m.app_feedback_subject_placeholder_general() : m.app_feedback_subject_placeholder_problem()}
 						bind:value={eventFeedbackSubject}
 						maxlength={200}
 					/>
@@ -1340,17 +1343,17 @@ function toggleTheme(): void {
 
 				<div class="space-y-2">
 					<Label for="feedback-message">
-						Message <span class="text-destructive">*</span>
+						{m.app_feedback_message()} <span class="text-destructive">*</span>
 					</Label>
 					<Textarea
 						id="feedback-message"
-						placeholder={eventFeedbackType === 'general' ? 'Share your thoughts...' : 'Please describe the problem in detail...'}
+						placeholder={eventFeedbackType === 'general' ? m.app_feedback_message_placeholder_general() : m.app_feedback_message_placeholder_problem()}
 						bind:value={eventFeedbackMessage}
 						rows={5}
 						maxlength={5000}
 					/>
 					<p class="text-xs text-muted-foreground">
-						{eventFeedbackMessage.length}/5000 characters
+						{m.app_feedback_characters({ count: eventFeedbackMessage.length })}
 					</p>
 				</div>
 
@@ -1364,7 +1367,7 @@ function toggleTheme(): void {
 
 			<Dialog.Footer>
 				<Button variant="outline" onclick={closeEventFeedbackDialog}>
-					Cancel
+					{m.action_cancel()}
 				</Button>
 				<Button
 					onclick={submitEventFeedback}
@@ -1372,9 +1375,9 @@ function toggleTheme(): void {
 				>
 					{#if isSubmittingEventFeedback}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-						Submitting...
+						{m.app_feedback_submitting()}
 					{:else}
-						Submit Feedback
+						{m.app_feedback_submit()}
 					{/if}
 				</Button>
 			</Dialog.Footer>
@@ -1393,12 +1396,12 @@ function toggleTheme(): void {
 			<div class="bg-white p-6 rounded-2xl">
 				<img
 					src={expandedQrCode.qrCode}
-					alt="Ticket QR Code"
+					alt={m.app_qr_code_alt()}
 					class="w-72 h-72 sm:w-80 sm:h-80"
 				/>
 			</div>
 			<p class="mt-4 font-mono text-lg text-white">{expandedQrCode.ticketNumber}</p>
-			<p class="mt-2 text-sm text-white/70">Tap anywhere to close</p>
+			<p class="mt-2 text-sm text-white/70">{m.app_ticket_qr_tap_close()}</p>
 		</div>
 	</button>
 {/if}

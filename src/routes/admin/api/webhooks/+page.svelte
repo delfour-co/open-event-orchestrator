@@ -5,6 +5,7 @@ import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { getWebhookEventLabel } from '$lib/features/api/domain/webhook'
 import type { WebhookEventType } from '$lib/features/api/domain/webhook'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, ExternalLink, Loader2, Pause, Play, Plus, Trash2, Webhook } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -19,7 +20,7 @@ let confirmingDelete = $state<string | null>(null)
 let isSubmitting = $state(false)
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -27,10 +28,11 @@ const formatDate = (date: Date) => {
 }
 
 const getScopeBadge = (webhook: (typeof data.webhooks)[0]) => {
-  if (webhook.edition) return `Edition: ${webhook.edition.name}`
-  if (webhook.event) return `Event: ${webhook.event.name}`
-  if (webhook.organization) return `Org: ${webhook.organization.name}`
-  return 'Global'
+  if (webhook.edition) return m.api_webhooks_scope_edition({ name: webhook.edition.name })
+  if (webhook.event) return m.api_webhooks_scope_event({ name: webhook.event.name })
+  if (webhook.organization)
+    return m.api_webhooks_scope_organization({ name: webhook.organization.name })
+  return m.api_webhooks_scope_global()
 }
 
 const getHealthColor = (stats: { total: number; success: number; failed: number }) => {
@@ -49,7 +51,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-  <title>Webhooks - Open Event Orchestrator</title>
+  <title>{m.api_webhooks_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -61,16 +63,16 @@ $effect(() => {
         </Button>
       </a>
       <div>
-        <h2 class="text-3xl font-bold tracking-tight">Webhooks</h2>
+        <h2 class="text-3xl font-bold tracking-tight">{m.api_webhooks_heading()}</h2>
         <p class="text-muted-foreground">
-          Configure event notifications to external services
+          {m.api_webhooks_description()}
         </p>
       </div>
     </div>
     <a href="/admin/api/webhooks/new">
       <Button>
         <Plus class="mr-2 h-4 w-4" />
-        New Webhook
+        {m.api_webhooks_new()}
       </Button>
     </a>
   </div>
@@ -79,14 +81,14 @@ $effect(() => {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <Webhook class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No webhooks configured</h3>
+        <h3 class="text-lg font-semibold">{m.api_webhooks_no_webhooks_title()}</h3>
         <p class="text-sm text-muted-foreground mb-4">
-          Set up webhooks to receive notifications when events occur.
+          {m.api_webhooks_no_webhooks_description()}
         </p>
         <a href="/admin/api/webhooks/new">
           <Button>
             <Plus class="mr-2 h-4 w-4" />
-            Create Webhook
+            {m.api_webhooks_create()}
           </Button>
         </a>
       </Card.Content>
@@ -103,15 +105,15 @@ $effect(() => {
                   <span class="font-semibold text-lg">{webhook.name}</span>
                   {#if webhook.isActive}
                     <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
-                      Active
+                      {m.api_webhooks_status_active()}
                     </span>
                   {:else}
                     <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                      Paused
+                      {m.api_webhooks_status_paused()}
                     </span>
                   {/if}
                   <span class="rounded-full px-2 py-0.5 text-xs font-medium {getHealthColor(webhook.stats)}">
-                    {webhook.stats.success}/{webhook.stats.total} delivered
+                    {m.api_webhooks_delivered({ success: webhook.stats.success, total: webhook.stats.total })}
                   </span>
                 </div>
 
@@ -121,11 +123,11 @@ $effect(() => {
                     <code class="truncate max-w-[200px]">{webhook.url}</code>
                   </div>
                   <div>
-                    <span class="font-medium">Scope:</span>
+                    <span class="font-medium">{m.api_webhooks_field_scope()}</span>
                     <span class="ml-1">{getScopeBadge(webhook)}</span>
                   </div>
                   <div>
-                    <span class="font-medium">Retries:</span>
+                    <span class="font-medium">{m.api_webhooks_field_retries()}</span>
                     <span class="ml-1">{webhook.retryCount}</span>
                   </div>
                 </div>
@@ -138,15 +140,15 @@ $effect(() => {
                   {/each}
                   {#if webhook.events.length > 4}
                     <span class="rounded bg-muted px-1.5 py-0.5 text-xs">
-                      +{webhook.events.length - 4} more
+                      {m.api_webhooks_more_events({ count: webhook.events.length - 4 })}
                     </span>
                   {/if}
                 </div>
 
                 <div class="mt-2 text-xs text-muted-foreground">
-                  Created {formatDate(webhook.createdAt)}
+                  {m.api_webhooks_created_at({ date: formatDate(webhook.createdAt) })}
                   {#if webhook.createdBy}
-                    by {webhook.createdBy.name}
+                    {m.api_webhooks_created_by({ name: webhook.createdBy.name })}
                   {/if}
                 </div>
               </div>
@@ -158,16 +160,16 @@ $effect(() => {
                   <Button variant="outline" size="sm" type="submit">
                     {#if webhook.isActive}
                       <Pause class="mr-1 h-4 w-4" />
-                      Pause
+                      {m.api_webhooks_pause()}
                     {:else}
                       <Play class="mr-1 h-4 w-4" />
-                      Enable
+                      {m.api_webhooks_enable()}
                     {/if}
                   </Button>
                 </form>
                 <a href="/admin/api/webhooks/{webhook.id}">
                   <Button variant="outline" size="sm">
-                    View Deliveries
+                    {m.api_webhooks_view_deliveries()}
                   </Button>
                 </a>
                 <Button
@@ -191,9 +193,9 @@ $effect(() => {
 {#if confirmingDelete}
   <Dialog.Content onClose={() => confirmingDelete = null}>
     <Dialog.Header>
-      <Dialog.Title>Delete Webhook</Dialog.Title>
+      <Dialog.Title>{m.api_webhooks_delete_dialog_title()}</Dialog.Title>
       <Dialog.Description>
-        Are you sure you want to delete this webhook? All delivery history will also be deleted. This action cannot be undone.
+        {m.api_webhooks_delete_dialog_description()}
       </Dialog.Description>
     </Dialog.Header>
     <form
@@ -210,13 +212,13 @@ $effect(() => {
       <input type="hidden" name="id" value={confirmingDelete} />
       <Dialog.Footer>
         <Button type="button" variant="outline" onclick={() => confirmingDelete = null}>
-          Cancel
+          {m.action_cancel()}
         </Button>
         <Button type="submit" variant="destructive" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
           {/if}
-          Delete Webhook
+          {m.api_webhooks_delete_confirm()}
         </Button>
       </Dialog.Footer>
     </form>

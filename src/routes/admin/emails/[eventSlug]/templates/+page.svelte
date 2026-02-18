@@ -6,6 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getEmailsNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Code, Edit, Eye, FileText, Plus, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -25,13 +26,13 @@ let htmlContent = $state('')
 const basePath = `/admin/emails/${data.eventSlug}`
 
 const AVAILABLE_VARIABLES = [
-  { key: '{{firstName}}', description: 'Contact first name' },
-  { key: '{{lastName}}', description: 'Contact last name' },
-  { key: '{{email}}', description: 'Contact email' },
-  { key: '{{company}}', description: 'Contact company' },
-  { key: '{{eventName}}', description: 'Event name' },
-  { key: '{{editionName}}', description: 'Edition name' },
-  { key: '{{unsubscribeUrl}}', description: 'Unsubscribe link' }
+  { key: '{{firstName}}', description: m.emails_var_first_name() },
+  { key: '{{lastName}}', description: m.emails_var_last_name() },
+  { key: '{{email}}', description: m.emails_var_email() },
+  { key: '{{company}}', description: m.emails_var_company() },
+  { key: '{{eventName}}', description: m.emails_var_event_name() },
+  { key: '{{editionName}}', description: m.emails_var_edition_name() },
+  { key: '{{unsubscribeUrl}}', description: m.emails_var_unsubscribe_url() }
 ]
 
 function replaceVariables(content: string): string {
@@ -73,16 +74,12 @@ function htmlToPlainText(html: string): string {
 // Plain text extracted from HTML
 const plainTextContent = $derived(htmlToPlainText(htmlContent))
 
-const previewHtml = $derived(
-  htmlContent
-    ? replaceVariables(htmlContent)
-    : '<p style="color: #888; text-align: center; padding: 2rem;">Enter HTML content to see preview</p>'
-)
+const previewHtmlPlaceholder = `<p style="color: #888; text-align: center; padding: 2rem;">${m.emails_preview_html_placeholder()}</p>`
+
+const previewHtml = $derived(htmlContent ? replaceVariables(htmlContent) : previewHtmlPlaceholder)
 
 const previewText = $derived(
-  plainTextContent
-    ? replaceVariables(plainTextContent)
-    : 'Enter HTML content to see plain text preview'
+  plainTextContent ? replaceVariables(plainTextContent) : m.emails_preview_text_placeholder()
 )
 
 function startEdit(template: (typeof data.templates)[0]) {
@@ -112,7 +109,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Email Templates - Open Event Orchestrator</title>
+	<title>{m.emails_templates_page_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -129,7 +126,7 @@ $effect(() => {
 		</div>
 		<Button onclick={startCreate} class="gap-2">
 			<Plus class="h-4 w-4" />
-			Create Template
+			{m.emails_create_template()}
 		</Button>
 	</div>
 
@@ -139,10 +136,10 @@ $effect(() => {
 	<!-- Success / Error messages -->
 	{#if form?.success}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-			{#if form.action === 'createTemplate'}Template created successfully.
-			{:else if form.action === 'updateTemplate'}Template updated.
-			{:else if form.action === 'deleteTemplate'}Template deleted.
-			{:else}Action completed.{/if}
+			{#if form.action === 'createTemplate'}{m.emails_template_created()}
+			{:else if form.action === 'updateTemplate'}{m.emails_template_updated()}
+			{:else if form.action === 'deleteTemplate'}{m.emails_template_deleted()}
+			{:else}{m.emails_action_completed()}{/if}
 		</div>
 	{/if}
 
@@ -156,9 +153,9 @@ $effect(() => {
 	{#if showForm}
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>{editingTemplate ? 'Edit Template' : 'New Template'}</Card.Title>
+				<Card.Title>{editingTemplate ? m.emails_form_edit_template() : m.emails_form_new_template()}</Card.Title>
 				<Card.Description>
-					{editingTemplate ? 'Update the template details.' : 'Create a reusable email template.'}
+					{editingTemplate ? m.emails_form_edit_template_desc() : m.emails_form_new_template_desc()}
 				</Card.Description>
 			</Card.Header>
 			<Card.Content>
@@ -181,21 +178,21 @@ $effect(() => {
 
 					<div class="grid gap-4 md:grid-cols-2">
 						<div class="space-y-2">
-							<Label for="tpl-name">Name *</Label>
+							<Label for="tpl-name">{m.emails_label_name()} *</Label>
 							<Input
 								id="tpl-name"
 								name="name"
-								placeholder="e.g., Speaker Invitation"
+								placeholder={m.emails_placeholder_template_name()}
 								required
 								value={editingTemplate?.name || ''}
 							/>
 						</div>
 						<div class="space-y-2">
-							<Label for="tpl-subject">Subject *</Label>
+							<Label for="tpl-subject">{m.emails_label_subject()} *</Label>
 							<Input
 								id="tpl-subject"
 								name="subject"
-								placeholder={"e.g., You're invited to {{eventName}}!"}
+								placeholder={m.emails_placeholder_template_subject()}
 								required
 								value={editingTemplate?.subject || ''}
 							/>
@@ -207,7 +204,7 @@ $effect(() => {
 						<div class="space-y-4">
 							<div class="flex items-center gap-2">
 								<Code class="h-4 w-4" />
-								<span class="font-medium">HTML Body</span>
+								<span class="font-medium">{m.emails_label_html_body()}</span>
 							</div>
 
 							<div class="space-y-4">
@@ -216,14 +213,14 @@ $effect(() => {
 									name="bodyHtml"
 									bind:value={htmlContent}
 									class="flex min-h-[350px] w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-									placeholder={'<h1>Hello {{firstName}},</h1>\n<p>We\'d like to invite you to {{eventName}}.</p>'}
+									placeholder={m.emails_placeholder_template_html()}
 								></textarea>
 
 								<!-- Variable Reference -->
 								<Card.Root>
 									<Card.Header class="py-3">
 										<Card.Title class="flex items-center gap-2 text-sm">
-											Available Variables
+											{m.emails_variables_title()}
 										</Card.Title>
 									</Card.Header>
 									<Card.Content class="py-2">
@@ -242,7 +239,7 @@ $effect(() => {
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2">
 									<Eye class="h-4 w-4" />
-									<span class="font-medium">Preview</span>
+									<span class="font-medium">{m.emails_preview()}</span>
 								</div>
 								<div class="flex gap-1 rounded-lg bg-muted p-1">
 									<Button
@@ -250,14 +247,14 @@ $effect(() => {
 										size="sm"
 										onclick={() => (previewTab = 'html')}
 									>
-										HTML
+										{m.emails_preview_tab_html()}
 									</Button>
 									<Button
 										variant={previewTab === 'text' ? 'default' : 'ghost'}
 										size="sm"
 										onclick={() => (previewTab = 'text')}
 									>
-										Plain Text
+										{m.emails_preview_tab_text()}
 									</Button>
 								</div>
 							</div>
@@ -277,10 +274,10 @@ $effect(() => {
 
 					<div class="flex justify-end gap-2">
 						<Button type="button" variant="outline" onclick={cancelForm}>
-							Cancel
+							{m.action_cancel()}
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{isSubmitting ? 'Saving...' : editingTemplate ? 'Update Template' : 'Create Template'}
+							{isSubmitting ? m.emails_btn_saving() : editingTemplate ? m.emails_btn_update_template() : m.emails_btn_create_template()}
 						</Button>
 					</div>
 				</form>
@@ -293,9 +290,9 @@ $effect(() => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No templates yet</h3>
+				<h3 class="text-lg font-semibold">{m.emails_empty_templates_title()}</h3>
 				<p class="text-sm text-muted-foreground">
-					Create a reusable email template for your campaigns.
+					{m.emails_empty_templates_desc()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -318,7 +315,7 @@ $effect(() => {
 						<div class="space-y-3">
 							{#if template.variables.length > 0}
 								<div>
-									<p class="mb-1 text-xs font-medium text-muted-foreground">Variables:</p>
+									<p class="mb-1 text-xs font-medium text-muted-foreground">{m.emails_variables_label()}</p>
 									<div class="flex flex-wrap gap-1">
 										{#each template.variables as variable}
 											<code class="rounded bg-muted px-1.5 py-0.5 text-xs">{variable}</code>
@@ -334,7 +331,7 @@ $effect(() => {
 									onclick={() => startEdit(template)}
 								>
 									<Edit class="h-3 w-3" />
-									Edit
+									{m.action_edit()}
 								</Button>
 								<form method="POST" action="?/deleteTemplate" use:enhance class="inline">
 									<input type="hidden" name="id" value={template.id} />

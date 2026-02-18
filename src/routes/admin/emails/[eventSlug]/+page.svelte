@@ -6,6 +6,8 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getEmailsNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import { ArrowLeft, Ban, Calendar, Edit, Mail, MailCheck, Plus, Send, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -31,7 +33,8 @@ function cancelForm() {
 }
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -49,7 +52,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Email Campaigns - Open Event Orchestrator</title>
+	<title>{m.emails_page_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -66,7 +69,7 @@ $effect(() => {
 		</div>
 		<Button onclick={() => { editingCampaign = null; showForm = !showForm }} class="gap-2">
 			<Plus class="h-4 w-4" />
-			New Campaign
+			{m.emails_new_campaign()}
 		</Button>
 	</div>
 
@@ -76,15 +79,15 @@ $effect(() => {
 	<!-- Success / Error messages -->
 	{#if form?.success}
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-			{#if form.action === 'createCampaign'}Campaign created successfully.
-			{:else if form.action === 'updateCampaign'}Campaign updated.
-			{:else if form.action === 'deleteCampaign'}Campaign deleted.
-			{:else if form.action === 'testSendCampaign'}Test email sent successfully.
-			{:else if form.action === 'cancelCampaign'}Campaign cancelled.
-			{:else if form.action === 'scheduleCampaign'}Campaign scheduled.
+			{#if form.action === 'createCampaign'}{m.emails_campaign_created()}
+			{:else if form.action === 'updateCampaign'}{m.emails_campaign_updated()}
+			{:else if form.action === 'deleteCampaign'}{m.emails_campaign_deleted()}
+			{:else if form.action === 'testSendCampaign'}{m.emails_campaign_test_sent()}
+			{:else if form.action === 'cancelCampaign'}{m.emails_campaign_cancelled()}
+			{:else if form.action === 'scheduleCampaign'}{m.emails_campaign_scheduled()}
 			{:else if form.action === 'sendCampaign'}
-				Campaign sent. {form.sendResult?.totalSent ?? 0} delivered, {form.sendResult?.totalFailed ?? 0} failed out of {form.sendResult?.totalRecipients ?? 0} recipients.
-			{:else}Action completed.{/if}
+				{m.emails_campaign_sent_result({ delivered: form.sendResult?.totalSent ?? 0, failed: form.sendResult?.totalFailed ?? 0, total: form.sendResult?.totalRecipients ?? 0 })}
+			{:else}{m.emails_action_completed()}{/if}
 		</div>
 	{/if}
 
@@ -98,9 +101,9 @@ $effect(() => {
 	{#if showForm}
 		<Card.Root>
 			<Card.Header>
-				<Card.Title>{editingCampaign ? 'Edit Campaign' : 'New Campaign'}</Card.Title>
+				<Card.Title>{editingCampaign ? m.emails_form_edit_campaign() : m.emails_form_new_campaign()}</Card.Title>
 				<Card.Description>
-					{editingCampaign ? 'Update the campaign details.' : 'Create a new email campaign.'}
+					{editingCampaign ? m.emails_form_edit_campaign_desc() : m.emails_form_new_campaign_desc()}
 				</Card.Description>
 			</Card.Header>
 			<Card.Content>
@@ -122,37 +125,37 @@ $effect(() => {
 
 					<div class="grid gap-4 md:grid-cols-2">
 						<div class="space-y-2">
-							<Label for="camp-name">Campaign Name *</Label>
-							<Input id="camp-name" name="name" placeholder="e.g., Speaker Announcement" required value={editingCampaign?.name || ''} />
+							<Label for="camp-name">{m.emails_label_campaign_name()} *</Label>
+							<Input id="camp-name" name="name" placeholder={m.emails_placeholder_campaign_name()} required value={editingCampaign?.name || ''} />
 						</div>
 						<div class="space-y-2">
-							<Label for="camp-subject">Subject *</Label>
-							<Input id="camp-subject" name="subject" placeholder="e.g., You're invited to speak!" required value={editingCampaign?.subject || ''} />
+							<Label for="camp-subject">{m.emails_label_subject()} *</Label>
+							<Input id="camp-subject" name="subject" placeholder={m.emails_placeholder_subject()} required value={editingCampaign?.subject || ''} />
 						</div>
 					</div>
 
 					<div class="grid gap-4 md:grid-cols-2">
 						<div class="space-y-2">
-							<Label for="camp-segment">Segment (optional)</Label>
+							<Label for="camp-segment">{m.emails_label_segment()}</Label>
 							<select
 								id="camp-segment"
 								name="segmentId"
 								class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							>
-								<option value="">All contacts</option>
+								<option value="">{m.emails_option_all_contacts()}</option>
 								{#each data.segments as segment}
-									<option value={segment.id} selected={editingCampaign?.segmentId === segment.id}>{segment.name} ({segment.contactCount} contacts)</option>
+									<option value={segment.id} selected={editingCampaign?.segmentId === segment.id}>{m.emails_option_contacts_count({ name: segment.name, count: segment.contactCount })}</option>
 								{/each}
 							</select>
 						</div>
 						<div class="space-y-2">
-							<Label for="camp-template">Template (optional)</Label>
+							<Label for="camp-template">{m.emails_label_template()}</Label>
 							<select
 								id="camp-template"
 								name="templateId"
 								class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 							>
-								<option value="">No template</option>
+								<option value="">{m.emails_option_no_template()}</option>
 								{#each data.templates as template}
 									<option value={template.id} selected={editingCampaign?.templateId === template.id}>{template.name}</option>
 								{/each}
@@ -161,31 +164,31 @@ $effect(() => {
 					</div>
 
 					<div class="space-y-2">
-						<Label for="camp-html">HTML Body</Label>
+						<Label for="camp-html">{m.emails_label_html_body()}</Label>
 						<textarea
 							id="camp-html"
 							name="bodyHtml"
 							class="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							placeholder={'<h1>Hello {{firstName}}</h1><p>...</p>'}
+							placeholder={m.emails_placeholder_html_body()}
 						>{editingCampaign?.bodyHtml || ''}</textarea>
 					</div>
 
 					<div class="space-y-2">
-						<Label for="camp-text">Plain Text Body</Label>
+						<Label for="camp-text">{m.emails_label_plain_text_body()}</Label>
 						<textarea
 							id="camp-text"
 							name="bodyText"
 							class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							placeholder={'Hello {{firstName}}, ...'}
+							placeholder={m.emails_placeholder_plain_text_body()}
 						>{editingCampaign?.bodyText || ''}</textarea>
 					</div>
 
 					<div class="flex justify-end gap-2">
 						<Button type="button" variant="outline" onclick={cancelForm}>
-							Cancel
+							{m.action_cancel()}
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{isSubmitting ? 'Saving...' : editingCampaign ? 'Update Campaign' : 'Create Campaign'}
+							{isSubmitting ? m.emails_btn_saving() : editingCampaign ? m.emails_btn_update_campaign() : m.emails_btn_create_campaign()}
 						</Button>
 					</div>
 				</form>
@@ -198,9 +201,9 @@ $effect(() => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Mail class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No campaigns yet</h3>
+				<h3 class="text-lg font-semibold">{m.emails_empty_campaigns_title()}</h3>
 				<p class="text-sm text-muted-foreground">
-					Create your first email campaign to reach your contacts.
+					{m.emails_empty_campaigns_desc()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -209,12 +212,12 @@ $effect(() => {
 			<table class="w-full">
 				<thead>
 					<tr class="border-b bg-muted/50">
-						<th class="p-3 text-left text-sm font-medium">Name</th>
-						<th class="p-3 text-left text-sm font-medium">Subject</th>
-						<th class="p-3 text-left text-sm font-medium">Status</th>
-						<th class="p-3 text-center text-sm font-medium">Stats</th>
-						<th class="p-3 text-right text-sm font-medium">Created</th>
-						<th class="p-3 text-right text-sm font-medium">Actions</th>
+						<th class="p-3 text-left text-sm font-medium">{m.emails_table_name()}</th>
+						<th class="p-3 text-left text-sm font-medium">{m.emails_table_subject()}</th>
+						<th class="p-3 text-left text-sm font-medium">{m.emails_table_status()}</th>
+						<th class="p-3 text-center text-sm font-medium">{m.emails_table_stats()}</th>
+						<th class="p-3 text-right text-sm font-medium">{m.emails_table_created()}</th>
+						<th class="p-3 text-right text-sm font-medium">{m.emails_table_actions()}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -231,12 +234,12 @@ $effect(() => {
 							</td>
 							<td class="p-3 text-center text-sm">
 								{#if campaign.status === 'sent' || campaign.status === 'sending'}
-									<span class="text-green-600">{campaign.totalSent} sent</span>
+									<span class="text-green-600">{m.emails_stats_sent({ count: campaign.totalSent })}</span>
 									{#if campaign.totalFailed > 0}
-										<span class="text-red-600"> / {campaign.totalFailed} failed</span>
+										<span class="text-red-600"> / {m.emails_stats_failed({ count: campaign.totalFailed })}</span>
 									{/if}
 								{:else}
-									<span class="text-muted-foreground">-</span>
+									<span class="text-muted-foreground">{m.emails_stats_none()}</span>
 								{/if}
 							</td>
 							<td class="p-3 text-right text-sm text-muted-foreground">
@@ -249,11 +252,11 @@ $effect(() => {
 											variant="ghost"
 											size="sm"
 											class="gap-1"
-											title="Edit campaign"
+											title={m.emails_title_edit()}
 											onclick={() => startEdit(campaign)}
 										>
 											<Edit class="h-3 w-3" />
-											Edit
+											{m.action_edit()}
 										</Button>
 									{/if}
 									{#if campaign.status === 'draft'}
@@ -263,7 +266,7 @@ $effect(() => {
 												type="email"
 												name="testEmail"
 												required
-												placeholder="test@email.com"
+												placeholder={m.emails_placeholder_test_email()}
 												class="h-8 w-36 rounded-md border border-input bg-background px-2 text-xs"
 											/>
 											<Button
@@ -271,10 +274,10 @@ $effect(() => {
 												variant="ghost"
 												size="sm"
 												class="gap-1 text-blue-600 hover:text-blue-600"
-												title="Send test email"
+												title={m.emails_title_test()}
 											>
 												<MailCheck class="h-3 w-3" />
-												Test
+												{m.emails_btn_test()}
 											</Button>
 										</form>
 										<form method="POST" action="?/sendCampaign" use:enhance class="inline">
@@ -284,10 +287,10 @@ $effect(() => {
 												variant="ghost"
 												size="sm"
 												class="gap-1 text-green-600 hover:text-green-600"
-												title="Send campaign"
+												title={m.emails_title_send()}
 											>
 												<Send class="h-3 w-3" />
-												Send
+												{m.emails_btn_send()}
 											</Button>
 										</form>
 										<form method="POST" action="?/scheduleCampaign" use:enhance class="inline flex items-center gap-1">
@@ -303,10 +306,10 @@ $effect(() => {
 												variant="ghost"
 												size="sm"
 												class="gap-1 text-blue-600 hover:text-blue-600"
-												title="Schedule campaign"
+												title={m.emails_title_schedule()}
 											>
 												<Calendar class="h-3 w-3" />
-												Schedule
+												{m.emails_btn_schedule()}
 											</Button>
 										</form>
 									{/if}
@@ -318,7 +321,7 @@ $effect(() => {
 												variant="ghost"
 												size="sm"
 												class="gap-1 text-orange-600 hover:text-orange-600"
-												title="Cancel campaign"
+												title={m.emails_title_cancel()}
 											>
 												<Ban class="h-3 w-3" />
 											</Button>
@@ -332,7 +335,7 @@ $effect(() => {
 												variant="ghost"
 												size="sm"
 												class="text-destructive hover:text-destructive"
-												title="Delete campaign"
+												title={m.emails_title_delete()}
 											>
 												<Trash2 class="h-3 w-3" />
 											</Button>

@@ -4,6 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { QuickSetupWizard } from '$lib/features/core/ui'
 import * as m from '$lib/paraglide/messages'
+import { getLocale } from '$lib/paraglide/runtime'
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -53,7 +54,8 @@ function handleEditionChange(e: Event) {
 }
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -67,15 +69,16 @@ const formatTimeAgo = (date: Date) => {
   const diffHours = Math.floor(diffMs / 3600000)
   const diffDays = Math.floor(diffMs / 86400000)
 
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  return `${diffDays}d ago`
+  if (diffMins < 60) return m.time_minutes_ago({ count: diffMins })
+  if (diffHours < 24) return m.time_hours_ago({ count: diffHours })
+  return m.time_days_ago({ count: diffDays })
 }
 
 const formatPrice = (priceInCents: number, currency: string) => {
-  if (priceInCents === 0) return 'Free'
+  if (priceInCents === 0) return m.billing_free()
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
   const amount = priceInCents / 100
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency
   }).format(amount)
@@ -97,7 +100,8 @@ const getStatusColor = (status: string) => {
 }
 
 const formatBudgetAmount = (amount: number, currency: string) => {
-  return new Intl.NumberFormat('fr-FR', {
+  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency
   }).format(amount)
@@ -115,6 +119,36 @@ const getOrderStatusColor = (status: string) => {
       return 'text-orange-600 dark:text-orange-400'
     default:
       return 'text-gray-600 dark:text-gray-400'
+  }
+}
+
+const getSubmissionStatusLabel = (status: string) => {
+  switch (status) {
+    case 'submitted':
+      return m.cfp_status_submitted()
+    case 'accepted':
+      return m.cfp_status_accepted()
+    case 'rejected':
+      return m.cfp_status_rejected()
+    case 'under_review':
+      return m.cfp_status_under_review()
+    default:
+      return status
+  }
+}
+
+const getOrderStatusLabel = (status: string) => {
+  switch (status) {
+    case 'paid':
+      return m.billing_order_status_paid()
+    case 'pending':
+      return m.billing_order_status_pending()
+    case 'cancelled':
+      return m.billing_order_status_cancelled()
+    case 'refunded':
+      return m.billing_order_status_refunded()
+    default:
+      return status
   }
 }
 </script>
@@ -135,12 +169,12 @@ const getOrderStatusColor = (status: string) => {
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Dashboard</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.admin_dashboard_heading()}</h2>
       <p class="text-muted-foreground">
         {#if data.selectedEdition}
-          Stats for <strong>{data.selectedEdition.name}</strong>
+          {m.admin_dashboard_stats_for({ name: data.selectedEdition.name })}
         {:else}
-          Overview of all your events
+          {m.admin_dashboard_overview()}
         {/if}
       </p>
     </div>
@@ -149,25 +183,25 @@ const getOrderStatusColor = (status: string) => {
       <!-- Quick Setup Button -->
       <Button onclick={() => (showWizard = true)} data-testid="quick-setup-button">
         <Rocket class="mr-2 h-4 w-4" />
-        Quick Setup
+        {m.admin_dashboard_quick_setup()}
       </Button>
 
       <!-- Edition Filter -->
       {#if data.editions.length > 0}
         <div class="flex items-center gap-2">
-          <label for="edition-filter" class="text-sm text-muted-foreground">Filter by edition:</label>
+          <label for="edition-filter" class="text-sm text-muted-foreground">{m.admin_dashboard_filter_edition()}</label>
           <select
             id="edition-filter"
             class="rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={selectedEditionId}
             onchange={handleEditionChange}
           >
-            <option value="">All editions</option>
+            <option value="">{m.admin_dashboard_all_editions()}</option>
             {#each data.editions.filter((e) => e.status !== 'archived') as edition}
               <option value={edition.id}>{edition.name}</option>
             {/each}
             {#if data.editions.some((e) => e.status === 'archived')}
-              <option disabled>── Archived ──</option>
+              <option disabled>── {m.admin_dashboard_archived()} ──</option>
               {#each data.editions.filter((e) => e.status === 'archived') as edition}
                 <option value={edition.id}>{edition.name}</option>
               {/each}
@@ -181,20 +215,20 @@ const getOrderStatusColor = (status: string) => {
   <!-- CFP Stats -->
   <div class="space-y-3">
     <div class="flex items-center justify-between">
-      <h3 class="text-lg font-semibold">Call for Papers</h3>
+      <h3 class="text-lg font-semibold">{m.admin_dashboard_cfp_title()}</h3>
       {#if data.selectedEdition}
         <a
           href="/admin/cfp/{data.selectedEdition.slug}/submissions"
           class="text-sm text-primary hover:underline"
         >
-          Manage CFP
+          {m.admin_dashboard_manage_cfp()}
         </a>
       {/if}
     </div>
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Total Talks</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.admin_dashboard_total_talks()}</Card.Title>
         <FileText class="h-4 w-4 text-muted-foreground" />
       </Card.Header>
       <Card.Content>
@@ -204,7 +238,7 @@ const getOrderStatusColor = (status: string) => {
 
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Submitted</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.admin_dashboard_submitted()}</Card.Title>
         <Send class="h-4 w-4 text-blue-500" />
       </Card.Header>
       <Card.Content>
@@ -214,7 +248,7 @@ const getOrderStatusColor = (status: string) => {
 
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Under Review</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.admin_dashboard_under_review()}</Card.Title>
         <Clock class="h-4 w-4 text-yellow-500" />
       </Card.Header>
       <Card.Content>
@@ -224,7 +258,7 @@ const getOrderStatusColor = (status: string) => {
 
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Accepted</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.admin_dashboard_accepted()}</Card.Title>
         <CheckCircle class="h-4 w-4 text-green-500" />
       </Card.Header>
       <Card.Content>
@@ -234,7 +268,7 @@ const getOrderStatusColor = (status: string) => {
 
     <Card.Root>
       <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Card.Title class="text-sm font-medium">Rejected</Card.Title>
+        <Card.Title class="text-sm font-medium">{m.admin_dashboard_rejected()}</Card.Title>
         <XCircle class="h-4 w-4 text-red-500" />
       </Card.Header>
       <Card.Content>
@@ -247,20 +281,20 @@ const getOrderStatusColor = (status: string) => {
   <!-- Billing Stats -->
   <div class="space-y-3">
     <div class="flex items-center justify-between">
-      <h3 class="text-lg font-semibold">Billing</h3>
+      <h3 class="text-lg font-semibold">{m.admin_dashboard_billing_title()}</h3>
       {#if data.selectedEdition}
         <a
           href="/admin/billing/{data.selectedEdition.slug}"
           class="text-sm text-primary hover:underline"
         >
-          Manage Billing
+          {m.admin_dashboard_manage_billing()}
         </a>
       {/if}
     </div>
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Revenue</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_revenue()}</Card.Title>
           <DollarSign class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
@@ -268,42 +302,40 @@ const getOrderStatusColor = (status: string) => {
             {formatPrice(data.billingStats.totalRevenue, 'EUR')}
           </div>
           <p class="text-xs text-muted-foreground">
-            {data.billingStats.paidOrders} paid order{data.billingStats.paidOrders !== 1
-              ? 's'
-              : ''}
+            {m.admin_dashboard_paid_orders({ count: data.billingStats.paidOrders })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Tickets Sold</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_tickets_sold()}</Card.Title>
           <Ticket class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
           <div class="text-2xl font-bold">{data.billingStats.ticketsSold}</div>
           <p class="text-xs text-muted-foreground">
-            {data.billingStats.ticketsCheckedIn} checked in ({data.billingStats.checkInRate}%)
+            {m.admin_dashboard_checked_in({ count: data.billingStats.ticketsCheckedIn, rate: data.billingStats.checkInRate })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Orders</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_orders()}</Card.Title>
           <ShoppingCart class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
           <div class="text-2xl font-bold">{data.billingStats.totalOrders}</div>
           <p class="text-xs text-muted-foreground">
-            {data.billingStats.pendingOrders} pending, {data.billingStats.cancelledOrders} cancelled
+            {m.admin_dashboard_pending_cancelled({ pending: data.billingStats.pendingOrders, cancelled: data.billingStats.cancelledOrders })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Check-in Rate</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_checkin_rate()}</Card.Title>
           <Users class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
@@ -322,20 +354,20 @@ const getOrderStatusColor = (status: string) => {
   <!-- Budget Stats -->
   <div class="space-y-3">
     <div class="flex items-center justify-between">
-      <h3 class="text-lg font-semibold">Budget</h3>
+      <h3 class="text-lg font-semibold">{m.admin_dashboard_budget_title()}</h3>
       {#if data.selectedEdition}
         <a
           href="/admin/budget/{data.selectedEdition.slug}"
           class="text-sm text-primary hover:underline"
         >
-          Manage Budget
+          {m.admin_dashboard_manage_budget()}
         </a>
       {/if}
     </div>
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Total Budget</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_total_budget()}</Card.Title>
           <Wallet class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
@@ -343,7 +375,7 @@ const getOrderStatusColor = (status: string) => {
             {formatBudgetAmount(data.budgetStats.totalBudget, data.budgetStats.currency)}
           </div>
           <p class="text-xs text-muted-foreground">
-            {data.budgetStats.usagePercent}% used
+            {m.admin_dashboard_used_percent({ percent: data.budgetStats.usagePercent })}
           </p>
           <div class="mt-2 h-2 w-full rounded-full bg-muted">
             <div
@@ -356,7 +388,7 @@ const getOrderStatusColor = (status: string) => {
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Expenses</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_expenses()}</Card.Title>
           <ArrowDownCircle class="h-4 w-4 text-red-500" />
         </Card.Header>
         <Card.Content>
@@ -364,14 +396,14 @@ const getOrderStatusColor = (status: string) => {
             {formatBudgetAmount(data.budgetStats.expenses, data.budgetStats.currency)}
           </div>
           <p class="text-xs text-muted-foreground">
-            {data.budgetStats.transactionsCount} transaction{data.budgetStats.transactionsCount !== 1 ? 's' : ''}
+            {m.admin_dashboard_transactions({ count: data.budgetStats.transactionsCount })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Income</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_income()}</Card.Title>
           <ArrowUpCircle class="h-4 w-4 text-green-500" />
         </Card.Header>
         <Card.Content>
@@ -379,14 +411,14 @@ const getOrderStatusColor = (status: string) => {
             {formatBudgetAmount(data.budgetStats.income, data.budgetStats.currency)}
           </div>
           <p class="text-xs text-muted-foreground">
-            {data.budgetStats.categoriesCount} categor{data.budgetStats.categoriesCount !== 1 ? 'ies' : 'y'}
+            {m.admin_dashboard_categories({ count: data.budgetStats.categoriesCount })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Balance</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_balance()}</Card.Title>
           <TrendingUp class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
@@ -394,7 +426,7 @@ const getOrderStatusColor = (status: string) => {
             {formatBudgetAmount(data.budgetStats.balance, data.budgetStats.currency)}
           </div>
           <p class="text-xs text-muted-foreground">
-            budget - expenses + income
+            {m.admin_dashboard_balance_formula()}
           </p>
         </Card.Content>
       </Card.Root>
@@ -404,33 +436,33 @@ const getOrderStatusColor = (status: string) => {
   <!-- Sponsoring Stats -->
   <div class="space-y-3">
     <div class="flex items-center justify-between">
-      <h3 class="text-lg font-semibold">Sponsoring</h3>
+      <h3 class="text-lg font-semibold">{m.admin_dashboard_sponsoring_title()}</h3>
       {#if data.selectedEdition}
         <a
           href="/admin/sponsoring/{data.selectedEdition.slug}"
           class="text-sm text-primary hover:underline"
         >
-          Manage Sponsors
+          {m.admin_dashboard_manage_sponsors()}
         </a>
       {/if}
     </div>
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Total Sponsors</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_total_sponsors()}</Card.Title>
           <Building2 class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
           <div class="text-2xl font-bold">{data.sponsoringStats.totalSponsors}</div>
           <p class="text-xs text-muted-foreground">
-            {data.sponsoringStats.confirmedSponsors} confirmed
+            {m.admin_dashboard_confirmed({ count: data.sponsoringStats.confirmedSponsors })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Revenue</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_sponsoring_revenue()}</Card.Title>
           <Handshake class="h-4 w-4 text-green-500" />
         </Card.Header>
         <Card.Content>
@@ -438,14 +470,14 @@ const getOrderStatusColor = (status: string) => {
             {formatBudgetAmount(data.sponsoringStats.revenue, data.sponsoringStats.currency)}
           </div>
           <p class="text-xs text-muted-foreground">
-            {data.sponsoringStats.paidSponsors} paid
+            {m.admin_dashboard_paid({ count: data.sponsoringStats.paidSponsors })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Pipeline</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_pipeline()}</Card.Title>
           <TrendingUp class="h-4 w-4 text-blue-500" />
         </Card.Header>
         <Card.Content>
@@ -453,32 +485,32 @@ const getOrderStatusColor = (status: string) => {
             {formatBudgetAmount(data.sponsoringStats.pipelineValue, data.sponsoringStats.currency)}
           </div>
           <p class="text-xs text-muted-foreground">
-            {data.sponsoringStats.contacted + data.sponsoringStats.negotiating} in progress
+            {m.admin_dashboard_in_progress({ count: data.sponsoringStats.contacted + data.sponsoringStats.negotiating })}
           </p>
         </Card.Content>
       </Card.Root>
 
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Card.Title class="text-sm font-medium">Pipeline Status</Card.Title>
+          <Card.Title class="text-sm font-medium">{m.admin_dashboard_pipeline_status()}</Card.Title>
           <Users class="h-4 w-4 text-muted-foreground" />
         </Card.Header>
         <Card.Content>
           <div class="space-y-1">
             <div class="flex justify-between text-xs">
-              <span class="text-muted-foreground">Prospects</span>
+              <span class="text-muted-foreground">{m.admin_dashboard_prospects()}</span>
               <span class="font-medium">{data.sponsoringStats.prospects}</span>
             </div>
             <div class="flex justify-between text-xs">
-              <span class="text-muted-foreground">Contacted</span>
+              <span class="text-muted-foreground">{m.admin_dashboard_contacted()}</span>
               <span class="font-medium">{data.sponsoringStats.contacted}</span>
             </div>
             <div class="flex justify-between text-xs">
-              <span class="text-muted-foreground">Negotiating</span>
+              <span class="text-muted-foreground">{m.admin_dashboard_negotiating()}</span>
               <span class="font-medium">{data.sponsoringStats.negotiating}</span>
             </div>
             <div class="flex justify-between text-xs">
-              <span class="text-muted-foreground">Declined</span>
+              <span class="text-muted-foreground">{m.admin_dashboard_declined()}</span>
               <span class="font-medium">{data.sponsoringStats.declined}</span>
             </div>
           </div>
@@ -491,12 +523,12 @@ const getOrderStatusColor = (status: string) => {
   <div class="grid gap-4 md:grid-cols-3">
     <Card.Root>
       <Card.Header>
-        <Card.Title>Recent Submissions</Card.Title>
-        <Card.Description>Latest CFP submissions</Card.Description>
+        <Card.Title>{m.admin_dashboard_recent_submissions()}</Card.Title>
+        <Card.Description>{m.admin_dashboard_latest_cfp()}</Card.Description>
       </Card.Header>
       <Card.Content>
         {#if data.recentSubmissions.length === 0}
-          <p class="text-sm text-muted-foreground">No submissions yet.</p>
+          <p class="text-sm text-muted-foreground">{m.admin_dashboard_no_submissions()}</p>
         {:else}
           <div class="space-y-3">
             {#each data.recentSubmissions as submission}
@@ -504,11 +536,11 @@ const getOrderStatusColor = (status: string) => {
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-sm font-medium">{submission.title}</p>
                   <p class="text-xs text-muted-foreground">
-                    by {submission.speakerName} - {formatTimeAgo(submission.createdAt)}
+                    {m.admin_dashboard_by_speaker({ name: submission.speakerName, time: formatTimeAgo(submission.createdAt) })}
                   </p>
                 </div>
                 <span class="ml-2 text-xs font-medium {getStatusColor(submission.status)}">
-                  {submission.status}
+                  {getSubmissionStatusLabel(submission.status)}
                 </span>
               </div>
             {/each}
@@ -519,12 +551,12 @@ const getOrderStatusColor = (status: string) => {
 
     <Card.Root>
       <Card.Header>
-        <Card.Title>Recent Orders</Card.Title>
-        <Card.Description>Latest ticket orders</Card.Description>
+        <Card.Title>{m.admin_dashboard_recent_orders()}</Card.Title>
+        <Card.Description>{m.admin_dashboard_latest_orders()}</Card.Description>
       </Card.Header>
       <Card.Content>
         {#if data.recentOrders.length === 0}
-          <p class="text-sm text-muted-foreground">No orders yet.</p>
+          <p class="text-sm text-muted-foreground">{m.admin_dashboard_no_orders()}</p>
         {:else}
           <div class="space-y-3">
             {#each data.recentOrders as order}
@@ -538,7 +570,7 @@ const getOrderStatusColor = (status: string) => {
                   </p>
                 </div>
                 <span class="ml-2 text-xs font-medium {getOrderStatusColor(order.status)}">
-                  {order.status}
+                  {getOrderStatusLabel(order.status)}
                 </span>
               </div>
             {/each}
@@ -549,12 +581,12 @@ const getOrderStatusColor = (status: string) => {
 
     <Card.Root>
       <Card.Header>
-        <Card.Title>Upcoming Events</Card.Title>
-        <Card.Description>Your next scheduled editions</Card.Description>
+        <Card.Title>{m.admin_dashboard_upcoming_events()}</Card.Title>
+        <Card.Description>{m.admin_dashboard_next_editions()}</Card.Description>
       </Card.Header>
       <Card.Content>
         {#if data.upcomingEditions.length === 0}
-          <p class="text-sm text-muted-foreground">No upcoming events.</p>
+          <p class="text-sm text-muted-foreground">{m.admin_dashboard_no_upcoming()}</p>
         {:else}
           <div class="space-y-3">
             {#each data.upcomingEditions as edition}
@@ -570,7 +602,7 @@ const getOrderStatusColor = (status: string) => {
                   href="/admin/cfp/{edition.slug}/submissions"
                   class="text-xs text-primary hover:underline"
                 >
-                  View CFP
+                  {m.admin_dashboard_view_cfp()}
                 </a>
               </div>
             {/each}

@@ -8,6 +8,7 @@ import { Label } from '$lib/components/ui/label'
 import { Switch } from '$lib/components/ui/switch'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getAvailableRatingModes } from '$lib/features/feedback/domain/rating-mode'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertCircle,
   ArrowLeft,
@@ -142,7 +143,7 @@ function handleHeaderChange(event: Event) {
 </script>
 
 <svelte:head>
-	<title>Attendee App - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.admin_app_config_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -154,18 +155,18 @@ function handleHeaderChange(event: Event) {
 			</Button>
 		</a>
 		<div class="flex-1">
-			<h2 class="text-3xl font-bold tracking-tight">Attendee App</h2>
+			<h2 class="text-3xl font-bold tracking-tight">{m.admin_app_config_heading()}</h2>
 			<p class="text-muted-foreground">{data.edition.name}</p>
 		</div>
 		<div class="flex gap-2">
 			<Button variant="outline" onclick={() => (showResetDialog = true)}>
 				<RotateCcw class="mr-2 h-4 w-4" />
-				Reset to Defaults
+				{m.admin_app_reset_defaults()}
 			</Button>
 			<a href={appUrl} target="_blank" rel="noopener noreferrer">
 				<Button variant="outline">
 					<ExternalLink class="mr-2 h-4 w-4" />
-					Open App
+					{m.admin_app_open_app()}
 				</Button>
 			</a>
 		</div>
@@ -175,14 +176,13 @@ function handleHeaderChange(event: Event) {
 	{#if showResetDialog}
 		<Dialog.Content class="max-w-md" onClose={() => (showResetDialog = false)}>
 			<Dialog.Header>
-				<Dialog.Title>Reset to Defaults?</Dialog.Title>
+				<Dialog.Title>{m.admin_app_reset_dialog_title()}</Dialog.Title>
 				<Dialog.Description>
-					This will reset all app settings (appearance, features, and feedback) to their default values.
-					This action cannot be undone.
+					{m.admin_app_reset_dialog_description()}
 				</Dialog.Description>
 			</Dialog.Header>
 			<Dialog.Footer>
-				<Button variant="outline" onclick={() => (showResetDialog = false)}>Cancel</Button>
+				<Button variant="outline" onclick={() => (showResetDialog = false)}>{m.action_cancel()}</Button>
 				<form
 					method="POST"
 					action="?/resetSettings"
@@ -198,10 +198,10 @@ function handleHeaderChange(event: Event) {
 					<Button type="submit" variant="destructive" disabled={isResetting}>
 						{#if isResetting}
 							<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-							Resetting...
+							{m.admin_app_resetting()}
 						{:else}
 							<RotateCcw class="mr-2 h-4 w-4" />
-							Reset
+							{m.admin_app_reset()}
 						{/if}
 					</Button>
 				</form>
@@ -214,9 +214,9 @@ function handleHeaderChange(event: Event) {
 		<div class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
 			<CheckCircle2 class="mr-2 inline h-4 w-4" />
 			{#if form.action === 'reset'}
-				Settings reset to defaults successfully.
+				{m.admin_app_settings_reset_success()}
 			{:else}
-				Settings saved successfully.
+				{m.admin_app_settings_saved_success()}
 			{/if}
 		</div>
 	{/if}
@@ -258,7 +258,7 @@ function handleHeaderChange(event: Event) {
 						}
 					}}>
 						<RefreshCw class="mr-2 h-4 w-4" />
-						Refresh Preview
+						{m.admin_app_refresh_preview()}
 					</Button>
 				</div>
 			</div>
@@ -274,7 +274,7 @@ function handleHeaderChange(event: Event) {
 					class="flex items-center gap-2"
 				>
 					<Palette class="h-4 w-4" />
-					Appearance
+					{m.admin_app_tab_appearance()}
 				</Button>
 				<Button
 					variant={activeTab === 'features' ? 'default' : 'ghost'}
@@ -282,7 +282,7 @@ function handleHeaderChange(event: Event) {
 					class="flex items-center gap-2"
 				>
 					<Settings2 class="h-4 w-4" />
-					Features
+					{m.admin_app_tab_features()}
 				</Button>
 				<Button
 					variant={activeTab === 'feedback' ? 'default' : 'ghost'}
@@ -290,7 +290,7 @@ function handleHeaderChange(event: Event) {
 					class="flex items-center gap-2"
 				>
 					<Star class="h-4 w-4" />
-					Feedback
+					{m.admin_app_tab_feedback()}
 				</Button>
 			</div>
 
@@ -313,28 +313,28 @@ function handleHeaderChange(event: Event) {
 						<Card.Header>
 							<Card.Title class="flex items-center gap-2">
 								<ImageIcon class="h-5 w-5" />
-								Branding
+								{m.admin_app_branding_title()}
 							</Card.Title>
-							<Card.Description>Customize how your app looks to attendees</Card.Description>
+							<Card.Description>{m.admin_app_branding_description()}</Card.Description>
 						</Card.Header>
 						<Card.Content class="space-y-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div class="space-y-2">
-									<Label for="title">App Title</Label>
+									<Label for="title">{m.admin_app_title_label()}</Label>
 									<Input
 										id="title"
 										name="title"
 										placeholder={data.edition.name}
 										bind:value={title}
 									/>
-									<p class="text-xs text-muted-foreground">Leave empty to use edition name</p>
+									<p class="text-xs text-muted-foreground">{m.admin_app_title_hint()}</p>
 								</div>
 								<div class="space-y-2">
-									<Label for="subtitle">Subtitle / Venue</Label>
+									<Label for="subtitle">{m.admin_app_subtitle_label()}</Label>
 									<Input
 										id="subtitle"
 										name="subtitle"
-										placeholder="Paris Convention Center"
+										placeholder={m.admin_app_subtitle_placeholder()}
 										bind:value={subtitle}
 									/>
 								</div>
@@ -342,7 +342,7 @@ function handleHeaderChange(event: Event) {
 
 							<div class="grid gap-4 md:grid-cols-2">
 								<div class="space-y-2">
-									<Label for="primaryColor">Primary Color</Label>
+									<Label for="primaryColor">{m.admin_app_primary_color_label()}</Label>
 									<div class="flex gap-2">
 										<input
 											id="primaryColor"
@@ -357,10 +357,10 @@ function handleHeaderChange(event: Event) {
 											class="flex-1 font-mono"
 										/>
 									</div>
-									<p class="text-xs text-muted-foreground">Active tabs, buttons, highlights</p>
+									<p class="text-xs text-muted-foreground">{m.admin_app_primary_color_hint()}</p>
 								</div>
 								<div class="space-y-2">
-									<Label for="accentColor">Accent Color</Label>
+									<Label for="accentColor">{m.admin_app_accent_color_label()}</Label>
 									<div class="flex gap-2">
 										<input
 											id="accentColor"
@@ -375,13 +375,13 @@ function handleHeaderChange(event: Event) {
 											class="flex-1 font-mono"
 										/>
 									</div>
-									<p class="text-xs text-muted-foreground">Favorites, secondary highlights</p>
+									<p class="text-xs text-muted-foreground">{m.admin_app_accent_color_hint()}</p>
 								</div>
 							</div>
 
 							<div class="grid gap-4 md:grid-cols-2">
 								<div class="space-y-2">
-									<Label for="logoFile">Logo (Optional)</Label>
+									<Label for="logoFile">{m.admin_app_logo_label()}</Label>
 									<div class="flex items-center gap-4">
 										{#if logoPreview}
 											<img src={logoPreview} alt="Logo preview" class="h-16 w-16 rounded-lg border object-contain p-1" />
@@ -400,14 +400,14 @@ function handleHeaderChange(event: Event) {
 											/>
 											<Button type="button" variant="outline" size="sm" class="pointer-events-none">
 												<Upload class="mr-2 h-4 w-4" />
-												Upload Logo
+												{m.admin_app_upload_logo()}
 											</Button>
 										</label>
 									</div>
-									<p class="text-xs text-muted-foreground">PNG, JPG, WebP or SVG. Max 2MB.</p>
+									<p class="text-xs text-muted-foreground">{m.admin_app_logo_hint()}</p>
 								</div>
 								<div class="space-y-2">
-									<Label for="headerImage">Header Background (Optional)</Label>
+									<Label for="headerImage">{m.admin_app_header_label()}</Label>
 									<div class="flex items-center gap-4">
 										{#if headerPreview}
 											<img src={headerPreview} alt="Header preview" class="h-16 w-24 rounded-lg border object-cover" />
@@ -426,11 +426,11 @@ function handleHeaderChange(event: Event) {
 											/>
 											<Button type="button" variant="outline" size="sm" class="pointer-events-none">
 												<Upload class="mr-2 h-4 w-4" />
-												Upload Image
+												{m.admin_app_upload_header()}
 											</Button>
 										</label>
 									</div>
-									<p class="text-xs text-muted-foreground">PNG, JPG or WebP. Max 5MB.</p>
+									<p class="text-xs text-muted-foreground">{m.admin_app_header_hint()}</p>
 								</div>
 							</div>
 						</Card.Content>
@@ -440,10 +440,10 @@ function handleHeaderChange(event: Event) {
 						<Button type="submit" disabled={isSavingAppearance}>
 							{#if isSavingAppearance}
 								<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-								Saving...
+								{m.admin_app_saving()}
 							{:else}
 								<Check class="mr-2 h-4 w-4" />
-								Save Appearance
+								{m.admin_app_save_appearance()}
 							{/if}
 						</Button>
 					</div>
@@ -468,17 +468,17 @@ function handleHeaderChange(event: Event) {
 						<Card.Header>
 							<Card.Title class="flex items-center gap-2">
 								<Settings2 class="h-5 w-5" />
-								App Tabs
+								{m.admin_app_tabs_title()}
 							</Card.Title>
-							<Card.Description>Choose which tabs to show in the attendee app</Card.Description>
+							<Card.Description>{m.admin_app_tabs_description()}</Card.Description>
 						</Card.Header>
 						<Card.Content class="space-y-4">
 							<div class="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
 								<div class="flex items-center gap-3">
 									<Calendar class="h-5 w-5 text-muted-foreground" />
 									<div>
-										<div class="font-medium">Schedule</div>
-										<p class="text-sm text-muted-foreground">Event schedule with sessions and rooms (always enabled)</p>
+										<div class="font-medium">{m.admin_app_tab_schedule()}</div>
+										<p class="text-sm text-muted-foreground">{m.admin_app_tab_schedule_description()}</p>
 									</div>
 								</div>
 								<input type="hidden" name="showScheduleTab" value="true" />
@@ -489,8 +489,8 @@ function handleHeaderChange(event: Event) {
 								<div class="flex items-center gap-3">
 									<Mic class="h-5 w-5 text-muted-foreground" />
 									<div>
-										<div class="font-medium">Speakers</div>
-										<p class="text-sm text-muted-foreground">List of speakers with their talks</p>
+										<div class="font-medium">{m.admin_app_tab_speakers()}</div>
+										<p class="text-sm text-muted-foreground">{m.admin_app_tab_speakers_description()}</p>
 									</div>
 								</div>
 								<input type="hidden" name="showSpeakersTab" value={showSpeakersTab ? 'true' : 'false'} />
@@ -501,8 +501,8 @@ function handleHeaderChange(event: Event) {
 								<div class="flex items-center gap-3">
 									<Ticket class="h-5 w-5 text-muted-foreground" />
 									<div>
-										<div class="font-medium">My Ticket</div>
-										<p class="text-sm text-muted-foreground">Ticket lookup and QR code display</p>
+										<div class="font-medium">{m.admin_app_tab_my_ticket()}</div>
+										<p class="text-sm text-muted-foreground">{m.admin_app_tab_my_ticket_description()}</p>
 									</div>
 								</div>
 								<input type="hidden" name="showTicketsTab" value={showTicketsTab ? 'true' : 'false'} />
@@ -513,8 +513,8 @@ function handleHeaderChange(event: Event) {
 								<div class="flex items-center gap-3">
 									<MessageSquare class="h-5 w-5 text-muted-foreground" />
 									<div>
-										<div class="font-medium">Feedback</div>
-										<p class="text-sm text-muted-foreground">Event feedback and problem reports</p>
+										<div class="font-medium">{m.admin_app_tab_feedback_label()}</div>
+										<p class="text-sm text-muted-foreground">{m.admin_app_tab_feedback_description()}</p>
 									</div>
 								</div>
 								<input type="hidden" name="showFeedbackTab" value={showFeedbackTab ? 'true' : 'false'} />
@@ -525,8 +525,8 @@ function handleHeaderChange(event: Event) {
 								<div class="flex items-center gap-3">
 									<Heart class="h-5 w-5 text-muted-foreground" />
 									<div>
-										<div class="font-medium">Favorites</div>
-										<p class="text-sm text-muted-foreground">Allow attendees to save favorite sessions</p>
+										<div class="font-medium">{m.admin_app_tab_favorites()}</div>
+										<p class="text-sm text-muted-foreground">{m.admin_app_tab_favorites_description()}</p>
 									</div>
 								</div>
 								<input type="hidden" name="showFavoritesTab" value={showFavoritesTab ? 'true' : 'false'} />
@@ -539,10 +539,10 @@ function handleHeaderChange(event: Event) {
 						<Button type="submit" disabled={isSavingFeatures}>
 							{#if isSavingFeatures}
 								<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-								Saving...
+								{m.admin_app_saving()}
 							{:else}
 								<Check class="mr-2 h-4 w-4" />
-								Save Features
+								{m.admin_app_save_features()}
 							{/if}
 						</Button>
 					</div>
@@ -568,16 +568,16 @@ function handleHeaderChange(event: Event) {
 						<Card.Header>
 							<Card.Title class="flex items-center gap-2">
 								<Star class="h-5 w-5" />
-								Session Ratings
+								{m.admin_app_session_ratings_title()}
 							</Card.Title>
-							<Card.Description>Allow attendees to rate individual sessions</Card.Description>
+							<Card.Description>{m.admin_app_session_ratings_description()}</Card.Description>
 						</Card.Header>
 						<Card.Content class="space-y-6">
 							<div class="flex items-center justify-between rounded-lg border p-4">
 								<div>
-									<div class="font-medium">Enable Session Ratings</div>
+									<div class="font-medium">{m.admin_app_enable_session_ratings()}</div>
 									<p class="text-sm text-muted-foreground">
-										Attendees can rate sessions in the app
+										{m.admin_app_enable_session_ratings_hint()}
 									</p>
 								</div>
 								<input type="hidden" name="sessionRatingEnabled" value={sessionRatingEnabled ? 'true' : 'false'} />
@@ -586,7 +586,7 @@ function handleHeaderChange(event: Event) {
 
 							{#if sessionRatingEnabled}
 								<div class="space-y-3">
-									<Label>Rating Mode</Label>
+									<Label>{m.admin_app_rating_mode_label()}</Label>
 									<div class="grid gap-3 md:grid-cols-2">
 										{#each ratingModes as mode}
 											<label
@@ -610,8 +610,8 @@ function handleHeaderChange(event: Event) {
 
 								<div class="flex items-center justify-between rounded-lg border p-4">
 									<div>
-										<div class="font-medium">Require Comments</div>
-										<p class="text-sm text-muted-foreground">Make comments mandatory</p>
+										<div class="font-medium">{m.admin_app_require_comments()}</div>
+										<p class="text-sm text-muted-foreground">{m.admin_app_require_comments_hint()}</p>
 									</div>
 									<input type="hidden" name="sessionCommentRequired" value={sessionCommentRequired ? 'true' : 'false'} />
 									<Switch checked={sessionCommentRequired} onCheckedChange={(v) => (sessionCommentRequired = v)} />
@@ -625,16 +625,16 @@ function handleHeaderChange(event: Event) {
 						<Card.Header>
 							<Card.Title class="flex items-center gap-2">
 								<MessageSquare class="h-5 w-5" />
-								Event Feedback
+								{m.admin_app_event_feedback_title()}
 							</Card.Title>
-							<Card.Description>General feedback and problem reports</Card.Description>
+							<Card.Description>{m.admin_app_event_feedback_description()}</Card.Description>
 						</Card.Header>
 						<Card.Content class="space-y-6">
 							<div class="flex items-center justify-between rounded-lg border p-4">
 								<div>
-									<div class="font-medium">Enable Event Feedback</div>
+									<div class="font-medium">{m.admin_app_enable_event_feedback()}</div>
 									<p class="text-sm text-muted-foreground">
-										Show feedback forms in the Feedback tab
+										{m.admin_app_enable_event_feedback_hint()}
 									</p>
 								</div>
 								<input type="hidden" name="eventFeedbackEnabled" value={eventFeedbackEnabled ? 'true' : 'false'} />
@@ -643,11 +643,11 @@ function handleHeaderChange(event: Event) {
 
 							{#if eventFeedbackEnabled}
 								<div class="space-y-2">
-									<Label for="feedbackIntroText">Introduction Text</Label>
+									<Label for="feedbackIntroText">{m.admin_app_intro_text_label()}</Label>
 									<Textarea
 										id="feedbackIntroText"
 										name="feedbackIntroText"
-										placeholder="We value your feedback! Help us improve future events."
+										placeholder={m.admin_app_intro_text_placeholder()}
 										bind:value={feedbackIntroText}
 										rows={3}
 									/>
@@ -660,10 +660,10 @@ function handleHeaderChange(event: Event) {
 						<Button type="submit" disabled={isSavingFeedback}>
 							{#if isSavingFeedback}
 								<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-								Saving...
+								{m.admin_app_saving()}
 							{:else}
 								<Check class="mr-2 h-4 w-4" />
-								Save Feedback Settings
+								{m.admin_app_save_feedback()}
 							{/if}
 						</Button>
 					</div>

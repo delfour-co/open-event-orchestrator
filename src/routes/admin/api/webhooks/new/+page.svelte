@@ -9,6 +9,7 @@ import {
   getWebhookEventLabel,
   groupWebhookEventsByCategory
 } from '$lib/features/api/domain/webhook'
+import * as m from '$lib/paraglide/messages'
 import { AlertTriangle, ArrowLeft, Check, Copy, Loader2, Webhook } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -69,7 +70,7 @@ const goToWebhooks = () => {
 </script>
 
 <svelte:head>
-  <title>Create Webhook - Open Event Orchestrator</title>
+  <title>{m.api_webhooks_new_title()}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-2xl space-y-6">
@@ -80,9 +81,9 @@ const goToWebhooks = () => {
       </Button>
     </a>
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Create Webhook</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.api_webhooks_new_heading()}</h2>
       <p class="text-muted-foreground">
-        Set up event notifications to an external URL
+        {m.api_webhooks_new_description()}
       </p>
     </div>
   </div>
@@ -93,25 +94,25 @@ const goToWebhooks = () => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2 text-green-600">
           <Check class="h-5 w-5" />
-          Webhook Created Successfully
+          {m.api_webhooks_new_success_title()}
         </Card.Title>
         <Card.Description>
-          Copy your webhook secret now. You won't be able to see it again!
+          {m.api_webhooks_new_success_description()}
         </Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="space-y-2">
-          <Label>Webhook Signing Secret</Label>
+          <Label>{m.api_webhooks_new_secret_label()}</Label>
           <div class="rounded-md border bg-muted p-4">
             <div class="flex items-center justify-between gap-4">
               <code class="flex-1 break-all text-sm">{form.webhookSecret}</code>
               <Button variant="outline" size="sm" onclick={copySecret} class="shrink-0">
                 {#if copied}
                   <Check class="mr-1 h-4 w-4 text-green-500" />
-                  Copied!
+                  {m.api_keys_copied()}
                 {:else}
                   <Copy class="mr-1 h-4 w-4" />
-                  Copy
+                  {m.action_copy()}
                 {/if}
               </Button>
             </div>
@@ -121,13 +122,13 @@ const goToWebhooks = () => {
         <div class="flex items-start gap-2 rounded-md border border-yellow-500 bg-yellow-50 p-3 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
           <AlertTriangle class="mt-0.5 h-5 w-5 shrink-0" />
           <div class="text-sm">
-            <p class="font-medium">Use this secret to verify webhook signatures</p>
-            <p>Each webhook request includes an <code>X-OEO-Signature</code> header with an HMAC-SHA256 signature. Use this secret to verify that requests are coming from Open Event Orchestrator.</p>
+            <p class="font-medium">{m.api_webhooks_new_secret_hint_title()}</p>
+            <p>{m.api_webhooks_new_secret_hint_description()}</p>
           </div>
         </div>
 
         <Button onclick={goToWebhooks} class="w-full">
-          Done - Go to Webhooks
+          {m.api_webhooks_new_done()}
         </Button>
       </Card.Content>
     </Card.Root>
@@ -137,7 +138,7 @@ const goToWebhooks = () => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Webhook class="h-5 w-5" />
-          New Webhook
+          {m.api_webhooks_new_card_title()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
@@ -160,36 +161,36 @@ const goToWebhooks = () => {
         >
           <!-- Name -->
           <div class="space-y-2">
-            <Label for="name">Name *</Label>
+            <Label for="name">{m.api_webhooks_new_name_label()}</Label>
             <Input
               id="name"
               name="name"
-              placeholder="My Integration Webhook"
+              placeholder={m.api_webhooks_new_name_placeholder()}
               required
             />
             <p class="text-xs text-muted-foreground">
-              A descriptive name to identify this webhook
+              {m.api_webhooks_new_name_hint()}
             </p>
           </div>
 
           <!-- URL -->
           <div class="space-y-2">
-            <Label for="url">Endpoint URL *</Label>
+            <Label for="url">{m.api_webhooks_new_url_label()}</Label>
             <Input
               id="url"
               name="url"
               type="url"
-              placeholder="https://example.com/webhooks/oeo"
+              placeholder={m.api_webhooks_new_url_placeholder()}
               required
             />
             <p class="text-xs text-muted-foreground">
-              The URL where webhook events will be sent via POST request
+              {m.api_webhooks_new_url_hint()}
             </p>
           </div>
 
           <!-- Scope -->
           <div class="space-y-3">
-            <Label>Scope</Label>
+            <Label>{m.api_webhooks_new_scope_label()}</Label>
             <div class="grid gap-2 md:grid-cols-2">
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'global' ? 'border-primary bg-primary/5' : ''}">
                 <input
@@ -201,8 +202,8 @@ const goToWebhooks = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Global</div>
-                  <div class="text-xs text-muted-foreground">All events</div>
+                  <div class="font-medium">{m.api_webhooks_new_scope_global()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_webhooks_new_scope_global_hint()}</div>
                 </div>
               </label>
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'organization' ? 'border-primary bg-primary/5' : ''}">
@@ -215,8 +216,8 @@ const goToWebhooks = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Organization</div>
-                  <div class="text-xs text-muted-foreground">Events from one organization</div>
+                  <div class="font-medium">{m.api_webhooks_new_scope_organization()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_webhooks_new_scope_organization_hint()}</div>
                 </div>
               </label>
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'event' ? 'border-primary bg-primary/5' : ''}">
@@ -229,8 +230,8 @@ const goToWebhooks = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Event</div>
-                  <div class="text-xs text-muted-foreground">Events from one event</div>
+                  <div class="font-medium">{m.api_webhooks_new_scope_event()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_webhooks_new_scope_event_hint()}</div>
                 </div>
               </label>
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'edition' ? 'border-primary bg-primary/5' : ''}">
@@ -243,22 +244,22 @@ const goToWebhooks = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Edition</div>
-                  <div class="text-xs text-muted-foreground">Events from one edition</div>
+                  <div class="font-medium">{m.api_webhooks_new_scope_edition()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_webhooks_new_scope_edition_hint()}</div>
                 </div>
               </label>
             </div>
 
             {#if scopeType === 'organization'}
               <div class="space-y-2">
-                <Label for="organizationId">Organization *</Label>
+                <Label for="organizationId">{m.api_webhooks_new_scope_organization()} *</Label>
                 <select
                   id="organizationId"
                   name="organizationId"
                   required
                   class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Select organization...</option>
+                  <option value="">{m.api_webhooks_new_select_organization()}</option>
                   {#each data.organizations as org}
                     <option value={org.id}>{org.name}</option>
                   {/each}
@@ -266,14 +267,14 @@ const goToWebhooks = () => {
               </div>
             {:else if scopeType === 'event'}
               <div class="space-y-2">
-                <Label for="eventId">Event *</Label>
+                <Label for="eventId">{m.api_webhooks_new_scope_event()} *</Label>
                 <select
                   id="eventId"
                   name="eventId"
                   required
                   class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Select event...</option>
+                  <option value="">{m.api_webhooks_new_select_event()}</option>
                   {#each data.events as event}
                     <option value={event.id}>{event.name}</option>
                   {/each}
@@ -281,14 +282,14 @@ const goToWebhooks = () => {
               </div>
             {:else if scopeType === 'edition'}
               <div class="space-y-2">
-                <Label for="editionId">Edition *</Label>
+                <Label for="editionId">{m.api_webhooks_new_scope_edition()} *</Label>
                 <select
                   id="editionId"
                   name="editionId"
                   required
                   class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Select edition...</option>
+                  <option value="">{m.api_webhooks_new_select_edition()}</option>
                   {#each data.editions as edition}
                     <option value={edition.id}>{edition.name} ({edition.year})</option>
                   {/each}
@@ -300,13 +301,13 @@ const goToWebhooks = () => {
           <!-- Events -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <Label>Events to Subscribe *</Label>
+              <Label>{m.api_webhooks_new_events_label()}</Label>
               <div class="flex gap-2">
                 <Button type="button" variant="ghost" size="sm" onclick={selectAllEvents}>
-                  All
+                  {m.api_webhooks_new_events_all()}
                 </Button>
                 <Button type="button" variant="ghost" size="sm" onclick={clearEvents}>
-                  Clear
+                  {m.api_webhooks_new_events_clear()}
                 </Button>
               </div>
             </div>
@@ -344,19 +345,19 @@ const goToWebhooks = () => {
 
           <!-- Retry Count -->
           <div class="space-y-2">
-            <Label for="retryCount">Retry Attempts</Label>
+            <Label for="retryCount">{m.api_webhooks_new_retries_label()}</Label>
             <select
               id="retryCount"
               name="retryCount"
               class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <option value="0">No retries</option>
-              <option value="1">1 retry</option>
-              <option value="3" selected>3 retries</option>
-              <option value="5">5 retries</option>
+              <option value="0">{m.api_webhooks_new_retries_none()}</option>
+              <option value="1">{m.api_webhooks_new_retries_one()}</option>
+              <option value="3" selected>{m.api_webhooks_new_retries_three()}</option>
+              <option value="5">{m.api_webhooks_new_retries_five()}</option>
             </select>
             <p class="text-xs text-muted-foreground">
-              Number of retry attempts if delivery fails (exponential backoff)
+              {m.api_webhooks_new_retries_hint()}
             </p>
           </div>
 
@@ -364,7 +365,7 @@ const goToWebhooks = () => {
           <div class="flex gap-3">
             <a href="/admin/api/webhooks" class="flex-1">
               <Button type="button" variant="outline" class="w-full">
-                Cancel
+                {m.action_cancel()}
               </Button>
             </a>
             <Button
@@ -377,7 +378,7 @@ const goToWebhooks = () => {
               {:else}
                 <Webhook class="mr-2 h-4 w-4" />
               {/if}
-              Create Webhook
+              {m.api_webhooks_new_submit()}
             </Button>
           </div>
         </form>

@@ -6,6 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getPermissionLabel } from '$lib/features/api/domain/api-key'
+import * as m from '$lib/paraglide/messages'
 import { AlertTriangle, ArrowLeft, Check, Copy, Key, Loader2, Shield } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -57,7 +58,7 @@ const goToKeys = () => {
 </script>
 
 <svelte:head>
-  <title>Create API Key - Open Event Orchestrator</title>
+  <title>{m.api_keys_new_title()}</title>
 </svelte:head>
 
 <div class="mx-auto max-w-2xl space-y-6">
@@ -68,9 +69,9 @@ const goToKeys = () => {
       </Button>
     </a>
     <div>
-      <h2 class="text-3xl font-bold tracking-tight">Create API Key</h2>
+      <h2 class="text-3xl font-bold tracking-tight">{m.api_keys_new_heading()}</h2>
       <p class="text-muted-foreground">
-        Generate a new API key for programmatic access
+        {m.api_keys_new_description()}
       </p>
     </div>
   </div>
@@ -81,10 +82,10 @@ const goToKeys = () => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2 text-green-600">
           <Check class="h-5 w-5" />
-          API Key Created Successfully
+          {m.api_keys_new_success_title()}
         </Card.Title>
         <Card.Description>
-          Copy your API key now. You won't be able to see it again!
+          {m.api_keys_new_success_description()}
         </Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
@@ -94,10 +95,10 @@ const goToKeys = () => {
             <Button variant="outline" size="sm" onclick={copyApiKey} class="shrink-0">
               {#if copied}
                 <Check class="mr-1 h-4 w-4 text-green-500" />
-                Copied!
+                {m.api_keys_copied()}
               {:else}
                 <Copy class="mr-1 h-4 w-4" />
-                Copy
+                {m.action_copy()}
               {/if}
             </Button>
           </div>
@@ -106,13 +107,13 @@ const goToKeys = () => {
         <div class="flex items-start gap-2 rounded-md border border-yellow-500 bg-yellow-50 p-3 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
           <AlertTriangle class="mt-0.5 h-5 w-5 shrink-0" />
           <div class="text-sm">
-            <p class="font-medium">Store this key securely</p>
-            <p>This is the only time you'll see this API key. Store it in a secure location like a password manager or environment variable.</p>
+            <p class="font-medium">{m.api_keys_new_store_securely_title()}</p>
+            <p>{m.api_keys_new_store_securely_description()}</p>
           </div>
         </div>
 
         <Button onclick={goToKeys} class="w-full">
-          Done - Go to API Keys
+          {m.api_keys_new_done()}
         </Button>
       </Card.Content>
     </Card.Root>
@@ -122,7 +123,7 @@ const goToKeys = () => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Key class="h-5 w-5" />
-          New API Key
+          {m.api_keys_new_card_title()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
@@ -145,21 +146,21 @@ const goToKeys = () => {
         >
           <!-- Name -->
           <div class="space-y-2">
-            <Label for="name">Name *</Label>
+            <Label for="name">{m.api_keys_new_name_label()}</Label>
             <Input
               id="name"
               name="name"
-              placeholder="Production API Key"
+              placeholder={m.api_keys_new_name_placeholder()}
               required
             />
             <p class="text-xs text-muted-foreground">
-              A descriptive name to identify this key
+              {m.api_keys_new_name_hint()}
             </p>
           </div>
 
           <!-- Scope -->
           <div class="space-y-3">
-            <Label>Scope</Label>
+            <Label>{m.api_keys_new_scope_label()}</Label>
             <div class="grid gap-2 md:grid-cols-2">
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'global' ? 'border-primary bg-primary/5' : ''}">
                 <input
@@ -171,8 +172,8 @@ const goToKeys = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Global</div>
-                  <div class="text-xs text-muted-foreground">Access all data</div>
+                  <div class="font-medium">{m.api_keys_new_scope_global()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_keys_new_scope_global_hint()}</div>
                 </div>
               </label>
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'organization' ? 'border-primary bg-primary/5' : ''}">
@@ -185,8 +186,8 @@ const goToKeys = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Organization</div>
-                  <div class="text-xs text-muted-foreground">Limited to one organization</div>
+                  <div class="font-medium">{m.api_keys_new_scope_organization()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_keys_new_scope_organization_hint()}</div>
                 </div>
               </label>
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'event' ? 'border-primary bg-primary/5' : ''}">
@@ -199,8 +200,8 @@ const goToKeys = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Event</div>
-                  <div class="text-xs text-muted-foreground">Limited to one event</div>
+                  <div class="font-medium">{m.api_keys_new_scope_event()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_keys_new_scope_event_hint()}</div>
                 </div>
               </label>
               <label class="flex cursor-pointer items-center gap-2 rounded-md border p-3 hover:bg-muted {scopeType === 'edition' ? 'border-primary bg-primary/5' : ''}">
@@ -213,22 +214,22 @@ const goToKeys = () => {
                   class="h-4 w-4"
                 />
                 <div>
-                  <div class="font-medium">Edition</div>
-                  <div class="text-xs text-muted-foreground">Limited to one edition</div>
+                  <div class="font-medium">{m.api_keys_new_scope_edition()}</div>
+                  <div class="text-xs text-muted-foreground">{m.api_keys_new_scope_edition_hint()}</div>
                 </div>
               </label>
             </div>
 
             {#if scopeType === 'organization'}
               <div class="space-y-2">
-                <Label for="organizationId">Organization *</Label>
+                <Label for="organizationId">{m.api_keys_new_scope_organization()} *</Label>
                 <select
                   id="organizationId"
                   name="organizationId"
                   required
                   class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Select organization...</option>
+                  <option value="">{m.api_keys_new_select_organization()}</option>
                   {#each data.organizations as org}
                     <option value={org.id}>{org.name}</option>
                   {/each}
@@ -236,14 +237,14 @@ const goToKeys = () => {
               </div>
             {:else if scopeType === 'event'}
               <div class="space-y-2">
-                <Label for="eventId">Event *</Label>
+                <Label for="eventId">{m.api_keys_new_scope_event()} *</Label>
                 <select
                   id="eventId"
                   name="eventId"
                   required
                   class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Select event...</option>
+                  <option value="">{m.api_keys_new_select_event()}</option>
                   {#each data.events as event}
                     <option value={event.id}>{event.name}</option>
                   {/each}
@@ -251,14 +252,14 @@ const goToKeys = () => {
               </div>
             {:else if scopeType === 'edition'}
               <div class="space-y-2">
-                <Label for="editionId">Edition *</Label>
+                <Label for="editionId">{m.api_keys_new_scope_edition()} *</Label>
                 <select
                   id="editionId"
                   name="editionId"
                   required
                   class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="">Select edition...</option>
+                  <option value="">{m.api_keys_new_select_edition()}</option>
                   {#each data.editions as edition}
                     <option value={edition.id}>{edition.name} ({edition.year})</option>
                   {/each}
@@ -270,16 +271,16 @@ const goToKeys = () => {
           <!-- Permissions -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <Label>Permissions *</Label>
+              <Label>{m.api_keys_new_permissions_label()}</Label>
               <div class="flex gap-2">
                 <Button type="button" variant="ghost" size="sm" onclick={selectAllPermissions}>
-                  All
+                  {m.api_keys_new_permissions_all()}
                 </Button>
                 <Button type="button" variant="ghost" size="sm" onclick={selectReadOnly}>
-                  Read Only
+                  {m.api_keys_new_permissions_read_only()}
                 </Button>
                 <Button type="button" variant="ghost" size="sm" onclick={clearPermissions}>
-                  Clear
+                  {m.api_keys_new_permissions_clear()}
                 </Button>
               </div>
             </div>
@@ -310,7 +311,7 @@ const goToKeys = () => {
 
           <!-- Rate Limit -->
           <div class="space-y-2">
-            <Label for="rateLimit">Rate Limit (requests/minute)</Label>
+            <Label for="rateLimit">{m.api_keys_new_rate_limit_label()}</Label>
             <Input
               id="rateLimit"
               name="rateLimit"
@@ -320,23 +321,23 @@ const goToKeys = () => {
               value="60"
             />
             <p class="text-xs text-muted-foreground">
-              Maximum number of API requests per minute
+              {m.api_keys_new_rate_limit_hint()}
             </p>
           </div>
 
           <!-- Expiration -->
           <div class="space-y-2">
-            <Label for="expiresIn">Expiration</Label>
+            <Label for="expiresIn">{m.api_keys_new_expiration_label()}</Label>
             <select
               id="expiresIn"
               name="expiresIn"
               class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <option value="30">30 days</option>
-              <option value="90">90 days</option>
-              <option value="180">6 months</option>
-              <option value="365" selected>1 year</option>
-              <option value="never">Never expires</option>
+              <option value="30">{m.api_keys_new_expiration_30_days()}</option>
+              <option value="90">{m.api_keys_new_expiration_90_days()}</option>
+              <option value="180">{m.api_keys_new_expiration_6_months()}</option>
+              <option value="365" selected>{m.api_keys_new_expiration_1_year()}</option>
+              <option value="never">{m.api_keys_new_expiration_never()}</option>
             </select>
           </div>
 
@@ -344,7 +345,7 @@ const goToKeys = () => {
           <div class="flex gap-3">
             <a href="/admin/api/keys" class="flex-1">
               <Button type="button" variant="outline" class="w-full">
-                Cancel
+                {m.action_cancel()}
               </Button>
             </a>
             <Button
@@ -357,7 +358,7 @@ const goToKeys = () => {
               {:else}
                 <Key class="mr-2 h-4 w-4" />
               {/if}
-              Create API Key
+              {m.api_keys_new_submit()}
             </Button>
           </div>
         </form>

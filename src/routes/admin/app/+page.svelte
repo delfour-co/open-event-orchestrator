@@ -2,6 +2,7 @@
 import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { ArrowRight, Calendar, ExternalLink, Eye, EyeOff, Smartphone } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -22,7 +23,7 @@ const filteredEditions = $derived(
 const archivedCount = $derived(data.editions.filter((e) => e.status === 'archived').length)
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -31,25 +32,25 @@ const formatDate = (date: Date) => {
 </script>
 
 <svelte:head>
-	<title>Attendee App - Open Event Orchestrator</title>
+	<title>{m.admin_app_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
-			<h2 class="text-3xl font-bold tracking-tight">Attendee App</h2>
+			<h2 class="text-3xl font-bold tracking-tight">{m.admin_app_heading()}</h2>
 			<p class="text-muted-foreground">
-				Configure the mobile PWA experience for your event attendees.
+				{m.admin_app_description()}
 			</p>
 		</div>
 		{#if archivedCount > 0}
 			<Button variant="outline" onclick={() => (showArchived = !showArchived)}>
 				{#if showArchived}
 					<EyeOff class="mr-2 h-4 w-4" />
-					Hide Archived ({archivedCount})
+					{m.admin_app_hide_archived({ count: archivedCount })}
 				{:else}
 					<Eye class="mr-2 h-4 w-4" />
-					Show Archived ({archivedCount})
+					{m.admin_app_show_archived({ count: archivedCount })}
 				{/if}
 			</Button>
 		{/if}
@@ -59,15 +60,15 @@ const formatDate = (date: Date) => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Smartphone class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No editions available</h3>
+				<h3 class="text-lg font-semibold">{m.admin_app_no_editions_title()}</h3>
 				<p class="text-sm text-muted-foreground">
 					{#if !showArchived && archivedCount > 0}
-						All editions are archived.
+						{m.admin_app_all_archived()}
 						<button class="text-primary underline" onclick={() => (showArchived = true)}>
-							Show archived editions
+							{m.admin_app_show_archived_link()}
 						</button>
 					{:else}
-						Create an edition to configure its attendee app.
+						{m.admin_app_create_edition_hint()}
 					{/if}
 				</p>
 			</Card.Content>
@@ -115,7 +116,7 @@ const formatDate = (date: Date) => {
 						{/if}
 						<a href="/admin/app/{edition.slug}">
 							<Button class="w-full" variant="outline">
-								Configure App
+								{m.admin_app_configure()}
 								<ArrowRight class="ml-2 h-4 w-4" />
 							</Button>
 						</a>
