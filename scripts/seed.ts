@@ -1583,11 +1583,11 @@ const collectionSchemas: Array<{
   {
     name: 'user_sessions',
     type: 'base',
-    listRule: '',
-    viewRule: '',
-    createRule: null,
-    updateRule: null,
-    deleteRule: '',
+    listRule: '@request.auth.id = userId',
+    viewRule: '@request.auth.id = userId',
+    createRule: '@request.auth.id != "" && @request.body.userId = @request.auth.id',
+    updateRule: '@request.auth.id = userId',
+    deleteRule: '@request.auth.id = userId',
     fields: [
       textField('tokenHash', true),
       textField('userAgent'),

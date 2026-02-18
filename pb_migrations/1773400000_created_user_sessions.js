@@ -130,8 +130,8 @@ migrate(
       indexes: ['CREATE INDEX idx_user_sessions_userId ON user_sessions (userId)'],
       listRule: '@request.auth.id = userId',
       viewRule: '@request.auth.id = userId',
-      createRule: null,
-      updateRule: null,
+      createRule: '@request.auth.id != "" && @request.body.userId = @request.auth.id',
+      updateRule: '@request.auth.id = userId',
       deleteRule: '@request.auth.id = userId'
     })
 
