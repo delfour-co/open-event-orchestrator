@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml/badge.svg)](https://github.com/delfour-co/open-event-orchestrator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-533%20E2E%20passed-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
+[![Tests](https://img.shields.io/badge/tests-4538%20unit%20%7C%20533%20E2E-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 [![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)](https://github.com/delfour-co/open-event-orchestrator/actions)
 
 <p align="center">
@@ -67,14 +67,86 @@ After running `pnpm db:init`, these test accounts are available:
 | `pierre@example.com` | `volunteer123` | Organizer (Staff) |
 | `sophie@example.com` | `volunteer123` | Organizer (Staff) |
 
-See [Database Seeding](docs/development/database-seeding.md) for more details.
+See the [Database Seeding](https://github.com/delfour-co/open-event-orchestrator/wiki/Database-Seeding) wiki page for more details.
 
-### Production
+## Deployment
+
+### Option 1: Docker Compose (Recommended)
+
+Download and run with Docker Compose:
 
 ```bash
-# Build for production
+# Download and extract the release
+wget https://github.com/delfour-co/open-event-orchestrator/releases/download/v1.0.0/open-event-orchestrator-v1.0.0.tar.gz
+tar -xzf open-event-orchestrator-v1.0.0.tar.gz
+cd open-event-orchestrator-v1.0.0
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your settings (SMTP, Stripe, etc.)
+
+# Start services (frontend + PocketBase)
+docker compose up -d
+```
+
+### Option 2: Docker Image Only
+
+If you already have a PocketBase instance:
+
+```bash
+# Pull the frontend image
+docker pull ghcr.io/delfour-co/open-event-orchestrator:latest
+
+# Run with your own PocketBase
+docker run -d -p 3000:3000 \
+  -e PUBLIC_POCKETBASE_URL=http://your-pocketbase:8090 \
+  ghcr.io/delfour-co/open-event-orchestrator:latest
+```
+
+**Version tags:** Use specific versions like `v1.0.0` instead of `latest` for production.
+
+### Option 3: Build from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/delfour-co/open-event-orchestrator.git
+cd open-event-orchestrator
+
+# Build production image
+docker build -t oeo .
+
+# Or use Docker Compose
 docker compose -f docker-compose.prod.yml up -d
 ```
+
+### Configuration
+
+Environment variables for production:
+
+```env
+# Required
+PUBLIC_POCKETBASE_URL=https://your-domain.com:8090
+
+# Email (SMTP)
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-user
+SMTP_PASS=your-password
+SMTP_FROM=noreply@your-domain.com
+
+# Stripe (optional, for paid tickets)
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+```
+
+### Accessing the Application
+
+| URL | Description |
+|-----|-------------|
+| `http://localhost:3000` | Frontend application |
+| `http://localhost:8090/_/` | PocketBase Admin UI |
+| `http://localhost:8090/api/` | PocketBase API |
 
 ## Tech Stack
 
@@ -159,9 +231,9 @@ The project has comprehensive test coverage:
 
 | Type | Tests | Coverage |
 |------|-------|----------|
-| Unit tests | 3345 | 98% statements |
+| Unit tests | 4538 | 98% statements |
 | E2E tests | 533 | Chromium |
-| **Total** | **3878+** | **98%** |
+| **Total** | **5071+** | **98%** |
 
 ```bash
 pnpm test              # Run unit tests
@@ -359,6 +431,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ## Links
 
 - [Documentation Wiki](https://github.com/delfour-co/open-event-orchestrator/wiki)
-- [Database Seeding Guide](docs/development/database-seeding.md)
+- [Database Seeding Guide](https://github.com/delfour-co/open-event-orchestrator/wiki/Database-Seeding)
 - [Issue Tracker](https://github.com/delfour-co/open-event-orchestrator/issues)
 - [Discussions](https://github.com/delfour-co/open-event-orchestrator/discussions)

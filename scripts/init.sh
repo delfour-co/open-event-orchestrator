@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Initialize PocketBase with superuser and seed data
+# Initialize PocketBase with superuser
 #
-# Usage: ./scripts/init.sh
+# Usage: ./scripts/init.sh [--seed]
 #
 # This script:
 # 1. Waits for PocketBase to be ready
 # 2. Creates the superuser account
-# 3. Runs the seed script to populate data
+# 3. Optionally runs the seed script (with --seed flag)
 #
 
 set -e
@@ -17,6 +17,17 @@ PB_ADMIN_EMAIL="${PB_ADMIN_EMAIL:-admin@pocketbase.local}"
 PB_ADMIN_PASSWORD="${PB_ADMIN_PASSWORD:-adminpassword123}"
 CONTAINER_NAME="${POCKETBASE_CONTAINER:-oeo-pocketbase}"
 MAX_WAIT_SECONDS=30
+RUN_SEED=false
+
+# Parse arguments
+for arg in "$@"; do
+  case $arg in
+    --seed)
+      RUN_SEED=true
+      shift
+      ;;
+  esac
+done
 
 echo "🚀 Initializing Open Event Orchestrator..."
 echo ""
@@ -53,18 +64,25 @@ else
 fi
 echo ""
 
-# Run seed script
-echo "🌱 Running seed script..."
-pnpm seed
+# Optionally run seed script
+if [ "$RUN_SEED" = true ]; then
+  echo "🌱 Running seed script..."
+  pnpm seed
+  echo ""
+  echo "📋 Test accounts created:"
+  echo "   - admin@example.com / admin123 (organizer)"
+  echo "   - speaker@example.com / speaker123 (speaker)"
+  echo "   - reviewer@example.com / reviewer123 (reviewer)"
+  echo ""
+fi
 
-echo ""
 echo "🎉 Initialization complete!"
 echo ""
 echo "📋 Quick reference:"
 echo "   PocketBase Admin: ${POCKETBASE_URL}/_/"
 echo "   Superuser: $PB_ADMIN_EMAIL / $PB_ADMIN_PASSWORD"
 echo ""
-echo "   Test accounts:"
-echo "   - admin@example.com / admin123 (organizer)"
-echo "   - speaker@example.com / speaker123 (speaker)"
-echo "   - reviewer@example.com / reviewer123 (reviewer)"
+if [ "$RUN_SEED" = false ]; then
+  echo "💡 To populate test data, run: pnpm db:init --seed"
+  echo "   Or manually: pnpm seed"
+fi

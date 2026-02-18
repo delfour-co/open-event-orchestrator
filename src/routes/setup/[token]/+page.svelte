@@ -4,13 +4,13 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import * as m from '$lib/paraglide/messages'
-import { Building2, CheckCircle2, Lock, Mail } from 'lucide-svelte'
+import { CheckCircle2, Lock, Mail } from 'lucide-svelte'
 
 type Props = {
   form: {
     error?: string
     errors?: Record<string, string>
-    values?: { email?: string; organizationName?: string }
+    values?: { email?: string }
   } | null
 }
 
@@ -61,32 +61,6 @@ let isSubmitting = $state(false)
           {/if}
 
           <div class="space-y-4">
-            <div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Building2 class="w-4 h-4" />
-              <span>{m.setup_organization()}</span>
-            </div>
-
-            <div class="space-y-2">
-              <label for="organizationName" class="text-sm font-medium">{m.setup_organization_name()}</label>
-              <Input
-                id="organizationName"
-                name="organizationName"
-                type="text"
-                placeholder={m.setup_organization_placeholder()}
-                value={form?.values?.organizationName ?? ''}
-                required
-                disabled={isSubmitting}
-              />
-              {#if form?.errors?.organizationName}
-                <p class="text-sm text-destructive">{form.errors.organizationName}</p>
-              {/if}
-              <p class="text-xs text-muted-foreground">
-                {m.setup_organization_hint()}
-              </p>
-            </div>
-          </div>
-
-          <div class="border-t pt-6 space-y-4">
             <div class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <Mail class="w-4 h-4" />
               <span>{m.setup_admin_account()}</span>

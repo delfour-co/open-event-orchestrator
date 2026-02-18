@@ -71,8 +71,7 @@ describe('Setup Token Domain', () => {
       const result = initialSetupSchema.safeParse({
         email: 'admin@example.com',
         password: 'password123',
-        passwordConfirm: 'password123',
-        organizationName: 'My Organization'
+        passwordConfirm: 'password123'
       })
       expect(result.success).toBe(true)
     })
@@ -81,8 +80,7 @@ describe('Setup Token Domain', () => {
       const result = initialSetupSchema.safeParse({
         email: 'invalid-email',
         password: 'password123',
-        passwordConfirm: 'password123',
-        organizationName: 'My Organization'
+        passwordConfirm: 'password123'
       })
       expect(result.success).toBe(false)
     })
@@ -91,8 +89,7 @@ describe('Setup Token Domain', () => {
       const result = initialSetupSchema.safeParse({
         email: 'admin@example.com',
         password: '1234567',
-        passwordConfirm: '1234567',
-        organizationName: 'My Organization'
+        passwordConfirm: '1234567'
       })
       expect(result.success).toBe(false)
     })
@@ -101,33 +98,12 @@ describe('Setup Token Domain', () => {
       const result = initialSetupSchema.safeParse({
         email: 'admin@example.com',
         password: 'password123',
-        passwordConfirm: 'different123',
-        organizationName: 'My Organization'
+        passwordConfirm: 'different123'
       })
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.issues[0].path).toContain('passwordConfirm')
       }
-    })
-
-    it('should reject short organization name', () => {
-      const result = initialSetupSchema.safeParse({
-        email: 'admin@example.com',
-        password: 'password123',
-        passwordConfirm: 'password123',
-        organizationName: 'A'
-      })
-      expect(result.success).toBe(false)
-    })
-
-    it('should reject organization name longer than 100 characters', () => {
-      const result = initialSetupSchema.safeParse({
-        email: 'admin@example.com',
-        password: 'password123',
-        passwordConfirm: 'password123',
-        organizationName: 'A'.repeat(101)
-      })
-      expect(result.success).toBe(false)
     })
   })
 

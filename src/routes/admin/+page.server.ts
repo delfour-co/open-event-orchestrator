@@ -328,6 +328,15 @@ export const actions: Actions = {
           description: newOrgDescription || undefined
         })
         organizationId = org.id
+
+        // Add user as organization owner (unless super_admin who has global access)
+        if (locals.user && userRole !== 'super_admin') {
+          await locals.pb.collection('organization_members').create({
+            userId: locals.user.id,
+            organizationId: org.id,
+            role: 'owner'
+          })
+        }
       }
 
       // Step 2: Create event

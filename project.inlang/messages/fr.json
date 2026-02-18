@@ -207,14 +207,10 @@
 
   "setup_page_title": "Configuration initiale - Open Event Orchestrator",
   "setup_welcome": "Bienvenue sur Open Event Orchestrator",
-  "setup_description": "Completez la configuration initiale pour creer votre compte administrateur et votre organisation",
+  "setup_description": "Completez la configuration initiale pour creer votre compte super administrateur",
   "setup_title": "Configuration initiale",
   "setup_wizard_notice": "Cet assistant de configuration n'apparaitra qu'une seule fois. Assurez-vous de sauvegarder vos identifiants.",
-  "setup_organization": "Organisation",
-  "setup_organization_name": "Nom de l'organisation",
-  "setup_organization_placeholder": "Mon Organisation de Conferences",
-  "setup_organization_hint": "Ce sera le nom de votre organisation principale gerant les evenements",
-  "setup_admin_account": "Compte administrateur",
+  "setup_admin_account": "Compte super administrateur",
   "setup_password_min": "Minimum 8 caracteres",
   "setup_submit": "Terminer la configuration",
   "setup_submitting": "Configuration en cours...",
@@ -3106,5 +3102,9 @@
   "admin_app_enable_event_feedback_hint": "Afficher les formulaires de feedback dans l'onglet Feedback",
   "admin_app_intro_text_label": "Texte d'introduction",
   "admin_app_intro_text_placeholder": "Votre avis nous interesse ! Aidez-nous a ameliorer nos prochains evenements.",
-  "admin_app_save_feedback": "Enregistrer les parametres de feedback"
+  "admin_app_save_feedback": "Enregistrer les parametres de feedback",
+
+  "error_edition_not_found": "Edition introuvable",
+  "error_schedule_not_available": "Programme non disponible",
+  "error_edition_no_event": "L'edition n'a pas d'evenement associe"
 }

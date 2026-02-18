@@ -1,0 +1,269 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ==========================================================================
+  # Build and test before release
+  # ==========================================================================
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm lint
+        continue-on-error: true
+      - run: pnpm test:coverage
+
+  # ==========================================================================
+  # Build Docker image
+  # ==========================================================================
+  docker:
+    name: Build Docker Image
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  # ==========================================================================
+  # Build versioned archives
+  # ==========================================================================
+  archives:
+    name: Build Archives
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Prepare release directory
+        run: |
+          RELEASE_DIR="release/open-event-orchestrator-${{ steps.version.outputs.version }}"
+          mkdir -p "$RELEASE_DIR"
+
+          # Copy build output
+          cp -r build "$RELEASE_DIR/"
+
+          # Copy production files
+          cp package.json "$RELEASE_DIR/"
+          cp pnpm-lock.yaml "$RELEASE_DIR/"
+
+          # Copy Docker files
+          cp Dockerfile "$RELEASE_DIR/"
+          cp docker-compose.prod.yml "$RELEASE_DIR/docker-compose.yml"
+
+          # Copy PocketBase migrations
+          cp -r pb_migrations "$RELEASE_DIR/"
+
+          # Copy documentation and config
+          cp README.md "$RELEASE_DIR/"
+          cp LICENSE "$RELEASE_DIR/"
+          cp .env.example "$RELEASE_DIR/"
+
+      - name: Create tar.gz archive
+        run: |
+          cd release
+          tar -czvf open-event-orchestrator-${{ steps.version.outputs.version }}.tar.gz open-event-orchestrator-${{ steps.version.outputs.version }}
+
+      - name: Create zip archive
+        run: |
+          cd release
+          zip -r open-event-orchestrator-${{ steps.version.outputs.version }}.zip open-event-orchestrator-${{ steps.version.outputs.version }}
+
+      - name: Upload archives as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-archives
+          path: |
+            release/*.tar.gz
+            release/*.zip
+
+  # ==========================================================================
+  # Create GitHub Release
+  # ==========================================================================
+  release:
+    name: Create Release
+    needs: [docker, archives]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download archives
+        uses: actions/download-artifact@v4
+        with:
+          name: release-archives
+          path: ./release
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "Generating changelog from $PREV_TAG to ${{ steps.version.outputs.version }}"
+            CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"- %s" --no-merges)
+          else
+            echo "No previous tag found, generating full changelog"
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges -50)
+          fi
+
+          # Save to file for multi-line handling
+          echo "$CHANGELOG" > changelog.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Open Event Orchestrator ${{ steps.version.outputs.version }}
+          body: |
+            ## Open Event Orchestrator ${{ steps.version.outputs.version }}
+
+            ### Installation
+
+            #### Option 1: Docker Compose (Recommended)
+
+            ```bash
+            # Download and extract
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/open-event-orchestrator-${{ steps.version.outputs.version }}.tar.gz
+            tar -xzf open-event-orchestrator-${{ steps.version.outputs.version }}.tar.gz
+            cd open-event-orchestrator-${{ steps.version.outputs.version }}
+
+            # Configure environment
+            cp .env.example .env
+            # Edit .env with your settings
+
+            # Start services (frontend + PocketBase)
+            docker compose up -d
+            ```
+
+            #### Option 2: Docker Image Only
+
+            ```bash
+            # Pull the frontend image
+            docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+
+            # Run with your own PocketBase
+            docker run -d -p 3000:3000 \
+              -e PUBLIC_POCKETBASE_URL=http://your-pocketbase:8090 \
+              ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+            ```
+
+            ### Access
+
+            | URL | Description |
+            |-----|-------------|
+            | http://localhost:3000 | Frontend application |
+            | http://localhost:8090/_/ | PocketBase Admin UI |
+
+            ### Changelog
+
+            $(cat changelog.txt)
+
+            ### Docker Image
+
+            `ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}`
+
+          files: |
+            release/*.tar.gz
+            release/*.zip
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}

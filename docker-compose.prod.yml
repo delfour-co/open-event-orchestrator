@@ -1,4 +1,21 @@
+# =============================================================================
+# Open Event Orchestrator - Production Docker Compose
+# =============================================================================
+# This configuration runs the frontend with a separate PocketBase instance.
+# For a simpler all-in-one deployment, use the fullstack Docker image.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Configuration:
+#   1. Copy .env.example to .env and configure your settings
+#   2. Update environment variables below as needed
+# =============================================================================
+
 services:
+  # ---------------------------------------------------------------------------
+  # PocketBase - Backend Database & API
+  # ---------------------------------------------------------------------------
   pocketbase:
     image: ghcr.io/muchobien/pocketbase:latest
     container_name: oeo-pocketbase
@@ -14,6 +31,9 @@ services:
       timeout: 10s
       retries: 3
 
+  # ---------------------------------------------------------------------------
+  # Frontend - SvelteKit Application
+  # ---------------------------------------------------------------------------
   frontend:
     build:
       context: .
@@ -23,11 +43,37 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Required
       - NODE_ENV=production
       - PUBLIC_POCKETBASE_URL=http://pocketbase:8090
+
+      # Stripe (optional - can also be configured via Admin UI)
+      # Uncomment and set your keys for payment processing
+      # - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      # - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      # - PUBLIC_STRIPE_PUBLISHABLE_KEY=${PUBLIC_STRIPE_PUBLISHABLE_KEY}
     depends_on:
       pocketbase:
         condition: service_healthy
 
 volumes:
   pb_data:
+
+# =============================================================================
+# Optional: Add a reverse proxy (Traefik, nginx, Caddy) for HTTPS
+# =============================================================================
+# Example with Traefik labels:
+#
+#   frontend:
+#     labels:
+#       - "traefik.enable=true"
+#       - "traefik.http.routers.oeo.rule=Host(`events.your-domain.com`)"
+#       - "traefik.http.routers.oeo.tls.certresolver=letsencrypt"
+#       - "traefik.http.services.oeo.loadbalancer.server.port=3000"
+#
+#   pocketbase:
+#     labels:
+#       - "traefik.enable=true"
+#       - "traefik.http.routers.oeo-api.rule=Host(`api.events.your-domain.com`)"
+#       - "traefik.http.routers.oeo-api.tls.certresolver=letsencrypt"
+#       - "traefik.http.services.oeo-api.loadbalancer.server.port=8090"

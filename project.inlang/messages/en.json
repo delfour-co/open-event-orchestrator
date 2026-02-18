@@ -207,14 +207,10 @@
 
   "setup_page_title": "Initial Setup - Open Event Orchestrator",
   "setup_welcome": "Welcome to Open Event Orchestrator",
-  "setup_description": "Complete the initial setup to create your admin account and organization",
+  "setup_description": "Complete the initial setup to create your super admin account",
   "setup_title": "Initial Setup",
   "setup_wizard_notice": "This setup wizard will only appear once. Make sure to save your credentials.",
-  "setup_organization": "Organization",
-  "setup_organization_name": "Organization Name",
-  "setup_organization_placeholder": "My Conference Organization",
-  "setup_organization_hint": "This will be the name of your main organization managing events",
-  "setup_admin_account": "Admin Account",
+  "setup_admin_account": "Super Admin Account",
   "setup_password_min": "Minimum 8 characters",
   "setup_submit": "Complete Setup",
   "setup_submitting": "Setting up...",
@@ -3106,5 +3102,9 @@
   "admin_app_enable_event_feedback_hint": "Show feedback forms in the Feedback tab",
   "admin_app_intro_text_label": "Introduction Text",
   "admin_app_intro_text_placeholder": "We value your feedback! Help us improve future events.",
-  "admin_app_save_feedback": "Save Feedback Settings"
+  "admin_app_save_feedback": "Save Feedback Settings",
+
+  "error_edition_not_found": "Edition not found",
+  "error_schedule_not_available": "Schedule not available",
+  "error_edition_no_event": "Edition has no associated event"
 }

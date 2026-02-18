@@ -1,10 +1,5 @@
-import {
-  generateOrganizationSlug,
-  initialSetupSchema,
-  isTokenValid
-} from '$lib/features/auth/domain'
+import { initialSetupSchema, isTokenValid } from '$lib/features/auth/domain'
 import { createSetupTokenRepository } from '$lib/features/auth/infra'
-import { createOrganizationRepository } from '$lib/features/core/infra'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -47,8 +42,7 @@ export const actions: Actions = {
     const data = {
       email: formData.get('email') as string,
       password: formData.get('password') as string,
-      passwordConfirm: formData.get('passwordConfirm') as string,
-      organizationName: formData.get('organizationName') as string
+      passwordConfirm: formData.get('passwordConfirm') as string
     }
 
     const result = initialSetupSchema.safeParse(data)
@@ -59,33 +53,19 @@ export const actions: Actions = {
       }
       return fail(400, {
         errors,
-        values: { email: data.email, organizationName: data.organizationName }
+        values: { email: data.email }
       })
     }
 
     try {
       // Create the admin user with super_admin role
-      const userRecord = await locals.pb.collection('users').create({
+      await locals.pb.collection('users').create({
         email: data.email,
         password: data.password,
         passwordConfirm: data.passwordConfirm,
         name: data.email.split('@')[0],
         role: 'super_admin',
         emailVisibility: true
-      })
-
-      // Create the organization
-      const orgRepository = createOrganizationRepository(locals.pb)
-      const organization = await orgRepository.create({
-        name: data.organizationName,
-        slug: generateOrganizationSlug(data.organizationName)
-      })
-
-      // Add user as organization owner
-      await locals.pb.collection('organization_members').create({
-        userId: userRecord.id,
-        organizationId: organization.id,
-        role: 'owner'
       })
 
       // Mark the setup token as used
@@ -95,9 +75,7 @@ export const actions: Actions = {
       await locals.pb.collection('users').authWithPassword(data.email, data.password)
 
       // Log the successful setup
-      console.log(
-        `[Setup] Initial setup completed - Admin: ${data.email}, Organization: ${data.organizationName}`
-      )
+      console.log(`[Setup] Initial setup completed - Admin: ${data.email}`)
     } catch (err) {
       console.error('Initial setup error:', err)
       const pbError = err as { response?: { data?: Record<string, { message: string }> } }
@@ -105,13 +83,13 @@ export const actions: Actions = {
       if (pbError.response?.data?.email) {
         return fail(400, {
           errors: { email: 'Email already exists' },
-          values: { email: data.email, organizationName: data.organizationName }
+          values: { email: data.email }
         })
       }
 
       return fail(500, {
         error: 'Failed to complete setup. Please try again.',
-        values: { email: data.email, organizationName: data.organizationName }
+        values: { email: data.email }
       })
     }
 

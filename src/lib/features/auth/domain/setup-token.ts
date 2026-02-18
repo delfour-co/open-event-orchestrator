@@ -16,8 +16,7 @@ export const initialSetupSchema = z
   .object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    passwordConfirm: z.string(),
-    organizationName: z.string().min(2, 'Organization name must be at least 2 characters').max(100)
+    passwordConfirm: z.string()
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: 'Passwords do not match',
