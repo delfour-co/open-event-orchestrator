@@ -333,7 +333,15 @@ describe('integration-service', () => {
     it('should return false for isConnected when not configured', async () => {
       vi.mocked(mockPb.collection).mockReturnValue({
         getList: vi.fn().mockResolvedValue({
-          items: []
+          items: [
+            {
+              stripeSecretKey: 'sk_test_disabled',
+              stripePublishableKey: 'pk_test_disabled',
+              stripeWebhookSecret: '',
+              stripeEnabled: false,
+              stripeApiBase: ''
+            }
+          ]
         })
       } as never)
 

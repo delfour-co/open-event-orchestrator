@@ -34,11 +34,19 @@ async function getSponsorInfoById(pb: PocketBase, sponsorId: string): Promise<Sp
 async function getSponsorInfoFromSession(
   pb: PocketBase,
   sessionId: string,
-  secretKey: string
+  secretKey: string,
+  apiBase?: string
 ): Promise<SponsorInfo | null> {
   try {
     const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(secretKey)
+    const opts: Record<string, unknown> = {}
+    if (apiBase) {
+      const url = new URL(apiBase)
+      opts.host = url.hostname
+      opts.port = Number(url.port) || undefined
+      opts.protocol = url.protocol.replace(':', '')
+    }
+    const stripe = new Stripe(secretKey, opts)
     const session = await stripe.checkout.sessions.retrieve(sessionId)
 
     if (session.status !== 'complete' || !session.metadata) {
@@ -103,7 +111,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
       sponsorInfo = await getSponsorInfoFromSession(
         locals.pb,
         sessionId,
-        stripeSettings.stripeSecretKey
+        stripeSettings.stripeSecretKey,
+        stripeSettings.stripeApiBase || undefined
       )
     }
   }

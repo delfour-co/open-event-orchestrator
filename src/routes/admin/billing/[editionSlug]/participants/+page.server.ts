@@ -1,4 +1,3 @@
-import { env } from '$env/dynamic/private'
 import {
   createOrderItemRepository,
   createOrderRepository,
@@ -9,6 +8,7 @@ import { generateQrCodeDataUrl } from '$lib/features/billing/services'
 import { createCancelOrderUseCase } from '$lib/features/billing/usecases/cancel-order'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
 import { createRefundOrderUseCase } from '$lib/features/billing/usecases/refund-order'
+import { getStripeSettings } from '$lib/server/app-settings'
 import { sendOrderConfirmationEmail, sendOrderRefundEmail } from '$lib/server/billing-notifications'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -190,11 +190,15 @@ export const actions: Actions = {
 
       // Try Stripe refund if configured and payment intent exists
       const order = await orderRepo.findById(orderId)
-      if (order?.stripePaymentIntentId && env.STRIPE_SECRET_KEY) {
+      const stripeSettings = await getStripeSettings(locals.pb)
+      if (order?.stripePaymentIntentId && stripeSettings.isConfigured) {
         const { createStripeService } = await import(
           '$lib/features/billing/services/stripe-service'
         )
-        const stripe = createStripeService(env.STRIPE_SECRET_KEY)
+        const stripe = createStripeService(
+          stripeSettings.stripeSecretKey,
+          stripeSettings.stripeApiBase || undefined
+        )
         await stripe.createRefund(order.stripePaymentIntentId)
       }
 

@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private'
+import { env as publicEnv } from '$env/dynamic/public'
 import { createConsoleEmailService, createSmtpEmailService } from '$lib/features/cfp/services'
 import type { EmailService } from '$lib/features/cfp/services'
 import type PocketBase from 'pocketbase'
@@ -90,18 +91,21 @@ export interface StripeSettings {
   stripePublishableKey: string
   stripeWebhookSecret: string
   stripeEnabled: boolean
+  stripeApiBase: string
 }
 
 export interface StripeSettingsInfo extends StripeSettings {
   mode: StripeMode
   isConfigured: boolean
+  isLocalMock: boolean
 }
 
 const DEFAULT_STRIPE: StripeSettings = {
   stripeSecretKey: '',
   stripePublishableKey: '',
   stripeWebhookSecret: '',
-  stripeEnabled: false
+  stripeEnabled: false,
+  stripeApiBase: ''
 }
 
 /**
@@ -118,12 +122,7 @@ export function getStripeMode(secretKey: string): StripeMode {
  * Check if Stripe is properly configured
  */
 export function isStripeConfigured(settings: StripeSettings): boolean {
-  return !!(
-    settings.stripeEnabled &&
-    settings.stripeSecretKey &&
-    settings.stripePublishableKey &&
-    settings.stripeWebhookSecret
-  )
+  return !!(settings.stripeEnabled && settings.stripeSecretKey && settings.stripePublishableKey)
 }
 
 /**
@@ -155,42 +154,53 @@ export async function getStripeSettings(pb: PocketBase): Promise<StripeSettingsI
           stripeSecretKey: secretKey,
           stripePublishableKey: (record.stripePublishableKey as string) || '',
           stripeWebhookSecret: (record.stripeWebhookSecret as string) || '',
-          stripeEnabled: record.stripeEnabled === true
+          stripeEnabled: record.stripeEnabled === true,
+          stripeApiBase: (record.stripeApiBase as string) || env.STRIPE_API_BASE || ''
         }
 
         return {
           ...settings,
           mode: getStripeMode(secretKey),
-          isConfigured: isStripeConfigured(settings)
+          isConfigured: isStripeConfigured(settings),
+          isLocalMock: isLocalMock(settings.stripeApiBase)
         }
       }
     }
 
-    // Fallback to environment variables
-    const envSecretKey = env.STRIPE_SECRET_KEY || ''
+    // Fallback to environment variables, then defaults
+    const envSecretKey = env.STRIPE_SECRET_KEY || DEFAULT_STRIPE.stripeSecretKey
     const envSettings: StripeSettings = {
       stripeSecretKey: envSecretKey,
-      stripePublishableKey: env.PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-      stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
-      stripeEnabled: !!envSecretKey
+      stripePublishableKey:
+        publicEnv.PUBLIC_STRIPE_PUBLISHABLE_KEY || DEFAULT_STRIPE.stripePublishableKey,
+      stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || DEFAULT_STRIPE.stripeWebhookSecret,
+      stripeEnabled: !!envSecretKey,
+      stripeApiBase: env.STRIPE_API_BASE || DEFAULT_STRIPE.stripeApiBase
     }
 
     return {
       ...envSettings,
       mode: getStripeMode(envSecretKey),
-      isConfigured: isStripeConfigured(envSettings)
+      isConfigured: isStripeConfigured(envSettings),
+      isLocalMock: isLocalMock(envSettings.stripeApiBase)
     }
   } catch {
-    // If collection doesn't exist or error, try env vars
-    const envSecretKey = env.STRIPE_SECRET_KEY || ''
-    return {
+    // If collection doesn't exist or error, try env vars then defaults
+    const envSecretKey = env.STRIPE_SECRET_KEY || DEFAULT_STRIPE.stripeSecretKey
+    const fallback: StripeSettings = {
       ...DEFAULT_STRIPE,
       stripeSecretKey: envSecretKey,
-      stripePublishableKey: env.PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-      stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
+      stripePublishableKey:
+        publicEnv.PUBLIC_STRIPE_PUBLISHABLE_KEY || DEFAULT_STRIPE.stripePublishableKey,
+      stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || DEFAULT_STRIPE.stripeWebhookSecret,
       stripeEnabled: !!envSecretKey,
+      stripeApiBase: env.STRIPE_API_BASE || DEFAULT_STRIPE.stripeApiBase
+    }
+    return {
+      ...fallback,
       mode: getStripeMode(envSecretKey),
-      isConfigured: false
+      isConfigured: isStripeConfigured(fallback),
+      isLocalMock: isLocalMock(fallback.stripeApiBase)
     }
   }
 }
@@ -228,8 +238,22 @@ export async function saveStripeSettings(
 /**
  * Test Stripe connection by making a simple API call
  */
+/**
+ * Check if the API base points to a local mock server (e.g. LocalStripe)
+ */
+function isLocalMock(apiBase?: string): boolean {
+  if (!apiBase) return false
+  try {
+    const url = new URL(apiBase)
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+  } catch {
+    return false
+  }
+}
+
 export async function testStripeConnection(
-  secretKey: string
+  secretKey: string,
+  apiBase?: string
 ): Promise<{ success: boolean; message: string; accountId?: string }> {
   if (!secretKey) {
     return { success: false, message: 'Secret key is required' }
@@ -239,8 +263,38 @@ export async function testStripeConnection(
     return { success: false, message: 'Invalid secret key format' }
   }
 
+  const baseUrl = apiBase || 'https://api.stripe.com'
+
+  // For local mock servers (e.g. LocalStripe), just check reachability
+  // since they don't support /v1/account
+  if (isLocalMock(apiBase)) {
+    try {
+      const response = await fetch(`${baseUrl}/v1/customers`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${secretKey}`
+        }
+      })
+      if (response.ok || response.status === 401) {
+        return {
+          success: true,
+          message: `Connected to local mock (${apiBase})`
+        }
+      }
+      return {
+        success: false,
+        message: `Local mock server unreachable (HTTP ${response.status})`
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: `Local mock server unreachable: ${error instanceof Error ? error.message : 'Connection failed'}`
+      }
+    }
+  }
+
   try {
-    const response = await fetch('https://api.stripe.com/v1/account', {
+    const response = await fetch(`${baseUrl}/v1/account`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${secretKey}`,
@@ -248,19 +302,29 @@ export async function testStripeConnection(
       }
     })
 
-    if (!response.ok) {
-      const error = await response.json()
+    const text = await response.text()
+    let data: Record<string, unknown>
+    try {
+      data = JSON.parse(text)
+    } catch {
       return {
         success: false,
-        message: error.error?.message || `HTTP ${response.status}`
+        message: `Invalid response from Stripe API (HTTP ${response.status})`
       }
     }
 
-    const account = await response.json()
+    if (!response.ok) {
+      const err = data.error as Record<string, unknown> | undefined
+      return {
+        success: false,
+        message: (err?.message as string) || `HTTP ${response.status}`
+      }
+    }
+
     return {
       success: true,
-      message: `Connected to ${account.business_profile?.name || account.email || 'Stripe account'}`,
-      accountId: account.id
+      message: `Connected to ${(data.business_profile as Record<string, unknown>)?.name || data.email || 'Stripe account'}`,
+      accountId: data.id as string
     }
   } catch (error) {
     return {

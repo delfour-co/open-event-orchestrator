@@ -140,10 +140,18 @@ async function createStripeSession(
   edition: EditionInfo,
   data: CheckoutData,
   pkg: SponsorPackage,
-  origin: string
+  origin: string,
+  apiBase?: string
 ): Promise<string> {
   const Stripe = (await import('stripe')).default
-  const stripeClient = new Stripe(stripeKey)
+  const opts: Record<string, unknown> = {}
+  if (apiBase) {
+    const url = new URL(apiBase)
+    opts.host = url.hostname
+    opts.port = Number(url.port) || undefined
+    opts.protocol = url.protocol.replace(':', '')
+  }
+  const stripeClient = new Stripe(stripeKey, opts)
 
   const session = await stripeClient.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -260,7 +268,8 @@ export const actions: Actions = {
       data,
       pkg,
       url.origin,
-      rawData
+      rawData,
+      stripeSettings.stripeApiBase || undefined
     )
   }
 }
@@ -296,10 +305,11 @@ async function handleStripeCheckout(
   data: CheckoutData,
   pkg: SponsorPackage,
   origin: string,
-  rawData: RawFormData
+  rawData: RawFormData,
+  apiBase?: string
 ) {
   try {
-    const sessionUrl = await createStripeSession(stripeKey, edition, data, pkg, origin)
+    const sessionUrl = await createStripeSession(stripeKey, edition, data, pkg, origin, apiBase)
     throw redirect(302, sessionUrl)
   } catch (err) {
     if (err && typeof err === 'object' && 'status' in err) throw err

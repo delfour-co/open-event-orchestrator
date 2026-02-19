@@ -1,4 +1,3 @@
-import { env } from '$env/dynamic/private'
 import {
   createOrderItemRepository,
   createOrderRepository,
@@ -8,6 +7,7 @@ import {
 import { generateQrCodeDataUrl } from '$lib/features/billing/services'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
 import { createCreateOrderUseCase } from '$lib/features/billing/usecases/create-order'
+import { getStripeSettings } from '$lib/server/app-settings'
 import { sendOrderConfirmationEmail } from '$lib/server/billing-notifications'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -131,9 +131,9 @@ export const actions: Actions = {
       }
 
       // Paid order: create Stripe checkout session
-      const stripeKey = env.STRIPE_SECRET_KEY
-      if (!stripeKey) {
-        // No Stripe configured: mark as paid for development
+      const stripeSettings = await getStripeSettings(locals.pb)
+      if (!stripeSettings.isConfigured) {
+        // No Stripe configured: auto-complete for development
         const completeOrder = createCompleteOrderUseCase(
           orderRepo,
           orderItemRepo,
@@ -156,7 +156,10 @@ export const actions: Actions = {
 
       // Create Stripe checkout session
       const { createStripeService } = await import('$lib/features/billing/services/stripe-service')
-      const stripe = createStripeService(stripeKey)
+      const stripe = createStripeService(
+        stripeSettings.stripeSecretKey,
+        stripeSettings.stripeApiBase || undefined
+      )
 
       // Get order items for line items
       const orderItems = await orderItemRepo.findByOrder(result.orderId)

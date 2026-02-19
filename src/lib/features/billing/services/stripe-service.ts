@@ -21,8 +21,15 @@ export interface CheckoutSessionResult {
   url: string
 }
 
-export const createStripeService = (secretKey: string) => {
-  const stripe = new Stripe(secretKey)
+export const createStripeService = (secretKey: string, apiBase?: string) => {
+  const opts: Stripe.StripeConfig = {}
+  if (apiBase) {
+    const url = new URL(apiBase)
+    opts.host = url.hostname
+    opts.port = Number(url.port) || undefined
+    opts.protocol = url.protocol.replace(':', '') as 'http' | 'https'
+  }
+  const stripe = new Stripe(secretKey, opts)
 
   return {
     async createCheckoutSession(input: CreateCheckoutSessionInput): Promise<CheckoutSessionResult> {

@@ -25,7 +25,8 @@ export const load: PageServerLoad = async ({ locals }) => {
       webhookSecretMasked: maskStripeKey(settings.stripeWebhookSecret),
       stripeEnabled: settings.stripeEnabled,
       mode: settings.mode,
-      isConfigured: settings.isConfigured
+      isConfigured: settings.isConfigured,
+      isLocalMock: settings.isLocalMock
     }
   }
 }
@@ -129,7 +130,8 @@ export const actions: Actions = {
       return fail(400, { error: 'Secret key is required to test connection', action: 'test' })
     }
 
-    const result = await testStripeConnection(secretKey)
+    const existing = await getStripeSettings(locals.pb)
+    const result = await testStripeConnection(secretKey, existing.stripeApiBase || undefined)
 
     if (result.success) {
       return {

@@ -1,4 +1,3 @@
-import { env } from '$env/dynamic/private'
 import {
   createOrderItemRepository,
   createOrderRepository,
@@ -8,15 +7,15 @@ import {
 import { generateQrCodeDataUrl } from '$lib/features/billing/services'
 import { createCancelOrderUseCase } from '$lib/features/billing/usecases/cancel-order'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
+import { getStripeSettings } from '$lib/server/app-settings'
 import { sendOrderConfirmationEmail } from '$lib/server/billing-notifications'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const stripeKey = env.STRIPE_SECRET_KEY
-  const webhookSecret = env.STRIPE_WEBHOOK_SECRET
+  const stripeSettings = await getStripeSettings(locals.pb)
 
-  if (!stripeKey || !webhookSecret) {
+  if (!stripeSettings.isConfigured || !stripeSettings.stripeWebhookSecret) {
     return json({ error: 'Stripe not configured' }, { status: 500 })
   }
 
@@ -29,8 +28,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   try {
     const { createStripeService } = await import('$lib/features/billing/services/stripe-service')
-    const stripe = createStripeService(stripeKey)
-    const event = stripe.constructWebhookEvent(payload, signature, webhookSecret)
+    const stripe = createStripeService(
+      stripeSettings.stripeSecretKey,
+      stripeSettings.stripeApiBase || undefined
+    )
+    const event = stripe.constructWebhookEvent(
+      payload,
+      signature,
+      stripeSettings.stripeWebhookSecret
+    )
 
     const orderRepo = createOrderRepository(locals.pb)
     const orderItemRepo = createOrderItemRepository(locals.pb)

@@ -20,7 +20,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     alias: {
-      $lib: '/src/lib'
+      $lib: '/src/lib',
+      '$env/dynamic/public': '/src/lib/server/__mocks__/env-public.ts'
     },
     setupFiles: ['./src/vitest-setup.ts'],
     coverage: {

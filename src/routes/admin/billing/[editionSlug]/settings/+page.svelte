@@ -211,7 +211,14 @@ function copyPublicUrl() {
               </p>
             </div>
           </div>
-          {#if data.settings.stripeConfigured}
+          {#if data.settings.stripeConfigured && data.settings.stripeLocalMock}
+            <span
+              class="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+            >
+              <Check class="h-3 w-3" />
+              Local Mock
+            </span>
+          {:else if data.settings.stripeConfigured}
             <span
               class="flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200"
             >
@@ -280,7 +287,16 @@ function copyPublicUrl() {
         </div>
       </div>
 
-      {#if !data.settings.stripeConfigured}
+      {#if data.settings.stripeLocalMock}
+        <div class="mt-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
+          <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Local Mock Mode</p>
+          <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+            Stripe is pointing to a local mock server (LocalStripe). Paid orders are auto-completed without real payment.
+            Refunds are supported. To use the real Stripe Checkout, configure real API keys in
+            <a href="/admin/settings/stripe" class="underline hover:no-underline">Stripe settings</a>.
+          </p>
+        </div>
+      {:else if !data.settings.stripeConfigured}
         <div class="mt-4 rounded-lg bg-muted p-4">
           <p class="text-sm font-medium">{m.billing_settings_stripe_info()}</p>
           <p class="mt-1 text-sm text-muted-foreground">

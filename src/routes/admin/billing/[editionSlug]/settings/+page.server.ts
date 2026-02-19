@@ -1,5 +1,4 @@
-import { env } from '$env/dynamic/private'
-import { getSmtpSettings } from '$lib/server/app-settings'
+import { getSmtpSettings, getStripeSettings } from '$lib/server/app-settings'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -28,6 +27,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 
   const publicUrl = `${url.origin}/tickets/${editionSlug}`
   const smtpSettings = await getSmtpSettings(locals.pb)
+  const stripeSettings = await getStripeSettings(locals.pb)
 
   return {
     edition: {
@@ -38,8 +38,9 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
     },
     settings: {
       publicUrl,
-      stripeConfigured: !!env.STRIPE_SECRET_KEY,
-      stripeWebhookConfigured: !!env.STRIPE_WEBHOOK_SECRET,
+      stripeConfigured: stripeSettings.isConfigured,
+      stripeLocalMock: stripeSettings.isLocalMock,
+      stripeWebhookConfigured: !!stripeSettings.stripeWebhookSecret,
       emailConfigured: smtpSettings.smtpEnabled && !!smtpSettings.smtpHost,
       activeTicketTypes: activeTicketTypes.length,
       totalTicketTypes: ticketTypes.length,

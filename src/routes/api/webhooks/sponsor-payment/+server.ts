@@ -123,7 +123,14 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
 
   try {
     const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(stripeSettings.stripeSecretKey)
+    const stripeOpts: Record<string, unknown> = {}
+    if (stripeSettings.stripeApiBase) {
+      const apiUrl = new URL(stripeSettings.stripeApiBase)
+      stripeOpts.host = apiUrl.hostname
+      stripeOpts.port = Number(apiUrl.port) || undefined
+      stripeOpts.protocol = apiUrl.protocol.replace(':', '')
+    }
+    const stripe = new Stripe(stripeSettings.stripeSecretKey, stripeOpts)
     const event = stripe.webhooks.constructEvent(
       payload,
       signature,

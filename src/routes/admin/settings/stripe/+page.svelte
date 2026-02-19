@@ -55,7 +55,12 @@ let testing = $state(false)
       </div>
     </div>
     <div class="flex items-center gap-2">
-      {#if data.stripe.isConfigured}
+      {#if data.stripe.isConfigured && data.stripe.isLocalMock}
+        <Badge variant="outline" class="border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300">
+          <CheckCircle2 class="mr-1 h-3 w-3" />
+          Local Mock
+        </Badge>
+      {:else if data.stripe.isConfigured}
         <Badge variant="default">
           <CheckCircle2 class="mr-1 h-3 w-3" />
           {m.admin_stripe_configured()}
@@ -99,6 +104,16 @@ let testing = $state(false)
     >
       <AlertCircle class="mr-2 inline h-4 w-4" />
       {form.error}
+    </div>
+  {/if}
+
+  {#if data.stripe.isLocalMock}
+    <div
+      class="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200"
+    >
+      <AlertCircle class="mr-2 inline h-4 w-4" />
+      Stripe is pointing to a local mock server. Checkout Sessions are not supported — paid orders will be auto-completed without payment.
+      Refunds and other API calls are supported. To use real Stripe Checkout, replace the keys with real <code class="rounded bg-blue-100 px-1 dark:bg-blue-900">sk_test_</code> / <code class="rounded bg-blue-100 px-1 dark:bg-blue-900">pk_test_</code> keys from your Stripe dashboard.
     </div>
   {/if}
 

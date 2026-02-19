@@ -34,7 +34,8 @@ describe('app-settings', () => {
           stripeSecretKey: 'sk_test_123',
           stripePublishableKey: 'pk_test_123',
           stripeWebhookSecret: 'whsec_123',
-          stripeEnabled: true
+          stripeEnabled: true,
+          stripeApiBase: ''
         }
         expect(isStripeConfigured(settings)).toBe(true)
       })
@@ -44,7 +45,8 @@ describe('app-settings', () => {
           stripeSecretKey: 'sk_test_123',
           stripePublishableKey: 'pk_test_123',
           stripeWebhookSecret: 'whsec_123',
-          stripeEnabled: false
+          stripeEnabled: false,
+          stripeApiBase: ''
         }
         expect(isStripeConfigured(settings)).toBe(false)
       })
@@ -54,7 +56,8 @@ describe('app-settings', () => {
           stripeSecretKey: '',
           stripePublishableKey: 'pk_test_123',
           stripeWebhookSecret: 'whsec_123',
-          stripeEnabled: true
+          stripeEnabled: true,
+          stripeApiBase: ''
         }
         expect(isStripeConfigured(settings)).toBe(false)
       })
@@ -64,19 +67,21 @@ describe('app-settings', () => {
           stripeSecretKey: 'sk_test_123',
           stripePublishableKey: '',
           stripeWebhookSecret: 'whsec_123',
-          stripeEnabled: true
+          stripeEnabled: true,
+          stripeApiBase: ''
         }
         expect(isStripeConfigured(settings)).toBe(false)
       })
 
-      it('should return false when webhook secret is missing', () => {
+      it('should return true when webhook secret is missing (not required for local mock)', () => {
         const settings: StripeSettings = {
           stripeSecretKey: 'sk_test_123',
           stripePublishableKey: 'pk_test_123',
           stripeWebhookSecret: '',
-          stripeEnabled: true
+          stripeEnabled: true,
+          stripeApiBase: ''
         }
-        expect(isStripeConfigured(settings)).toBe(false)
+        expect(isStripeConfigured(settings)).toBe(true)
       })
     })
 
