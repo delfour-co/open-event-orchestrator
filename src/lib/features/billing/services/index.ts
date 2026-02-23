@@ -49,6 +49,17 @@ export {
   type CreditNoteData
 } from './pdf-credit-note-service'
 
+export type {
+  PaymentProvider,
+  PaymentProviderType,
+  CreateCheckoutInput,
+  PaymentLineItem,
+  CheckoutResult,
+  RefundResult,
+  PaymentEvent
+} from './payment-providers'
+export { getPaymentProvider, getActivePaymentProviderType } from './payment-providers'
+
 export {
   createBillingStatsService,
   type BillingStatsService,

@@ -14,6 +14,7 @@ export interface CreateCheckoutSessionInput {
   lineItems: CheckoutLineItem[]
   successUrl: string
   cancelUrl: string
+  metadata?: Record<string, string>
 }
 
 export interface CheckoutSessionResult {
@@ -49,7 +50,8 @@ export const createStripeService = (secretKey: string, apiBase?: string) => {
         })),
         metadata: {
           orderId: input.orderId,
-          orderNumber: input.orderNumber
+          orderNumber: input.orderNumber,
+          ...input.metadata
         },
         success_url: input.successUrl,
         cancel_url: input.cancelUrl
