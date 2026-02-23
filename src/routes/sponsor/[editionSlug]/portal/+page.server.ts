@@ -77,6 +77,13 @@ export const actions: Actions = {
     const contactName = formData.get('contactName') as string
     const contactEmail = formData.get('contactEmail') as string
     const contactPhone = formData.get('contactPhone') as string
+    const legalName = formData.get('legalName') as string
+    const vatNumber = formData.get('vatNumber') as string
+    const siret = formData.get('siret') as string
+    const billingAddress = formData.get('billingAddress') as string
+    const billingCity = formData.get('billingCity') as string
+    const billingPostalCode = formData.get('billingPostalCode') as string
+    const billingCountry = formData.get('billingCountry') as string
 
     if (!token) {
       return fail(400, { error: 'Token is required', action: 'updateProfile' })
@@ -103,7 +110,14 @@ export const actions: Actions = {
         description: description?.trim() || undefined,
         contactName: contactName?.trim() || undefined,
         contactEmail: contactEmail?.trim() || undefined,
-        contactPhone: contactPhone?.trim() || undefined
+        contactPhone: contactPhone?.trim() || undefined,
+        legalName: legalName?.trim() || undefined,
+        vatNumber: vatNumber?.trim() || undefined,
+        siret: siret?.trim() || undefined,
+        billingAddress: billingAddress?.trim() || undefined,
+        billingCity: billingCity?.trim() || undefined,
+        billingPostalCode: billingPostalCode?.trim() || undefined,
+        billingCountry: billingCountry?.trim() || undefined
       })
 
       return { success: true, action: 'updateProfile' }

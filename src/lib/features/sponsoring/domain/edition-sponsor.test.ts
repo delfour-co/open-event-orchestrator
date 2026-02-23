@@ -153,10 +153,11 @@ describe('EditionSponsor Domain', () => {
 
   describe('SPONSOR_STATUS_ORDER', () => {
     it('should contain all statuses', () => {
-      expect(SPONSOR_STATUS_ORDER).toHaveLength(6)
+      expect(SPONSOR_STATUS_ORDER).toHaveLength(7)
       expect(SPONSOR_STATUS_ORDER).toContain('prospect')
       expect(SPONSOR_STATUS_ORDER).toContain('confirmed')
       expect(SPONSOR_STATUS_ORDER).toContain('cancelled')
+      expect(SPONSOR_STATUS_ORDER).toContain('refunded')
     })
   })
 

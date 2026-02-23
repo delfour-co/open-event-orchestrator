@@ -1067,6 +1067,22 @@
   "sponsoring_sponsor_form_internal_notes": "Notes internes",
   "sponsoring_sponsor_form_notes_placeholder": "Notes internes sur ce sponsor...",
 
+  "sponsoring_billing_section_title": "Informations de facturation",
+  "sponsoring_sponsor_form_legal_name": "Raison sociale",
+  "sponsoring_sponsor_form_legal_name_placeholder": "Acme Corporation SAS",
+  "sponsoring_sponsor_form_vat_number": "Numero de TVA intracommunautaire",
+  "sponsoring_sponsor_form_vat_number_placeholder": "FR12345678901",
+  "sponsoring_sponsor_form_siret": "SIRET",
+  "sponsoring_sponsor_form_siret_placeholder": "123 456 789 00012",
+  "sponsoring_sponsor_form_billing_address": "Adresse",
+  "sponsoring_sponsor_form_billing_address_placeholder": "123 Rue Principale",
+  "sponsoring_sponsor_form_billing_city": "Ville",
+  "sponsoring_sponsor_form_billing_city_placeholder": "Paris",
+  "sponsoring_sponsor_form_billing_postal_code": "Code postal",
+  "sponsoring_sponsor_form_billing_postal_code_placeholder": "75001",
+  "sponsoring_sponsor_form_billing_country": "Pays",
+  "sponsoring_sponsor_form_billing_country_placeholder": "France",
+
   "sponsoring_add_to_edition_title": "Ajouter un sponsor a l'edition",
   "sponsoring_add_to_edition_desc": "Selectionnez un sponsor et attribuez optionnellement une formule.",
   "sponsoring_add_to_edition_sponsor": "Sponsor",
@@ -2411,6 +2427,17 @@
   "admin_org_settings_delete_description": "Supprimez definitivement cette organisation et retirez tous les membres de l'equipe.",
   "admin_org_settings_delete_confirm": "Confirmer la suppression",
   "admin_org_settings_delete_button": "Supprimer l'organisation",
+  "admin_org_settings_vat_rate": "Taux de TVA (%)",
+  "admin_org_settings_vat_rate_hint": "Taux de TVA par defaut applique aux factures de sponsoring. Mettre a 0 pour les organisations exonerees de TVA.",
+  "admin_org_settings_legal_title": "Informations legales et facturation",
+  "admin_org_settings_legal_description": "Informations legales affichees sur les factures et avoirs.",
+  "admin_org_settings_legal_name": "Denomination sociale",
+  "admin_org_settings_siret": "SIRET",
+  "admin_org_settings_vat_number": "Numero de TVA intracommunautaire",
+  "admin_org_settings_address": "Adresse",
+  "admin_org_settings_city": "Ville",
+  "admin_org_settings_postal_code": "Code postal",
+  "admin_org_settings_country": "Pays",
 
   "admin_events_title": "Evenements - Open Event Orchestrator",
   "admin_events_heading": "Evenements",
@@ -3106,5 +3133,7 @@
 
   "error_edition_not_found": "Edition introuvable",
   "error_schedule_not_available": "Programme non disponible",
-  "error_edition_no_event": "L'edition n'a pas d'evenement associe"
+  "error_edition_no_event": "L'edition n'a pas d'evenement associe",
+
+  "sponsoring_invoice_download": "Telecharger la facture"
 }

@@ -50,21 +50,40 @@ export const createSponsorRepository = (pb: PocketBase) => ({
       contactName: data.contactName || null,
       contactEmail: data.contactEmail || null,
       contactPhone: data.contactPhone || null,
-      notes: data.notes || null
+      notes: data.notes || null,
+      legalName: data.legalName || null,
+      vatNumber: data.vatNumber || null,
+      siret: data.siret || null,
+      billingAddress: data.billingAddress || null,
+      billingCity: data.billingCity || null,
+      billingPostalCode: data.billingPostalCode || null,
+      billingCountry: data.billingCountry || null
     })
     return mapRecordToSponsor(record)
   },
 
   async update(id: string, data: UpdateSponsor): Promise<Sponsor> {
     const updateData: Record<string, unknown> = {}
+    const nullableFields = [
+      'logo',
+      'website',
+      'description',
+      'contactName',
+      'contactEmail',
+      'contactPhone',
+      'notes',
+      'legalName',
+      'vatNumber',
+      'siret',
+      'billingAddress',
+      'billingCity',
+      'billingPostalCode',
+      'billingCountry'
+    ] as const
     if (data.name !== undefined) updateData.name = data.name
-    if (data.logo !== undefined) updateData.logo = data.logo || null
-    if (data.website !== undefined) updateData.website = data.website || null
-    if (data.description !== undefined) updateData.description = data.description || null
-    if (data.contactName !== undefined) updateData.contactName = data.contactName || null
-    if (data.contactEmail !== undefined) updateData.contactEmail = data.contactEmail || null
-    if (data.contactPhone !== undefined) updateData.contactPhone = data.contactPhone || null
-    if (data.notes !== undefined) updateData.notes = data.notes || null
+    for (const field of nullableFields) {
+      if (data[field] !== undefined) updateData[field] = data[field] || null
+    }
     const record = await pb.collection(COLLECTION).update(id, updateData)
     return mapRecordToSponsor(record)
   },
@@ -117,6 +136,13 @@ const mapRecordToSponsor = (record: Record<string, unknown>): Sponsor => ({
   contactEmail: (record.contactEmail as string) || undefined,
   contactPhone: (record.contactPhone as string) || undefined,
   notes: (record.notes as string) || undefined,
+  legalName: (record.legalName as string) || undefined,
+  vatNumber: (record.vatNumber as string) || undefined,
+  siret: (record.siret as string) || undefined,
+  billingAddress: (record.billingAddress as string) || undefined,
+  billingCity: (record.billingCity as string) || undefined,
+  billingPostalCode: (record.billingPostalCode as string) || undefined,
+  billingCountry: (record.billingCountry as string) || undefined,
   createdAt: new Date(record.created as string),
   updatedAt: new Date(record.updated as string)
 })

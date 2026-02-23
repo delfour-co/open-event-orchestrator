@@ -1,11 +1,19 @@
 import { env } from '$env/dynamic/public'
+import { getNextCreditNoteNumber } from '$lib/features/billing/services/invoice-number-service'
+import { recordCreditNote } from '$lib/features/budget/services'
+import { createSmtpEmailService } from '$lib/features/cfp/services'
 import type { SponsorStatus } from '$lib/features/sponsoring/domain'
 import {
   createEditionSponsorRepository,
   createPackageRepository,
   createSponsorRepository
 } from '$lib/features/sponsoring/infra'
-import { createSponsorTokenService } from '$lib/features/sponsoring/services'
+import {
+  createSponsorEmailService,
+  createSponsorTokenService
+} from '$lib/features/sponsoring/services'
+import { generateSponsorCreditNotePdf } from '$lib/features/sponsoring/services/sponsor-credit-note-service'
+import { getSmtpSettings, getStripeSettings } from '$lib/server/app-settings'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -82,6 +90,13 @@ export const actions: Actions = {
     const contactPhone = formData.get('contactPhone') as string
     const description = formData.get('description') as string
     const notes = formData.get('notes') as string
+    const legalName = formData.get('legalName') as string
+    const vatNumber = formData.get('vatNumber') as string
+    const siret = formData.get('siret') as string
+    const billingAddress = formData.get('billingAddress') as string
+    const billingCity = formData.get('billingCity') as string
+    const billingPostalCode = formData.get('billingPostalCode') as string
+    const billingCountry = formData.get('billingCountry') as string
 
     if (!organizationId) {
       return fail(400, { error: 'Organization ID is required', action: 'createSponsor' })
@@ -100,7 +115,14 @@ export const actions: Actions = {
         contactEmail: contactEmail?.trim() || undefined,
         contactPhone: contactPhone?.trim() || undefined,
         description: description?.trim() || undefined,
-        notes: notes?.trim() || undefined
+        notes: notes?.trim() || undefined,
+        legalName: legalName?.trim() || undefined,
+        vatNumber: vatNumber?.trim() || undefined,
+        siret: siret?.trim() || undefined,
+        billingAddress: billingAddress?.trim() || undefined,
+        billingCity: billingCity?.trim() || undefined,
+        billingPostalCode: billingPostalCode?.trim() || undefined,
+        billingCountry: billingCountry?.trim() || undefined
       })
 
       return { success: true, action: 'createSponsor' }
@@ -120,6 +142,13 @@ export const actions: Actions = {
     const contactPhone = formData.get('contactPhone') as string
     const description = formData.get('description') as string
     const notes = formData.get('notes') as string
+    const legalName = formData.get('legalName') as string
+    const vatNumber = formData.get('vatNumber') as string
+    const siret = formData.get('siret') as string
+    const billingAddress = formData.get('billingAddress') as string
+    const billingCity = formData.get('billingCity') as string
+    const billingPostalCode = formData.get('billingPostalCode') as string
+    const billingCountry = formData.get('billingCountry') as string
 
     if (!id) {
       return fail(400, { error: 'Sponsor ID is required', action: 'updateSponsor' })
@@ -137,7 +166,14 @@ export const actions: Actions = {
         contactEmail: contactEmail?.trim() || undefined,
         contactPhone: contactPhone?.trim() || undefined,
         description: description?.trim() || undefined,
-        notes: notes?.trim() || undefined
+        notes: notes?.trim() || undefined,
+        legalName: legalName?.trim() || undefined,
+        vatNumber: vatNumber?.trim() || undefined,
+        siret: siret?.trim() || undefined,
+        billingAddress: billingAddress?.trim() || undefined,
+        billingCity: billingCity?.trim() || undefined,
+        billingPostalCode: billingPostalCode?.trim() || undefined,
+        billingCountry: billingCountry?.trim() || undefined
       })
 
       return { success: true, action: 'updateSponsor' }
@@ -293,6 +329,152 @@ export const actions: Actions = {
         error: 'Failed to remove sponsor from edition',
         action: 'removeFromEdition'
       })
+    }
+  },
+
+  refundSponsor: async ({ request, locals }) => {
+    const formData = await request.formData()
+    const id = formData.get('id') as string
+
+    if (!id) {
+      return fail(400, { error: 'Edition sponsor ID is required', action: 'refundSponsor' })
+    }
+
+    try {
+      const editionSponsorRepo = createEditionSponsorRepository(locals.pb)
+      const editionSponsor = await editionSponsorRepo.findByIdWithExpand(id)
+
+      if (!editionSponsor) {
+        return fail(404, { error: 'Sponsor not found', action: 'refundSponsor' })
+      }
+
+      if (editionSponsor.status !== 'confirmed') {
+        return fail(400, {
+          error: 'Only confirmed sponsors can be refunded',
+          action: 'refundSponsor'
+        })
+      }
+
+      if (!editionSponsor.paidAt) {
+        return fail(400, { error: 'Sponsor has not been paid yet', action: 'refundSponsor' })
+      }
+
+      // Stripe refund if payment intent exists
+      if (editionSponsor.stripePaymentIntentId) {
+        const stripeSettings = await getStripeSettings(locals.pb)
+        if (stripeSettings.isConfigured) {
+          const { createStripeService } = await import(
+            '$lib/features/billing/services/stripe-service'
+          )
+          const stripe = createStripeService(
+            stripeSettings.stripeSecretKey,
+            stripeSettings.stripeApiBase || undefined
+          )
+          await stripe.createRefund(editionSponsor.stripePaymentIntentId)
+          console.log(
+            `[refund-sponsor] Stripe refund created for PI: ${editionSponsor.stripePaymentIntentId}`
+          )
+        }
+      }
+
+      // Update status to refunded
+      await editionSponsorRepo.update(id, { status: 'refunded' })
+      console.log(`[refund-sponsor] Status updated to refunded for: ${id}`)
+
+      // Get organization info for credit note
+      const edition = await locals.pb.collection('editions').getOne(editionSponsor.editionId)
+      const event = await locals.pb.collection('events').getOne(edition.eventId as string)
+      const organizationId = event.organizationId as string
+      const eventName = event.name as string
+      const organization = await locals.pb.collection('organizations').getOne(organizationId)
+      const vatRate = (organization.vatRate as number) ?? 20
+      const seller = {
+        name: organization.name as string,
+        legalName: (organization.legalName as string) || undefined,
+        siret: (organization.siret as string) || undefined,
+        vatNumber: (organization.vatNumber as string) || undefined,
+        address: (organization.address as string) || undefined,
+        city: (organization.city as string) || undefined,
+        postalCode: (organization.postalCode as string) || undefined,
+        country: (organization.country as string) || undefined,
+        contactEmail: (organization.contactEmail as string) || undefined
+      }
+
+      // Generate credit note PDF
+      const now = new Date()
+      const creditNoteNumber = await getNextCreditNoteNumber(locals.pb, organizationId)
+
+      const invoiceDate = editionSponsor.paidAt
+        ? editionSponsor.paidAt.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : 'N/A'
+
+      const pdfBytes = await generateSponsorCreditNotePdf({
+        creditNoteNumber,
+        creditNoteDate: now.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        originalInvoiceNumber: editionSponsor.invoiceNumber || 'N/A',
+        originalInvoiceDate: invoiceDate,
+        eventName,
+        sponsorName: editionSponsor.sponsor?.name || 'Sponsor',
+        legalName: editionSponsor.sponsor?.legalName,
+        vatNumber: editionSponsor.sponsor?.vatNumber,
+        siret: editionSponsor.sponsor?.siret,
+        billingAddress: editionSponsor.sponsor?.billingAddress,
+        billingCity: editionSponsor.sponsor?.billingCity,
+        billingPostalCode: editionSponsor.sponsor?.billingPostalCode,
+        billingCountry: editionSponsor.sponsor?.billingCountry,
+        packageName: editionSponsor.package?.name || 'Sponsorship',
+        amount: editionSponsor.amount || 0,
+        currency: editionSponsor.package?.currency || 'EUR',
+        vatRate,
+        seller
+      })
+      console.log(`[refund-sponsor] Credit note generated: ${creditNoteNumber}`)
+
+      // Record credit note in budget
+      await recordCreditNote({
+        pb: locals.pb,
+        editionId: editionSponsor.editionId,
+        description: `Refund: ${editionSponsor.sponsor?.name || 'Sponsor'} - ${editionSponsor.package?.name || 'Sponsorship'}`,
+        amount: editionSponsor.amount || 0,
+        creditNoteNumber,
+        pdfBytes,
+        vendor: editionSponsor.sponsor?.name,
+        source: 'sponsoring'
+      }).catch((err) => console.error('[refund-sponsor] Budget integration failed:', err))
+
+      // Send refund email
+      const smtpSettings = await getSmtpSettings(locals.pb)
+      if (smtpSettings.smtpEnabled) {
+        const emailService = createSmtpEmailService({
+          host: smtpSettings.smtpHost,
+          port: smtpSettings.smtpPort,
+          user: smtpSettings.smtpUser || undefined,
+          pass: smtpSettings.smtpPass || undefined,
+          from: smtpSettings.smtpFrom
+        })
+        const sponsorEmailService = createSponsorEmailService(emailService)
+        const refundEmailResult = await sponsorEmailService.sendRefundEmail(
+          editionSponsor,
+          eventName,
+          pdfBytes
+        )
+        console.log(
+          `[refund-sponsor] Refund email: ${refundEmailResult.success ? 'sent' : `failed - ${refundEmailResult.error}`}`
+        )
+      }
+
+      return { success: true, action: 'refundSponsor' }
+    } catch (err) {
+      console.error('Failed to refund sponsor:', err)
+      return fail(500, { error: 'Failed to refund sponsor', action: 'refundSponsor' })
     }
   },
 

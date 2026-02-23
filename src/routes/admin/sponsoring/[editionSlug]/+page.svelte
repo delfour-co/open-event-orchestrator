@@ -138,7 +138,8 @@ $effect(() => {
     if (
       form.action === 'updateEditionSponsor' ||
       form.action === 'updateStatus' ||
-      form.action === 'removeFromEdition'
+      form.action === 'removeFromEdition' ||
+      form.action === 'refundSponsor'
     ) {
       cancelEditionSponsorDetail()
     }
@@ -341,13 +342,13 @@ $effect(() => {
 			</div>
 
 			<!-- Declined/Cancelled Section -->
-			{#if data.editionSponsors.some((es) => es.status === 'declined' || es.status === 'cancelled')}
+			{#if data.editionSponsors.some((es) => es.status === 'declined' || es.status === 'cancelled' || es.status === 'refunded')}
 				<details class="mt-4">
 					<summary class="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-						Show declined/cancelled ({data.editionSponsors.filter((es) => es.status === 'declined' || es.status === 'cancelled').length})
+						Show declined/cancelled/refunded ({data.editionSponsors.filter((es) => es.status === 'declined' || es.status === 'cancelled' || es.status === 'refunded').length})
 					</summary>
 					<div class="mt-2 grid gap-2 md:grid-cols-4">
-						{#each data.editionSponsors.filter((es) => es.status === 'declined' || es.status === 'cancelled') as es}
+						{#each data.editionSponsors.filter((es) => es.status === 'declined' || es.status === 'cancelled' || es.status === 'refunded') as es}
 							<button
 								type="button"
 								class="rounded-md border bg-muted/50 p-3 text-left opacity-60 hover:opacity-100"
@@ -461,6 +462,82 @@ $effect(() => {
 					placeholder="Brief description of the company..."
 					value={editingSponsor?.description || ''}
 				/>
+			</div>
+
+			<div class="border-t pt-4 mt-4">
+				<h4 class="font-medium mb-3">Billing Information</h4>
+				<div class="space-y-4">
+					<div class="space-y-2">
+						<Label for="sponsor-legalName">Legal Name</Label>
+						<Input
+							id="sponsor-legalName"
+							name="legalName"
+							placeholder="Acme Corporation SAS"
+							value={editingSponsor?.legalName || ''}
+						/>
+					</div>
+
+					<div class="grid gap-4 md:grid-cols-2">
+						<div class="space-y-2">
+							<Label for="sponsor-vatNumber">VAT Number</Label>
+							<Input
+								id="sponsor-vatNumber"
+								name="vatNumber"
+								placeholder="FR12345678901"
+								value={editingSponsor?.vatNumber || ''}
+							/>
+						</div>
+						<div class="space-y-2">
+							<Label for="sponsor-siret">SIRET</Label>
+							<Input
+								id="sponsor-siret"
+								name="siret"
+								placeholder="123 456 789 00012"
+								value={editingSponsor?.siret || ''}
+							/>
+						</div>
+					</div>
+
+					<div class="space-y-2">
+						<Label for="sponsor-billingAddress">Address</Label>
+						<Input
+							id="sponsor-billingAddress"
+							name="billingAddress"
+							placeholder="123 Main Street"
+							value={editingSponsor?.billingAddress || ''}
+						/>
+					</div>
+
+					<div class="grid gap-4 md:grid-cols-3">
+						<div class="space-y-2">
+							<Label for="sponsor-billingPostalCode">Postal Code</Label>
+							<Input
+								id="sponsor-billingPostalCode"
+								name="billingPostalCode"
+								placeholder="75001"
+								value={editingSponsor?.billingPostalCode || ''}
+							/>
+						</div>
+						<div class="space-y-2">
+							<Label for="sponsor-billingCity">City</Label>
+							<Input
+								id="sponsor-billingCity"
+								name="billingCity"
+								placeholder="Paris"
+								value={editingSponsor?.billingCity || ''}
+							/>
+						</div>
+						<div class="space-y-2">
+							<Label for="sponsor-billingCountry">Country</Label>
+							<Input
+								id="sponsor-billingCountry"
+								name="billingCountry"
+								placeholder="France"
+								value={editingSponsor?.billingCountry || ''}
+							/>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<div class="space-y-2">
@@ -610,7 +687,7 @@ $effect(() => {
 			</div>
 		</Dialog.Header>
 
-		{#if form?.error && (form?.action === 'updateEditionSponsor' || form?.action === 'updateStatus')}
+		{#if form?.error && (form?.action === 'updateEditionSponsor' || form?.action === 'updateStatus' || form?.action === 'refundSponsor')}
 			<div class="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
 				{form.error}
 			</div>
@@ -717,6 +794,7 @@ $effect(() => {
 							<option value="confirmed" selected={selectedEditionSponsor.status === 'confirmed'}>Confirmed</option>
 							<option value="declined" selected={selectedEditionSponsor.status === 'declined'}>Declined</option>
 							<option value="cancelled" selected={selectedEditionSponsor.status === 'cancelled'}>Cancelled</option>
+							<option value="refunded" selected={selectedEditionSponsor.status === 'refunded'} disabled={selectedEditionSponsor.status !== 'refunded'}>Refunded</option>
 						</select>
 					</div>
 
@@ -793,6 +871,32 @@ $effect(() => {
 						</form>
 					{/if}
 				</div>
+
+				<!-- Refund Sponsor -->
+				{#if selectedEditionSponsor.status === 'confirmed' && selectedEditionSponsor.paidAt && (selectedEditionSponsor.amount ?? 0) > 0}
+					<div class="border-t pt-4">
+						<form
+							method="POST"
+							action="?/refundSponsor"
+							use:enhance={() => {
+								isSubmitting = true
+								return async ({ update }) => {
+									isSubmitting = false
+									await update()
+								}
+							}}
+						>
+							<input type="hidden" name="id" value={selectedEditionSponsor.id} />
+							<Button variant="destructive" class="w-full" type="submit" disabled={isSubmitting}>
+								{#if isSubmitting}
+									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+								{/if}
+								<DollarSign class="mr-2 h-4 w-4" />
+								Refund Sponsor
+							</Button>
+						</form>
+					</div>
+				{/if}
 
 				<!-- Remove from Edition -->
 				<div class="border-t pt-4">

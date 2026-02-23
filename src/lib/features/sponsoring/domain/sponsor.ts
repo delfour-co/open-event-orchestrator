@@ -11,6 +11,13 @@ export const sponsorSchema = z.object({
   contactEmail: z.string().email().optional(),
   contactPhone: z.string().max(50).optional(),
   notes: z.string().max(5000).optional(),
+  legalName: z.string().max(300).optional(),
+  vatNumber: z.string().max(50).optional(),
+  siret: z.string().max(20).optional(),
+  billingAddress: z.string().max(500).optional(),
+  billingCity: z.string().max(100).optional(),
+  billingPostalCode: z.string().max(20).optional(),
+  billingCountry: z.string().max(100).optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })

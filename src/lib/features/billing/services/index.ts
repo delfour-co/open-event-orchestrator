@@ -33,6 +33,23 @@ export {
 } from './pdf-ticket-service'
 
 export {
+  generateOrderInvoicePdf,
+  type OrderInvoiceData
+} from './pdf-invoice-service'
+
+export type { SellerInfo } from './pdf-shared'
+
+export {
+  getNextInvoiceNumber,
+  getNextCreditNoteNumber
+} from './invoice-number-service'
+
+export {
+  generateCreditNotePdf,
+  type CreditNoteData
+} from './pdf-credit-note-service'
+
+export {
   createBillingStatsService,
   type BillingStatsService,
   type SalesStats,

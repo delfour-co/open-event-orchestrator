@@ -8,6 +8,9 @@ export interface TicketTemplateColors {
   accentColor: string
   logoUrl?: string
   customFooterText?: string
+  showDate?: boolean
+  showVenue?: boolean
+  showQrCode?: boolean
 }
 
 export interface OrderConfirmationData {
@@ -33,6 +36,10 @@ export const generateOrderConfirmationHtml = (data: OrderConfirmationData): stri
     accentColor: '#10B981'
   }
 
+  const showDate = template.showDate ?? true
+  const showVenue = template.showVenue ?? true
+  const showQrCode = template.showQrCode ?? true
+
   const headerTextColor = getContrastColor(template.primaryColor)
 
   const itemRows = data.items
@@ -57,30 +64,65 @@ export const generateOrderConfirmationHtml = (data: OrderConfirmationData): stri
     })
   }
 
+  // Build a lookup from ticketTypeId to ticketTypeName
+  const ticketTypeNames = new Map<string, string>()
+  for (const item of data.items) {
+    ticketTypeNames.set(item.ticketTypeId, item.ticketTypeName)
+  }
+
   const ticketRows = data.tickets
-    .map(
-      (ticket) => `
+    .map((ticket) => {
+      const typeName = ticketTypeNames.get(ticket.ticketTypeId) || 'Ticket'
+
+      const dateHtml =
+        showDate && data.startDate
+          ? `<div style="font-size: 12px; margin-top: 6px; color: ${template.textColor};">Date: ${formatDate(data.startDate)}</div>`
+          : ''
+
+      const venueHtml =
+        showVenue && data.venue
+          ? `<div style="font-size: 12px; color: ${template.textColor};">Venue: ${data.venue}</div>`
+          : ''
+
+      const qrHtml =
+        showQrCode && ticket.qrCode
+          ? `
+			<td style="vertical-align: middle; padding: 16px; border-left: 2px dashed ${template.textColor}20; width: 140px; text-align: center;">
+				<img src="${ticket.qrCode}" width="110" height="110" alt="QR Code" style="border: 1px solid ${template.textColor}20; border-radius: 4px; padding: 4px; background: white;" />
+				<div style="font-size: 9px; color: ${template.textColor}99; margin-top: 4px;">Scan for check-in</div>
+			</td>`
+          : ''
+
+      const footerHtml = template.customFooterText
+        ? `<div style="font-size: 10px; color: ${template.textColor}99; margin-top: 6px;">${template.customFooterText}</div>`
+        : ''
+
+      return `
 		<div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin-bottom: 16px; background: ${template.backgroundColor};">
-			<div style="background: ${template.primaryColor}; color: ${headerTextColor}; padding: 12px 16px;">
-				<div style="display: flex; align-items: center; gap: 12px;">
-					${template.logoUrl ? `<img src="${template.logoUrl}" alt="Logo" style="height: 32px; width: auto; max-width: 80px;" />` : ''}
-					<div>
-						<div style="font-weight: bold; font-size: 16px;">${data.eventName}</div>
-						<div style="font-size: 12px; opacity: 0.9;">${data.editionName}</div>
-					</div>
-				</div>
+			<div style="background: ${template.primaryColor}; color: ${headerTextColor}; padding: 10px 16px;">
+				<!--[if mso]><table cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td><![endif]-->
+				${template.logoUrl ? `<img src="${template.logoUrl}" alt="Logo" style="height: 28px; width: auto; max-width: 80px; vertical-align: middle; margin-right: 10px;" />` : ''}
+				<span style="font-weight: bold; font-size: 15px; vertical-align: middle;">${data.eventName}</span>
+				<span style="font-size: 12px; opacity: 0.9; vertical-align: middle; margin-left: 6px;">${data.editionName}</span>
+				<!--[if mso]></td></tr></table><![endif]-->
 			</div>
-			<div style="padding: 16px; color: ${template.textColor};">
-				<div style="font-weight: bold; font-size: 16px; color: ${template.primaryColor};">${ticket.attendeeFirstName} ${ticket.attendeeLastName}</div>
-				<div style="color: ${template.accentColor}; margin-top: 4px; font-size: 14px;">Ticket #${ticket.ticketNumber}</div>
-				${data.startDate ? `<div style="margin-top: 8px; font-size: 13px;">Date: ${formatDate(data.startDate)}</div>` : ''}
-				${data.venue ? `<div style="font-size: 13px;">Venue: ${data.venue}</div>` : ''}
-				${ticket.qrCode ? `<div style="text-align: center; margin-top: 16px;"><img src="${ticket.qrCode}" width="180" height="180" alt="QR Code" style="border: 1px solid #eee; border-radius: 4px; padding: 8px; background: white;" /></div>` : ''}
-				${template.customFooterText ? `<div style="margin-top: 12px; font-size: 11px; color: ${template.textColor}80;">${template.customFooterText}</div>` : ''}
-			</div>
+			<table cellpadding="0" cellspacing="0" border="0" width="100%" style="color: ${template.textColor};">
+				<tr>
+					<td style="vertical-align: top; padding: 14px 16px;">
+						<div style="font-weight: bold; color: ${template.primaryColor}; font-size: 13px;">${typeName}</div>
+						<div style="font-weight: 600; font-size: 15px; margin-top: 6px;">${ticket.attendeeFirstName} ${ticket.attendeeLastName}</div>
+						<div style="font-size: 12px; color: ${template.textColor}aa;">${ticket.attendeeEmail}</div>
+						${dateHtml}
+						${venueHtml}
+						<div style="font-size: 12px; color: ${template.accentColor}; margin-top: 6px;">Ticket #${ticket.ticketNumber}</div>
+						${footerHtml}
+					</td>
+					${qrHtml}
+				</tr>
+			</table>
 		</div>
 	`
-    )
+    })
     .join('')
 
   return `
@@ -236,11 +278,16 @@ export const generateOrderConfirmationText = (data: OrderConfirmationData): stri
     .map((item) => `- ${item.ticketTypeName} x${item.quantity}: ${formatPrice(item.totalPrice)}`)
     .join('\n')
 
+  const ticketTypeNames = new Map<string, string>()
+  for (const item of data.items) {
+    ticketTypeNames.set(item.ticketTypeId, item.ticketTypeName)
+  }
+
   const tickets = data.tickets
-    .map(
-      (ticket) =>
-        `- ${ticket.attendeeFirstName} ${ticket.attendeeLastName}: Ticket #${ticket.ticketNumber}`
-    )
+    .map((ticket) => {
+      const typeName = ticketTypeNames.get(ticket.ticketTypeId) || 'Ticket'
+      return `- ${typeName} | ${ticket.attendeeFirstName} ${ticket.attendeeLastName}: Ticket #${ticket.ticketNumber}`
+    })
     .join('\n')
 
   return `Order Confirmation

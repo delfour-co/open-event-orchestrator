@@ -143,6 +143,124 @@ const getValue = (field: string): string => {
             </div>
 
             <div class="border-t pt-6">
+              <h3 class="mb-4 font-medium">Billing Information</h3>
+
+              <!-- Legal Name -->
+              <div class="mb-4 space-y-2">
+                <Label for="legalName">Legal Name *</Label>
+                <Input
+                  id="legalName"
+                  name="legalName"
+                  required
+                  placeholder="Acme Corporation SAS"
+                  value={getValue('legalName')}
+                  class={getFieldError('legalName') ? 'border-destructive' : ''}
+                />
+                {#if getFieldError('legalName')}
+                  <p class="text-sm text-destructive">{getFieldError('legalName')}</p>
+                {/if}
+              </div>
+
+              <div class="mb-4 grid gap-4 md:grid-cols-2">
+                <!-- VAT Number -->
+                <div class="space-y-2">
+                  <Label for="vatNumber">VAT Number</Label>
+                  <Input
+                    id="vatNumber"
+                    name="vatNumber"
+                    placeholder="FR12345678901"
+                    value={getValue('vatNumber')}
+                    class={getFieldError('vatNumber') ? 'border-destructive' : ''}
+                  />
+                  {#if getFieldError('vatNumber')}
+                    <p class="text-sm text-destructive">{getFieldError('vatNumber')}</p>
+                  {/if}
+                </div>
+
+                <!-- SIRET -->
+                <div class="space-y-2">
+                  <Label for="siret">SIRET</Label>
+                  <Input
+                    id="siret"
+                    name="siret"
+                    placeholder="123 456 789 00012"
+                    value={getValue('siret')}
+                    class={getFieldError('siret') ? 'border-destructive' : ''}
+                  />
+                  {#if getFieldError('siret')}
+                    <p class="text-sm text-destructive">{getFieldError('siret')}</p>
+                  {/if}
+                </div>
+              </div>
+
+              <!-- Billing Address -->
+              <div class="mb-4 space-y-2">
+                <Label for="billingAddress">Address *</Label>
+                <Input
+                  id="billingAddress"
+                  name="billingAddress"
+                  required
+                  placeholder="123 Main Street"
+                  value={getValue('billingAddress')}
+                  class={getFieldError('billingAddress') ? 'border-destructive' : ''}
+                />
+                {#if getFieldError('billingAddress')}
+                  <p class="text-sm text-destructive">{getFieldError('billingAddress')}</p>
+                {/if}
+              </div>
+
+              <div class="mb-4 grid gap-4 md:grid-cols-3">
+                <!-- Postal Code -->
+                <div class="space-y-2">
+                  <Label for="billingPostalCode">Postal Code *</Label>
+                  <Input
+                    id="billingPostalCode"
+                    name="billingPostalCode"
+                    required
+                    placeholder="75001"
+                    value={getValue('billingPostalCode')}
+                    class={getFieldError('billingPostalCode') ? 'border-destructive' : ''}
+                  />
+                  {#if getFieldError('billingPostalCode')}
+                    <p class="text-sm text-destructive">{getFieldError('billingPostalCode')}</p>
+                  {/if}
+                </div>
+
+                <!-- City -->
+                <div class="space-y-2">
+                  <Label for="billingCity">City *</Label>
+                  <Input
+                    id="billingCity"
+                    name="billingCity"
+                    required
+                    placeholder="Paris"
+                    value={getValue('billingCity')}
+                    class={getFieldError('billingCity') ? 'border-destructive' : ''}
+                  />
+                  {#if getFieldError('billingCity')}
+                    <p class="text-sm text-destructive">{getFieldError('billingCity')}</p>
+                  {/if}
+                </div>
+
+                <!-- Country -->
+                <div class="space-y-2">
+                  <Label for="billingCountry">Country *</Label>
+                  <Input
+                    id="billingCountry"
+                    name="billingCountry"
+                    required
+                    placeholder="France"
+                    value={getValue('billingCountry')}
+                    class={getFieldError('billingCountry') ? 'border-destructive' : ''}
+                  />
+                  {#if getFieldError('billingCountry')}
+                    <p class="text-sm text-destructive">{getFieldError('billingCountry')}</p>
+                  {/if}
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t pt-6">
               <h3 class="mb-4 font-medium">Contact Person</h3>
 
               <!-- Contact Name -->

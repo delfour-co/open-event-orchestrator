@@ -45,7 +45,8 @@ describe('FinancialAuditService', () => {
           action: 'create',
           entityType: 'transaction',
           entityId: 'tx-1'
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -68,7 +69,8 @@ describe('FinancialAuditService', () => {
           entityId: 'tx-1',
           oldValue: expect.objectContaining({ amount: 1000 }),
           newValue: expect.objectContaining({ amount: 1500 })
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -90,7 +92,8 @@ describe('FinancialAuditService', () => {
           entityType: 'transaction',
           entityId: 'tx-1',
           oldValue: expect.objectContaining({ amount: 1000 })
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -113,7 +116,8 @@ describe('FinancialAuditService', () => {
           entityId: 'tx-1',
           oldValue: expect.objectContaining({ status: 'pending' }),
           newValue: expect.objectContaining({ status: 'paid', paidAt: '2024-01-15' })
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -136,7 +140,8 @@ describe('FinancialAuditService', () => {
           entityId: 'quote-1',
           entityReference: 'Q-2024-001',
           newValue: expect.objectContaining({ amount: 5000 })
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -159,7 +164,8 @@ describe('FinancialAuditService', () => {
           entityId: 'quote-1',
           entityReference: 'Q-2024-001',
           metadata: expect.objectContaining({ transactionId: 'tx-1' })
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -181,7 +187,8 @@ describe('FinancialAuditService', () => {
           entityType: 'invoice',
           entityId: 'invoice-1',
           entityReference: 'INV-2024-001'
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -204,7 +211,8 @@ describe('FinancialAuditService', () => {
           entityId: 'reimb-1',
           entityReference: 'R-2024-001',
           metadata: expect.objectContaining({ transactionId: 'tx-1' })
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -226,7 +234,8 @@ describe('FinancialAuditService', () => {
           entityType: 'category',
           entityId: 'cat-1',
           entityReference: 'Venue'
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -247,7 +256,8 @@ describe('FinancialAuditService', () => {
           action: 'create',
           entityType: 'budget',
           entityId: 'budget-1'
-        })
+        }),
+        expect.anything()
       )
     })
   })
@@ -270,7 +280,8 @@ describe('FinancialAuditService', () => {
           entityId: 'budget-1',
           oldValue: expect.objectContaining({ status: 'draft' }),
           newValue: expect.objectContaining({ status: 'approved' })
-        })
+        }),
+        expect.anything()
       )
     })
   })

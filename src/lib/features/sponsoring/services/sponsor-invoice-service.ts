@@ -1,0 +1,344 @@
+import {
+  LINE_HEIGHT,
+  MARGIN,
+  MUTED_COLOR,
+  PAGE_HEIGHT,
+  PAGE_WIDTH,
+  PRIMARY_COLOR,
+  type SellerInfo,
+  TEXT_COLOR,
+  drawLegalMentions,
+  drawSellerBlock,
+  formatCurrencyAmount
+} from '$lib/features/billing/services/pdf-shared'
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+
+export { formatCurrencyAmount }
+
+export interface SponsorInvoiceData {
+  invoiceNumber: string
+  invoiceDate: string
+  eventName: string
+  sponsorName: string
+  legalName?: string
+  vatNumber?: string
+  siret?: string
+  billingAddress?: string
+  billingCity?: string
+  billingPostalCode?: string
+  billingCountry?: string
+  packageName: string
+  amount: number
+  currency: string
+  vatRate?: number
+  seller?: SellerInfo
+}
+
+export const generateInvoiceNumber = (sponsorId: string, date: Date = new Date()): string => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `SPO-${y}${m}${d}-${sponsorId.slice(0, 6).toUpperCase()}`
+}
+
+export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promise<Uint8Array> => {
+  const pdfDoc = await PDFDocument.create()
+  const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT])
+
+  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  const regular = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  const fonts = { bold, regular }
+
+  let y = PAGE_HEIGHT - MARGIN
+
+  // Header: event name
+  page.drawText(data.eventName, {
+    x: MARGIN,
+    y,
+    size: 22,
+    font: bold,
+    color: PRIMARY_COLOR
+  })
+  y -= 10
+
+  page.drawRectangle({
+    x: MARGIN,
+    y,
+    width: PAGE_WIDTH - 2 * MARGIN,
+    height: 2,
+    color: PRIMARY_COLOR
+  })
+  y -= 30
+
+  // Invoice title and number
+  page.drawText('INVOICE', {
+    x: MARGIN,
+    y,
+    size: 16,
+    font: bold,
+    color: TEXT_COLOR
+  })
+  y -= LINE_HEIGHT
+
+  page.drawText(`Invoice #: ${data.invoiceNumber}`, {
+    x: MARGIN,
+    y,
+    size: 10,
+    font: regular,
+    color: MUTED_COLOR
+  })
+
+  page.drawText(`Date: ${data.invoiceDate}`, {
+    x: PAGE_WIDTH / 2,
+    y,
+    size: 10,
+    font: regular,
+    color: MUTED_COLOR
+  })
+  y -= 35
+
+  // Bill To + Seller block side by side
+  const billToY = y
+
+  page.drawText('Bill To:', {
+    x: MARGIN,
+    y,
+    size: 11,
+    font: bold,
+    color: TEXT_COLOR
+  })
+  y -= LINE_HEIGHT
+
+  const billTo = data.legalName || data.sponsorName
+  page.drawText(billTo, {
+    x: MARGIN,
+    y,
+    size: 10,
+    font: bold,
+    color: TEXT_COLOR
+  })
+  y -= LINE_HEIGHT
+
+  if (data.vatNumber) {
+    page.drawText(`VAT: ${data.vatNumber}`, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  if (data.siret) {
+    page.drawText(`SIRET: ${data.siret}`, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  if (data.billingAddress) {
+    page.drawText(data.billingAddress, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  const cityLine = [data.billingPostalCode, data.billingCity].filter(Boolean).join(' ')
+  if (cityLine) {
+    page.drawText(cityLine, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  if (data.billingCountry) {
+    page.drawText(data.billingCountry, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  y -= 20
+
+  // Seller block (right side)
+  if (data.seller) {
+    drawSellerBlock(page, data.seller, fonts, billToY)
+  }
+
+  // Table header
+  const tableLeft = MARGIN
+  const tableRight = PAGE_WIDTH - MARGIN
+  const tableWidth = tableRight - tableLeft
+  const descCol = tableLeft + 10
+  const amountCol = tableRight - 100
+
+  page.drawRectangle({
+    x: tableLeft,
+    y: y - 5,
+    width: tableWidth,
+    height: 25,
+    color: rgb(0.95, 0.95, 0.95)
+  })
+
+  page.drawText('Description', {
+    x: descCol,
+    y: y + 2,
+    size: 10,
+    font: bold,
+    color: TEXT_COLOR
+  })
+
+  page.drawText('Amount', {
+    x: amountCol,
+    y: y + 2,
+    size: 10,
+    font: bold,
+    color: TEXT_COLOR
+  })
+
+  y -= 30
+
+  const vatRate = data.vatRate ?? 0
+  const totalAmountCents = data.amount
+  const htAmountCents =
+    vatRate > 0 ? Math.round(totalAmountCents / (1 + vatRate / 100)) : totalAmountCents
+  const vatAmountCents = totalAmountCents - htAmountCents
+
+  const formattedHt = formatCurrencyAmount(htAmountCents, data.currency)
+  const formattedVat = formatCurrencyAmount(vatAmountCents, data.currency)
+  const formattedTotal = formatCurrencyAmount(totalAmountCents, data.currency)
+
+  // Table row
+  page.drawText(`${data.packageName} Sponsorship`, {
+    x: descCol,
+    y,
+    size: 10,
+    font: regular,
+    color: TEXT_COLOR
+  })
+
+  page.drawText(formattedHt, {
+    x: amountCol,
+    y,
+    size: 10,
+    font: regular,
+    color: TEXT_COLOR
+  })
+
+  y -= 15
+
+  // Separator line
+  page.drawRectangle({
+    x: tableLeft,
+    y,
+    width: tableWidth,
+    height: 1,
+    color: rgb(0.85, 0.85, 0.85)
+  })
+
+  y -= 20
+
+  // Subtotal HT
+  page.drawText('Subtotal (HT):', {
+    x: amountCol - 80,
+    y,
+    size: 10,
+    font: regular,
+    color: TEXT_COLOR
+  })
+  page.drawText(formattedHt, {
+    x: amountCol,
+    y,
+    size: 10,
+    font: regular,
+    color: TEXT_COLOR
+  })
+  y -= LINE_HEIGHT
+
+  // VAT line
+  const vatLabel = vatRate > 0 ? `VAT (${vatRate}%):` : 'VAT (exempt):'
+  page.drawText(vatLabel, {
+    x: amountCol - 80,
+    y,
+    size: 10,
+    font: regular,
+    color: TEXT_COLOR
+  })
+  page.drawText(formattedVat, {
+    x: amountCol,
+    y,
+    size: 10,
+    font: regular,
+    color: TEXT_COLOR
+  })
+  y -= LINE_HEIGHT + 5
+
+  // Separator before total
+  page.drawRectangle({
+    x: amountCol - 80,
+    y: y + 3,
+    width: PAGE_WIDTH - MARGIN - (amountCol - 80),
+    height: 1,
+    color: rgb(0.7, 0.7, 0.7)
+  })
+
+  // Total TTC
+  page.drawText('Total (TTC):', {
+    x: amountCol - 80,
+    y: y - 5,
+    size: 12,
+    font: bold,
+    color: TEXT_COLOR
+  })
+  page.drawText(formattedTotal, {
+    x: amountCol,
+    y: y - 5,
+    size: 12,
+    font: bold,
+    color: PRIMARY_COLOR
+  })
+  y -= 25
+
+  y -= 40
+
+  // Status
+  page.drawText('Status: PAID', {
+    x: MARGIN,
+    y,
+    size: 10,
+    font: bold,
+    color: rgb(22 / 255, 163 / 255, 106 / 255)
+  })
+  y -= 30
+
+  // Legal mentions
+  drawLegalMentions(page, vatRate, fonts, y)
+
+  // Footer
+  page.drawText('Thank you for your sponsorship!', {
+    x: MARGIN,
+    y: MARGIN + 10,
+    size: 9,
+    font: regular,
+    color: MUTED_COLOR
+  })
+
+  return pdfDoc.save()
+}

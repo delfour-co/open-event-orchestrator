@@ -32,6 +32,9 @@ done
 echo "🚀 Initializing Open Event Orchestrator..."
 echo ""
 
+# Clean up stale setup token from previous runs
+rm -f "$(dirname "$0")/../.setup-token.json"
+
 # Function to check if PocketBase is ready
 check_pocketbase() {
   curl -s "${POCKETBASE_URL}/api/health" > /dev/null 2>&1

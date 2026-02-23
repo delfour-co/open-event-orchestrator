@@ -159,7 +159,8 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
         negotiating: 0,
         confirmed: 0,
         declined: 0,
-        cancelled: 0
+        cancelled: 0,
+        refunded: 0
       }
 
       const packageCounts = new Map<string, number>()
@@ -243,7 +244,8 @@ export const createSponsoringStatsService = (pb: PocketBase): SponsoringStatsSer
         negotiating: 0,
         confirmed: 0,
         declined: 0,
-        cancelled: 0
+        cancelled: 0,
+        refunded: 0
       }
 
       let totalConfirmedAmount = 0

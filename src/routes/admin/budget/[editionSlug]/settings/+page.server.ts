@@ -19,11 +19,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     filter: `editionId = "${editionId}"`
   })
 
+  let budget: Record<string, unknown>
   if (budgets.items.length === 0) {
-    throw error(404, 'Budget not found. Initialize a budget first.')
+    budget = await locals.pb.collection('edition_budgets').create({
+      editionId,
+      totalBudget: 0,
+      currency: 'EUR',
+      status: 'draft'
+    })
+  } else {
+    budget = budgets.items[0]
   }
-
-  const budget = budgets.items[0]
 
   // Compute stats for overview
   const categoryRecords = await locals.pb.collection('budget_categories').getFullList({

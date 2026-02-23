@@ -82,6 +82,14 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         description: (organization.description as string) || '',
         website: (organization.website as string) || '',
         contactEmail: (organization.contactEmail as string) || '',
+        vatRate: (organization.vatRate as number) ?? 20,
+        legalName: (organization.legalName as string) || '',
+        siret: (organization.siret as string) || '',
+        vatNumber: (organization.vatNumber as string) || '',
+        address: (organization.address as string) || '',
+        city: (organization.city as string) || '',
+        postalCode: (organization.postalCode as string) || '',
+        country: (organization.country as string) || '',
         ownerId: (organization.ownerId as string) || null,
         ownerName: organization.expand?.ownerId
           ? ((organization.expand.ownerId as Record<string, unknown>).name as string)
@@ -110,6 +118,15 @@ export const actions: Actions = {
     const description = formData.get('description') as string
     const website = formData.get('website') as string
     const contactEmail = formData.get('contactEmail') as string
+    const vatRateRaw = formData.get('vatRate') as string
+    const vatRate = vatRateRaw !== null && vatRateRaw !== '' ? Number(vatRateRaw) : undefined
+    const legalName = formData.get('legalName') as string
+    const siret = formData.get('siret') as string
+    const vatNumber = formData.get('vatNumber') as string
+    const address = formData.get('address') as string
+    const city = formData.get('city') as string
+    const postalCode = formData.get('postalCode') as string
+    const country = formData.get('country') as string
 
     if (!name || !slug) {
       return fail(400, { error: 'Name and slug are required' })
@@ -140,7 +157,15 @@ export const actions: Actions = {
         slug,
         description: description || null,
         website: website || null,
-        contactEmail: contactEmail || null
+        contactEmail: contactEmail || null,
+        vatRate: vatRate !== undefined ? vatRate : null,
+        legalName: legalName || null,
+        siret: siret || null,
+        vatNumber: vatNumber || null,
+        address: address || null,
+        city: city || null,
+        postalCode: postalCode || null,
+        country: country || null
       })
 
       // If slug changed, redirect to new URL

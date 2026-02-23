@@ -1067,6 +1067,22 @@
   "sponsoring_sponsor_form_internal_notes": "Internal Notes",
   "sponsoring_sponsor_form_notes_placeholder": "Internal notes about this sponsor...",
 
+  "sponsoring_billing_section_title": "Billing Information",
+  "sponsoring_sponsor_form_legal_name": "Legal Name",
+  "sponsoring_sponsor_form_legal_name_placeholder": "Acme Corporation SAS",
+  "sponsoring_sponsor_form_vat_number": "VAT Number",
+  "sponsoring_sponsor_form_vat_number_placeholder": "FR12345678901",
+  "sponsoring_sponsor_form_siret": "SIRET",
+  "sponsoring_sponsor_form_siret_placeholder": "123 456 789 00012",
+  "sponsoring_sponsor_form_billing_address": "Address",
+  "sponsoring_sponsor_form_billing_address_placeholder": "123 Main Street",
+  "sponsoring_sponsor_form_billing_city": "City",
+  "sponsoring_sponsor_form_billing_city_placeholder": "Paris",
+  "sponsoring_sponsor_form_billing_postal_code": "Postal Code",
+  "sponsoring_sponsor_form_billing_postal_code_placeholder": "75001",
+  "sponsoring_sponsor_form_billing_country": "Country",
+  "sponsoring_sponsor_form_billing_country_placeholder": "France",
+
   "sponsoring_add_to_edition_title": "Add Sponsor to Edition",
   "sponsoring_add_to_edition_desc": "Select a sponsor and optionally assign a package.",
   "sponsoring_add_to_edition_sponsor": "Sponsor",
@@ -2411,6 +2427,17 @@
   "admin_org_settings_delete_description": "Permanently delete this organization and remove all team members.",
   "admin_org_settings_delete_confirm": "Confirm Delete",
   "admin_org_settings_delete_button": "Delete Organization",
+  "admin_org_settings_vat_rate": "VAT Rate (%)",
+  "admin_org_settings_vat_rate_hint": "Default VAT rate applied to sponsor invoices. Set to 0 for VAT-exempt organizations.",
+  "admin_org_settings_legal_title": "Legal & Billing Information",
+  "admin_org_settings_legal_description": "Legal information displayed on invoices and credit notes.",
+  "admin_org_settings_legal_name": "Legal Name",
+  "admin_org_settings_siret": "SIRET",
+  "admin_org_settings_vat_number": "VAT Number",
+  "admin_org_settings_address": "Address",
+  "admin_org_settings_city": "City",
+  "admin_org_settings_postal_code": "Postal Code",
+  "admin_org_settings_country": "Country",
 
   "admin_events_title": "Events - Open Event Orchestrator",
   "admin_events_heading": "Events",
@@ -3106,5 +3133,7 @@
 
   "error_edition_not_found": "Edition not found",
   "error_schedule_not_available": "Schedule not available",
-  "error_edition_no_event": "Edition has no associated event"
+  "error_edition_no_event": "Edition has no associated event",
+
+  "sponsoring_invoice_download": "Download Invoice"
 }

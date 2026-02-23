@@ -9,7 +9,7 @@ import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
 import * as m from '$lib/paraglide/messages'
-import { ArrowLeft, ExternalLink, FileText, FileUp, Loader2, Trash2 } from 'lucide-svelte'
+import { ArrowLeft, ExternalLink, FileText, FileUp, Loader2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -83,13 +83,6 @@ $effect(() => {
 	<!-- Sub-navigation -->
 	<AdminSubNav basePath="/admin/budget/{data.edition.slug}" items={getBudgetNavItems(data.edition.slug)} />
 
-	<!-- Error display -->
-	{#if form?.error && (form?.action === 'deleteInvoice')}
-		<div class="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
-			{form.error}
-		</div>
-	{/if}
-
 	<!-- Stats Card -->
 	<div class="grid gap-4 md:grid-cols-1">
 		<Card.Root>
@@ -130,7 +123,6 @@ $effect(() => {
 							<th class="px-4 py-3 font-medium">{m.budget_invoices_issue_date()}</th>
 							<th class="px-4 py-3 font-medium">{m.budget_invoices_due_date()}</th>
 							<th class="px-4 py-3 font-medium">{m.budget_invoices_file()}</th>
-							<th class="px-4 py-3 font-medium">{m.budget_invoices_actions()}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -180,28 +172,6 @@ $effect(() => {
 									{:else}
 										<span class="text-muted-foreground">{m.budget_invoices_no_file()}</span>
 									{/if}
-								</td>
-								<td class="px-4 py-3">
-									<div class="flex gap-1">
-										{#if invoice.file && invoice.fileUrl}
-											<a href={invoice.fileUrl} target="_blank" rel="noopener noreferrer">
-												<Button variant="ghost" size="icon" class="h-8 w-8">
-													<ExternalLink class="h-3 w-3" />
-												</Button>
-											</a>
-										{/if}
-										<form method="POST" action="?/deleteInvoice" use:enhance>
-											<input type="hidden" name="id" value={invoice.id} />
-											<Button
-												type="submit"
-												variant="ghost"
-												size="icon"
-												class="h-8 w-8 text-destructive hover:text-destructive"
-											>
-												<Trash2 class="h-3 w-3" />
-											</Button>
-										</form>
-									</div>
 								</td>
 							</tr>
 						{/each}

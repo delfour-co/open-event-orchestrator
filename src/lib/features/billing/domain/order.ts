@@ -17,6 +17,7 @@ export const orderSchema = z.object({
   currency: currencySchema.default('EUR'),
   stripeSessionId: z.string().optional(),
   stripePaymentIntentId: z.string().optional(),
+  invoiceNumber: z.string().optional(),
   paidAt: z.date().optional(),
   cancelledAt: z.date().optional(),
   createdAt: z.date(),

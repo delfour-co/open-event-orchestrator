@@ -91,17 +91,20 @@ export const createAuditLogRepository = (pb: PocketBase) => ({
   },
 
   async create(data: CreateAuditLog): Promise<FinancialAuditLog> {
-    const record = await pb.collection(COLLECTION).create({
-      editionId: data.editionId,
-      userId: data.userId || null,
-      action: data.action,
-      entityType: data.entityType,
-      entityId: data.entityId,
-      entityReference: data.entityReference || null,
-      oldValue: data.oldValue || null,
-      newValue: data.newValue || null,
-      metadata: data.metadata || null
-    })
+    const record = await pb.collection(COLLECTION).create(
+      {
+        editionId: data.editionId,
+        userId: data.userId || null,
+        action: data.action,
+        entityType: data.entityType,
+        entityId: data.entityId,
+        entityReference: data.entityReference || null,
+        oldValue: data.oldValue || null,
+        newValue: data.newValue || null,
+        metadata: data.metadata || null
+      },
+      { requestKey: null }
+    )
     return mapRecordToAuditLog(record)
   },
 

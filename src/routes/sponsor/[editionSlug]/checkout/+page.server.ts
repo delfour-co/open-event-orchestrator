@@ -14,7 +14,14 @@ const checkoutSchema = z.object({
   description: z.string().max(2000).optional(),
   contactName: z.string().min(1, 'Contact name is required').max(200),
   contactEmail: z.string().email('Invalid email address'),
-  contactPhone: z.string().max(50).optional()
+  contactPhone: z.string().max(50).optional(),
+  legalName: z.string().min(1, 'Legal name is required').max(300),
+  vatNumber: z.string().max(50).optional().or(z.literal('')),
+  siret: z.string().max(20).optional().or(z.literal('')),
+  billingAddress: z.string().min(1, 'Billing address is required').max(500),
+  billingCity: z.string().min(1, 'City is required').max(100),
+  billingPostalCode: z.string().min(1, 'Postal code is required').max(20),
+  billingCountry: z.string().min(1, 'Country is required').max(100)
 })
 
 type CheckoutData = z.infer<typeof checkoutSchema>
@@ -35,6 +42,13 @@ interface RawFormData {
   contactName: string
   contactEmail: string
   contactPhone: string
+  legalName: string
+  vatNumber: string
+  siret: string
+  billingAddress: string
+  billingCity: string
+  billingPostalCode: string
+  billingCountry: string
 }
 
 async function getEditionInfo(pb: PocketBase, editionSlug: string): Promise<EditionInfo | null> {
@@ -96,7 +110,14 @@ async function createSponsorWithoutPayment(
     description: data.description || undefined,
     contactName: data.contactName,
     contactEmail: data.contactEmail,
-    contactPhone: data.contactPhone || undefined
+    contactPhone: data.contactPhone || undefined,
+    legalName: data.legalName || undefined,
+    vatNumber: data.vatNumber || undefined,
+    siret: data.siret || undefined,
+    billingAddress: data.billingAddress || undefined,
+    billingCity: data.billingCity || undefined,
+    billingPostalCode: data.billingPostalCode || undefined,
+    billingCountry: data.billingCountry || undefined
   })
 
   const editionSponsor = await editionSponsorRepo.create({
@@ -129,6 +150,66 @@ async function createSponsorWithoutPayment(
         portalUrl,
         edition.eventName
       )
+
+      if (packagePrice > 0) {
+        const { generateSponsorInvoicePdf } = await import(
+          '$lib/features/sponsoring/services/sponsor-invoice-service'
+        )
+        const { getNextInvoiceNumber } = await import(
+          '$lib/features/billing/services/invoice-number-service'
+        )
+        let vatRate = 20
+        try {
+          const org = await pb.collection('organizations').getOne(edition.organizationId)
+          vatRate = (org.vatRate as number) ?? 20
+        } catch {
+          // Use default
+        }
+        const now = new Date()
+        const invoiceNumber = await getNextInvoiceNumber(pb, edition.organizationId)
+        const pdfBytes = await generateSponsorInvoicePdf({
+          invoiceNumber,
+          invoiceDate: now.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          eventName: edition.eventName,
+          sponsorName: sponsor.name,
+          legalName: data.legalName || undefined,
+          vatNumber: data.vatNumber || undefined,
+          siret: data.siret || undefined,
+          billingAddress: data.billingAddress || undefined,
+          billingCity: data.billingCity || undefined,
+          billingPostalCode: data.billingPostalCode || undefined,
+          billingCountry: data.billingCountry || undefined,
+          packageName: expandedEditionSponsor.package?.name || 'Sponsorship',
+          amount: packagePrice,
+          currency: expandedEditionSponsor.package?.currency || 'EUR',
+          vatRate
+        })
+        // Store invoice number on the edition sponsor
+        await editionSponsorRepo.update(editionSponsor.id, { invoiceNumber })
+
+        await sponsorEmailService.sendInvoiceEmail(
+          expandedEditionSponsor,
+          edition.eventName,
+          pdfBytes,
+          portalUrl
+        )
+
+        const { recordIncome } = await import('$lib/features/budget/services')
+        await recordIncome({
+          pb,
+          editionId: edition.id,
+          description: `Sponsor: ${data.companyName} - ${expandedEditionSponsor.package?.name || 'Sponsorship'}`,
+          amount: packagePrice,
+          invoiceNumber,
+          pdfBytes,
+          vendor: data.companyName,
+          source: 'sponsoring'
+        }).catch((err) => console.error('[sponsor-checkout] Budget integration failed:', err))
+      }
     }
   }
 
@@ -180,7 +261,14 @@ async function createStripeSession(
       description: (data.description || '').slice(0, 500),
       contactName: data.contactName,
       contactEmail: data.contactEmail,
-      contactPhone: data.contactPhone || ''
+      contactPhone: data.contactPhone || '',
+      legalName: data.legalName || '',
+      vatNumber: data.vatNumber || '',
+      siret: data.siret || '',
+      billingAddress: data.billingAddress || '',
+      billingCity: data.billingCity || '',
+      billingPostalCode: data.billingPostalCode || '',
+      billingCountry: data.billingCountry || ''
     },
     success_url: `${origin}/sponsor/${edition.slug}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/sponsor/${edition.slug}/packages`
@@ -235,7 +323,14 @@ export const actions: Actions = {
       description: formData.get('description') as string,
       contactName: formData.get('contactName') as string,
       contactEmail: formData.get('contactEmail') as string,
-      contactPhone: formData.get('contactPhone') as string
+      contactPhone: formData.get('contactPhone') as string,
+      legalName: formData.get('legalName') as string,
+      vatNumber: formData.get('vatNumber') as string,
+      siret: formData.get('siret') as string,
+      billingAddress: formData.get('billingAddress') as string,
+      billingCity: formData.get('billingCity') as string,
+      billingPostalCode: formData.get('billingPostalCode') as string,
+      billingCountry: formData.get('billingCountry') as string
     }
 
     const result = checkoutSchema.safeParse(rawData)

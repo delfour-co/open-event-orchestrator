@@ -8,7 +8,8 @@ export const sponsorStatusSchema = z.enum([
   'negotiating',
   'confirmed',
   'declined',
-  'cancelled'
+  'cancelled',
+  'refunded'
 ])
 
 export type SponsorStatus = z.infer<typeof sponsorStatusSchema>
@@ -22,6 +23,8 @@ export const editionSponsorSchema = z.object({
   confirmedAt: z.date().optional(),
   paidAt: z.date().optional(),
   amount: z.number().min(0).optional(),
+  invoiceNumber: z.string().max(30).optional(),
+  stripePaymentIntentId: z.string().optional(),
   notes: z.string().max(5000).optional(),
   createdAt: z.date(),
   updatedAt: z.date()
@@ -63,7 +66,8 @@ export const SPONSOR_STATUS_ORDER: SponsorStatus[] = [
   'negotiating',
   'confirmed',
   'declined',
-  'cancelled'
+  'cancelled',
+  'refunded'
 ]
 
 export const PIPELINE_STATUSES: SponsorStatus[] = [
@@ -80,7 +84,8 @@ export const getStatusLabel = (status: SponsorStatus): string => {
     negotiating: 'Negotiating',
     confirmed: 'Confirmed',
     declined: 'Declined',
-    cancelled: 'Cancelled'
+    cancelled: 'Cancelled',
+    refunded: 'Refunded'
   }
   return labels[status]
 }
@@ -92,7 +97,8 @@ export const getStatusColor = (status: SponsorStatus): string => {
     negotiating: 'yellow',
     confirmed: 'green',
     declined: 'red',
-    cancelled: 'slate'
+    cancelled: 'slate',
+    refunded: 'red'
   }
   return colors[status]
 }
@@ -106,7 +112,8 @@ export const getStatusBadgeVariant = (
     negotiating: 'secondary',
     confirmed: 'default',
     declined: 'destructive',
-    cancelled: 'outline'
+    cancelled: 'outline',
+    refunded: 'destructive'
   }
   return variants[status]
 }
@@ -115,9 +122,10 @@ const VALID_TRANSITIONS: Record<SponsorStatus, SponsorStatus[]> = {
   prospect: ['contacted', 'declined', 'cancelled'],
   contacted: ['negotiating', 'declined', 'cancelled'],
   negotiating: ['confirmed', 'declined', 'cancelled'],
-  confirmed: ['cancelled'],
+  confirmed: ['cancelled', 'refunded'],
   declined: ['prospect', 'contacted'],
-  cancelled: ['prospect']
+  cancelled: ['prospect'],
+  refunded: []
 }
 
 export const canTransitionTo = (from: SponsorStatus, to: SponsorStatus): boolean => {
@@ -130,11 +138,11 @@ export const getValidTransitions = (from: SponsorStatus): SponsorStatus[] => {
 }
 
 export const isActiveStatus = (status: SponsorStatus): boolean => {
-  return ['prospect', 'contacted', 'negotiating', 'confirmed'].includes(status)
+  return ['prospect', 'contacted', 'negotiating', 'confirmed'].includes(status as string)
 }
 
 export const isTerminalStatus = (status: SponsorStatus): boolean => {
-  return ['declined', 'cancelled'].includes(status)
+  return ['declined', 'cancelled', 'refunded'].includes(status as string)
 }
 
 export const isPipelineStatus = (status: SponsorStatus): boolean => {
@@ -150,7 +158,8 @@ export const calculateStats = (sponsors: EditionSponsor[]): SponsorStats => {
       negotiating: 0,
       confirmed: 0,
       declined: 0,
-      cancelled: 0
+      cancelled: 0,
+      refunded: 0
     },
     confirmed: 0,
     totalAmount: 0,
@@ -181,7 +190,8 @@ export const groupByStatus = (
     negotiating: [],
     confirmed: [],
     declined: [],
-    cancelled: []
+    cancelled: [],
+    refunded: []
   }
 
   for (const sponsor of sponsors) {

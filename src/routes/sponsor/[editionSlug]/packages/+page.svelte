@@ -87,11 +87,11 @@ const getTierBorderColor = (tier: number) => {
     </div>
   {:else}
     <!-- Packages Grid -->
-    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-{Math.min(data.packages.length, 4)}">
+    <div class="flex flex-wrap justify-center gap-8">
       {#each data.packages as pkg}
         {@const TierIcon = getTierIcon(pkg.tier)}
         <Card.Root
-          class="relative flex flex-col {getTierBorderColor(pkg.tier)} {!pkg.hasAvailableSlots ? 'opacity-60' : ''}"
+          class="relative flex w-full max-w-sm flex-col {getTierBorderColor(pkg.tier)} {!pkg.hasAvailableSlots ? 'opacity-60' : ''}"
         >
           {#if pkg.tier === 1}
             <div class="absolute -top-3 left-1/2 -translate-x-1/2">

@@ -1,11 +1,18 @@
 import nodemailer from 'nodemailer'
 import type { NotificationType } from '../domain/notification'
 
+export interface EmailAttachment {
+  filename: string
+  content: Buffer | Uint8Array
+  contentType: string
+}
+
 export interface EmailOptions {
   to: string
   subject: string
   html: string
   text?: string
+  attachments?: EmailAttachment[]
 }
 
 export interface EmailService {
@@ -28,6 +35,9 @@ export const createConsoleEmailService = (): EmailService => ({
     console.log('To:', options.to)
     console.log('Subject:', options.subject)
     console.log('Body:', options.text || options.html)
+    if (options.attachments?.length) {
+      console.log('Attachments:', options.attachments.map((a) => a.filename).join(', '))
+    }
     console.log('===========================')
     return { success: true }
   }
@@ -57,7 +67,12 @@ export const createSmtpEmailService = (config: SmtpConfig): EmailService => {
           to: options.to,
           subject: options.subject,
           html: options.html,
-          text: options.text
+          text: options.text,
+          attachments: options.attachments?.map((a) => ({
+            filename: a.filename,
+            content: Buffer.from(a.content),
+            contentType: a.contentType
+          }))
         })
         return { success: true }
       } catch (err) {

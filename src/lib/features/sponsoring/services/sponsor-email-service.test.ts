@@ -238,6 +238,73 @@ describe('SponsorEmailService', () => {
     })
   })
 
+  describe('sendInvoiceEmail', () => {
+    const fakePdf = new Uint8Array([37, 80, 68, 70]) // %PDF
+
+    it('should send invoice email with PDF attachment', async () => {
+      const result = await service.sendInvoiceEmail(
+        mockEditionSponsor,
+        'Tech Conference 2024',
+        fakePdf,
+        'https://example.com/portal'
+      )
+
+      expect(result.success).toBe(true)
+      expect(mockEmailService.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'john@acme.com',
+          subject: 'Tech Conference 2024 - Sponsorship Invoice',
+          attachments: [
+            expect.objectContaining({
+              filename: expect.stringContaining('.pdf'),
+              content: fakePdf,
+              contentType: 'application/pdf'
+            })
+          ]
+        })
+      )
+    })
+
+    it('should include portal URL in invoice email when provided', async () => {
+      await service.sendInvoiceEmail(
+        mockEditionSponsor,
+        'Tech Conference 2024',
+        fakePdf,
+        'https://example.com/portal'
+      )
+
+      const call = vi.mocked(mockEmailService.send).mock.calls[0][0]
+      expect(call.html).toContain('https://example.com/portal')
+      expect(call.text).toContain('https://example.com/portal')
+    })
+
+    it('should return error when no contact email', async () => {
+      const sponsorWithoutEmail = {
+        ...mockEditionSponsor,
+        sponsor: mockEditionSponsor.sponsor
+          ? { ...mockEditionSponsor.sponsor, contactEmail: undefined }
+          : undefined
+      }
+
+      const result = await service.sendInvoiceEmail(
+        sponsorWithoutEmail,
+        'Tech Conference 2024',
+        fakePdf
+      )
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('No contact email for sponsor')
+      expect(mockEmailService.send).not.toHaveBeenCalled()
+    })
+
+    it('should use sponsor name in attachment filename', async () => {
+      await service.sendInvoiceEmail(mockEditionSponsor, 'Tech Conference 2024', fakePdf)
+
+      const call = vi.mocked(mockEmailService.send).mock.calls[0][0]
+      expect(call.attachments?.[0].filename).toBe('invoice-acme-corp.pdf')
+    })
+  })
+
   describe('email template content', () => {
     it('should include contact name in greeting when available', async () => {
       await service.sendPortalInvitation(

@@ -1,4 +1,4 @@
-import type { EmailService } from '$lib/features/cfp/services/email-service'
+import type { EmailAttachment, EmailService } from '$lib/features/cfp/services/email-service'
 import type { EditionSponsorExpanded } from '../domain'
 import { formatPackagePrice } from '../domain'
 
@@ -20,6 +20,8 @@ export type SponsorEmailType =
   | 'status_declined'
   | 'payment_received'
   | 'welcome'
+  | 'invoice'
+  | 'refund'
 
 export const createSponsorEmailService = (emailService: EmailService) => ({
   async sendPortalInvitation(
@@ -133,6 +135,83 @@ export const createSponsorEmailService = (emailService: EmailService) => ({
       subject: `Welcome to ${eventName} as a Sponsor!`,
       html: generateSponsorEmailHtml('welcome', data),
       text: generateSponsorEmailText('welcome', data)
+    })
+  },
+
+  async sendInvoiceEmail(
+    editionSponsor: EditionSponsorExpanded,
+    eventName: string,
+    pdfBytes: Uint8Array,
+    portalUrl?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const contactEmail = editionSponsor.sponsor?.contactEmail
+    if (!contactEmail) {
+      return { success: false, error: 'No contact email for sponsor' }
+    }
+
+    const data: SponsorEmailTemplateData = {
+      sponsorName: editionSponsor.sponsor?.name || 'Sponsor',
+      contactName: editionSponsor.sponsor?.contactName,
+      editionName: '',
+      eventName,
+      packageName: editionSponsor.package?.name,
+      packagePrice: editionSponsor.package
+        ? formatPackagePrice(editionSponsor.package.price, editionSponsor.package.currency)
+        : undefined,
+      amount: editionSponsor.amount
+        ? formatPackagePrice(editionSponsor.amount, editionSponsor.package?.currency || 'EUR')
+        : undefined,
+      portalUrl
+    }
+
+    const attachment: EmailAttachment = {
+      filename: `invoice-${editionSponsor.sponsor?.name?.replace(/\s+/g, '-').toLowerCase() || 'sponsor'}.pdf`,
+      content: pdfBytes,
+      contentType: 'application/pdf'
+    }
+
+    return emailService.send({
+      to: contactEmail,
+      subject: `${eventName} - Sponsorship Invoice`,
+      html: generateSponsorEmailHtml('invoice', data),
+      text: generateSponsorEmailText('invoice', data),
+      attachments: [attachment]
+    })
+  },
+
+  async sendRefundEmail(
+    editionSponsor: EditionSponsorExpanded,
+    eventName: string,
+    pdfBytes: Uint8Array
+  ): Promise<{ success: boolean; error?: string }> {
+    const contactEmail = editionSponsor.sponsor?.contactEmail
+    if (!contactEmail) {
+      return { success: false, error: 'No contact email for sponsor' }
+    }
+
+    const data: SponsorEmailTemplateData = {
+      sponsorName: editionSponsor.sponsor?.name || 'Sponsor',
+      contactName: editionSponsor.sponsor?.contactName,
+      editionName: '',
+      eventName,
+      packageName: editionSponsor.package?.name,
+      amount: editionSponsor.amount
+        ? formatPackagePrice(editionSponsor.amount, editionSponsor.package?.currency || 'EUR')
+        : undefined
+    }
+
+    const attachment: EmailAttachment = {
+      filename: `credit-note-${editionSponsor.sponsor?.name?.replace(/\s+/g, '-').toLowerCase() || 'sponsor'}.pdf`,
+      content: pdfBytes,
+      contentType: 'application/pdf'
+    }
+
+    return emailService.send({
+      to: contactEmail,
+      subject: `${eventName} - Sponsorship Refund & Credit Note`,
+      html: generateSponsorEmailHtml('refund', data),
+      text: generateSponsorEmailText('refund', data),
+      attachments: [attachment]
     })
   }
 })
@@ -248,6 +327,46 @@ const generateSponsorEmailHtml = (
   <p><a href="${data.portalUrl}" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Get Started</a></p>
   <p>Best regards,<br>The ${data.eventName} Team</p>
 </body>
+</html>`,
+
+    invoice: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sponsorship Invoice</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #2563eb;">Sponsorship Invoice</h1>
+  <p>${greeting},</p>
+  <p>Thank you for your sponsorship of <strong>${data.eventName}</strong>!</p>
+  ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
+  ${data.amount ? `<p>Amount: <strong>${data.amount}</strong></p>` : ''}
+  <p>Please find your invoice attached to this email.</p>
+  ${data.portalUrl ? `<p>You can also download your invoice at any time from your sponsor portal:</p><p><a href="${data.portalUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Access Sponsor Portal</a></p>` : ''}
+  <p>Best regards,<br>The ${data.eventName} Team</p>
+</body>
+</html>`,
+
+    refund: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sponsorship Refund</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #dc2626;">Sponsorship Refund</h1>
+  <p>${greeting},</p>
+  <p>We are writing to inform you that your sponsorship of <strong>${data.eventName}</strong> has been refunded.</p>
+  ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
+  ${data.amount ? `<p>Refunded amount: <strong>${data.amount}</strong></p>` : ''}
+  <p>Please find the credit note attached to this email. The refund will be processed to your original payment method.</p>
+  <p>If you have any questions, please don't hesitate to reach out.</p>
+  <p>Best regards,<br>The ${data.eventName} Team</p>
+</body>
 </html>`
   }
 
@@ -325,6 +444,37 @@ Welcome aboard as a sponsor of ${data.eventName}!
 ${data.packageName ? `Your package: ${data.packageName}` : ''}
 
 Get started here: ${data.portalUrl}
+
+Best regards,
+The ${data.eventName} Team`,
+
+    invoice: `
+Sponsorship Invoice
+
+${greeting},
+
+Thank you for your sponsorship of ${data.eventName}!
+${data.packageName ? `Package: ${data.packageName}` : ''}
+${data.amount ? `Amount: ${data.amount}` : ''}
+
+Please find your invoice attached to this email.
+${data.portalUrl ? `You can also download your invoice from your sponsor portal: ${data.portalUrl}` : ''}
+
+Best regards,
+The ${data.eventName} Team`,
+
+    refund: `
+Sponsorship Refund
+
+${greeting},
+
+We are writing to inform you that your sponsorship of ${data.eventName} has been refunded.
+${data.packageName ? `Package: ${data.packageName}` : ''}
+${data.amount ? `Refunded amount: ${data.amount}` : ''}
+
+Please find the credit note attached to this email. The refund will be processed to your original payment method.
+
+If you have any questions, please don't hesitate to reach out.
 
 Best regards,
 The ${data.eventName} Team`

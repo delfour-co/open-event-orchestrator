@@ -1,3 +1,5 @@
+export { recordIncome, recordCreditNote } from './budget-integration-service'
+
 export { createBudgetStatsService } from './budget-stats-service'
 export type {
   BudgetStatsService,

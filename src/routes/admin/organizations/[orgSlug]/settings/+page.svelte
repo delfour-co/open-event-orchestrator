@@ -171,6 +171,23 @@ const getRoleBadgeColor = (role: string) => {
           </div>
         </div>
 
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="org-vat-rate">{m.admin_org_settings_vat_rate()}</Label>
+            <Input
+              id="org-vat-rate"
+              name="vatRate"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={String(data.organization.vatRate)}
+              placeholder="20"
+            />
+            <p class="text-xs text-muted-foreground">{m.admin_org_settings_vat_rate_hint()}</p>
+          </div>
+        </div>
+
         <div class="flex justify-end">
           <Button type="submit" disabled={isSubmitting}>
             {#if isSubmitting}
@@ -178,6 +195,121 @@ const getRoleBadgeColor = (role: string) => {
               Saving...
             {:else}
               Save Details
+            {/if}
+          </Button>
+        </div>
+      </form>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Legal & Billing Information Card -->
+  <Card.Root>
+    <Card.Header>
+      <Card.Title>{m.admin_org_settings_legal_title()}</Card.Title>
+      <Card.Description>{m.admin_org_settings_legal_description()}</Card.Description>
+    </Card.Header>
+    <Card.Content>
+      <form
+        method="POST"
+        action="?/updateOrganization"
+        use:enhance={() => {
+          isSubmitting = true
+          return async ({ update }) => {
+            isSubmitting = false
+            await update()
+            await invalidateAll()
+          }
+        }}
+        class="space-y-4"
+      >
+        <!-- Hidden fields to preserve existing org data -->
+        <input type="hidden" name="name" value={data.organization.name} />
+        <input type="hidden" name="slug" value={data.organization.slug} />
+        <input type="hidden" name="description" value={data.organization.description} />
+        <input type="hidden" name="website" value={data.organization.website} />
+        <input type="hidden" name="contactEmail" value={data.organization.contactEmail} />
+        <input type="hidden" name="vatRate" value={String(data.organization.vatRate)} />
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="org-legal-name">{m.admin_org_settings_legal_name()}</Label>
+            <Input
+              id="org-legal-name"
+              name="legalName"
+              value={data.organization.legalName}
+              placeholder="ACME SAS"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="org-siret">{m.admin_org_settings_siret()}</Label>
+            <Input
+              id="org-siret"
+              name="siret"
+              value={data.organization.siret}
+              placeholder="123 456 789 00012"
+            />
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="org-vat-number">{m.admin_org_settings_vat_number()}</Label>
+            <Input
+              id="org-vat-number"
+              name="vatNumber"
+              value={data.organization.vatNumber}
+              placeholder="FR12345678901"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <Label for="org-address">{m.admin_org_settings_address()}</Label>
+          <Input
+            id="org-address"
+            name="address"
+            value={data.organization.address}
+            placeholder="123 rue de la Paix"
+          />
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="space-y-2">
+            <Label for="org-postal-code">{m.admin_org_settings_postal_code()}</Label>
+            <Input
+              id="org-postal-code"
+              name="postalCode"
+              value={data.organization.postalCode}
+              placeholder="75001"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="org-city">{m.admin_org_settings_city()}</Label>
+            <Input
+              id="org-city"
+              name="city"
+              value={data.organization.city}
+              placeholder="Paris"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="org-country">{m.admin_org_settings_country()}</Label>
+            <Input
+              id="org-country"
+              name="country"
+              value={data.organization.country}
+              placeholder="France"
+            />
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <Button type="submit" disabled={isSubmitting}>
+            {#if isSubmitting}
+              <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            {:else}
+              Save Legal Information
             {/if}
           </Button>
         </div>

@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
+  Download,
   FileImage,
   Gift,
   Loader2,
@@ -238,6 +239,82 @@ const excludedBenefits = $derived(
 							</div>
 
 							<div class="border-t pt-4 mt-4">
+								<h4 class="font-medium mb-3">Billing Information</h4>
+								<div class="space-y-4">
+									<div class="space-y-2">
+										<Label for="legalName">Legal Name</Label>
+										<Input
+											id="legalName"
+											name="legalName"
+											placeholder="Acme Corporation SAS"
+											value={data.editionSponsor.sponsor?.legalName || ''}
+										/>
+									</div>
+
+									<div class="grid gap-4 md:grid-cols-2">
+										<div class="space-y-2">
+											<Label for="vatNumber">VAT Number</Label>
+											<Input
+												id="vatNumber"
+												name="vatNumber"
+												placeholder="FR12345678901"
+												value={data.editionSponsor.sponsor?.vatNumber || ''}
+											/>
+										</div>
+										<div class="space-y-2">
+											<Label for="siret">SIRET</Label>
+											<Input
+												id="siret"
+												name="siret"
+												placeholder="123 456 789 00012"
+												value={data.editionSponsor.sponsor?.siret || ''}
+											/>
+										</div>
+									</div>
+
+									<div class="space-y-2">
+										<Label for="billingAddress">Address</Label>
+										<Input
+											id="billingAddress"
+											name="billingAddress"
+											placeholder="123 Main Street"
+											value={data.editionSponsor.sponsor?.billingAddress || ''}
+										/>
+									</div>
+
+									<div class="grid gap-4 md:grid-cols-3">
+										<div class="space-y-2">
+											<Label for="billingPostalCode">Postal Code</Label>
+											<Input
+												id="billingPostalCode"
+												name="billingPostalCode"
+												placeholder="75001"
+												value={data.editionSponsor.sponsor?.billingPostalCode || ''}
+											/>
+										</div>
+										<div class="space-y-2">
+											<Label for="billingCity">City</Label>
+											<Input
+												id="billingCity"
+												name="billingCity"
+												placeholder="Paris"
+												value={data.editionSponsor.sponsor?.billingCity || ''}
+											/>
+										</div>
+										<div class="space-y-2">
+											<Label for="billingCountry">Country</Label>
+											<Input
+												id="billingCountry"
+												name="billingCountry"
+												placeholder="France"
+												value={data.editionSponsor.sponsor?.billingCountry || ''}
+											/>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="border-t pt-4 mt-4">
 								<h4 class="font-medium mb-3">Contact Information</h4>
 								<div class="space-y-4">
 									<div class="space-y-2">
@@ -310,6 +387,16 @@ const excludedBenefits = $derived(
 										</p>
 									{/if}
 								</div>
+							{/if}
+
+							{#if data.editionSponsor.status === 'confirmed' && data.editionSponsor.amount && data.editionSponsor.amount > 0}
+								<a
+									href="/sponsor/{data.edition.slug}/portal/invoice?token={data.token}"
+									class="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+								>
+									<Download class="h-4 w-4" />
+									Download Invoice
+								</a>
 							{/if}
 
 							{#if data.editionSponsor.package.description}

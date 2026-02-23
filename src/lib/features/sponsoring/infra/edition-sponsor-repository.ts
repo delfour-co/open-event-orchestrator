@@ -105,6 +105,8 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
       confirmedAt: data.confirmedAt?.toISOString() || null,
       paidAt: data.paidAt?.toISOString() || null,
       amount: data.amount ?? null,
+      invoiceNumber: data.invoiceNumber || null,
+      stripePaymentIntentId: data.stripePaymentIntentId || null,
       notes: data.notes || null
     })
     return mapRecordToEditionSponsor(record)
@@ -118,6 +120,9 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
       updateData.confirmedAt = data.confirmedAt?.toISOString() || null
     if (data.paidAt !== undefined) updateData.paidAt = data.paidAt?.toISOString() || null
     if (data.amount !== undefined) updateData.amount = data.amount ?? null
+    if (data.invoiceNumber !== undefined) updateData.invoiceNumber = data.invoiceNumber || null
+    if (data.stripePaymentIntentId !== undefined)
+      updateData.stripePaymentIntentId = data.stripePaymentIntentId || null
     if (data.notes !== undefined) updateData.notes = data.notes || null
     const record = await pb.collection(COLLECTION).update(id, updateData)
     return mapRecordToEditionSponsor(record)
@@ -151,7 +156,8 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
         negotiating: 0,
         confirmed: 0,
         declined: 0,
-        cancelled: 0
+        cancelled: 0,
+        refunded: 0
       },
       confirmed: 0,
       totalAmount: 0,
@@ -185,6 +191,8 @@ const mapRecordToEditionSponsor = (record: Record<string, unknown>): EditionSpon
   confirmedAt: record.confirmedAt ? new Date(record.confirmedAt as string) : undefined,
   paidAt: record.paidAt ? new Date(record.paidAt as string) : undefined,
   amount: (record.amount as number) || undefined,
+  invoiceNumber: (record.invoiceNumber as string) || undefined,
+  stripePaymentIntentId: (record.stripePaymentIntentId as string) || undefined,
   notes: (record.notes as string) || undefined,
   createdAt: new Date(record.created as string),
   updatedAt: new Date(record.updated as string)
@@ -213,6 +221,13 @@ const mapRecordToEditionSponsorExpanded = (
       contactEmail: (sponsorRecord.contactEmail as string) || undefined,
       contactPhone: (sponsorRecord.contactPhone as string) || undefined,
       notes: (sponsorRecord.notes as string) || undefined,
+      legalName: (sponsorRecord.legalName as string) || undefined,
+      vatNumber: (sponsorRecord.vatNumber as string) || undefined,
+      siret: (sponsorRecord.siret as string) || undefined,
+      billingAddress: (sponsorRecord.billingAddress as string) || undefined,
+      billingCity: (sponsorRecord.billingCity as string) || undefined,
+      billingPostalCode: (sponsorRecord.billingPostalCode as string) || undefined,
+      billingCountry: (sponsorRecord.billingCountry as string) || undefined,
       createdAt: new Date(sponsorRecord.created as string),
       updatedAt: new Date(sponsorRecord.updated as string)
     }

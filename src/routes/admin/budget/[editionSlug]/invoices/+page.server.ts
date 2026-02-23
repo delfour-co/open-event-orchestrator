@@ -20,11 +20,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     filter: `editionId = "${editionId}"`
   })
 
+  let budget: Record<string, unknown>
   if (budgets.items.length === 0) {
-    throw error(404, 'Budget not found. Initialize a budget first.')
+    budget = await locals.pb.collection('edition_budgets').create({
+      editionId,
+      totalBudget: 0,
+      currency: 'EUR',
+      status: 'draft'
+    })
+  } else {
+    budget = budgets.items[0]
   }
-
-  const budget = budgets.items[0]
   const budgetId = budget.id as string
 
   const categoryRecords = await locals.pb.collection('budget_categories').getFullList({
@@ -192,48 +198,6 @@ export const actions: Actions = {
     } catch (err) {
       console.error('Failed to upload invoice:', err)
       return fail(500, { error: 'Failed to upload invoice', action: 'uploadInvoice' })
-    }
-  },
-
-  deleteInvoice: async ({ request, locals }) => {
-    const formData = await request.formData()
-    const id = formData.get('id') as string
-
-    if (!id) {
-      return fail(400, { error: 'Invoice ID is required', action: 'deleteInvoice' })
-    }
-
-    try {
-      const oldInvoice = await locals.pb.collection('budget_invoices').getOne(id)
-      const transaction = await locals.pb
-        .collection('budget_transactions')
-        .getOne(oldInvoice.transactionId as string)
-      const category = await locals.pb
-        .collection('budget_categories')
-        .getOne(transaction.categoryId as string)
-      const budget = await locals.pb
-        .collection('edition_budgets')
-        .getOne(category.budgetId as string)
-      const editionId = budget.editionId as string
-
-      const auditService = createFinancialAuditService(locals.pb, {
-        editionId,
-        userId: locals.user?.id
-      })
-
-      const oldData = {
-        invoiceNumber: oldInvoice.invoiceNumber,
-        amount: oldInvoice.amount
-      }
-
-      await locals.pb.collection('budget_invoices').delete(id)
-
-      auditService.logInvoiceDelete(id, oldInvoice.invoiceNumber as string, oldData)
-
-      return { success: true, action: 'deleteInvoice' }
-    } catch (err) {
-      console.error('Failed to delete invoice:', err)
-      return fail(500, { error: 'Failed to delete invoice', action: 'deleteInvoice' })
     }
   }
 }

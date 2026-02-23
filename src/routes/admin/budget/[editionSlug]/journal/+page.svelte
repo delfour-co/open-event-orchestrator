@@ -155,6 +155,45 @@ function buildLogDescription(log: (typeof data.logs)[0]): string {
   return buildAuditDescription(fullLog)
 }
 
+function extractDescription(log: (typeof data.logs)[0]): string | null {
+  const nv = log.newValue as Record<string, unknown> | undefined
+  const ov = log.oldValue as Record<string, unknown> | undefined
+  return (nv?.description as string) || (ov?.description as string) || null
+}
+
+function extractSource(log: (typeof data.logs)[0]): string | null {
+  const nv = log.newValue as Record<string, unknown> | undefined
+  const md = log.metadata as Record<string, unknown> | undefined
+  return (nv?.source as string) || (md?.source as string) || null
+}
+
+function extractVendor(log: (typeof data.logs)[0]): string | null {
+  const nv = log.newValue as Record<string, unknown> | undefined
+  const ov = log.oldValue as Record<string, unknown> | undefined
+  return (nv?.vendor as string) || (ov?.vendor as string) || null
+}
+
+function extractType(log: (typeof data.logs)[0]): string | null {
+  const nv = log.newValue as Record<string, unknown> | undefined
+  return (nv?.type as string) || null
+}
+
+function extractStatus(log: (typeof data.logs)[0]): string | null {
+  const nv = log.newValue as Record<string, unknown> | undefined
+  return (nv?.status as string) || null
+}
+
+function getSourceBadgeClass(source: string): string {
+  switch (source.toLowerCase()) {
+    case 'sponsoring':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+    case 'ticketing':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  }
+}
+
 const hasFilters = $derived(
   filterAction || filterEntityType || filterStartDate || filterEndDate || filterSearch
 )
@@ -296,6 +335,7 @@ const hasFilters = $derived(
                 <th class="px-4 py-3 text-left text-sm font-medium">Action</th>
                 <th class="px-4 py-3 text-left text-sm font-medium">Entity</th>
                 <th class="px-4 py-3 text-left text-sm font-medium">Reference</th>
+                <th class="px-4 py-3 text-left text-sm font-medium">Description</th>
                 <th class="px-4 py-3 text-right text-sm font-medium">Amount</th>
                 <th class="px-4 py-3 text-center text-sm font-medium">Details</th>
               </tr>
@@ -317,6 +357,37 @@ const hasFilters = $derived(
                   </td>
                   <td class="px-4 py-3 text-sm font-mono">
                     {log.entityReference || '-'}
+                  </td>
+                  <td class="px-4 py-3 text-sm">
+                    {#if extractDescription(log) || extractSource(log) || extractVendor(log)}
+                      <div class="flex flex-col gap-0.5">
+                        {#if extractDescription(log)}
+                          <div class="flex items-center gap-2">
+                            <span>{extractDescription(log)}</span>
+                            {#if extractSource(log)}
+                              {@const source = extractSource(log)}
+                              {#if source}
+                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {getSourceBadgeClass(source)}">
+                                  {source.charAt(0).toUpperCase() + source.slice(1)}
+                                </span>
+                              {/if}
+                            {/if}
+                          </div>
+                        {:else if extractSource(log)}
+                          {@const source = extractSource(log)}
+                          {#if source}
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {getSourceBadgeClass(source)}">
+                              {source.charAt(0).toUpperCase() + source.slice(1)}
+                            </span>
+                          {/if}
+                        {/if}
+                        {#if extractVendor(log)}
+                          <span class="text-xs text-muted-foreground">{extractVendor(log)}</span>
+                        {/if}
+                      </div>
+                    {:else}
+                      <span class="text-muted-foreground">-</span>
+                    {/if}
                   </td>
                   <td class="px-4 py-3 text-right text-sm">
                     {formatAmount(extractAmount(log.newValue as Record<string, unknown> | undefined))}
@@ -416,25 +487,82 @@ const hasFilters = $derived(
         </div>
       </div>
 
-      {#if selectedLog.oldValue}
-        <div>
-          <p class="mb-2 font-medium text-muted-foreground">Old Value</p>
-          <pre class="rounded-md bg-muted p-3 text-xs overflow-auto max-h-40">{JSON.stringify(selectedLog.oldValue, null, 2)}</pre>
+      <!-- Formatted fields -->
+      {#if extractDescription(selectedLog) || extractSource(selectedLog) || extractVendor(selectedLog) || extractType(selectedLog) || extractStatus(selectedLog)}
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          {#if extractDescription(selectedLog)}
+            <div class="col-span-2">
+              <p class="font-medium text-muted-foreground">Description</p>
+              <p>{extractDescription(selectedLog)}</p>
+            </div>
+          {/if}
+          {#if extractSource(selectedLog)}
+            {@const src = extractSource(selectedLog)}
+            <div>
+              <p class="font-medium text-muted-foreground">Source</p>
+              {#if src}
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {getSourceBadgeClass(src)}">
+                  {src.charAt(0).toUpperCase() + src.slice(1)}
+                </span>
+              {/if}
+            </div>
+          {/if}
+          {#if extractVendor(selectedLog)}
+            <div>
+              <p class="font-medium text-muted-foreground">Vendor</p>
+              <p>{extractVendor(selectedLog)}</p>
+            </div>
+          {/if}
+          {#if extractType(selectedLog)}
+            {@const typ = extractType(selectedLog)}
+            <div>
+              <p class="font-medium text-muted-foreground">Type</p>
+              {#if typ}
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {typ === 'income' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
+                  {typ.charAt(0).toUpperCase() + typ.slice(1)}
+                </span>
+              {/if}
+            </div>
+          {/if}
+          {#if extractStatus(selectedLog)}
+            {@const stat = extractStatus(selectedLog)}
+            <div>
+              <p class="font-medium text-muted-foreground">Status</p>
+              {#if stat}
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium {stat === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : stat === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}">
+                  {stat.charAt(0).toUpperCase() + stat.slice(1)}
+                </span>
+              {/if}
+            </div>
+          {/if}
         </div>
       {/if}
 
-      {#if selectedLog.newValue}
-        <div>
-          <p class="mb-2 font-medium text-muted-foreground">New Value</p>
-          <pre class="rounded-md bg-muted p-3 text-xs overflow-auto max-h-40">{JSON.stringify(selectedLog.newValue, null, 2)}</pre>
-        </div>
-      {/if}
-
-      {#if selectedLog.metadata}
-        <div>
-          <p class="mb-2 font-medium text-muted-foreground">Metadata</p>
-          <pre class="rounded-md bg-muted p-3 text-xs overflow-auto max-h-40">{JSON.stringify(selectedLog.metadata, null, 2)}</pre>
-        </div>
+      <!-- Raw data (collapsible) -->
+      {#if selectedLog.oldValue || selectedLog.newValue || selectedLog.metadata}
+        <details class="text-sm">
+          <summary class="cursor-pointer font-medium text-muted-foreground hover:text-foreground">Raw data</summary>
+          <div class="mt-2 space-y-3">
+            {#if selectedLog.oldValue}
+              <div>
+                <p class="mb-1 text-xs font-medium text-muted-foreground">Old Value</p>
+                <pre class="rounded-md bg-muted p-3 text-xs overflow-auto max-h-40">{JSON.stringify(selectedLog.oldValue, null, 2)}</pre>
+              </div>
+            {/if}
+            {#if selectedLog.newValue}
+              <div>
+                <p class="mb-1 text-xs font-medium text-muted-foreground">New Value</p>
+                <pre class="rounded-md bg-muted p-3 text-xs overflow-auto max-h-40">{JSON.stringify(selectedLog.newValue, null, 2)}</pre>
+              </div>
+            {/if}
+            {#if selectedLog.metadata}
+              <div>
+                <p class="mb-1 text-xs font-medium text-muted-foreground">Metadata</p>
+                <pre class="rounded-md bg-muted p-3 text-xs overflow-auto max-h-40">{JSON.stringify(selectedLog.metadata, null, 2)}</pre>
+              </div>
+            {/if}
+          </div>
+        </details>
       {/if}
     </div>
     <Dialog.Footer>

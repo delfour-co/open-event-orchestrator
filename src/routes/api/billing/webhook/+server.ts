@@ -7,12 +7,16 @@ import {
 import { generateQrCodeDataUrl } from '$lib/features/billing/services'
 import { createCancelOrderUseCase } from '$lib/features/billing/usecases/cancel-order'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
+import {
+  handleSponsorCheckoutCompleted,
+  isSponsorCheckoutMetadata
+} from '$lib/features/sponsoring/services/sponsor-checkout-handler'
 import { getStripeSettings } from '$lib/server/app-settings'
 import { sendOrderConfirmationEmail } from '$lib/server/billing-notifications'
 import { json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals, url }) => {
   const stripeSettings = await getStripeSettings(locals.pb)
 
   if (!stripeSettings.isConfigured || !stripeSettings.stripeWebhookSecret) {
@@ -43,13 +47,36 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const ticketTypeRepo = createTicketTypeRepository(locals.pb)
     const ticketRepo = createTicketRepository(locals.pb)
 
+    console.log(`[billing-webhook] Received event: ${event.type}`)
+
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as {
-          metadata?: { orderId?: string }
+          metadata?: Record<string, unknown>
           payment_intent?: string
         }
-        const orderId = session.metadata?.orderId
+
+        console.log(
+          '[billing-webhook] checkout.session.completed metadata:',
+          JSON.stringify(session.metadata)
+        )
+
+        // Delegate sponsor checkout events to the sponsoring module
+        if (isSponsorCheckoutMetadata(session.metadata)) {
+          const sponsorPaymentIntent =
+            typeof session.payment_intent === 'string' ? session.payment_intent : undefined
+          console.log('[billing-webhook] Routing to sponsor checkout handler')
+          await handleSponsorCheckoutCompleted(
+            locals.pb,
+            session.metadata as Record<string, unknown>,
+            url.origin,
+            sponsorPaymentIntent
+          )
+          console.log('[billing-webhook] Sponsor checkout handler completed successfully')
+          break
+        }
+
+        const orderId = session.metadata?.orderId as string | undefined
         if (!orderId) break
 
         // Update payment info

@@ -124,6 +124,7 @@ const mapRecordToOrder = (record: Record<string, unknown>): Order => ({
   currency: (record.currency as 'EUR' | 'USD' | 'GBP') || 'EUR',
   stripeSessionId: record.stripeSessionId as string | undefined,
   stripePaymentIntentId: record.stripePaymentIntentId as string | undefined,
+  invoiceNumber: (record.invoiceNumber as string) || undefined,
   paidAt: record.paidAt ? new Date(record.paidAt as string) : undefined,
   cancelledAt: record.cancelledAt ? new Date(record.cancelledAt as string) : undefined,
   createdAt: new Date(record.created as string),
