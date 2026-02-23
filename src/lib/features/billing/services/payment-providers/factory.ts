@@ -1,5 +1,13 @@
-import { getStripeSettings, isStripeConfigured } from '$lib/server/app-settings'
+import {
+  getHelloAssoSettings,
+  getStripeSettings,
+  isHelloAssoConfigured,
+  isStripeConfigured
+} from '$lib/server/app-settings'
 import type PocketBase from 'pocketbase'
+import { createHelloAssoApiClient } from '../helloasso/api-client'
+import { createHelloAssoPaymentProvider } from '../helloasso/helloasso-provider'
+import { createHelloAssoTokenManager } from '../helloasso/token-manager'
 import { createNoneProvider } from './none-provider'
 import { createStripePaymentProvider } from './stripe-provider'
 import type { PaymentProvider, PaymentProviderType } from './types'
@@ -36,8 +44,21 @@ export async function getPaymentProvider(pb: PocketBase): Promise<PaymentProvide
     }
 
     case 'helloasso': {
-      // HelloAsso provider will be implemented in Phase 3
-      throw new Error('HelloAsso provider not yet implemented')
+      const haSettings = await getHelloAssoSettings(pb)
+      if (!isHelloAssoConfigured(haSettings)) {
+        return createNoneProvider()
+      }
+      const tokenManager = createHelloAssoTokenManager(
+        haSettings.helloassoClientId,
+        haSettings.helloassoClientSecret,
+        haSettings.helloassoApiBase
+      )
+      const apiClient = createHelloAssoApiClient(
+        tokenManager,
+        haSettings.helloassoOrgSlug,
+        haSettings.helloassoApiBase
+      )
+      return createHelloAssoPaymentProvider(apiClient)
     }
 
     case 'none':

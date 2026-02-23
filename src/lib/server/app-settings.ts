@@ -474,3 +474,122 @@ export async function saveDiscordSettings(
     await pb.collection('app_settings').create(data)
   }
 }
+
+// =============================================================================
+// HelloAsso Settings
+// =============================================================================
+
+const HELLOASSO_API_BASE = 'https://api.helloasso.com'
+const HELLOASSO_SANDBOX_API_BASE = 'https://api.helloasso-sandbox.com'
+
+export interface HelloAssoSettings {
+  helloassoClientId: string
+  helloassoClientSecret: string
+  helloassoOrgSlug: string
+  helloassoEnabled: boolean
+  helloassoSandbox: boolean
+  helloassoApiBase: string
+}
+
+const DEFAULT_HELLOASSO: HelloAssoSettings = {
+  helloassoClientId: '',
+  helloassoClientSecret: '',
+  helloassoOrgSlug: '',
+  helloassoEnabled: false,
+  helloassoSandbox: true,
+  helloassoApiBase: HELLOASSO_SANDBOX_API_BASE
+}
+
+export function isHelloAssoConfigured(settings: HelloAssoSettings): boolean {
+  return !!(
+    settings.helloassoEnabled &&
+    settings.helloassoClientId &&
+    settings.helloassoClientSecret &&
+    settings.helloassoOrgSlug
+  )
+}
+
+export async function getHelloAssoSettings(pb: PocketBase): Promise<HelloAssoSettings> {
+  try {
+    const records = await pb.collection('app_settings').getList(1, 1)
+    if (records.items.length === 0) {
+      return DEFAULT_HELLOASSO
+    }
+    const record = records.items[0]
+    const sandbox = record.helloassoSandbox !== false
+    return {
+      helloassoClientId: (record.helloassoClientId as string) || '',
+      helloassoClientSecret: (record.helloassoClientSecret as string) || '',
+      helloassoOrgSlug: (record.helloassoOrgSlug as string) || '',
+      helloassoEnabled: record.helloassoEnabled === true,
+      helloassoSandbox: sandbox,
+      helloassoApiBase: sandbox ? HELLOASSO_SANDBOX_API_BASE : HELLOASSO_API_BASE
+    }
+  } catch {
+    return DEFAULT_HELLOASSO
+  }
+}
+
+export async function saveHelloAssoSettings(
+  pb: PocketBase,
+  settings: Partial<HelloAssoSettings>
+): Promise<void> {
+  const records = await pb.collection('app_settings').getList(1, 1)
+  const data: Record<string, unknown> = {}
+
+  if (settings.helloassoClientId !== undefined) data.helloassoClientId = settings.helloassoClientId
+  if (settings.helloassoClientSecret !== undefined)
+    data.helloassoClientSecret = settings.helloassoClientSecret
+  if (settings.helloassoOrgSlug !== undefined) data.helloassoOrgSlug = settings.helloassoOrgSlug
+  if (settings.helloassoEnabled !== undefined) data.helloassoEnabled = settings.helloassoEnabled
+  if (settings.helloassoSandbox !== undefined) data.helloassoSandbox = settings.helloassoSandbox
+
+  if (records.items.length > 0) {
+    await pb.collection('app_settings').update(records.items[0].id, data)
+  } else {
+    await pb.collection('app_settings').create(data)
+  }
+}
+
+export async function testHelloAssoConnection(
+  clientId: string,
+  clientSecret: string,
+  orgSlug: string,
+  sandbox: boolean
+): Promise<{ success: boolean; message: string }> {
+  if (!clientId || !clientSecret || !orgSlug) {
+    return {
+      success: false,
+      message: 'Client ID, Client Secret, and Organization Slug are required'
+    }
+  }
+
+  const apiBase = sandbox ? HELLOASSO_SANDBOX_API_BASE : HELLOASSO_API_BASE
+
+  try {
+    const response = await fetch(`${apiBase}/oauth2/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'client_credentials'
+      }).toString()
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      return { success: false, message: `Authentication failed (${response.status}): ${text}` }
+    }
+
+    return {
+      success: true,
+      message: `Connected to HelloAsso${sandbox ? ' (sandbox)' : ''} for organization "${orgSlug}"`
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Connection failed'
+    }
+  }
+}
