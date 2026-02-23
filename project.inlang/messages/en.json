@@ -3144,5 +3144,23 @@
   "error_schedule_not_available": "Schedule not available",
   "error_edition_no_event": "Edition has no associated event",
 
-  "sponsoring_invoice_download": "Download Invoice"
+  "sponsoring_invoice_download": "Download Invoice",
+
+  "legal_terms_of_sale": "Terms of Sale",
+  "legal_code_of_conduct": "Code of Conduct",
+  "legal_privacy_policy": "Privacy Policy",
+  "legal_accept_prefix": "I accept the",
+  "legal_view_document": "View",
+  "legal_must_accept": "You must accept all required documents before proceeding.",
+  "legal_documents_title": "Legal Documents",
+  "legal_documents_description": "Configure legal documents displayed during checkout. Use Markdown formatting.",
+  "legal_documents_saved": "Legal documents updated successfully",
+  "legal_generate_template": "Generate from template",
+  "legal_generate_confirm": "This will replace the current content. Continue?",
+  "legal_status_configured": "Configured",
+  "legal_status_not_configured": "Not configured",
+  "legal_back_to_list": "Back to document list",
+  "legal_save": "Save",
+  "legal_editor": "Editor",
+  "legal_preview": "Preview"
 }

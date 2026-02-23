@@ -178,9 +178,9 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   const tableRight = PAGE_WIDTH - MARGIN
   const tableWidth = tableRight - tableLeft
   const descCol = tableLeft + 10
-  const qtyCol = tableLeft + 280
-  const unitCol = tableLeft + 340
-  const amountCol = tableRight - 80
+  const qtyCol = tableLeft + 220
+  const unitCol = tableLeft + 300
+  const amountCol = tableLeft + 410
 
   page.drawRectangle({
     x: tableLeft,
@@ -270,8 +270,9 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   const vatCents = totalCents - totalCentsHt
 
   // Subtotal HT
+  const summaryLabelX = tableLeft + 210
   page.drawText(PDF_LABELS.SUBTOTAL_HT, {
-    x: amountCol - 80,
+    x: summaryLabelX,
     y,
     size: 10,
     font: regular,
@@ -288,7 +289,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
 
   // VAT line
   page.drawText(PDF_LABELS.VAT(vatRate), {
-    x: amountCol - 80,
+    x: summaryLabelX,
     y,
     size: 10,
     font: regular,
@@ -305,24 +306,24 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
 
   // Separator before total
   page.drawRectangle({
-    x: amountCol - 80,
+    x: summaryLabelX,
     y: y + 3,
-    width: PAGE_WIDTH - MARGIN - (amountCol - 80),
+    width: PAGE_WIDTH - MARGIN - summaryLabelX,
     height: 1,
     color: rgb(0.7, 0.7, 0.7)
   })
 
   // Net to deduct (TTC)
   page.drawText(PDF_LABELS.NET_TO_DEDUCT, {
-    x: amountCol - 100,
-    y: y - 5,
+    x: summaryLabelX,
+    y: y - 2,
     size: 12,
     font: bold,
     color: TEXT_COLOR
   })
   page.drawText(`-${formatPrice(totalCents, data.order.currency)}`, {
     x: amountCol,
-    y: y - 5,
+    y: y - 2,
     size: 12,
     font: bold,
     color: REFUND_COLOR

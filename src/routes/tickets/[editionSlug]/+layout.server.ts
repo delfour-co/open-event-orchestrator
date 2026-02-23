@@ -23,7 +23,10 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
     startDate: new Date(editionRecord.startDate as string),
     endDate: new Date(editionRecord.endDate as string),
     venue: editionRecord.venue as string | undefined,
-    city: editionRecord.city as string | undefined
+    city: editionRecord.city as string | undefined,
+    termsOfSale: (editionRecord.termsOfSale as string) || '',
+    codeOfConduct: (editionRecord.codeOfConduct as string) || '',
+    privacyPolicy: (editionRecord.privacyPolicy as string) || ''
   }
 
   // Load active ticket types

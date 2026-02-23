@@ -1,7 +1,7 @@
+import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { getAvailableSlots, hasAvailableSlots } from '$lib/features/sponsoring/domain'
 import type { SponsorPackage } from '$lib/features/sponsoring/domain'
 import { createPackageRepository } from '$lib/features/sponsoring/infra'
-import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type PocketBase from 'pocketbase'
 import { z } from 'zod'
@@ -247,10 +247,19 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
     throw error(400, 'This package is sold out')
   }
 
+  // Load legal documents from edition record
+  const editionRecords = await locals.pb.collection('editions').getList(1, 1, {
+    filter: `slug = "${editionSlug}"`
+  })
+  const editionRecord = editionRecords.items[0]
+
   return {
     edition: { id: edition.id, name: edition.name, slug: edition.slug },
     eventName: edition.eventName,
-    package: { ...pkg, availableSlots: getAvailableSlots(pkg, currentCount) }
+    package: { ...pkg, availableSlots: getAvailableSlots(pkg, currentCount) },
+    termsOfSale: (editionRecord?.termsOfSale as string) || '',
+    codeOfConduct: (editionRecord?.codeOfConduct as string) || '',
+    privacyPolicy: (editionRecord?.privacyPolicy as string) || ''
   }
 }
 
@@ -278,6 +287,30 @@ export const actions: Actions = {
     const result = checkoutSchema.safeParse(rawData)
     if (!result.success) {
       return fail(400, { errors: result.error.flatten().fieldErrors, values: rawData })
+    }
+
+    // Validate legal document consent
+    const editionsForConsent = await locals.pb.collection('editions').getList(1, 1, {
+      filter: `slug = "${params.editionSlug}"`
+    })
+    if (editionsForConsent.items.length > 0) {
+      const ed = editionsForConsent.items[0]
+      const legalFields = [
+        { key: 'termsOfSale', value: ed.termsOfSale as string },
+        { key: 'codeOfConduct', value: ed.codeOfConduct as string },
+        { key: 'privacyPolicy', value: ed.privacyPolicy as string }
+      ]
+      for (const field of legalFields) {
+        if (field.value?.trim()) {
+          const accepted = formData.get(`${field.key}Accepted`) as string
+          if (accepted !== 'on') {
+            return fail(400, {
+              error: 'You must accept all required documents before proceeding.',
+              values: rawData
+            })
+          }
+        }
+      }
     }
 
     const data = result.data
@@ -329,7 +362,12 @@ async function handleDevModeCheckout(
 }
 
 async function handleProviderCheckout(
-  provider: { type: string; createCheckout: (input: import('$lib/features/billing/services/payment-providers/types').CreateCheckoutInput) => Promise<import('$lib/features/billing/services/payment-providers/types').CheckoutResult> },
+  provider: {
+    type: string
+    createCheckout: (
+      input: import('$lib/features/billing/services/payment-providers/types').CreateCheckoutInput
+    ) => Promise<import('$lib/features/billing/services/payment-providers/types').CheckoutResult>
+  },
   edition: EditionInfo,
   data: CheckoutData,
   pkg: SponsorPackage,

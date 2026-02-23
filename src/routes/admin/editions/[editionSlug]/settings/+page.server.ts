@@ -15,6 +15,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         expand: 'eventId'
       })
 
+    const eventRecord = edition.expand?.eventId as Record<string, unknown> | undefined
+    const eventName = eventRecord ? (eventRecord.name as string) : 'Unknown Event'
+
     return {
       edition: {
         id: edition.id as string,
@@ -28,9 +31,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         country: (edition.country as string) || '',
         status: edition.status as string,
         eventId: edition.eventId as string,
-        eventName: edition.expand?.eventId
-          ? ((edition.expand.eventId as Record<string, unknown>).name as string)
-          : 'Unknown Event'
+        eventName
       }
     }
   } catch {

@@ -13,7 +13,7 @@ Open Event Orchestrator is an all-in-one open-source platform for event manageme
 - **Testing**: Vitest (unit) + Playwright (E2E)
 - **Linting**: Biome
 - **Containerization**: Docker Compose
-- **Payments**: Stripe (Checkout Sessions)
+- **Payments**: Stripe + HelloAsso (via provider abstraction layer — see `docs/payments.md`)
 - **Email**: Nodemailer (SMTP) + Mailpit (local dev)
 - **QR Codes**: qrcode (generation) + html5-qrcode (scanning)
 
@@ -40,7 +40,7 @@ src/
 │   │   │   ├── domain/     # TicketType, Order, OrderItem, Ticket
 │   │   │   ├── usecases/   # create-order, complete-order, cancel-order, refund-order, check-in-ticket
 │   │   │   ├── infra/      # PocketBase repositories for billing entities
-│   │   │   └── services/   # Stripe, QR code generation, email templates
+│   │   │   └── services/   # Payment providers (Stripe, HelloAsso), PDF invoices, QR codes
 │   │   ├── crm/
 │   │   ├── budget/
 │   │   │   ├── domain/     # EditionBudget, BudgetCategory, BudgetTransaction
@@ -57,7 +57,7 @@ src/
 ├── routes/
 │   ├── admin/              # Admin pages (billing, planning, cfp, budget, organizations)
 │   ├── tickets/            # Public ticket purchase pages
-│   ├── api/                # API routes (Stripe webhook, etc.)
+│   ├── api/                # API routes (payment webhooks, etc.)
 │   └── auth/               # Authentication (login, register)
 └── tests/
     └── e2e/                # Playwright E2E tests
@@ -194,14 +194,20 @@ pnpm format
 | PocketBase | 8090 | Backend API + admin UI |
 | Mailpit | 8025 | Email testing web UI |
 | Mailpit SMTP | 1025 | SMTP server for local email capture |
-| Stripe CLI | - | Webhook forwarding from Stripe test mode |
+| Stripe CLI | - | Webhook forwarding from Stripe test mode (profile: `stripe`) |
 
-### Stripe Testing
+### Payment Testing
 
-Stripe testing uses the real Stripe API in test mode (free, no charges).
+The app supports two payment providers: **Stripe** and **HelloAsso** (configured via Admin UI).
+See `docs/payments.md` for complete setup and configuration guide.
+
+**Stripe**: Uses real Stripe API in test mode (free, no charges).
 Get test keys at https://dashboard.stripe.com/test/apikeys and add them to `.env`.
-The Stripe CLI (`docker compose up stripe-cli`) forwards webhook events to your local app.
+The Stripe CLI (`docker compose --profile stripe up`) forwards webhook events to your local app.
 Use test card `4242 4242 4242 4242` with any future expiry and CVC.
+
+**HelloAsso**: Configured entirely via Admin UI (Client ID, Client Secret, Organization Slug).
+Use the sandbox API base `https://api.helloasso-sandbox.com` for testing.
 
 ### Email Testing
 

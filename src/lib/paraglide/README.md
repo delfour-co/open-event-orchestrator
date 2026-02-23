@@ -2,7 +2,7 @@
 
 > Auto-generated i18n message functions. Import `messages.js` to use translated strings.
 
-Compiled from: `/home/kdelfour/Workspace/Professionel/Delfour.co/webapp--open_event_orchestrator/project.inlang`
+Compiled from: `./project.inlang`
 
 
 ## What is this folder?

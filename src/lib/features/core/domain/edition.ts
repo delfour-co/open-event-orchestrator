@@ -19,6 +19,9 @@ export const editionSchema = z.object({
   city: z.string().max(100).optional(),
   country: z.string().max(100).optional(),
   status: editionStatusSchema,
+  termsOfSale: z.string().optional(),
+  codeOfConduct: z.string().optional(),
+  privacyPolicy: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })

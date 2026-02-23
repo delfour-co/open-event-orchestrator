@@ -30,6 +30,9 @@ importers:
       d3-shape:
         specifier: ^3.2.0
         version: 3.2.0
+      dompurify:
+        specifier: ^3.3.1
+        version: 3.3.1
       html5-qrcode:
         specifier: ^2.3.8
         version: 2.3.8
@@ -42,6 +45,9 @@ importers:
       lucide-svelte:
         specifier: ^0.563.0
         version: 0.563.0(svelte@5.51.3)
+      marked:
+        specifier: ^17.0.3
+        version: 17.0.3
       nodemailer:
         specifier: ^8.0.1
         version: 8.0.1
@@ -112,6 +118,9 @@ importers:
       '@testing-library/svelte':
         specifier: ^5.3.1
         version: 5.3.1(svelte@5.51.3)(vite@6.4.1(@types/node@22.19.11)(jiti@1.21.7)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2))(vitest@2.1.9(@types/node@22.19.11)(jiti@1.21.7)(jsdom@25.0.1)(lightningcss@1.31.1)(tsx@4.21.0)(yaml@2.8.2))
+      '@types/dompurify':
+        specifier: ^3.2.0
+        version: 3.2.0
       '@types/node':
         specifier: ^22.19.11
         version: 22.19.11
@@ -1229,6 +1238,10 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
+  '@types/dompurify@3.2.0':
+    resolution: {integrity: sha512-Fgg31wv9QbLDA0SpTOXO3MaxySc4DKGLi8sna4/Utjo4r3ZRPdCt4UQee8BWr+Q5z21yifghREPJGYaEOEIACg==}
+    deprecated: This is a stub types definition. dompurify provides its own type definitions, so you do not need this installed.
+
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -1800,6 +1813,9 @@ packages:
 
   dom-accessibility-api@0.6.3:
     resolution: {integrity: sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==}
+
+  dompurify@3.3.1:
+    resolution: {integrity: sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==}
 
   dot-prop@5.3.0:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
@@ -2428,6 +2444,11 @@ packages:
   make-dir@4.0.0:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
     engines: {node: '>=10'}
+
+  marked@17.0.3:
+    resolution: {integrity: sha512-jt1v2ObpyOKR8p4XaUJVk3YWRJ5n+i4+rjQopxvV32rSndTJXvIzuUdWWIy/1pFQMkQmvTXawzDNqOH/CUmx6A==}
+    engines: {node: '>= 20'}
+    hasBin: true
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -4323,6 +4344,10 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/dompurify@3.2.0':
+    dependencies:
+      dompurify: 3.3.1
+
   '@types/estree@1.0.8': {}
 
   '@types/mdx@2.0.13': {}
@@ -4854,6 +4879,10 @@ snapshots:
   dom-accessibility-api@0.5.16: {}
 
   dom-accessibility-api@0.6.3: {}
+
+  dompurify@3.3.1:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
 
   dot-prop@5.3.0:
     dependencies:
@@ -5524,6 +5553,8 @@ snapshots:
   make-dir@4.0.0:
     dependencies:
       semver: 7.7.4
+
+  marked@17.0.3: {}
 
   math-intrinsics@1.1.0: {}
 

@@ -3144,5 +3144,23 @@
   "error_schedule_not_available": "Programme non disponible",
   "error_edition_no_event": "L'edition n'a pas d'evenement associe",
 
-  "sponsoring_invoice_download": "Telecharger la facture"
+  "sponsoring_invoice_download": "Telecharger la facture",
+
+  "legal_terms_of_sale": "Conditions Generales de Vente",
+  "legal_code_of_conduct": "Code de Conduite",
+  "legal_privacy_policy": "Politique de Confidentialite",
+  "legal_accept_prefix": "J'accepte les",
+  "legal_view_document": "Consulter",
+  "legal_must_accept": "Vous devez accepter tous les documents requis avant de continuer.",
+  "legal_documents_title": "Documents Legaux",
+  "legal_documents_description": "Configurez les documents legaux affiches lors du paiement. Utilisez le format Markdown.",
+  "legal_documents_saved": "Documents legaux mis a jour avec succes",
+  "legal_generate_template": "Generer depuis le template",
+  "legal_generate_confirm": "Cela remplacera le contenu actuel. Continuer ?",
+  "legal_status_configured": "Configure",
+  "legal_status_not_configured": "Non configure",
+  "legal_back_to_list": "Retour a la liste des documents",
+  "legal_save": "Sauvegarder",
+  "legal_editor": "Editeur",
+  "legal_preview": "Apercu"
 }

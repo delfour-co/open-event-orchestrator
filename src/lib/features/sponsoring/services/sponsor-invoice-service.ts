@@ -212,7 +212,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   const tableRight = PAGE_WIDTH - MARGIN
   const tableWidth = tableRight - tableLeft
   const descCol = tableLeft + 10
-  const amountCol = tableRight - 100
+  const amountCol = tableLeft + 410
 
   page.drawRectangle({
     x: tableLeft,
@@ -289,8 +289,9 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   y -= 20
 
   // Subtotal HT
+  const summaryLabelX = tableLeft + 210
   page.drawText(PDF_LABELS.SUBTOTAL_HT, {
-    x: amountCol - 80,
+    x: summaryLabelX,
     y,
     size: 10,
     font: regular,
@@ -307,7 +308,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
 
   // VAT line
   page.drawText(PDF_LABELS.VAT(effectiveVatRate), {
-    x: amountCol - 80,
+    x: summaryLabelX,
     y,
     size: 10,
     font: regular,
@@ -324,24 +325,24 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
 
   // Separator before total
   page.drawRectangle({
-    x: amountCol - 80,
+    x: summaryLabelX,
     y: y + 3,
-    width: PAGE_WIDTH - MARGIN - (amountCol - 80),
+    width: PAGE_WIDTH - MARGIN - summaryLabelX,
     height: 1,
     color: rgb(0.7, 0.7, 0.7)
   })
 
   // Total TTC
   page.drawText(PDF_LABELS.TOTAL_TTC, {
-    x: amountCol - 80,
-    y: y - 5,
+    x: summaryLabelX,
+    y: y - 2,
     size: 12,
     font: bold,
     color: TEXT_COLOR
   })
   page.drawText(formattedTotal, {
     x: amountCol,
-    y: y - 5,
+    y: y - 2,
     size: 12,
     font: bold,
     color: PRIMARY_COLOR

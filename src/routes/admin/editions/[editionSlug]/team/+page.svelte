@@ -11,6 +11,7 @@ import {
   type SocialLink,
   getSocialIcon
 } from '$lib/features/core/domain/team-member'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
@@ -189,32 +190,53 @@ const teamNames = $derived(() => {
 
 <div class="space-y-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <a href="/admin/editions/{data.edition.slug}/settings">
-        <Button variant="ghost" size="icon">
-          <ArrowLeft class="h-4 w-4" />
-        </Button>
-      </a>
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight">Team Members</h2>
-        <p class="text-muted-foreground">
-          Manage the team for {data.edition.name}
-        </p>
-      </div>
-    </div>
-    <div class="flex gap-2">
-      {#if data.orgMembers.length > 0}
-        <Button variant="outline" onclick={() => (showImport = !showImport)}>
-          <Users class="mr-2 h-4 w-4" />
-          Import from Org ({data.orgMembers.length})
-        </Button>
-      {/if}
-      <Button onclick={openNewForm}>
-        <UserPlus class="mr-2 h-4 w-4" />
-        Add Member
+  <div class="flex items-center gap-4">
+    <a href="/admin/events">
+      <Button variant="ghost" size="icon">
+        <ArrowLeft class="h-4 w-4" />
       </Button>
+    </a>
+    <div>
+      <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
+      <p class="text-muted-foreground">
+        {data.edition.eventName}
+      </p>
     </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+    <a
+      href="/admin/editions/{data.edition.slug}/settings"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      {m.nav_settings()}
+    </a>
+    <span
+      class="rounded-md px-3 py-1.5 text-sm font-medium bg-background shadow-sm"
+    >
+      {m.admin_events_team_members()}
+    </span>
+    <a
+      href="/admin/editions/{data.edition.slug}/settings/legal-documents"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      {m.legal_documents_title()}
+    </a>
+  </nav>
+
+  <!-- Actions -->
+  <div class="flex justify-end gap-2">
+    {#if data.orgMembers.length > 0}
+      <Button variant="outline" onclick={() => (showImport = !showImport)}>
+        <Users class="mr-2 h-4 w-4" />
+        Import from Org ({data.orgMembers.length})
+      </Button>
+    {/if}
+    <Button onclick={openNewForm}>
+      <UserPlus class="mr-2 h-4 w-4" />
+      Add Member
+    </Button>
   </div>
 
   {#if form?.error}

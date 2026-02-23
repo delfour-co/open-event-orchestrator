@@ -24,6 +24,9 @@ const mapToEdition = (record: RecordModel): Edition => ({
   city: record.city || undefined,
   country: record.country || undefined,
   status: record.status,
+  termsOfSale: record.termsOfSale || undefined,
+  codeOfConduct: record.codeOfConduct || undefined,
+  privacyPolicy: record.privacyPolicy || undefined,
   createdAt: new Date(record.created),
   updatedAt: new Date(record.updated)
 })

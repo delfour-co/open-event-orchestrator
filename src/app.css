@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   /* Colors - Using CSS custom properties for theming */

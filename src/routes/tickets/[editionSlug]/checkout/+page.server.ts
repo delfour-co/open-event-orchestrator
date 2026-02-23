@@ -66,6 +66,27 @@ export const actions: Actions = {
       return fail(400, { error: 'All fields are required' })
     }
 
+    // Validate legal document consent
+    const editionsForConsent = await locals.pb.collection('editions').getList(1, 1, {
+      filter: `slug = "${params.editionSlug}"`
+    })
+    if (editionsForConsent.items.length > 0) {
+      const ed = editionsForConsent.items[0]
+      const legalFields = [
+        { key: 'termsOfSale', value: ed.termsOfSale as string },
+        { key: 'codeOfConduct', value: ed.codeOfConduct as string },
+        { key: 'privacyPolicy', value: ed.privacyPolicy as string }
+      ]
+      for (const field of legalFields) {
+        if (field.value?.trim()) {
+          const accepted = formData.get(`${field.key}Accepted`) as string
+          if (accepted !== 'on') {
+            return fail(400, { error: 'You must accept all required documents before proceeding.' })
+          }
+        }
+      }
+    }
+
     let items: Array<{ ticketTypeId: string; quantity: number }>
     try {
       items = JSON.parse(itemsJson)

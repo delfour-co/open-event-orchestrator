@@ -6,6 +6,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import * as m from '$lib/paraglide/messages'
 import { AlertTriangle, ArrowLeft, Loader2, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -44,6 +45,27 @@ const statuses = ['draft', 'published', 'archived'] as const
       </p>
     </div>
   </div>
+
+  <!-- Tab Navigation -->
+  <nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
+    <span
+      class="rounded-md px-3 py-1.5 text-sm font-medium bg-background shadow-sm"
+    >
+      {m.nav_settings()}
+    </span>
+    <a
+      href="/admin/editions/{data.edition.slug}/team"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      {m.admin_events_team_members()}
+    </a>
+    <a
+      href="/admin/editions/{data.edition.slug}/settings/legal-documents"
+      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
+    >
+      {m.legal_documents_title()}
+    </a>
+  </nav>
 
   {#if form?.error}
     <div class="rounded-md border border-destructive bg-destructive/10 p-4 text-destructive">
@@ -198,27 +220,6 @@ const statuses = ['draft', 'published', 'archived'] as const
           </Button>
         </div>
       </form>
-    </Card.Content>
-  </Card.Root>
-
-  <!-- Quick Links -->
-  <Card.Root>
-    <Card.Header>
-      <Card.Title>Related Settings</Card.Title>
-      <Card.Description>Manage other aspects of this edition</Card.Description>
-    </Card.Header>
-    <Card.Content>
-      <div class="flex flex-wrap gap-2">
-        <a href="/admin/editions/{data.edition.slug}/team">
-          <Button variant="outline">Team Members</Button>
-        </a>
-        <a href="/admin/cfp/{data.edition.slug}/settings">
-          <Button variant="outline">CFP Settings</Button>
-        </a>
-        <a href="/admin/cfp/{data.edition.slug}/submissions">
-          <Button variant="outline">View Submissions</Button>
-        </a>
-      </div>
     </Card.Content>
   </Card.Root>
 

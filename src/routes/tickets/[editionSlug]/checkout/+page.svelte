@@ -4,6 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import LegalConsent from '$lib/components/ui/legal-consent.svelte'
 import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Loader2, Lock } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
@@ -15,6 +16,21 @@ interface Props {
 
 const { data, form }: Props = $props()
 let isSubmitting = $state(false)
+let allLegalAccepted = $state(false)
+
+const legalDocuments = $derived([
+  { key: 'termsOfSale', title: m.legal_terms_of_sale(), content: data.edition.termsOfSale ?? '' },
+  {
+    key: 'codeOfConduct',
+    title: m.legal_code_of_conduct(),
+    content: data.edition.codeOfConduct ?? ''
+  },
+  {
+    key: 'privacyPolicy',
+    title: m.legal_privacy_policy(),
+    content: data.edition.privacyPolicy ?? ''
+  }
+])
 
 const formatPrice = (priceInCents: number, currency: string) => {
   if (priceInCents === 0) return m.billing_free()
@@ -137,11 +153,13 @@ const itemsJson = JSON.stringify(
 							</div>
 						{/if}
 
+						<LegalConsent documents={legalDocuments} bind:allAccepted={allLegalAccepted} />
+
 						<Button
 							type="submit"
 							class="w-full gap-2"
 							size="lg"
-							disabled={isSubmitting}
+							disabled={isSubmitting || !allLegalAccepted}
 						>
 							{#if isSubmitting}
 								<Loader2 class="h-4 w-4 animate-spin" />
