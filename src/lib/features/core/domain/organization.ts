@@ -19,6 +19,9 @@ export const organizationSchema = z.object({
   city: z.string().optional(),
   postalCode: z.string().optional(),
   country: z.string().optional(),
+  legalForm: z.string().optional(),
+  rcsNumber: z.string().optional(),
+  shareCapital: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })
@@ -39,6 +42,9 @@ export type CreateOrganizationInput = {
   city?: string
   postalCode?: string
   country?: string
+  legalForm?: string
+  rcsNumber?: string
+  shareCapital?: string
 }
 
 export type UpdateOrganizationInput = Partial<CreateOrganizationInput>

@@ -84,6 +84,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         contactEmail: (organization.contactEmail as string) || '',
         vatRate: (organization.vatRate as number) ?? 20,
         legalName: (organization.legalName as string) || '',
+        legalForm: (organization.legalForm as string) || '',
+        rcsNumber: (organization.rcsNumber as string) || '',
+        shareCapital: (organization.shareCapital as string) || '',
         siret: (organization.siret as string) || '',
         vatNumber: (organization.vatNumber as string) || '',
         address: (organization.address as string) || '',
@@ -121,6 +124,9 @@ export const actions: Actions = {
     const vatRateRaw = formData.get('vatRate') as string
     const vatRate = vatRateRaw !== null && vatRateRaw !== '' ? Number(vatRateRaw) : undefined
     const legalName = formData.get('legalName') as string
+    const legalForm = formData.get('legalForm') as string
+    const rcsNumber = formData.get('rcsNumber') as string
+    const shareCapital = formData.get('shareCapital') as string
     const siret = formData.get('siret') as string
     const vatNumber = formData.get('vatNumber') as string
     const address = formData.get('address') as string
@@ -160,6 +166,9 @@ export const actions: Actions = {
         contactEmail: contactEmail || null,
         vatRate: vatRate !== undefined ? vatRate : null,
         legalName: legalName || null,
+        legalForm: legalForm || null,
+        rcsNumber: rcsNumber || null,
+        shareCapital: shareCapital || null,
         siret: siret || null,
         vatNumber: vatNumber || null,
         address: address || null,

@@ -39,6 +39,9 @@ function buildSellerFromOrg(org: Record<string, unknown>): SellerInfo {
   return {
     name: org.name as string,
     legalName: (org.legalName as string) || undefined,
+    legalForm: (org.legalForm as string) || undefined,
+    rcsNumber: (org.rcsNumber as string) || undefined,
+    shareCapital: (org.shareCapital as string) || undefined,
     siret: (org.siret as string) || undefined,
     vatNumber: (org.vatNumber as string) || undefined,
     address: (org.address as string) || undefined,
@@ -133,13 +136,15 @@ async function sendCheckoutEmails(
 
   const now = new Date()
   const invoiceNumber = await getNextInvoiceNumber(pb, params.organizationId)
+  const invoiceDate = now.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
   const pdfBytes = await generateSponsorInvoicePdf({
     invoiceNumber,
-    invoiceDate: now.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }),
+    invoiceDate,
+    dueDate: invoiceDate,
     eventName: params.eventName,
     sponsorName: params.metadata.companyName,
     legalName: params.metadata.legalName || undefined,

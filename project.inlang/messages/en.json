@@ -2438,6 +2438,9 @@
   "admin_org_settings_city": "City",
   "admin_org_settings_postal_code": "Postal Code",
   "admin_org_settings_country": "Country",
+  "admin_org_settings_legal_form": "Legal Form",
+  "admin_org_settings_rcs_number": "RCS Number",
+  "admin_org_settings_share_capital": "Share Capital",
 
   "admin_events_title": "Events - Open Event Orchestrator",
   "admin_events_heading": "Events",

@@ -10,9 +10,40 @@ export const REFUND_COLOR = rgb(220 / 255, 38 / 255, 38 / 255)
 export const TEXT_COLOR = rgb(0.2, 0.2, 0.2)
 export const MUTED_COLOR = rgb(0.5, 0.5, 0.5)
 
+export const PDF_LABELS = {
+  INVOICE_TITLE: 'FACTURE / INVOICE',
+  CREDIT_NOTE_TITLE: 'AVOIR / CREDIT NOTE',
+  BILL_TO: 'Factur\u00E9 \u00E0 / Bill To:',
+  ISSUED_BY: '\u00C9mis par / Issued by:',
+  DESCRIPTION: 'Description',
+  QTY: 'Qt\u00E9 / Qty',
+  UNIT_PRICE: 'Prix unit. HT / Unit Price',
+  AMOUNT: 'Montant / Amount',
+  SUBTOTAL_HT: 'Sous-total HT / Subtotal:',
+  VAT: (rate: number): string =>
+    rate > 0 ? `TVA / VAT (${rate}%):` : 'TVA / VAT (exon\u00E9r\u00E9e / exempt):',
+  TOTAL_TTC: 'Total TTC / Total:',
+  NET_TO_DEDUCT: 'Net \u00E0 d\u00E9duire TTC / Net to deduct:',
+  STATUS_PAID: 'Statut / Status: PAY\u00C9 / PAID',
+  STATUS_REFUNDED: 'Statut / Status: REMBOURS\u00C9 / REFUNDED',
+  INVOICE_NUMBER: 'Facture n\u00B0 / Invoice #:',
+  DATE: 'Date :',
+  DUE_DATE: '\u00C9ch\u00E9ance / Due:',
+  ORDER_NUMBER: 'Commande n\u00B0 / Order #',
+  CANCELS_INVOICE: 'Annule la facture / Cancels invoice #',
+  DATED: 'du / dated',
+  THANK_PURCHASE: 'Merci pour votre achat ! / Thank you for your purchase!',
+  THANK_SPONSORSHIP: 'Merci pour votre sponsoring ! / Thank you for your sponsorship!',
+  CREDIT_NOTE_FOOTER:
+    'Cet avoir annule et remplace la facture r\u00E9f\u00E9renc\u00E9e. / This credit note cancels and replaces the referenced invoice.'
+} as const
+
 export interface SellerInfo {
   name: string
   legalName?: string
+  legalForm?: string
+  rcsNumber?: string
+  shareCapital?: string
   siret?: string
   vatNumber?: string
   address?: string
@@ -22,6 +53,11 @@ export interface SellerInfo {
   contactEmail?: string
 }
 
+/**
+ * Formats a price from cents to a display string.
+ * @param cents - The price in cents (e.g. 1500 = 15.00)
+ * @param currency - The ISO 4217 currency code (e.g. 'EUR', 'USD')
+ */
 export const formatPrice = (cents: number, currency: string): string => {
   const value = cents / 100
   const symbols: Record<string, string> = { EUR: '\u20AC', USD: '$', GBP: '\u00A3' }
@@ -29,6 +65,11 @@ export const formatPrice = (cents: number, currency: string): string => {
   return `${value.toFixed(2)} ${symbol}`
 }
 
+/**
+ * Formats a decimal currency amount to a display string.
+ * @param amount - The price as a decimal number (e.g. 15.00)
+ * @param currency - The ISO 4217 currency code (e.g. 'EUR', 'USD')
+ */
 export const formatCurrencyAmount = (amount: number, currency: string): string => {
   const symbols: Record<string, string> = { EUR: '\u20AC', USD: '$', GBP: '\u00A3' }
   const symbol = symbols[currency.toUpperCase()] || currency
@@ -49,7 +90,7 @@ export const drawSellerBlock = (
   let currentY = startY
   const x = PAGE_WIDTH / 2
 
-  page.drawText('Issued by:', {
+  page.drawText(PDF_LABELS.ISSUED_BY, {
     x,
     y: currentY,
     size: 11,
@@ -58,7 +99,10 @@ export const drawSellerBlock = (
   })
   currentY -= LINE_HEIGHT
 
-  page.drawText(seller.legalName || seller.name, {
+  // Legal name with legal form (e.g. "ACME SAS")
+  const displayName = seller.legalName || seller.name
+  const nameWithForm = seller.legalForm ? `${displayName} - ${seller.legalForm}` : displayName
+  page.drawText(nameWithForm, {
     x,
     y: currentY,
     size: 10,
@@ -69,6 +113,28 @@ export const drawSellerBlock = (
 
   if (seller.siret) {
     page.drawText(`SIRET: ${seller.siret}`, {
+      x,
+      y: currentY,
+      size: 9,
+      font: fonts.regular,
+      color: TEXT_COLOR
+    })
+    currentY -= LINE_HEIGHT
+  }
+
+  if (seller.rcsNumber) {
+    page.drawText(`RCS: ${seller.rcsNumber}`, {
+      x,
+      y: currentY,
+      size: 9,
+      font: fonts.regular,
+      color: TEXT_COLOR
+    })
+    currentY -= LINE_HEIGHT
+  }
+
+  if (seller.shareCapital) {
+    page.drawText(`Capital social : ${seller.shareCapital}`, {
       x,
       y: currentY,
       size: 9,
@@ -146,7 +212,7 @@ export const drawLegalMentions = (
   let currentY = startY
 
   if (vatRate === 0) {
-    page.drawText('TVA non applicable, art. 293 B du CGI', {
+    page.drawText('TVA non applicable, art. 293 B du CGI / VAT not applicable, art. 293 B CGI', {
       x: MARGIN,
       y: currentY,
       size: 8,
@@ -157,13 +223,28 @@ export const drawLegalMentions = (
   }
 
   currentY -= 5
-  page.drawText('Conditions de paiement : Paiement comptant \u00E0 r\u00E9ception.', {
-    x: MARGIN,
-    y: currentY,
-    size: 7,
-    font: fonts.regular,
-    color: MUTED_COLOR
-  })
+  page.drawText(
+    'Pas d\u2019escompte pour paiement anticip\u00E9. / No discount for early payment.',
+    {
+      x: MARGIN,
+      y: currentY,
+      size: 7,
+      font: fonts.regular,
+      color: MUTED_COLOR
+    }
+  )
+  currentY -= 12
+
+  page.drawText(
+    'Conditions de paiement : Paiement comptant \u00E0 r\u00E9ception. / Payment terms: Due on receipt.',
+    {
+      x: MARGIN,
+      y: currentY,
+      size: 7,
+      font: fonts.regular,
+      color: MUTED_COLOR
+    }
+  )
   currentY -= 12
 
   page.drawText(
@@ -172,13 +253,16 @@ export const drawLegalMentions = (
   )
   currentY -= 12
 
-  page.drawText('ainsi qu\u2019une indemnit\u00E9 forfaitaire de recouvrement de 40 \u20AC.', {
-    x: MARGIN,
-    y: currentY,
-    size: 7,
-    font: fonts.regular,
-    color: MUTED_COLOR
-  })
+  page.drawText(
+    'ainsi qu\u2019une indemnit\u00E9 forfaitaire de recouvrement de 40 \u20AC. / plus a fixed recovery fee of \u20AC40.',
+    {
+      x: MARGIN,
+      y: currentY,
+      size: 7,
+      font: fonts.regular,
+      color: MUTED_COLOR
+    }
+  )
   currentY -= LINE_HEIGHT
 
   return currentY

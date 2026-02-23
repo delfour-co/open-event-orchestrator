@@ -124,6 +124,9 @@ export async function sendOrderConfirmationEmail(
             seller = {
               name: org.name as string,
               legalName: (org.legalName as string) || undefined,
+              legalForm: (org.legalForm as string) || undefined,
+              rcsNumber: (org.rcsNumber as string) || undefined,
+              shareCapital: (org.shareCapital as string) || undefined,
               siret: (org.siret as string) || undefined,
               vatNumber: (org.vatNumber as string) || undefined,
               address: (org.address as string) || undefined,
@@ -144,13 +147,15 @@ export async function sendOrderConfirmationEmail(
 
         if (invoiceNumber) {
           const now = order.paidAt || new Date()
+          const invoiceDate = now.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
           const pdfBytes = await generateOrderInvoicePdf({
             invoiceNumber,
-            invoiceDate: now.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }),
+            invoiceDate,
+            dueDate: invoiceDate,
             eventName,
             order,
             items,
@@ -239,6 +244,9 @@ export async function sendOrderRefundEmail(
             seller = {
               name: org.name as string,
               legalName: (org.legalName as string) || undefined,
+              legalForm: (org.legalForm as string) || undefined,
+              rcsNumber: (org.rcsNumber as string) || undefined,
+              shareCapital: (org.shareCapital as string) || undefined,
               siret: (org.siret as string) || undefined,
               vatNumber: (org.vatNumber as string) || undefined,
               address: (org.address as string) || undefined,

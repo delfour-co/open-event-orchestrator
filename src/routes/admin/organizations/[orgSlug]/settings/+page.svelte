@@ -105,6 +105,18 @@ const getRoleBadgeColor = (role: string) => {
         }}
         class="space-y-4"
       >
+        <!-- Hidden fields to preserve legal data -->
+        <input type="hidden" name="legalName" value={data.organization.legalName} />
+        <input type="hidden" name="legalForm" value={data.organization.legalForm} />
+        <input type="hidden" name="rcsNumber" value={data.organization.rcsNumber} />
+        <input type="hidden" name="shareCapital" value={data.organization.shareCapital} />
+        <input type="hidden" name="siret" value={data.organization.siret} />
+        <input type="hidden" name="vatNumber" value={data.organization.vatNumber} />
+        <input type="hidden" name="address" value={data.organization.address} />
+        <input type="hidden" name="city" value={data.organization.city} />
+        <input type="hidden" name="postalCode" value={data.organization.postalCode} />
+        <input type="hidden" name="country" value={data.organization.country} />
+
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
             <Label for="org-name">Name</Label>
@@ -241,12 +253,33 @@ const getRoleBadgeColor = (role: string) => {
             />
           </div>
           <div class="space-y-2">
+            <Label for="org-legal-form">{m.admin_org_settings_legal_form()}</Label>
+            <Input
+              id="org-legal-form"
+              name="legalForm"
+              value={data.organization.legalForm}
+              placeholder="SAS"
+            />
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
             <Label for="org-siret">{m.admin_org_settings_siret()}</Label>
             <Input
               id="org-siret"
               name="siret"
               value={data.organization.siret}
               placeholder="123 456 789 00012"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="org-rcs-number">{m.admin_org_settings_rcs_number()}</Label>
+            <Input
+              id="org-rcs-number"
+              name="rcsNumber"
+              value={data.organization.rcsNumber}
+              placeholder="Paris B 123 456 789"
             />
           </div>
         </div>
@@ -259,6 +292,15 @@ const getRoleBadgeColor = (role: string) => {
               name="vatNumber"
               value={data.organization.vatNumber}
               placeholder="FR12345678901"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="org-share-capital">{m.admin_org_settings_share_capital()}</Label>
+            <Input
+              id="org-share-capital"
+              name="shareCapital"
+              value={data.organization.shareCapital}
+              placeholder="10 000 EUR"
             />
           </div>
         </div>

@@ -16,6 +16,9 @@ function buildSellerFromOrg(org: Record<string, unknown>): SellerInfo {
   return {
     name: org.name as string,
     legalName: (org.legalName as string) || undefined,
+    legalForm: (org.legalForm as string) || undefined,
+    rcsNumber: (org.rcsNumber as string) || undefined,
+    shareCapital: (org.shareCapital as string) || undefined,
     siret: (org.siret as string) || undefined,
     vatNumber: (org.vatNumber as string) || undefined,
     address: (org.address as string) || undefined,
@@ -87,13 +90,15 @@ export const GET: RequestHandler = async ({ params, url, locals, cookies }) => {
   }
 
   const paidDate = es.paidAt ? new Date(es.paidAt) : new Date(es.confirmedAt || es.createdAt)
+  const invoiceDate = paidDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
   const pdfBytes = await generateSponsorInvoicePdf({
     invoiceNumber: es.invoiceNumber,
-    invoiceDate: paidDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }),
+    invoiceDate,
+    dueDate: invoiceDate,
     eventName: ctx.eventName,
     sponsorName: es.sponsor?.name || 'Sponsor',
     legalName: es.sponsor?.legalName,

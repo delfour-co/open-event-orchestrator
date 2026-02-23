@@ -6,6 +6,7 @@ import {
   MUTED_COLOR,
   PAGE_HEIGHT,
   PAGE_WIDTH,
+  PDF_LABELS,
   REFUND_COLOR,
   type SellerInfo,
   TEXT_COLOR,
@@ -56,7 +57,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   y -= 30
 
   // Credit note title
-  page.drawText('AVOIR / CREDIT NOTE', {
+  page.drawText(PDF_LABELS.CREDIT_NOTE_TITLE, {
     x: MARGIN,
     y,
     size: 16,
@@ -72,7 +73,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
     font: regular,
     color: MUTED_COLOR
   })
-  page.drawText(`Date: ${data.creditNoteDate}`, {
+  page.drawText(`${PDF_LABELS.DATE} ${data.creditNoteDate}`, {
     x: PAGE_WIDTH / 2,
     y,
     size: 10,
@@ -83,7 +84,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
 
   // Reference to original invoice
   page.drawText(
-    `Cancels invoice #${data.originalInvoiceNumber} dated ${data.originalInvoiceDate}`,
+    `${PDF_LABELS.CANCELS_INVOICE}${data.originalInvoiceNumber} ${PDF_LABELS.DATED} ${data.originalInvoiceDate}`,
     { x: MARGIN, y, size: 10, font: bold, color: TEXT_COLOR }
   )
   y -= 30
@@ -91,7 +92,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   // Bill To + Seller block
   const billToY = y
 
-  page.drawText('Bill To:', {
+  page.drawText(PDF_LABELS.BILL_TO, {
     x: MARGIN,
     y,
     size: 11,
@@ -119,7 +120,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   })
   y -= LINE_HEIGHT
 
-  page.drawText(`Order #${data.order.orderNumber}`, {
+  page.drawText(`${PDF_LABELS.ORDER_NUMBER}${data.order.orderNumber}`, {
     x: MARGIN,
     y,
     size: 9,
@@ -150,10 +151,28 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
     color: rgb(0.95, 0.95, 0.95)
   })
 
-  page.drawText('Description', { x: descCol, y: y + 2, size: 10, font: bold, color: TEXT_COLOR })
-  page.drawText('Qty', { x: qtyCol, y: y + 2, size: 10, font: bold, color: TEXT_COLOR })
-  page.drawText('Unit Price', { x: unitCol, y: y + 2, size: 10, font: bold, color: TEXT_COLOR })
-  page.drawText('Amount', { x: amountCol, y: y + 2, size: 10, font: bold, color: TEXT_COLOR })
+  page.drawText(PDF_LABELS.DESCRIPTION, {
+    x: descCol,
+    y: y + 2,
+    size: 10,
+    font: bold,
+    color: TEXT_COLOR
+  })
+  page.drawText(PDF_LABELS.QTY, { x: qtyCol, y: y + 2, size: 10, font: bold, color: TEXT_COLOR })
+  page.drawText(PDF_LABELS.UNIT_PRICE, {
+    x: unitCol,
+    y: y + 2,
+    size: 10,
+    font: bold,
+    color: TEXT_COLOR
+  })
+  page.drawText(PDF_LABELS.AMOUNT, {
+    x: amountCol,
+    y: y + 2,
+    size: 10,
+    font: bold,
+    color: TEXT_COLOR
+  })
   y -= 30
 
   // Table rows (negative amounts)
@@ -212,7 +231,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   const vatCents = totalCents - totalCentsHt
 
   // Subtotal HT
-  page.drawText('Subtotal (HT):', {
+  page.drawText(PDF_LABELS.SUBTOTAL_HT, {
     x: amountCol - 80,
     y,
     size: 10,
@@ -229,8 +248,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   y -= LINE_HEIGHT
 
   // VAT line
-  const vatLabel = vatRate > 0 ? `VAT (${vatRate}%):` : 'VAT (exempt):'
-  page.drawText(vatLabel, {
+  page.drawText(PDF_LABELS.VAT(vatRate), {
     x: amountCol - 80,
     y,
     size: 10,
@@ -256,7 +274,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   })
 
   // Net to deduct (TTC)
-  page.drawText('Net to deduct (TTC):', {
+  page.drawText(PDF_LABELS.NET_TO_DEDUCT, {
     x: amountCol - 100,
     y: y - 5,
     size: 12,
@@ -273,7 +291,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   y -= 40
 
   // Status
-  page.drawText('Status: REFUNDED', {
+  page.drawText(PDF_LABELS.STATUS_REFUNDED, {
     x: MARGIN,
     y,
     size: 10,
@@ -286,7 +304,7 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
   drawLegalMentions(page, vatRate, fonts, y)
 
   // Footer
-  page.drawText('This credit note cancels and replaces the referenced invoice.', {
+  page.drawText(PDF_LABELS.CREDIT_NOTE_FOOTER, {
     x: MARGIN,
     y: MARGIN + 10,
     size: 9,

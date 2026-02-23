@@ -391,6 +391,9 @@ export const actions: Actions = {
       const seller = {
         name: organization.name as string,
         legalName: (organization.legalName as string) || undefined,
+        legalForm: (organization.legalForm as string) || undefined,
+        rcsNumber: (organization.rcsNumber as string) || undefined,
+        shareCapital: (organization.shareCapital as string) || undefined,
         siret: (organization.siret as string) || undefined,
         vatNumber: (organization.vatNumber as string) || undefined,
         address: (organization.address as string) || undefined,

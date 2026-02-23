@@ -4,6 +4,7 @@ import {
   MUTED_COLOR,
   PAGE_HEIGHT,
   PAGE_WIDTH,
+  PDF_LABELS,
   PRIMARY_COLOR,
   type SellerInfo,
   TEXT_COLOR,
@@ -18,6 +19,7 @@ export { formatCurrencyAmount }
 export interface SponsorInvoiceData {
   invoiceNumber: string
   invoiceDate: string
+  dueDate?: string
   eventName: string
   sponsorName: string
   legalName?: string
@@ -71,7 +73,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   y -= 30
 
   // Invoice title and number
-  page.drawText('INVOICE', {
+  page.drawText(PDF_LABELS.INVOICE_TITLE, {
     x: MARGIN,
     y,
     size: 16,
@@ -80,7 +82,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   })
   y -= LINE_HEIGHT
 
-  page.drawText(`Invoice #: ${data.invoiceNumber}`, {
+  page.drawText(`${PDF_LABELS.INVOICE_NUMBER} ${data.invoiceNumber}`, {
     x: MARGIN,
     y,
     size: 10,
@@ -88,19 +90,30 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
     color: MUTED_COLOR
   })
 
-  page.drawText(`Date: ${data.invoiceDate}`, {
+  page.drawText(`${PDF_LABELS.DATE} ${data.invoiceDate}`, {
     x: PAGE_WIDTH / 2,
     y,
     size: 10,
     font: regular,
     color: MUTED_COLOR
   })
-  y -= 35
+  y -= LINE_HEIGHT
+
+  // Due date
+  const dueDate = data.dueDate || data.invoiceDate
+  page.drawText(`${PDF_LABELS.DUE_DATE} ${dueDate}`, {
+    x: MARGIN,
+    y,
+    size: 10,
+    font: regular,
+    color: MUTED_COLOR
+  })
+  y -= 25
 
   // Bill To + Seller block side by side
   const billToY = y
 
-  page.drawText('Bill To:', {
+  page.drawText(PDF_LABELS.BILL_TO, {
     x: MARGIN,
     y,
     size: 11,
@@ -197,7 +210,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
     color: rgb(0.95, 0.95, 0.95)
   })
 
-  page.drawText('Description', {
+  page.drawText(PDF_LABELS.DESCRIPTION, {
     x: descCol,
     y: y + 2,
     size: 10,
@@ -205,7 +218,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
     color: TEXT_COLOR
   })
 
-  page.drawText('Amount', {
+  page.drawText(PDF_LABELS.AMOUNT, {
     x: amountCol,
     y: y + 2,
     size: 10,
@@ -256,7 +269,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   y -= 20
 
   // Subtotal HT
-  page.drawText('Subtotal (HT):', {
+  page.drawText(PDF_LABELS.SUBTOTAL_HT, {
     x: amountCol - 80,
     y,
     size: 10,
@@ -273,8 +286,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   y -= LINE_HEIGHT
 
   // VAT line
-  const vatLabel = vatRate > 0 ? `VAT (${vatRate}%):` : 'VAT (exempt):'
-  page.drawText(vatLabel, {
+  page.drawText(PDF_LABELS.VAT(vatRate), {
     x: amountCol - 80,
     y,
     size: 10,
@@ -300,7 +312,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   })
 
   // Total TTC
-  page.drawText('Total (TTC):', {
+  page.drawText(PDF_LABELS.TOTAL_TTC, {
     x: amountCol - 80,
     y: y - 5,
     size: 12,
@@ -319,7 +331,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   y -= 40
 
   // Status
-  page.drawText('Status: PAID', {
+  page.drawText(PDF_LABELS.STATUS_PAID, {
     x: MARGIN,
     y,
     size: 10,
@@ -332,7 +344,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   drawLegalMentions(page, vatRate, fonts, y)
 
   // Footer
-  page.drawText('Thank you for your sponsorship!', {
+  page.drawText(PDF_LABELS.THANK_SPONSORSHIP, {
     x: MARGIN,
     y: MARGIN + 10,
     size: 9,
