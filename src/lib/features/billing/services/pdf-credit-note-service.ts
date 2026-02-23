@@ -127,7 +127,46 @@ export const generateCreditNotePdf = async (data: CreditNoteData): Promise<Uint8
     font: regular,
     color: MUTED_COLOR
   })
-  y -= 30
+  y -= LINE_HEIGHT
+
+  // Billing address
+  if (data.order.billingAddress) {
+    page.drawText(data.order.billingAddress, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  const billingCityLine = [data.order.billingPostalCode, data.order.billingCity]
+    .filter(Boolean)
+    .join(' ')
+  if (billingCityLine) {
+    page.drawText(billingCityLine, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  if (data.order.billingCountry) {
+    page.drawText(data.order.billingCountry, {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: regular,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
+  y -= 15
 
   // Seller block (right side)
   if (data.seller) {

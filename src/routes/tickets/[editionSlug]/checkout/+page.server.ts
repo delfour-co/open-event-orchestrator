@@ -5,9 +5,9 @@ import {
   createTicketTypeRepository
 } from '$lib/features/billing/infra'
 import { generateQrCodeDataUrl } from '$lib/features/billing/services'
+import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
 import { createCreateOrderUseCase } from '$lib/features/billing/usecases/create-order'
-import { getStripeSettings } from '$lib/server/app-settings'
 import { sendOrderConfirmationEmail } from '$lib/server/billing-notifications'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -57,6 +57,10 @@ export const actions: Actions = {
     const firstName = formData.get('firstName') as string
     const lastName = formData.get('lastName') as string
     const itemsJson = formData.get('items') as string
+    const billingAddress = (formData.get('billingAddress') as string) || ''
+    const billingCity = (formData.get('billingCity') as string) || ''
+    const billingPostalCode = (formData.get('billingPostalCode') as string) || ''
+    const billingCountry = (formData.get('billingCountry') as string) || ''
 
     if (!email || !firstName || !lastName) {
       return fail(400, { error: 'All fields are required' })
@@ -105,6 +109,10 @@ export const actions: Actions = {
         firstName,
         lastName,
         currency: 'EUR',
+        billingAddress: billingAddress || undefined,
+        billingCity: billingCity || undefined,
+        billingPostalCode: billingPostalCode || undefined,
+        billingCountry: billingCountry || undefined,
         items
       })
 
@@ -130,10 +138,11 @@ export const actions: Actions = {
         throw redirect(302, `/tickets/${params.editionSlug}/confirmation?order=${result.orderId}`)
       }
 
-      // Paid order: create Stripe checkout session
-      const stripeSettings = await getStripeSettings(locals.pb)
-      if (!stripeSettings.isConfigured) {
-        // No Stripe configured: auto-complete for development
+      // Paid order: use payment provider
+      const provider = await getPaymentProvider(locals.pb)
+
+      if (provider.type === 'none') {
+        // No provider configured: auto-complete for development
         const completeOrder = createCompleteOrderUseCase(
           orderRepo,
           orderItemRepo,
@@ -154,36 +163,38 @@ export const actions: Actions = {
         throw redirect(302, `/tickets/${params.editionSlug}/confirmation?order=${result.orderId}`)
       }
 
-      // Create Stripe checkout session
-      const { createStripeService } = await import('$lib/features/billing/services/stripe-service')
-      const stripe = createStripeService(
-        stripeSettings.stripeSecretKey,
-        stripeSettings.stripeApiBase || undefined
-      )
-
       // Get order items for line items
       const orderItems = await orderItemRepo.findByOrder(result.orderId)
 
-      const session = await stripe.createCheckoutSession({
-        orderId: result.orderId,
-        orderNumber: result.orderNumber,
+      const checkout = await provider.createCheckout({
+        referenceId: result.orderId,
+        referenceNumber: result.orderNumber,
         customerEmail: email,
         lineItems: orderItems.map((item) => ({
           name: item.ticketTypeName,
           unitAmount: item.unitPrice,
-          quantity: item.quantity,
-          currency: 'EUR'
+          quantity: item.quantity
         })),
         successUrl: `${url.origin}/tickets/${params.editionSlug}/confirmation?order=${result.orderId}&session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${url.origin}/tickets/${params.editionSlug}`
+        cancelUrl: `${url.origin}/tickets/${params.editionSlug}`,
+        metadata: {
+          orderId: result.orderId,
+          orderNumber: result.orderNumber
+        },
+        currency: 'EUR'
       })
 
-      // Update order with Stripe session ID
+      // Update order with session ID and provider info
       await orderRepo.updatePaymentInfo(result.orderId, {
-        stripeSessionId: session.sessionId
+        stripeSessionId: checkout.sessionId
       })
 
-      throw redirect(302, session.url)
+      // Track which provider was used
+      await locals.pb.collection('orders').update(result.orderId, {
+        paymentProvider: provider.type
+      })
+
+      throw redirect(302, checkout.redirectUrl)
     } catch (err) {
       if (err && typeof err === 'object' && 'status' in err) {
         throw err // Re-throw redirects

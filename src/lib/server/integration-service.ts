@@ -1,10 +1,12 @@
 import type PocketBase from 'pocketbase'
 import {
   getDiscordSettings,
+  getHelloAssoSettings,
   getSlackSettings,
   getSmtpSettings,
   getStripeSettings,
   isDiscordConfigured,
+  isHelloAssoConfigured,
   isSlackConfigured,
   isStripeConfigured
 } from './app-settings'
@@ -67,6 +69,43 @@ async function checkStripeStatus(pb: PocketBase): Promise<IntegrationEntry> {
       'stripe',
       'error',
       error instanceof Error ? error.message : 'Failed to check Stripe status'
+    )
+  }
+}
+
+/**
+ * Check HelloAsso integration status
+ */
+async function checkHelloAssoStatus(pb: PocketBase): Promise<IntegrationEntry> {
+  try {
+    const settings = await getHelloAssoSettings(pb)
+
+    if (!settings.helloassoEnabled) {
+      return buildIntegrationEntry('helloasso', 'not_configured', 'HelloAsso is disabled')
+    }
+
+    if (!isHelloAssoConfigured(settings)) {
+      return buildIntegrationEntry(
+        'helloasso',
+        'not_configured',
+        'HelloAsso credentials not configured'
+      )
+    }
+
+    return buildIntegrationEntry(
+      'helloasso',
+      'connected',
+      `${settings.helloassoSandbox ? 'sandbox' : 'production'} mode`,
+      {
+        orgSlug: settings.helloassoOrgSlug,
+        sandbox: settings.helloassoSandbox
+      }
+    )
+  } catch (error) {
+    return buildIntegrationEntry(
+      'helloasso',
+      'error',
+      error instanceof Error ? error.message : 'Failed to check HelloAsso status'
     )
   }
 }
@@ -169,6 +208,8 @@ export async function checkIntegrationStatus(
       return checkSmtpStatus(pb)
     case 'stripe':
       return checkStripeStatus(pb)
+    case 'helloasso':
+      return checkHelloAssoStatus(pb)
     case 'slack':
       return checkSlackStatus(pb)
     case 'discord':

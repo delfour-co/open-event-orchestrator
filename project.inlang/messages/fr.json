@@ -457,6 +457,12 @@
   "billing_checkout_proceed_payment": "Proceder au paiement",
   "billing_checkout_order_summary": "Resume de la commande",
   "billing_checkout_total": "Total",
+  "billing_checkout_billing_address": "Adresse de facturation",
+  "billing_checkout_billing_address_hint": "Optionnel — pour la facturation.",
+  "billing_checkout_address_placeholder": "Adresse",
+  "billing_checkout_city_placeholder": "Ville",
+  "billing_checkout_postal_code_placeholder": "Code postal",
+  "billing_checkout_country_placeholder": "Pays",
 
   "billing_confirmation_order_confirmed": "Commande confirmee",
   "billing_confirmation_tickets_sent": "Vos billets ont ete envoyes a",

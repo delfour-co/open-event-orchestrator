@@ -8,7 +8,7 @@ import { generateQrCodeDataUrl } from '$lib/features/billing/services'
 import { createCancelOrderUseCase } from '$lib/features/billing/usecases/cancel-order'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
 import { createRefundOrderUseCase } from '$lib/features/billing/usecases/refund-order'
-import { getStripeSettings } from '$lib/server/app-settings'
+import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { sendOrderConfirmationEmail, sendOrderRefundEmail } from '$lib/server/billing-notifications'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -188,18 +188,17 @@ export const actions: Actions = {
       const ticketTypeRepo = createTicketTypeRepository(locals.pb)
       const ticketRepo = createTicketRepository(locals.pb)
 
-      // Try Stripe refund if configured and payment intent exists
+      // Try refund via payment provider if payment reference exists
       const order = await orderRepo.findById(orderId)
-      const stripeSettings = await getStripeSettings(locals.pb)
-      if (order?.stripePaymentIntentId && stripeSettings.isConfigured) {
-        const { createStripeService } = await import(
-          '$lib/features/billing/services/stripe-service'
-        )
-        const stripe = createStripeService(
-          stripeSettings.stripeSecretKey,
-          stripeSettings.stripeApiBase || undefined
-        )
-        await stripe.createRefund(order.stripePaymentIntentId)
+      if (order?.stripePaymentIntentId) {
+        try {
+          const provider = await getPaymentProvider(locals.pb)
+          if (provider.type !== 'none') {
+            await provider.createRefund(order.stripePaymentIntentId)
+          }
+        } catch (refundErr) {
+          console.error('Payment provider refund failed:', refundErr)
+        }
       }
 
       const refundOrder = createRefundOrderUseCase(

@@ -457,6 +457,12 @@
   "billing_checkout_proceed_payment": "Proceed to Payment",
   "billing_checkout_order_summary": "Order Summary",
   "billing_checkout_total": "Total",
+  "billing_checkout_billing_address": "Billing Address",
+  "billing_checkout_billing_address_hint": "Optional — for invoice purposes.",
+  "billing_checkout_address_placeholder": "Street address",
+  "billing_checkout_city_placeholder": "City",
+  "billing_checkout_postal_code_placeholder": "Postal code",
+  "billing_checkout_country_placeholder": "Country",
 
   "billing_confirmation_order_confirmed": "Order Confirmed",
   "billing_confirmation_tickets_sent": "Your tickets have been sent to",

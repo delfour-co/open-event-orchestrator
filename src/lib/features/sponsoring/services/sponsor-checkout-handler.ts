@@ -33,6 +33,7 @@ export interface SponsorCheckoutMetadata {
   billingCity: string
   billingPostalCode: string
   billingCountry: string
+  poNumber: string
 }
 
 function buildSellerFromOrg(org: Record<string, unknown>): SellerInfo {
@@ -154,6 +155,7 @@ async function sendCheckoutEmails(
     billingCity: params.metadata.billingCity || undefined,
     billingPostalCode: params.metadata.billingPostalCode || undefined,
     billingCountry: params.metadata.billingCountry || undefined,
+    poNumber: params.metadata.poNumber || undefined,
     packageName: params.pkgName,
     amount: params.pkgPrice,
     currency: params.pkgCurrency,
@@ -244,7 +246,8 @@ export async function handleSponsorCheckoutCompleted(
     status: 'confirmed',
     confirmedAt: new Date(),
     paidAt: new Date(),
-    amount: pkg.price
+    amount: pkg.price,
+    poNumber: metadata.poNumber || undefined
   })
   console.log(
     `[sponsor-checkout] Edition sponsor created: ${editionSponsor.id} (status: confirmed)`

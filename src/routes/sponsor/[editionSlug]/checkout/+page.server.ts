@@ -1,7 +1,7 @@
 import { getAvailableSlots, hasAvailableSlots } from '$lib/features/sponsoring/domain'
 import type { SponsorPackage } from '$lib/features/sponsoring/domain'
 import { createPackageRepository } from '$lib/features/sponsoring/infra'
-import { getStripeSettings } from '$lib/server/app-settings'
+import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type PocketBase from 'pocketbase'
 import { z } from 'zod'
@@ -21,7 +21,8 @@ const checkoutSchema = z.object({
   billingAddress: z.string().min(1, 'Billing address is required').max(500),
   billingCity: z.string().min(1, 'City is required').max(100),
   billingPostalCode: z.string().min(1, 'Postal code is required').max(20),
-  billingCountry: z.string().min(1, 'Country is required').max(100)
+  billingCountry: z.string().min(1, 'Country is required').max(100),
+  poNumber: z.string().max(50).optional().or(z.literal(''))
 })
 
 type CheckoutData = z.infer<typeof checkoutSchema>
@@ -49,6 +50,7 @@ interface RawFormData {
   billingCity: string
   billingPostalCode: string
   billingCountry: string
+  poNumber: string
 }
 
 async function getEditionInfo(pb: PocketBase, editionSlug: string): Promise<EditionInfo | null> {
@@ -127,7 +129,8 @@ async function createSponsorWithoutPayment(
     status: 'confirmed',
     confirmedAt: new Date(),
     paidAt: new Date(),
-    amount: packagePrice
+    amount: packagePrice,
+    poNumber: data.poNumber || undefined
   })
 
   const tokenService = createSponsorTokenService(pb)
@@ -167,13 +170,15 @@ async function createSponsorWithoutPayment(
         }
         const now = new Date()
         const invoiceNumber = await getNextInvoiceNumber(pb, edition.organizationId)
+        const invoiceDate = now.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
         const pdfBytes = await generateSponsorInvoicePdf({
           invoiceNumber,
-          invoiceDate: now.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
+          invoiceDate,
+          dueDate: invoiceDate,
           eventName: edition.eventName,
           sponsorName: sponsor.name,
           legalName: data.legalName || undefined,
@@ -183,6 +188,7 @@ async function createSponsorWithoutPayment(
           billingCity: data.billingCity || undefined,
           billingPostalCode: data.billingPostalCode || undefined,
           billingCountry: data.billingCountry || undefined,
+          poNumber: data.poNumber || undefined,
           packageName: expandedEditionSponsor.package?.name || 'Sponsorship',
           amount: packagePrice,
           currency: expandedEditionSponsor.package?.currency || 'EUR',
@@ -214,71 +220,6 @@ async function createSponsorWithoutPayment(
   }
 
   return editionSponsor.id
-}
-
-async function createStripeSession(
-  stripeKey: string,
-  edition: EditionInfo,
-  data: CheckoutData,
-  pkg: SponsorPackage,
-  origin: string,
-  apiBase?: string
-): Promise<string> {
-  const Stripe = (await import('stripe')).default
-  const opts: Record<string, unknown> = {}
-  if (apiBase) {
-    const url = new URL(apiBase)
-    opts.host = url.hostname
-    opts.port = Number(url.port) || undefined
-    opts.protocol = url.protocol.replace(':', '')
-  }
-  const stripeClient = new Stripe(stripeKey, opts)
-
-  const session = await stripeClient.checkout.sessions.create({
-    payment_method_types: ['card'],
-    mode: 'payment',
-    customer_email: data.contactEmail,
-    line_items: [
-      {
-        price_data: {
-          currency: pkg.currency.toLowerCase(),
-          product_data: {
-            name: `${edition.eventName} - ${pkg.name} Sponsorship`,
-            description: pkg.description || `${pkg.name} sponsorship package`
-          },
-          unit_amount: pkg.price * 100
-        },
-        quantity: 1
-      }
-    ],
-    metadata: {
-      type: 'sponsor_package',
-      editionId: edition.id,
-      editionSlug: edition.slug,
-      packageId: pkg.id,
-      companyName: data.companyName,
-      website: data.website || '',
-      description: (data.description || '').slice(0, 500),
-      contactName: data.contactName,
-      contactEmail: data.contactEmail,
-      contactPhone: data.contactPhone || '',
-      legalName: data.legalName || '',
-      vatNumber: data.vatNumber || '',
-      siret: data.siret || '',
-      billingAddress: data.billingAddress || '',
-      billingCity: data.billingCity || '',
-      billingPostalCode: data.billingPostalCode || '',
-      billingCountry: data.billingCountry || ''
-    },
-    success_url: `${origin}/sponsor/${edition.slug}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/sponsor/${edition.slug}/packages`
-  })
-
-  if (!session.url) {
-    throw new Error('Failed to create checkout session')
-  }
-
-  return session.url
 }
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
@@ -330,7 +271,8 @@ export const actions: Actions = {
       billingAddress: formData.get('billingAddress') as string,
       billingCity: formData.get('billingCity') as string,
       billingPostalCode: formData.get('billingPostalCode') as string,
-      billingCountry: formData.get('billingCountry') as string
+      billingCountry: formData.get('billingCountry') as string,
+      poNumber: formData.get('poNumber') as string
     }
 
     const result = checkoutSchema.safeParse(rawData)
@@ -351,21 +293,13 @@ export const actions: Actions = {
       return fail(400, { error: 'This package is now sold out', values: rawData })
     }
 
-    const stripeSettings = await getStripeSettings(locals.pb)
+    const provider = await getPaymentProvider(locals.pb)
 
-    if (!stripeSettings.isConfigured) {
+    if (provider.type === 'none') {
       return handleDevModeCheckout(locals.pb, edition, data, pkg, url.origin, rawData)
     }
 
-    return handleStripeCheckout(
-      stripeSettings.stripeSecretKey,
-      edition,
-      data,
-      pkg,
-      url.origin,
-      rawData,
-      stripeSettings.stripeApiBase || undefined
-    )
+    return handleProviderCheckout(provider, edition, data, pkg, url.origin, rawData)
   }
 }
 
@@ -394,21 +328,55 @@ async function handleDevModeCheckout(
   }
 }
 
-async function handleStripeCheckout(
-  stripeKey: string,
+async function handleProviderCheckout(
+  provider: { type: string; createCheckout: (input: import('$lib/features/billing/services/payment-providers/types').CreateCheckoutInput) => Promise<import('$lib/features/billing/services/payment-providers/types').CheckoutResult> },
   edition: EditionInfo,
   data: CheckoutData,
   pkg: SponsorPackage,
   origin: string,
-  rawData: RawFormData,
-  apiBase?: string
+  rawData: RawFormData
 ) {
   try {
-    const sessionUrl = await createStripeSession(stripeKey, edition, data, pkg, origin, apiBase)
-    throw redirect(302, sessionUrl)
+    const checkout = await provider.createCheckout({
+      referenceId: `sponsor-${edition.id}`,
+      referenceNumber: `SP-${Date.now().toString(36).toUpperCase()}`,
+      customerEmail: data.contactEmail,
+      lineItems: [
+        {
+          name: `${edition.eventName} - ${pkg.name} Sponsorship`,
+          unitAmount: pkg.price * 100,
+          quantity: 1
+        }
+      ],
+      successUrl: `${origin}/sponsor/${edition.slug}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${origin}/sponsor/${edition.slug}/packages`,
+      metadata: {
+        type: 'sponsor_package',
+        editionId: edition.id,
+        editionSlug: edition.slug,
+        packageId: pkg.id,
+        companyName: data.companyName,
+        website: data.website || '',
+        description: (data.description || '').slice(0, 500),
+        contactName: data.contactName,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone || '',
+        legalName: data.legalName || '',
+        vatNumber: data.vatNumber || '',
+        siret: data.siret || '',
+        billingAddress: data.billingAddress || '',
+        billingCity: data.billingCity || '',
+        billingPostalCode: data.billingPostalCode || '',
+        billingCountry: data.billingCountry || '',
+        poNumber: data.poNumber || ''
+      },
+      currency: pkg.currency
+    })
+
+    throw redirect(302, checkout.redirectUrl)
   } catch (err) {
     if (err && typeof err === 'object' && 'status' in err) throw err
-    console.error('Failed to create Stripe session:', err)
+    console.error('Failed to create checkout session:', err)
     return fail(500, { error: 'Failed to process payment', values: rawData })
   }
 }

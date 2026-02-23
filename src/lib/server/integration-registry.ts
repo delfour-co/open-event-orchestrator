@@ -9,7 +9,14 @@ export type IntegrationStatus = z.infer<typeof integrationStatusSchema>
 /**
  * Integration type identifiers
  */
-export const integrationTypeSchema = z.enum(['smtp', 'stripe', 'slack', 'discord', 'webhooks'])
+export const integrationTypeSchema = z.enum([
+  'smtp',
+  'stripe',
+  'helloasso',
+  'slack',
+  'discord',
+  'webhooks'
+])
 export type IntegrationType = z.infer<typeof integrationTypeSchema>
 
 /**
@@ -60,6 +67,13 @@ export const INTEGRATION_REGISTRY: Record<IntegrationType, IntegrationInfo> = {
     description: 'Accept payments for tickets',
     icon: 'credit-card',
     configPath: '/admin/settings/stripe'
+  },
+  helloasso: {
+    type: 'helloasso',
+    name: 'HelloAsso',
+    description: 'Accept payments via HelloAsso (associations)',
+    icon: 'heart-handshake',
+    configPath: '/admin/settings/helloasso'
   },
   slack: {
     type: 'slack',

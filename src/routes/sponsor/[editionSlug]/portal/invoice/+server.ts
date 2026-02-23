@@ -108,6 +108,7 @@ export const GET: RequestHandler = async ({ params, url, locals, cookies }) => {
     billingCity: es.sponsor?.billingCity,
     billingPostalCode: es.sponsor?.billingPostalCode,
     billingCountry: es.sponsor?.billingCountry,
+    poNumber: es.poNumber,
     packageName: es.package?.name || 'Sponsorship',
     amount: es.amount,
     currency: es.package?.currency || 'EUR',

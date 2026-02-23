@@ -107,6 +107,8 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
       amount: data.amount ?? null,
       invoiceNumber: data.invoiceNumber || null,
       stripePaymentIntentId: data.stripePaymentIntentId || null,
+      paymentProvider: data.paymentProvider || null,
+      poNumber: data.poNumber || null,
       notes: data.notes || null
     })
     return mapRecordToEditionSponsor(record)
@@ -123,6 +125,9 @@ export const createEditionSponsorRepository = (pb: PocketBase) => ({
     if (data.invoiceNumber !== undefined) updateData.invoiceNumber = data.invoiceNumber || null
     if (data.stripePaymentIntentId !== undefined)
       updateData.stripePaymentIntentId = data.stripePaymentIntentId || null
+    if (data.paymentProvider !== undefined)
+      updateData.paymentProvider = data.paymentProvider || null
+    if (data.poNumber !== undefined) updateData.poNumber = data.poNumber || null
     if (data.notes !== undefined) updateData.notes = data.notes || null
     const record = await pb.collection(COLLECTION).update(id, updateData)
     return mapRecordToEditionSponsor(record)
@@ -193,6 +198,8 @@ const mapRecordToEditionSponsor = (record: Record<string, unknown>): EditionSpon
   amount: (record.amount as number) || undefined,
   invoiceNumber: (record.invoiceNumber as string) || undefined,
   stripePaymentIntentId: (record.stripePaymentIntentId as string) || undefined,
+  paymentProvider: (record.paymentProvider as string) || undefined,
+  poNumber: (record.poNumber as string) || undefined,
   notes: (record.notes as string) || undefined,
   createdAt: new Date(record.created as string),
   updatedAt: new Date(record.updated as string)

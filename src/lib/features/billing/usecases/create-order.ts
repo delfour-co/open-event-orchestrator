@@ -12,6 +12,10 @@ export interface CreateOrderInput {
   firstName: string
   lastName: string
   currency: 'EUR' | 'USD' | 'GBP'
+  billingAddress?: string
+  billingCity?: string
+  billingPostalCode?: string
+  billingCountry?: string
   items: OrderLineItem[]
 }
 
@@ -75,6 +79,10 @@ export const createCreateOrderUseCase = (
       lastName: input.lastName,
       totalAmount,
       currency: input.currency,
+      billingAddress: input.billingAddress,
+      billingCity: input.billingCity,
+      billingPostalCode: input.billingPostalCode,
+      billingCountry: input.billingCountry,
       orderNumber,
       status: 'pending'
     })

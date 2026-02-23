@@ -29,6 +29,7 @@ export interface SponsorInvoiceData {
   billingCity?: string
   billingPostalCode?: string
   billingCountry?: string
+  poNumber?: string
   packageName: string
   amount: number
   currency: string
@@ -108,6 +109,17 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
     font: regular,
     color: MUTED_COLOR
   })
+
+  // PO number
+  if (data.poNumber) {
+    page.drawText(`PO: ${data.poNumber}`, {
+      x: PAGE_WIDTH / 2,
+      y,
+      size: 10,
+      font: regular,
+      color: MUTED_COLOR
+    })
+  }
   y -= 25
 
   // Bill To + Seller block side by side
@@ -228,10 +240,20 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
 
   y -= 30
 
-  const vatRate = data.vatRate ?? 0
+  // Intracommunity reverse charge: if sponsor has VAT number and is in a different country
+  const sellerCountry = data.seller?.country || 'France'
+  const buyerCountry = data.billingCountry || ''
+  const isReverseCharge =
+    !!data.vatNumber &&
+    !!buyerCountry &&
+    buyerCountry.toLowerCase() !== sellerCountry.toLowerCase()
+
+  const effectiveVatRate = isReverseCharge ? 0 : (data.vatRate ?? 0)
   const totalAmountCents = data.amount
   const htAmountCents =
-    vatRate > 0 ? Math.round(totalAmountCents / (1 + vatRate / 100)) : totalAmountCents
+    effectiveVatRate > 0
+      ? Math.round(totalAmountCents / (1 + effectiveVatRate / 100))
+      : totalAmountCents
   const vatAmountCents = totalAmountCents - htAmountCents
 
   const formattedHt = formatCurrencyAmount(htAmountCents, data.currency)
@@ -286,7 +308,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   y -= LINE_HEIGHT
 
   // VAT line
-  page.drawText(PDF_LABELS.VAT(vatRate), {
+  page.drawText(PDF_LABELS.VAT(effectiveVatRate), {
     x: amountCol - 80,
     y,
     size: 10,
@@ -340,8 +362,20 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   })
   y -= 30
 
+  // Reverse charge mention
+  if (isReverseCharge) {
+    page.drawText('Autoliquidation / Reverse charge, art. 283-2 du CGI', {
+      x: MARGIN,
+      y,
+      size: 9,
+      font: bold,
+      color: TEXT_COLOR
+    })
+    y -= LINE_HEIGHT
+  }
+
   // Legal mentions
-  drawLegalMentions(page, vatRate, fonts, y)
+  drawLegalMentions(page, effectiveVatRate, fonts, y)
 
   // Footer
   page.drawText(PDF_LABELS.THANK_SPONSORSHIP, {

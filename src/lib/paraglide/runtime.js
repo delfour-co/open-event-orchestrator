@@ -34,7 +34,7 @@ export const localStorageKey = "PARAGLIDE_LOCALE";
  */
 export const strategy = [
   "cookie",
-  "navigatorLanguage",
+  "globalVariable",
   "baseLocale"
 ];
 /**
@@ -148,7 +148,7 @@ export function isExcludedByRouteStrategy(url) {
 export let serverAsyncLocalStorage = undefined;
 export const disableAsyncLocalStorage = false;
 export const experimentalMiddlewareLocaleSplitting = false;
-export const isServer = import.meta.env?.SSR ?? typeof window === 'undefined';
+export const isServer = typeof window === 'undefined';
 /** @type {Locale | undefined} */
 // @ts-ignore - injected by bundlers at compile time
 export const experimentalStaticLocale = undefined;
@@ -167,7 +167,7 @@ export function overwriteServerAsyncLocalStorage(value) {
 }
 const TREE_SHAKE_COOKIE_STRATEGY_USED = true;
 const TREE_SHAKE_URL_STRATEGY_USED = false;
-const TREE_SHAKE_GLOBAL_VARIABLE_STRATEGY_USED = false;
+const TREE_SHAKE_GLOBAL_VARIABLE_STRATEGY_USED = true;
 const TREE_SHAKE_PREFERRED_LANGUAGE_STRATEGY_USED = false;
 const TREE_SHAKE_DEFAULT_URL_PATTERN_USED = true;
 const TREE_SHAKE_LOCAL_STORAGE_STRATEGY_USED = false;

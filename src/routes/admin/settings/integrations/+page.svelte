@@ -11,6 +11,7 @@ import {
   CreditCard,
   ExternalLink,
   Hash,
+  HeartHandshake,
   Mail,
   MessageSquare,
   Settings2,
@@ -28,6 +29,7 @@ const { data }: Props = $props()
 const iconMap = {
   smtp: Mail,
   stripe: CreditCard,
+  helloasso: HeartHandshake,
   slack: Hash,
   discord: MessageSquare,
   webhooks: Webhook
@@ -72,6 +74,8 @@ function getConfigPath(integration: IntegrationEntry): string | null {
       return '/admin/settings'
     case 'stripe':
       return '/admin/settings/stripe'
+    case 'helloasso':
+      return '/admin/settings/helloasso'
     case 'slack':
       return '/admin/settings/slack'
     case 'discord':

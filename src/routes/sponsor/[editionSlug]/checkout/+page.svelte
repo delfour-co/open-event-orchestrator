@@ -258,6 +258,24 @@ const getValue = (field: string): string => {
                   {/if}
                 </div>
               </div>
+
+              <!-- PO Number -->
+              <div class="space-y-2">
+                <Label for="poNumber">Purchase Order Number</Label>
+                <Input
+                  id="poNumber"
+                  name="poNumber"
+                  placeholder="PO-2024-001"
+                  value={getValue('poNumber')}
+                  class={getFieldError('poNumber') ? 'border-destructive' : ''}
+                />
+                {#if getFieldError('poNumber')}
+                  <p class="text-sm text-destructive">{getFieldError('poNumber')}</p>
+                {/if}
+                <p class="text-xs text-muted-foreground">
+                  Optional — will appear on the invoice if provided.
+                </p>
+              </div>
             </div>
 
             <div class="border-t pt-6">

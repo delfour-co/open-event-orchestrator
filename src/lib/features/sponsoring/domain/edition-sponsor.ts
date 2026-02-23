@@ -25,6 +25,8 @@ export const editionSponsorSchema = z.object({
   amount: z.number().min(0).optional(),
   invoiceNumber: z.string().max(30).optional(),
   stripePaymentIntentId: z.string().optional(),
+  paymentProvider: z.string().optional(),
+  poNumber: z.string().max(50).optional(),
   notes: z.string().max(5000).optional(),
   createdAt: z.date(),
   updatedAt: z.date()

@@ -13,7 +13,8 @@ import {
   createSponsorTokenService
 } from '$lib/features/sponsoring/services'
 import { generateSponsorCreditNotePdf } from '$lib/features/sponsoring/services/sponsor-credit-note-service'
-import { getSmtpSettings, getStripeSettings } from '$lib/server/app-settings'
+import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
+import { getSmtpSettings } from '$lib/server/app-settings'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -359,21 +360,18 @@ export const actions: Actions = {
         return fail(400, { error: 'Sponsor has not been paid yet', action: 'refundSponsor' })
       }
 
-      // Stripe refund if payment intent exists
+      // Refund via payment provider if payment reference exists
       if (editionSponsor.stripePaymentIntentId) {
-        const stripeSettings = await getStripeSettings(locals.pb)
-        if (stripeSettings.isConfigured) {
-          const { createStripeService } = await import(
-            '$lib/features/billing/services/stripe-service'
-          )
-          const stripe = createStripeService(
-            stripeSettings.stripeSecretKey,
-            stripeSettings.stripeApiBase || undefined
-          )
-          await stripe.createRefund(editionSponsor.stripePaymentIntentId)
-          console.log(
-            `[refund-sponsor] Stripe refund created for PI: ${editionSponsor.stripePaymentIntentId}`
-          )
+        try {
+          const provider = await getPaymentProvider(locals.pb)
+          if (provider.type !== 'none') {
+            await provider.createRefund(editionSponsor.stripePaymentIntentId)
+            console.log(
+              `[refund-sponsor] Refund created for: ${editionSponsor.stripePaymentIntentId}`
+            )
+          }
+        } catch (refundErr) {
+          console.error('[refund-sponsor] Payment provider refund failed:', refundErr)
         }
       }
 

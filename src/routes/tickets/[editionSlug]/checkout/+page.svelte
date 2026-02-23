@@ -110,6 +110,33 @@ const itemsJson = JSON.stringify(
 							</p>
 						</div>
 
+						{#if !data.isFree}
+							<div class="space-y-3 rounded-lg border p-4">
+								<p class="text-sm font-medium">{m.billing_checkout_billing_address()}</p>
+								<p class="text-xs text-muted-foreground">{m.billing_checkout_billing_address_hint()}</p>
+								<div class="space-y-2">
+									<Input
+										name="billingAddress"
+										placeholder={m.billing_checkout_address_placeholder()}
+									/>
+								</div>
+								<div class="grid gap-2 md:grid-cols-2">
+									<Input
+										name="billingCity"
+										placeholder={m.billing_checkout_city_placeholder()}
+									/>
+									<Input
+										name="billingPostalCode"
+										placeholder={m.billing_checkout_postal_code_placeholder()}
+									/>
+								</div>
+								<Input
+									name="billingCountry"
+									placeholder={m.billing_checkout_country_placeholder()}
+								/>
+							</div>
+						{/if}
+
 						<Button
 							type="submit"
 							class="w-full gap-2"
