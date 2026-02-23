@@ -82,6 +82,29 @@ export const GET: RequestHandler = async ({ params, url, locals, cookies }) => {
     throw error(400, 'No invoice number found')
   }
 
+  const filename = `invoice-${es.sponsor?.name?.replace(/\s+/g, '-').toLowerCase() || 'sponsor'}.pdf`
+
+  // Serve archived PDF if available
+  if (es.invoicePdf) {
+    try {
+      const record = await locals.pb.collection('edition_sponsors').getOne(es.id)
+      const fileUrl = locals.pb.files.getURL(record, record.invoicePdf as string)
+      const response = await fetch(fileUrl)
+      if (response.ok) {
+        const pdfBytes = await response.arrayBuffer()
+        return new Response(pdfBytes, {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="${filename}"`
+          }
+        })
+      }
+    } catch {
+      // Fall through to regeneration
+    }
+  }
+
+  // Regenerate PDF if no archived version
   let ctx: EventContext
   try {
     ctx = await loadEventContext(locals.pb, editionSlug)
@@ -115,8 +138,6 @@ export const GET: RequestHandler = async ({ params, url, locals, cookies }) => {
     vatRate: ctx.vatRate,
     seller: ctx.seller
   })
-
-  const filename = `invoice-${es.sponsor?.name?.replace(/\s+/g, '-').toLowerCase() || 'sponsor'}.pdf`
 
   return new Response(Buffer.from(pdfBytes), {
     headers: {

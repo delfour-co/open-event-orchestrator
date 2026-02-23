@@ -23,6 +23,7 @@ export const orderSchema = z.object({
   billingCity: z.string().optional(),
   billingPostalCode: z.string().optional(),
   billingCountry: z.string().optional(),
+  invoicePdf: z.string().optional(),
   paidAt: z.date().optional(),
   cancelledAt: z.date().optional(),
   createdAt: z.date(),

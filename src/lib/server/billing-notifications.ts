@@ -168,6 +168,19 @@ export async function sendOrderConfirmationEmail(
             contentType: 'application/pdf'
           })
 
+          // Archive PDF in PocketBase
+          try {
+            const formData = new FormData()
+            formData.append(
+              'invoicePdf',
+              new Blob([Buffer.from(pdfBytes)], { type: 'application/pdf' }),
+              `invoice-${invoiceNumber}.pdf`
+            )
+            await pb.collection('orders').update(order.id, formData)
+          } catch (archiveErr) {
+            console.error('[billing] Failed to archive invoice PDF:', archiveErr)
+          }
+
           await recordIncome({
             pb,
             editionId: order.editionId,

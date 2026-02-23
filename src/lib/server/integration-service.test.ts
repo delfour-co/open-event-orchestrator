@@ -278,10 +278,11 @@ describe('integration-service', () => {
 
       const results = await getAllIntegrationStatuses(mockPb)
 
-      expect(results).toHaveLength(5)
+      expect(results).toHaveLength(6)
       expect(results.map((r) => r.info.type)).toEqual([
         'smtp',
         'stripe',
+        'helloasso',
         'slack',
         'discord',
         'webhooks'
@@ -301,7 +302,7 @@ describe('integration-service', () => {
       const service = createIntegrationService(mockPb)
       const results = await service.getAll()
 
-      expect(results).toHaveLength(5)
+      expect(results).toHaveLength(6)
     })
 
     it('should create service with getStatus method', async () => {

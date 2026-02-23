@@ -130,6 +130,7 @@ const mapRecordToOrder = (record: Record<string, unknown>): Order => ({
   billingCity: (record.billingCity as string) || undefined,
   billingPostalCode: (record.billingPostalCode as string) || undefined,
   billingCountry: (record.billingCountry as string) || undefined,
+  invoicePdf: (record.invoicePdf as string) || undefined,
   paidAt: record.paidAt ? new Date(record.paidAt as string) : undefined,
   cancelledAt: record.cancelledAt ? new Date(record.cancelledAt as string) : undefined,
   createdAt: new Date(record.created as string),

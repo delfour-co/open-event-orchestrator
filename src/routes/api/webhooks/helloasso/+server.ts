@@ -8,6 +8,10 @@ import { generateQrCodeDataUrl } from '$lib/features/billing/services'
 import { createHelloAssoApiClient } from '$lib/features/billing/services/helloasso/api-client'
 import { createHelloAssoPaymentProvider } from '$lib/features/billing/services/helloasso/helloasso-provider'
 import { createHelloAssoTokenManager } from '$lib/features/billing/services/helloasso/token-manager'
+import {
+  isAlreadyProcessed,
+  markProcessed
+} from '$lib/features/billing/services/payment-resilience'
 import { createCancelOrderUseCase } from '$lib/features/billing/usecases/cancel-order'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
 import {
@@ -49,6 +53,12 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
     const event = await provider.parseWebhookEvent({ body, headers })
 
     console.log(`[helloasso-webhook] Received event: ${event.type} (${event.eventId})`)
+
+    // Idempotence check
+    if (await isAlreadyProcessed(locals.pb, event.eventId)) {
+      console.log(`[helloasso-webhook] Event ${event.eventId} already processed, skipping`)
+      return json({ received: true, duplicate: true })
+    }
 
     const orderRepo = createOrderRepository(locals.pb)
     const orderItemRepo = createOrderItemRepository(locals.pb)
@@ -131,12 +141,12 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
       }
 
       case 'payment.refunded': {
-        console.log(
-          `[helloasso-webhook] Payment refunded: ${event.paymentReference || 'unknown'}`
-        )
+        console.log(`[helloasso-webhook] Payment refunded: ${event.paymentReference || 'unknown'}`)
         break
       }
     }
+
+    await markProcessed(locals.pb, event.eventId, 'helloasso')
 
     return json({ received: true })
   } catch (err) {

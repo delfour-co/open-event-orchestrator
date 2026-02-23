@@ -56,10 +56,11 @@ describe('integration-registry', () => {
       const types = getIntegrationTypes()
       expect(types).toContain('smtp')
       expect(types).toContain('stripe')
+      expect(types).toContain('helloasso')
       expect(types).toContain('slack')
       expect(types).toContain('discord')
       expect(types).toContain('webhooks')
-      expect(types).toHaveLength(5)
+      expect(types).toHaveLength(6)
     })
   })
 

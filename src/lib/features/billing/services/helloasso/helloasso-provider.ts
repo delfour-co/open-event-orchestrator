@@ -7,9 +7,7 @@ import type {
 } from '../payment-providers/types'
 import type { HelloAssoApiClient } from './api-client'
 
-export const createHelloAssoPaymentProvider = (
-  apiClient: HelloAssoApiClient
-): PaymentProvider => ({
+export const createHelloAssoPaymentProvider = (apiClient: HelloAssoApiClient): PaymentProvider => ({
   type: 'helloasso',
 
   async createCheckout(input: CreateCheckoutInput): Promise<CheckoutResult> {
@@ -58,7 +56,9 @@ export const createHelloAssoPaymentProvider = (
 
   async parseWebhookEvent(request): Promise<PaymentEvent> {
     const payload =
-      typeof request.body === 'string' ? JSON.parse(request.body) : JSON.parse(request.body.toString())
+      typeof request.body === 'string'
+        ? JSON.parse(request.body)
+        : JSON.parse(request.body.toString())
 
     const eventType = payload.eventType as string
     const data = payload.data as Record<string, unknown>

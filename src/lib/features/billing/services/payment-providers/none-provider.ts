@@ -4,7 +4,9 @@ export const createNoneProvider = (): PaymentProvider => ({
   type: 'none',
 
   async createCheckout(): Promise<never> {
-    throw new Error('No payment provider configured. Please configure a payment provider in settings.')
+    throw new Error(
+      'No payment provider configured. Please configure a payment provider in settings.'
+    )
   },
 
   async createRefund(): Promise<never> {

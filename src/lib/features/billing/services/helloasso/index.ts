@@ -1,5 +1,10 @@
 export { createHelloAssoTokenManager } from './token-manager'
 export type { HelloAssoTokenManager } from './token-manager'
 export { createHelloAssoApiClient } from './api-client'
-export type { HelloAssoApiClient, HelloAssoCheckoutIntent, HelloAssoOrder, HelloAssoPayment } from './api-client'
+export type {
+  HelloAssoApiClient,
+  HelloAssoCheckoutIntent,
+  HelloAssoOrder,
+  HelloAssoPayment
+} from './api-client'
 export { createHelloAssoPaymentProvider } from './helloasso-provider'

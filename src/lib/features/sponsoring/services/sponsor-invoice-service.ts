@@ -244,9 +244,7 @@ export const generateSponsorInvoicePdf = async (data: SponsorInvoiceData): Promi
   const sellerCountry = data.seller?.country || 'France'
   const buyerCountry = data.billingCountry || ''
   const isReverseCharge =
-    !!data.vatNumber &&
-    !!buyerCountry &&
-    buyerCountry.toLowerCase() !== sellerCountry.toLowerCase()
+    !!data.vatNumber && !!buyerCountry && buyerCountry.toLowerCase() !== sellerCountry.toLowerCase()
 
   const effectiveVatRate = isReverseCharge ? 0 : (data.vatRate ?? 0)
   const totalAmountCents = data.amount

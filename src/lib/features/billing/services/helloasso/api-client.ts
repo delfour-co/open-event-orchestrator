@@ -47,11 +47,7 @@ export const createHelloAssoApiClient = (
   orgSlug: string,
   apiBase: string
 ): HelloAssoApiClient => {
-  async function apiRequest<T>(
-    method: string,
-    path: string,
-    body?: unknown
-  ): Promise<T> {
+  async function apiRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
     const accessToken = await tokenManager.getAccessToken()
     const url = `${apiBase}/v5${path}`
 

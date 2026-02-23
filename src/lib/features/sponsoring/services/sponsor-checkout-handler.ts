@@ -166,6 +166,19 @@ async function sendCheckoutEmails(
   await editionSponsorRepo.update(params.editionSponsorId, { invoiceNumber })
   console.log(`[sponsor-checkout] Invoice number: ${invoiceNumber}`)
 
+  // Archive PDF in PocketBase
+  try {
+    const formData = new FormData()
+    formData.append(
+      'invoicePdf',
+      new Blob([Buffer.from(pdfBytes)], { type: 'application/pdf' }),
+      `invoice-${invoiceNumber}.pdf`
+    )
+    await pb.collection('edition_sponsors').update(params.editionSponsorId, formData)
+  } catch (archiveErr) {
+    console.error('[sponsor-checkout] Failed to archive invoice PDF:', archiveErr)
+  }
+
   const invoiceResult = await sponsorEmailService.sendInvoiceEmail(
     expandedEditionSponsor,
     params.eventName,

@@ -200,6 +200,7 @@ const mapRecordToEditionSponsor = (record: Record<string, unknown>): EditionSpon
   stripePaymentIntentId: (record.stripePaymentIntentId as string) || undefined,
   paymentProvider: (record.paymentProvider as string) || undefined,
   poNumber: (record.poNumber as string) || undefined,
+  invoicePdf: (record.invoicePdf as string) || undefined,
   notes: (record.notes as string) || undefined,
   createdAt: new Date(record.created as string),
   updatedAt: new Date(record.updated as string)

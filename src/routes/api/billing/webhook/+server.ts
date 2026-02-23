@@ -5,6 +5,10 @@ import {
   createTicketTypeRepository
 } from '$lib/features/billing/infra'
 import { generateQrCodeDataUrl } from '$lib/features/billing/services'
+import {
+  isAlreadyProcessed,
+  markProcessed
+} from '$lib/features/billing/services/payment-resilience'
 import { createCancelOrderUseCase } from '$lib/features/billing/usecases/cancel-order'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
 import {
@@ -47,7 +51,13 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
     const ticketTypeRepo = createTicketTypeRepository(locals.pb)
     const ticketRepo = createTicketRepository(locals.pb)
 
-    console.log(`[billing-webhook] Received event: ${event.type}`)
+    console.log(`[billing-webhook] Received event: ${event.type} (${event.id})`)
+
+    // Idempotence check
+    if (await isAlreadyProcessed(locals.pb, event.id)) {
+      console.log(`[billing-webhook] Event ${event.id} already processed, skipping`)
+      return json({ received: true, duplicate: true })
+    }
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -143,6 +153,8 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
         break
       }
     }
+
+    await markProcessed(locals.pb, event.id, 'stripe')
 
     return json({ received: true })
   } catch (err) {
