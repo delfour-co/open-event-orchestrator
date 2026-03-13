@@ -145,6 +145,7 @@ export const actions: Actions = {
         createFormData.append('showTicketsTab', 'true')
         createFormData.append('showFeedbackTab', 'true')
         createFormData.append('showFavoritesTab', 'true')
+        createFormData.append('showNetworkingTab', 'false')
 
         await locals.pb.collection('pwa_settings').create(createFormData)
       }
@@ -175,6 +176,7 @@ export const actions: Actions = {
     const showTicketsTab = formData.get('showTicketsTab') === 'true'
     const showFeedbackTab = formData.get('showFeedbackTab') === 'true'
     const showFavoritesTab = formData.get('showFavoritesTab') === 'true'
+    const showNetworkingTab = formData.get('showNetworkingTab') === 'true'
 
     const appSettingsRepo = new AppSettingsRepository(locals.pb)
     const existingSettings = await appSettingsRepo.getByEdition(editionId)
@@ -187,7 +189,8 @@ export const actions: Actions = {
           showSpeakersTab,
           showTicketsTab,
           showFeedbackTab,
-          showFavoritesTab
+          showFavoritesTab,
+          showNetworkingTab
         })
       } else {
         await appSettingsRepo.create({
@@ -196,7 +199,8 @@ export const actions: Actions = {
           showSpeakersTab,
           showTicketsTab,
           showFeedbackTab,
-          showFavoritesTab
+          showFavoritesTab,
+          showNetworkingTab
         })
       }
       return { success: true, action: 'features' }

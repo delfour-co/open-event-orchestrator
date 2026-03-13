@@ -139,7 +139,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           showSpeakersTab: appSettings.showSpeakersTab,
           showTicketsTab: appSettings.showTicketsTab,
           showFeedbackTab: appSettings.showFeedbackTab,
-          showFavoritesTab: appSettings.showFavoritesTab
+          showFavoritesTab: appSettings.showFavoritesTab,
+          showNetworkingTab: appSettings.showNetworkingTab
         }
       : null,
     feedbackSettings: feedbackSettings

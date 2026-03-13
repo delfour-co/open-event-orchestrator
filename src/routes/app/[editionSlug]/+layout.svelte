@@ -1,5 +1,6 @@
 <script lang="ts">
 import '../../../app.css'
+import { applyReducedMotion, reducedMotion } from '$lib/stores/reduced-motion'
 import { onMount } from 'svelte'
 
 interface Props {
@@ -9,8 +10,20 @@ interface Props {
 const { children }: Props = $props()
 
 onMount(() => {
+  // Apply reduced motion preference
+  applyReducedMotion($reducedMotion)
+
+  // Subscribe to store changes
+  const unsubscribe = reducedMotion.subscribe((value) => {
+    applyReducedMotion(value)
+  })
+
   // Register service worker
   registerServiceWorker()
+
+  return () => {
+    unsubscribe()
+  }
 })
 
 async function registerServiceWorker(): Promise<void> {

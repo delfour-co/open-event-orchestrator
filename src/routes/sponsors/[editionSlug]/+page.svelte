@@ -44,7 +44,7 @@ const getLogoSize = (tier: number | undefined) => {
 </svelte:head>
 
 <div class="min-h-screen bg-background">
-	<div class="container mx-auto px-4 py-12">
+	<main class="container mx-auto px-4 py-12">
 		<!-- Header -->
 		<div class="text-center mb-12">
 			<h1 class="text-4xl font-bold tracking-tight mb-4">Our Sponsors</h1>
@@ -56,8 +56,8 @@ const getLogoSize = (tier: number | undefined) => {
 		{#if data.totalSponsors === 0}
 			<Card.Root class="max-w-md mx-auto">
 				<Card.Content class="flex flex-col items-center justify-center py-12">
-					<Handshake class="mb-4 h-12 w-12 text-muted-foreground" />
-					<h3 class="text-lg font-semibold">Sponsors coming soon</h3>
+					<Handshake class="mb-4 h-12 w-12 text-muted-foreground" aria-hidden="true" />
+					<h2 class="text-lg font-semibold">Sponsors coming soon</h2>
 					<p class="text-sm text-muted-foreground text-center">
 						We're currently working on partnerships for this edition.
 						Check back soon!
@@ -87,12 +87,12 @@ const getLogoSize = (tier: number | undefined) => {
 										target={sponsor.website ? '_blank' : undefined}
 										rel={sponsor.website ? 'noopener noreferrer' : undefined}
 										class="group flex items-center justify-center p-4 rounded-lg transition-all hover:bg-muted/50 {sponsor.website ? 'cursor-pointer' : 'cursor-default'}"
-										title={sponsor.name}
+										aria-label={sponsor.website ? `${sponsor.name} - visit website` : sponsor.name}
 									>
 										{#if sponsor.logoThumbUrl || sponsor.logoUrl}
 											<img
 												src={sponsor.logoThumbUrl || sponsor.logoUrl}
-												alt={sponsor.name}
+												alt="{sponsor.name} logo"
 												class="{getLogoSize(tierGroup.package?.tier)} object-contain grayscale hover:grayscale-0 transition-all group-hover:scale-105"
 											/>
 										{:else}
@@ -123,5 +123,5 @@ const getLogoSize = (tier: number | undefined) => {
 				</a>
 			</div>
 		{/if}
-	</div>
+	</main>
 </div>

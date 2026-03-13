@@ -29,7 +29,8 @@ export class AppSettingsRepository {
       showSpeakersTab: data.showSpeakersTab ?? true,
       showTicketsTab: data.showTicketsTab ?? true,
       showFeedbackTab: data.showFeedbackTab ?? true,
-      showFavoritesTab: data.showFavoritesTab ?? true
+      showFavoritesTab: data.showFavoritesTab ?? true,
+      showNetworkingTab: data.showNetworkingTab ?? false
     })
     return this.mapRecord(record)
   }
@@ -48,6 +49,7 @@ export class AppSettingsRepository {
     if (data.showTicketsTab !== undefined) updateData.showTicketsTab = data.showTicketsTab
     if (data.showFeedbackTab !== undefined) updateData.showFeedbackTab = data.showFeedbackTab
     if (data.showFavoritesTab !== undefined) updateData.showFavoritesTab = data.showFavoritesTab
+    if (data.showNetworkingTab !== undefined) updateData.showNetworkingTab = data.showNetworkingTab
 
     const record = await this.pb.collection('pwa_settings').update(data.id, updateData)
     return this.mapRecord(record)
@@ -91,7 +93,8 @@ export class AppSettingsRepository {
       showSpeakersTab: record.showSpeakersTab ?? true,
       showTicketsTab: record.showTicketsTab ?? true,
       showFeedbackTab: record.showFeedbackTab ?? true,
-      showFavoritesTab: record.showFavoritesTab ?? true
+      showFavoritesTab: record.showFavoritesTab ?? true,
+      showNetworkingTab: record.showNetworkingTab ?? false
     }
   }
 }

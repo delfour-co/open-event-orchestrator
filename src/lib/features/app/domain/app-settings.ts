@@ -13,7 +13,8 @@ export const appSettingsSchema = z.object({
   showSpeakersTab: z.boolean().default(true),
   showTicketsTab: z.boolean().default(true),
   showFeedbackTab: z.boolean().default(true),
-  showFavoritesTab: z.boolean().default(true)
+  showFavoritesTab: z.boolean().default(true),
+  showNetworkingTab: z.boolean().default(false)
 })
 
 export type AppSettings = z.infer<typeof appSettingsSchema>
@@ -32,5 +33,6 @@ export const DEFAULT_APP_SETTINGS: Omit<AppSettings, 'id' | 'editionId'> = {
   showSpeakersTab: true,
   showTicketsTab: true,
   showFeedbackTab: true,
-  showFavoritesTab: true
+  showFavoritesTab: true,
+  showNetworkingTab: false
 }

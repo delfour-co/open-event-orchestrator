@@ -316,16 +316,20 @@ function formatSpeakers(
                 type="button"
                 class="flex items-center gap-1 px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-room' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
                 onclick={() => (scheduleView = 'by-room')}
+                aria-label="By Room"
+                aria-pressed={scheduleView === 'by-room'}
               >
-                <DoorOpen class="h-4 w-4" />
+                <DoorOpen class="h-4 w-4" aria-hidden="true" />
                 <span class="hidden sm:inline">By Room</span>
               </button>
               <button
                 type="button"
                 class="flex items-center gap-1 px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-track' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
                 onclick={() => (scheduleView = 'by-track')}
+                aria-label="By Track"
+                aria-pressed={scheduleView === 'by-track'}
               >
-                <Layers class="h-4 w-4" />
+                <Layers class="h-4 w-4" aria-hidden="true" />
                 <span class="hidden sm:inline">By Track</span>
               </button>
             </div>

@@ -34,6 +34,7 @@ async function runInitialSetupCheck(baseUrl: string): Promise<void> {
   }
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Server hook handles auth, rate limiting, security headers
 export const handle: Handle = async ({ event, resolve }) => {
   const pb = new PocketBase(env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090')
 
@@ -152,7 +153,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   // Allow camera on scanner and checkin pages, block on others
   const needsCamera =
-    event.url.pathname.startsWith('/scan') || event.url.pathname.includes('/checkin')
+    event.url.pathname.startsWith('/scan') ||
+    event.url.pathname.includes('/checkin') ||
+    event.url.pathname.startsWith('/app/')
   if (needsCamera) {
     response.headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()')
   } else {

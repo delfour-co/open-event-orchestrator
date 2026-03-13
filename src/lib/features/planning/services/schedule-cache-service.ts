@@ -3,9 +3,10 @@
  */
 
 const DB_NAME = 'oeo-attendee'
-const DB_VERSION = 1
+const DB_VERSION = 2
 const SCHEDULE_STORE = 'schedule'
 const FAVORITES_STORE = 'favorites'
+const CONTACTS_STORE = 'contacts'
 
 export interface CachedSchedule {
   editionSlug: string
@@ -97,6 +98,13 @@ const openDb = (): Promise<IDBDatabase> => {
       if (!db.objectStoreNames.contains(FAVORITES_STORE)) {
         const favoritesStore = db.createObjectStore(FAVORITES_STORE, { keyPath: 'sessionId' })
         favoritesStore.createIndex('editionSlug', 'editionSlug', { unique: false })
+      }
+
+      // Contacts store (added in version 2)
+      if (!db.objectStoreNames.contains(CONTACTS_STORE)) {
+        const contactsStore = db.createObjectStore(CONTACTS_STORE, { keyPath: 'id' })
+        contactsStore.createIndex('editionSlug', 'editionSlug', { unique: false })
+        contactsStore.createIndex('email', 'email', { unique: false })
       }
     }
   })

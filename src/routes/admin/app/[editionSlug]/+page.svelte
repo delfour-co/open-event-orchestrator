@@ -24,6 +24,7 @@ import {
   Palette,
   RefreshCw,
   RotateCcw,
+  ScanLine,
   Settings2,
   Star,
   Ticket,
@@ -57,6 +58,7 @@ let showSpeakersTab = $state(data.appSettings?.showSpeakersTab ?? true)
 let showTicketsTab = $state(data.appSettings?.showTicketsTab ?? true)
 let showFeedbackTab = $state(data.appSettings?.showFeedbackTab ?? true)
 let showFavoritesTab = $state(data.appSettings?.showFavoritesTab ?? true)
+let showNetworkingTab = $state(data.appSettings?.showNetworkingTab ?? false)
 
 // Feedback settings state
 let sessionRatingEnabled = $state(
@@ -92,6 +94,7 @@ $effect(() => {
   showTicketsTab = data.appSettings?.showTicketsTab ?? true
   showFeedbackTab = data.appSettings?.showFeedbackTab ?? true
   showFavoritesTab = data.appSettings?.showFavoritesTab ?? true
+  showNetworkingTab = data.appSettings?.showNetworkingTab ?? false
 })
 
 // Sync feedback settings state when data changes (after form submission)
@@ -531,6 +534,18 @@ function handleHeaderChange(event: Event) {
 								</div>
 								<input type="hidden" name="showFavoritesTab" value={showFavoritesTab ? 'true' : 'false'} />
 								<Switch checked={showFavoritesTab} onCheckedChange={(v) => (showFavoritesTab = v)} />
+							</div>
+
+							<div class="flex items-center justify-between rounded-lg border p-4">
+								<div class="flex items-center gap-3">
+									<ScanLine class="h-5 w-5 text-muted-foreground" />
+									<div>
+										<div class="font-medium">{m.admin_app_tab_networking()}</div>
+										<p class="text-sm text-muted-foreground">{m.admin_app_tab_networking_description()}</p>
+									</div>
+								</div>
+								<input type="hidden" name="showNetworkingTab" value={showNetworkingTab ? 'true' : 'false'} />
+								<Switch checked={showNetworkingTab} onCheckedChange={(v) => (showNetworkingTab = v)} />
 							</div>
 						</Card.Content>
 					</Card.Root>
