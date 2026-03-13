@@ -13,7 +13,7 @@ export class EventFeedbackRepository {
       editionId: data.editionId,
       userId: data.userId,
       feedbackType: data.feedbackType,
-      subject: data.subject,
+      numericValue: data.numericValue ?? null,
       message: data.message,
       status: data.status || 'open'
     })
@@ -23,7 +23,7 @@ export class EventFeedbackRepository {
 
   async update(data: UpdateEventFeedback): Promise<EventFeedback> {
     const record = await this.pb.collection('event_feedback').update(data.id, {
-      subject: data.subject,
+      numericValue: data.numericValue,
       message: data.message,
       status: data.status
     })
@@ -74,7 +74,7 @@ export class EventFeedbackRepository {
       editionId: record.editionId as string,
       userId: record.userId as string,
       feedbackType: record.feedbackType as EventFeedback['feedbackType'],
-      subject: record.subject as string | undefined,
+      numericValue: (record.numericValue as number) ?? null,
       message: record.message as string,
       status: record.status as EventFeedback['status'],
       createdAt: new Date(record.created as string),

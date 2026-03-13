@@ -6,13 +6,13 @@ interface EventFeedbackRequest {
   editionId: string
   userId: string
   feedbackType: 'general' | 'problem'
-  subject?: string
+  numericValue?: number | null
   message: string
 }
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const body = (await request.json()) as EventFeedbackRequest
-  const { editionId, userId, feedbackType, subject, message } = body
+  const { editionId, userId, feedbackType, numericValue, message } = body
 
   if (!editionId) {
     return json({ success: false, error: 'editionId is required' }, { status: 400 })
@@ -40,11 +40,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     )
   }
 
-  if (subject && subject.length > 200) {
-    return json(
-      { success: false, error: 'subject must be 200 characters or less' },
-      { status: 400 }
-    )
+  if (numericValue !== undefined && numericValue !== null) {
+    if (numericValue < 1 || numericValue > 5 || !Number.isInteger(numericValue)) {
+      return json(
+        { success: false, error: 'numericValue must be an integer between 1 and 5' },
+        { status: 400 }
+      )
+    }
   }
 
   try {
@@ -73,7 +75,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       editionId,
       userId,
       feedbackType,
-      subject: subject?.trim(),
+      numericValue: numericValue ?? null,
       message: message.trim(),
       status: 'open'
     })
@@ -83,7 +85,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       feedback: {
         id: feedback.id,
         feedbackType: feedback.feedbackType,
-        subject: feedback.subject,
+        numericValue: feedback.numericValue,
         message: feedback.message,
         status: feedback.status
       }

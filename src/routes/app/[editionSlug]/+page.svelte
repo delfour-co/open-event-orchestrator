@@ -45,6 +45,7 @@ import {
   RefreshCw,
   ScanLine,
   Search,
+  Star,
   StickyNote,
   Sun,
   Ticket,
@@ -250,7 +251,7 @@ let userFeedback = $state<Map<string, UserFeedback>>(new Map())
 // Event feedback dialog state
 let showEventFeedbackDialog = $state(false)
 let eventFeedbackType = $state<'general' | 'problem'>('general')
-let eventFeedbackSubject = $state<string>('')
+let eventFeedbackRating = $state<number>(0)
 let eventFeedbackMessage = $state<string>('')
 let isSubmittingEventFeedback = $state(false)
 let eventFeedbackSuccess = $state(false)
@@ -610,7 +611,7 @@ async function submitSessionRating(): Promise<void> {
 // Event feedback functions
 function openEventFeedbackDialog(type: 'general' | 'problem'): void {
   eventFeedbackType = type
-  eventFeedbackSubject = ''
+  eventFeedbackRating = 0
   eventFeedbackMessage = ''
   eventFeedbackSuccess = false
   eventFeedbackError = null
@@ -619,7 +620,7 @@ function openEventFeedbackDialog(type: 'general' | 'problem'): void {
 
 function closeEventFeedbackDialog(): void {
   showEventFeedbackDialog = false
-  eventFeedbackSubject = ''
+  eventFeedbackRating = 0
   eventFeedbackMessage = ''
   eventFeedbackSuccess = false
   eventFeedbackError = null
@@ -639,7 +640,7 @@ async function submitEventFeedback(): Promise<void> {
         editionId: data.edition.id,
         userId: getAnonymousUserId(),
         feedbackType: eventFeedbackType,
-        subject: eventFeedbackSubject.trim() || undefined,
+        numericValue: eventFeedbackRating > 0 ? eventFeedbackRating : null,
         message: eventFeedbackMessage.trim()
       })
     })
@@ -1950,15 +1951,26 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 			</div>
 		{:else}
 			<div class="space-y-4 py-4">
-				<div class="space-y-2">
-					<Label for="feedback-subject">{m.app_feedback_subject()}</Label>
-					<Input
-						id="feedback-subject"
-						placeholder={eventFeedbackType === 'general' ? m.app_feedback_subject_placeholder_general() : m.app_feedback_subject_placeholder_problem()}
-						bind:value={eventFeedbackSubject}
-						maxlength={200}
-					/>
-				</div>
+				{#if eventFeedbackType === 'general'}
+					<!-- Star rating for general feedback -->
+					<div class="space-y-2">
+						<Label>{m.app_feedback_rating()}</Label>
+						<div class="flex justify-center gap-1">
+							{#each [1, 2, 3, 4, 5] as star}
+								<button
+									type="button"
+									onclick={() => (eventFeedbackRating = eventFeedbackRating === star ? 0 : star)}
+									class="p-1 transition-transform hover:scale-110"
+									aria-label="{star}/5"
+								>
+									<Star
+										class="h-8 w-8 {star <= eventFeedbackRating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'}"
+									/>
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
 
 				<div class="space-y-2">
 					<Label for="feedback-message">

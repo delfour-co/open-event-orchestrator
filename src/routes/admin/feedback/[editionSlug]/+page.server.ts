@@ -111,7 +111,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const eventFeedback = eventFeedbackRecords.map((f) => ({
     id: f.id as string,
     feedbackType: f.feedbackType as 'general' | 'problem',
-    subject: f.subject as string | undefined,
+    numericValue: (f.numericValue as number) ?? null,
     message: f.message as string,
     status: f.status as 'open' | 'acknowledged' | 'resolved' | 'closed',
     createdAt: (f.created as string) || ''

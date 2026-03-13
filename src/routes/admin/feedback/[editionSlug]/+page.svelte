@@ -339,8 +339,8 @@ function getTypeLabel(type: string): string {
 										</span>
 										<StatusBadge status={feedback.status} size="sm" />
 									</div>
-									{#if feedback.subject}
-										<Card.Title class="mt-2 text-base">{feedback.subject}</Card.Title>
+									{#if feedback.numericValue}
+										<div class="mt-1 text-amber-500">{renderStars(feedback.numericValue)}</div>
 									{/if}
 								</div>
 								<p class="text-xs text-muted-foreground">{formatDate(feedback.createdAt)}</p>

@@ -49,7 +49,7 @@ describe('event-feedback', () => {
       editionId: 'edition-456',
       userId: 'user-789',
       feedbackType: 'general',
-      subject: 'Great event!',
+      numericValue: 4,
       message: 'I really enjoyed the conference.',
       status: 'open',
       createdAt: new Date('2025-01-01'),
@@ -61,10 +61,15 @@ describe('event-feedback', () => {
       expect(result).toEqual(validFeedback)
     })
 
-    it('should accept feedback without subject', () => {
-      const feedback = { ...validFeedback, subject: undefined }
+    it('should accept feedback without rating', () => {
+      const feedback = { ...validFeedback, numericValue: null }
       const result = eventFeedbackSchema.parse(feedback)
-      expect(result.subject).toBeUndefined()
+      expect(result.numericValue).toBeNull()
+    })
+
+    it('should reject rating outside 1-5 range', () => {
+      expect(() => eventFeedbackSchema.parse({ ...validFeedback, numericValue: 0 })).toThrow()
+      expect(() => eventFeedbackSchema.parse({ ...validFeedback, numericValue: 6 })).toThrow()
     })
 
     it('should default status to open', () => {
@@ -84,9 +89,11 @@ describe('event-feedback', () => {
       expect(() => eventFeedbackSchema.parse(feedback)).toThrow()
     })
 
-    it('should reject subject longer than 200 characters', () => {
-      const feedback = { ...validFeedback, subject: 'a'.repeat(201) }
-      expect(() => eventFeedbackSchema.parse(feedback)).toThrow()
+    it('should accept valid star ratings', () => {
+      for (const rating of [1, 2, 3, 4, 5]) {
+        const result = eventFeedbackSchema.parse({ ...validFeedback, numericValue: rating })
+        expect(result.numericValue).toBe(rating)
+      }
     })
   })
 
@@ -96,6 +103,7 @@ describe('event-feedback', () => {
         editionId: 'edition-456',
         userId: 'user-789',
         feedbackType: 'problem',
+        numericValue: null,
         message: 'There was an issue with registration.',
         status: 'open'
       }

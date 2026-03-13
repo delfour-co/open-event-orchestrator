@@ -22,7 +22,7 @@ export const eventFeedbackSchema = z.object({
   editionId: z.string(),
   userId: z.string(),
   feedbackType: feedbackTypeSchema,
-  subject: z.string().max(200).optional(),
+  numericValue: z.number().min(1).max(5).nullable().default(null),
   message: z.string().min(1).max(5000),
   status: feedbackStatusSchema.default('open'),
   createdAt: z.date(),
