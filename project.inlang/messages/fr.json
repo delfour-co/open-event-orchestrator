@@ -3067,6 +3067,7 @@
   "app_networking_scan_again": "Re-scanner",
   "app_networking_confirm_delete": "Supprimer",
   "app_networking_invalid_qr": "Format de QR code non reconnu",
+  "app_networking_resolving_badge": "Recherche du badge...",
   "app_networking_initializing": "Demarrage de la camera...",
   "app_networking_try_again": "Reessayer",
   "app_networking_close_scanner": "Fermer",

@@ -29,8 +29,17 @@ const openDb = (): Promise<IDBDatabase> => {
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
-    request.onerror = () => reject(request.error)
+    request.onerror = () => {
+      dbPromise = null
+      reject(request.error)
+    }
     request.onsuccess = () => resolve(request.result)
+
+    request.onblocked = () => {
+      // Another connection is open with an older version — close it
+      dbPromise = null
+      reject(new Error('IndexedDB upgrade blocked by another connection'))
+    }
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result
@@ -133,22 +142,47 @@ function parseVCard(vcardStr: string): NewContact | null {
   return { firstName, lastName, email, company, title, phone, editionSlug: '' }
 }
 
+export interface QrParseResult {
+  type: 'contact'
+  contact: NewContact
+}
+
+export interface QrTicketResult {
+  type: 'ticket'
+  ticketNumber: string
+}
+
+export type QrResult = QrParseResult | QrTicketResult | null
+
 /**
- * Parse QR code data which can be JSON or vCard format.
+ * Parse QR code data which can be JSON contact, vCard, or a ticket QR code.
  */
-export function parseQrCodeData(raw: string, editionSlug: string): NewContact | null {
+export function parseQrCodeData(raw: string, editionSlug: string): QrResult {
   // Try JSON first
   try {
     const data = JSON.parse(raw) as Record<string, unknown>
+
+    // Check if it's a ticket QR code
+    if (data.ticketNumber || data.ticketId) {
+      return {
+        type: 'ticket',
+        ticketNumber: String(data.ticketNumber || data.ticketId)
+      }
+    }
+
+    // Check if it's a contact JSON
     if (data.firstName || data.lastName || data.email) {
       return {
-        firstName: String(data.firstName || ''),
-        lastName: String(data.lastName || ''),
-        email: String(data.email || ''),
-        company: data.company ? String(data.company) : undefined,
-        title: data.title ? String(data.title) : undefined,
-        phone: data.phone ? String(data.phone) : undefined,
-        editionSlug
+        type: 'contact',
+        contact: {
+          firstName: String(data.firstName || ''),
+          lastName: String(data.lastName || ''),
+          email: String(data.email || ''),
+          company: data.company ? String(data.company) : undefined,
+          title: data.title ? String(data.title) : undefined,
+          phone: data.phone ? String(data.phone) : undefined,
+          editionSlug
+        }
       }
     }
   } catch {
@@ -159,7 +193,7 @@ export function parseQrCodeData(raw: string, editionSlug: string): NewContact | 
   if (raw.includes('BEGIN:VCARD')) {
     const contact = parseVCard(raw)
     if (contact) {
-      return { ...contact, editionSlug }
+      return { type: 'contact', contact: { ...contact, editionSlug } }
     }
   }
 
@@ -178,9 +212,9 @@ export const contactsService = {
       scannedAt: Date.now()
     }
 
-    store.put(fullContact)
-
     return new Promise((resolve, reject) => {
+      const request = store.put(fullContact)
+      request.onerror = () => reject(request.error)
       tx.oncomplete = () => resolve(fullContact)
       tx.onerror = () => reject(tx.error)
     })
@@ -209,9 +243,9 @@ export const contactsService = {
     const tx = db.transaction(CONTACTS_STORE, 'readwrite')
     const store = tx.objectStore(CONTACTS_STORE)
 
-    store.delete(id)
-
     return new Promise((resolve, reject) => {
+      const request = store.delete(id)
+      request.onerror = () => reject(request.error)
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })
@@ -223,11 +257,11 @@ export const contactsService = {
     const tx = db.transaction(CONTACTS_STORE, 'readwrite')
     const store = tx.objectStore(CONTACTS_STORE)
 
-    for (const contact of contacts) {
-      store.delete(contact.id)
-    }
-
     return new Promise((resolve, reject) => {
+      for (const contact of contacts) {
+        const request = store.delete(contact.id)
+        request.onerror = () => reject(request.error)
+      }
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
     })

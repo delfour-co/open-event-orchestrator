@@ -83,8 +83,16 @@ const openDb = (): Promise<IDBDatabase> => {
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
-    request.onerror = () => reject(request.error)
+    request.onerror = () => {
+      dbPromise = null
+      reject(request.error)
+    }
     request.onsuccess = () => resolve(request.result)
+
+    request.onblocked = () => {
+      dbPromise = null
+      reject(new Error('IndexedDB upgrade blocked by another connection'))
+    }
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result

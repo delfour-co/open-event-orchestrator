@@ -17,13 +17,16 @@ describe('parseQrCodeData', () => {
     const result = parseQrCodeData(json, editionSlug)
 
     expect(result).not.toBeNull()
-    expect(result?.firstName).toBe('Alice')
-    expect(result?.lastName).toBe('Dupont')
-    expect(result?.email).toBe('alice@example.com')
-    expect(result?.company).toBe('Acme Corp')
-    expect(result?.title).toBe('CTO')
-    expect(result?.phone).toBe('+33612345678')
-    expect(result?.editionSlug).toBe(editionSlug)
+    expect(result?.type).toBe('contact')
+    if (result?.type === 'contact') {
+      expect(result.contact.firstName).toBe('Alice')
+      expect(result.contact.lastName).toBe('Dupont')
+      expect(result.contact.email).toBe('alice@example.com')
+      expect(result.contact.company).toBe('Acme Corp')
+      expect(result.contact.title).toBe('CTO')
+      expect(result.contact.phone).toBe('+33612345678')
+      expect(result.contact.editionSlug).toBe(editionSlug)
+    }
   })
 
   it('parses JSON with minimal fields', () => {
@@ -32,10 +35,41 @@ describe('parseQrCodeData', () => {
     const result = parseQrCodeData(json, editionSlug)
 
     expect(result).not.toBeNull()
-    expect(result?.firstName).toBe('Bob')
-    expect(result?.lastName).toBe('')
-    expect(result?.email).toBe('bob@test.com')
-    expect(result?.company).toBeUndefined()
+    expect(result?.type).toBe('contact')
+    if (result?.type === 'contact') {
+      expect(result.contact.firstName).toBe('Bob')
+      expect(result.contact.lastName).toBe('')
+      expect(result.contact.email).toBe('bob@test.com')
+      expect(result.contact.company).toBeUndefined()
+    }
+  })
+
+  it('parses ticket QR code', () => {
+    const json = JSON.stringify({
+      ticketId: 'TKT-123',
+      ticketNumber: 'TKT-123',
+      editionId: 'ed-1'
+    })
+
+    const result = parseQrCodeData(json, editionSlug)
+
+    expect(result).not.toBeNull()
+    expect(result?.type).toBe('ticket')
+    if (result?.type === 'ticket') {
+      expect(result.ticketNumber).toBe('TKT-123')
+    }
+  })
+
+  it('parses ticket QR code with only ticketId', () => {
+    const json = JSON.stringify({ ticketId: 'TKT-456' })
+
+    const result = parseQrCodeData(json, editionSlug)
+
+    expect(result).not.toBeNull()
+    expect(result?.type).toBe('ticket')
+    if (result?.type === 'ticket') {
+      expect(result.ticketNumber).toBe('TKT-456')
+    }
   })
 
   it('parses vCard 3.0 format', () => {
@@ -54,13 +88,16 @@ describe('parseQrCodeData', () => {
     const result = parseQrCodeData(vcard, editionSlug)
 
     expect(result).not.toBeNull()
-    expect(result?.firstName).toBe('Claire')
-    expect(result?.lastName).toBe('Martin')
-    expect(result?.email).toBe('claire@example.com')
-    expect(result?.company).toBe('TechCo')
-    expect(result?.title).toBe('Engineer')
-    expect(result?.phone).toBe('+33698765432')
-    expect(result?.editionSlug).toBe(editionSlug)
+    expect(result?.type).toBe('contact')
+    if (result?.type === 'contact') {
+      expect(result.contact.firstName).toBe('Claire')
+      expect(result.contact.lastName).toBe('Martin')
+      expect(result.contact.email).toBe('claire@example.com')
+      expect(result.contact.company).toBe('TechCo')
+      expect(result.contact.title).toBe('Engineer')
+      expect(result.contact.phone).toBe('+33698765432')
+      expect(result.contact.editionSlug).toBe(editionSlug)
+    }
   })
 
   it('handles vCard with EMAIL;TYPE= format', () => {
@@ -76,18 +113,13 @@ describe('parseQrCodeData', () => {
     const result = parseQrCodeData(vcard, editionSlug)
 
     expect(result).not.toBeNull()
-    expect(result?.email).toBe('john@example.com')
+    if (result?.type === 'contact') {
+      expect(result.contact.email).toBe('john@example.com')
+    }
   })
 
   it('returns null for unrecognized format', () => {
     const result = parseQrCodeData('random-string-123', editionSlug)
-    expect(result).toBeNull()
-  })
-
-  it('returns null for JSON without contact fields', () => {
-    const json = JSON.stringify({ ticketNumber: 'T-123', orderId: 'O-456' })
-
-    const result = parseQrCodeData(json, editionSlug)
     expect(result).toBeNull()
   })
 
@@ -105,6 +137,8 @@ describe('parseQrCodeData', () => {
     const result = parseQrCodeData(vcard, editionSlug)
 
     expect(result).not.toBeNull()
-    expect(result?.email).toBe('sean@example.com')
+    if (result?.type === 'contact') {
+      expect(result.contact.email).toBe('sean@example.com')
+    }
   })
 })

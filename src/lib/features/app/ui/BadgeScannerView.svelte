@@ -22,6 +22,7 @@ let html5QrCode: unknown = null
 // Scanned contact preview
 let pendingContact = $state<Omit<ScannedContact, 'id' | 'scannedAt'> | null>(null)
 let addSuccess = $state(false)
+let addError = $state<string | null>(null)
 
 // Contact list
 let contacts = $state<ScannedContact[]>([])
@@ -138,24 +139,74 @@ async function stopScanner(): Promise<void> {
   }
 }
 
+let isResolving = $state(false)
+
+async function resolveTicket(ticketNumber: string): Promise<void> {
+  isResolving = true
+  try {
+    const response = await fetch('/api/tickets/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketNumber })
+    })
+
+    if (!response.ok) {
+      const data = await response.json()
+      scanError = data.error || m.app_networking_invalid_qr()
+      setTimeout(() => {
+        scanError = null
+      }, 3000)
+      return
+    }
+
+    const data = await response.json()
+    if (data.success && data.contact) {
+      pendingContact = {
+        firstName: data.contact.firstName,
+        lastName: data.contact.lastName,
+        email: data.contact.email,
+        editionSlug
+      }
+    } else {
+      scanError = m.app_networking_invalid_qr()
+      setTimeout(() => {
+        scanError = null
+      }, 3000)
+    }
+  } catch {
+    scanError = m.app_networking_invalid_qr()
+    setTimeout(() => {
+      scanError = null
+    }, 3000)
+  } finally {
+    isResolving = false
+  }
+}
+
 async function handleScan(decodedText: string): Promise<void> {
   await stopScanner()
 
   const parsed = parseQrCodeData(decodedText, editionSlug)
 
-  if (parsed) {
-    pendingContact = parsed
-  } else {
+  if (!parsed) {
     scanError = m.app_networking_invalid_qr()
     setTimeout(() => {
       scanError = null
     }, 3000)
+    return
+  }
+
+  if (parsed.type === 'contact') {
+    pendingContact = parsed.contact
+  } else if (parsed.type === 'ticket') {
+    await resolveTicket(parsed.ticketNumber)
   }
 }
 
 async function confirmAdd(): Promise<void> {
   if (!pendingContact) return
 
+  addError = null
   try {
     await contactsService.addContact(pendingContact)
     pendingContact = null
@@ -165,8 +216,12 @@ async function confirmAdd(): Promise<void> {
     setTimeout(() => {
       addSuccess = false
     }, 2000)
-  } catch {
-    // Silently fail
+  } catch (err) {
+    console.error('Failed to add contact:', err)
+    addError = err instanceof Error ? err.message : 'Failed to save contact'
+    setTimeout(() => {
+      addError = null
+    }, 5000)
   }
 }
 
@@ -200,7 +255,16 @@ function closeScanner(): void {
   <h2 class="sr-only">{m.app_networking_contacts()}</h2>
 
   <!-- Scan Badge Button -->
-  {#if !scannerActive && !isInitializing && !pendingContact}
+  {#if isResolving}
+    <Card class="p-6">
+      <div class="flex flex-col items-center gap-4">
+        <Loader2 class="h-8 w-8 animate-spin text-primary" />
+        <p class="text-sm text-muted-foreground">{m.app_networking_resolving_badge()}</p>
+      </div>
+    </Card>
+  {/if}
+
+  {#if !scannerActive && !isInitializing && !pendingContact && !isResolving}
     <Card class="p-6">
       <div class="flex flex-col items-center gap-4">
         <div class="rounded-full bg-primary/10 p-4">
@@ -277,16 +341,18 @@ function closeScanner(): void {
           <p class="text-sm text-muted-foreground">{pendingContact.phone}</p>
         {/if}
 
-        <div class="flex gap-2 pt-2">
-          <Button onclick={confirmAdd} class="flex-1">
+        <div class="flex flex-col gap-2 pt-2 sm:flex-row">
+          <Button onclick={confirmAdd} class="w-full sm:flex-1">
             {m.app_networking_add_contact()}
           </Button>
-          <Button variant="outline" onclick={cancelAdd}>
-            {m.app_networking_cancel()}
-          </Button>
-          <Button variant="outline" onclick={() => { cancelAdd(); startScanner(); }}>
-            {m.app_networking_scan_again()}
-          </Button>
+          <div class="flex gap-2">
+            <Button variant="outline" onclick={cancelAdd} class="flex-1 sm:flex-initial">
+              {m.app_networking_cancel()}
+            </Button>
+            <Button variant="outline" onclick={() => { cancelAdd(); startScanner(); }} class="flex-1 sm:flex-initial">
+              {m.app_networking_scan_again()}
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
@@ -296,6 +362,13 @@ function closeScanner(): void {
   {#if addSuccess}
     <div class="rounded-md bg-green-50 dark:bg-green-950 p-3 text-center text-sm text-green-800 dark:text-green-200">
       {m.app_networking_scanned()}
+    </div>
+  {/if}
+
+  <!-- Error Message -->
+  {#if addError}
+    <div class="rounded-md border border-destructive bg-destructive/10 p-3 text-center text-sm text-destructive">
+      {addError}
     </div>
   {/if}
 
