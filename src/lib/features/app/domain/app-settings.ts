@@ -1,5 +1,25 @@
 import { z } from 'zod'
 
+export const FLOOR_AMENITY_TYPES = [
+  'toilets',
+  'elevator',
+  'stairs',
+  'cafeteria',
+  'water_fountain',
+  'first_aid',
+  'cloakroom',
+  'charging_station',
+  'info_desk',
+  'exit'
+] as const
+
+export type FloorAmenityType = (typeof FLOOR_AMENITY_TYPES)[number]
+
+export interface FloorAmenity {
+  floor: string
+  amenities: FloorAmenityType[]
+}
+
 export const appSettingsSchema = z.object({
   id: z.string(),
   editionId: z.string(),
@@ -14,7 +34,15 @@ export const appSettingsSchema = z.object({
   showTicketsTab: z.boolean().default(true),
   showFeedbackTab: z.boolean().default(true),
   showFavoritesTab: z.boolean().default(true),
-  showNetworkingTab: z.boolean().default(false)
+  showNetworkingTab: z.boolean().default(false),
+  floorAmenities: z
+    .array(
+      z.object({
+        floor: z.string(),
+        amenities: z.array(z.string())
+      })
+    )
+    .default([])
 })
 
 export type AppSettings = z.infer<typeof appSettingsSchema>
@@ -34,5 +62,6 @@ export const DEFAULT_APP_SETTINGS: Omit<AppSettings, 'id' | 'editionId'> = {
   showTicketsTab: true,
   showFeedbackTab: true,
   showFavoritesTab: true,
-  showNetworkingTab: false
+  showNetworkingTab: false,
+  floorAmenities: []
 }

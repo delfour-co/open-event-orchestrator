@@ -2103,6 +2103,7 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 		sessions={data.sessions}
 		slots={data.slots}
 		tracks={data.tracks}
+		floorAmenities={data.appSettings?.floorAmenities ?? []}
 		selectedRoomId={mapSelectedRoomId}
 		editionSlug={data.edition.slug}
 		onClose={closeVenueMap}

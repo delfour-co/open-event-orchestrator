@@ -2,7 +2,23 @@
 import { Button } from '$lib/components/ui/button'
 import { Card } from '$lib/components/ui/card'
 import * as m from '$lib/paraglide/messages'
-import { Clock, MapPin, Minus, Plus, Users, X } from 'lucide-svelte'
+import {
+  Bath,
+  Clock,
+  Coffee,
+  DoorOpen,
+  Droplets,
+  Footprints,
+  Info,
+  LogOut,
+  MapPin,
+  Minus,
+  Plus,
+  ShieldPlus,
+  Users,
+  X,
+  Zap
+} from 'lucide-svelte'
 
 interface RoomData {
   id: string
@@ -35,15 +51,37 @@ interface TrackData {
   color?: string
 }
 
+interface FloorAmenityData {
+  floor: string
+  amenities: string[]
+}
+
 interface Props {
   rooms: RoomData[]
   sessions: SessionData[]
   slots: SlotData[]
   tracks: TrackData[]
+  floorAmenities?: FloorAmenityData[]
   selectedRoomId?: string | null
   editionSlug: string
   onClose: () => void
   onSelectSession?: (sessionId: string) => void
+}
+
+function getAmenityLabel(type: string): string {
+  const labels: Record<string, () => string> = {
+    toilets: () => m.amenity_toilets(),
+    elevator: () => m.amenity_elevator(),
+    stairs: () => m.amenity_stairs(),
+    cafeteria: () => m.amenity_cafeteria(),
+    water_fountain: () => m.amenity_water_fountain(),
+    first_aid: () => m.amenity_first_aid(),
+    cloakroom: () => m.amenity_cloakroom(),
+    charging_station: () => m.amenity_charging_station(),
+    info_desk: () => m.amenity_info_desk(),
+    exit: () => m.amenity_exit()
+  }
+  return labels[type]?.() ?? type
 }
 
 const {
@@ -51,11 +89,17 @@ const {
   sessions,
   slots,
   tracks,
+  floorAmenities = [],
   selectedRoomId = null,
   editionSlug: _editionSlug,
   onClose,
   onSelectSession
 }: Props = $props()
+
+function getFloorAmenities(floor: string): string[] {
+  const entry = floorAmenities.find((fa) => fa.floor === floor)
+  return entry?.amenities ?? []
+}
 
 // Transform state
 let scale = $state(1)
@@ -79,10 +123,10 @@ const ZOOM_STEP = 0.25
 // Isometric floor slab dimensions (internal SVG units)
 const FLOOR_W = 320
 const ISO_DX = 60
-const ISO_DY = 60
+const ISO_DY = 20
 const WALL_H = 75
-const VB_W = FLOOR_W + ISO_DX
-const VB_H = ISO_DY + WALL_H
+const VB_W = FLOOR_W + ISO_DX + 2
+const VB_H = ISO_DY + WALL_H + 2
 
 // Group rooms by floor (descending: highest floor at top, floor 0 at bottom)
 const floorGroups = $derived(() => {
@@ -340,13 +384,13 @@ function getRoomAriaLabel(room: RoomData): string {
 </script>
 
 <div
-	class="fixed inset-0 z-[90] flex flex-col bg-background"
+	class="venue-map fixed inset-0 z-[90] flex flex-col bg-background"
 	role="dialog"
 	aria-modal="true"
 	aria-label={m.app_map_title()}
 >
 	<!-- Header -->
-	<div class="flex items-center justify-between border-b px-4 py-3">
+	<div class="flex items-center justify-between border-b bg-background/80 px-4 py-3 backdrop-blur-sm">
 		<div class="flex items-center gap-2">
 			<MapPin class="h-5 w-5 text-primary" />
 			<h2 class="text-lg font-semibold">{m.app_map_title()}</h2>
@@ -365,7 +409,7 @@ function getRoomAriaLabel(room: RoomData): string {
 		</div>
 	</div>
 
-	<!-- Map area -->
+	<!-- Map area with vignette -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		class="flex-1 overflow-hidden touch-none cursor-grab active:cursor-grabbing"
@@ -385,44 +429,55 @@ function getRoomAriaLabel(room: RoomData): string {
 		data-testid="venue-map-svg"
 	>
 		<div
-			class="flex min-h-full flex-col justify-end px-4 pb-8 pt-4"
+			class="mx-auto flex min-h-full max-w-2xl flex-col justify-end px-4 pb-8 pt-4"
 			style="transform: scale({scale}) translate({panX / scale}px, {panY / scale}px); transform-origin: center center;"
 		>
 			{#each floorGroups() as group}
 				{@const layouts = computeFloorLayout(group.rooms)}
-				<div class="mb-8">
-					<!-- Floor label -->
-					<p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.label}</p>
+				<div class="mb-6">
+					<!-- Floor label with decorative lines -->
+					<div class="mb-3 flex items-center gap-3">
+						<div class="h-px flex-1 bg-gradient-to-r from-transparent to-border"></div>
+						<p class="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{group.label}</p>
+						<div class="h-px flex-1 bg-gradient-to-l from-transparent to-border"></div>
+					</div>
 
 					<!-- Isometric floor slab -->
-					<svg viewBox="0 0 {VB_W} {VB_H}" class="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-						<!-- Layer 1: Per-room interactive areas + subtle fills -->
+					<svg viewBox="0 0 {VB_W} {VB_H}" class="w-full h-auto" preserveAspectRatio="xMidYMid meet" overflow="visible">
+						<defs>
+							<!-- Glow filter for selected room -->
+							<filter id="selectedGlow-{group.floor}" x="-20%" y="-20%" width="140%" height="140%">
+								<feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+								<feComposite in="SourceGraphic" in2="blur" operator="over" />
+							</filter>
+
+							<!-- Live dot glow -->
+							<filter id="dotGlow-{group.floor}" x="-100%" y="-100%" width="300%" height="300%">
+								<feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+							</filter>
+						</defs>
+
+						<!-- Layer 1: Per-room — front face only is interactive -->
 						{#each layouts as layout}
 							{@const isSelected = layout.room.id === activeRoomId}
 							{@const current = getCurrentSession(layout.room.id)}
 							{@const tc = current?.track?.color}
 							{@const maxChars = Math.max(4, Math.floor(layout.widthUnits / 5))}
 
-							<!-- Clickable top face area per room (hover + selection highlight) -->
-							<polygon
-								points="{layout.x1},{ISO_DY} {layout.x2},{ISO_DY} {layout.x2 + ISO_DX},0 {layout.x1 + ISO_DX},0"
-								fill={isSelected ? 'var(--color-primary, #3b82f6)' : tc ? tc : 'transparent'}
-								opacity={isSelected ? 0.15 : tc ? 0.1 : 0}
-								class="cursor-pointer transition-opacity hover:!opacity-20"
+							<!-- Front face clickable area (transparent, only for interaction) -->
+							<rect
+								x={layout.x1}
+								y={ISO_DY}
+								width={layout.x2 - layout.x1}
+								height={WALL_H}
+								fill={isSelected ? (tc || 'var(--color-primary, #3b82f6)') : 'transparent'}
+								opacity={isSelected ? 0.1 : 0}
+								class="cursor-pointer" style="transition: opacity 0.3s ease"
 								role="button"
 								tabindex="-1"
 								aria-label={getRoomAriaLabel(layout.room)}
 								onclick={(e) => { e.stopPropagation(); selectRoom(layout.room.id) }}
 								data-testid="map-room-{layout.room.id}"
-							/>
-
-							<!-- Front face fill per room (clickable) -->
-							<polygon
-								points="{layout.x1},{ISO_DY} {layout.x2},{ISO_DY} {layout.x2},{VB_H} {layout.x1},{VB_H}"
-								fill={tc || 'var(--color-muted, #3f3f46)'}
-								opacity={isSelected ? 0.25 : 0.12}
-								class="cursor-pointer"
-								onclick={(e) => { e.stopPropagation(); selectRoom(layout.room.id) }}
 							/>
 
 							{@const frontCx = (layout.x1 + layout.x2) / 2}
@@ -435,8 +490,10 @@ function getRoomAriaLabel(room: RoomData): string {
 								text-anchor="middle"
 								dominant-baseline="middle"
 								class="pointer-events-none fill-current text-foreground"
-								font-size="14"
+								font-size="11"
 								font-weight="600"
+								letter-spacing="0.5"
+
 							>
 								{truncateText(layout.room.name, maxChars)}
 							</text>
@@ -448,7 +505,8 @@ function getRoomAriaLabel(room: RoomData): string {
 								text-anchor="middle"
 								dominant-baseline="middle"
 								class="pointer-events-none fill-current {current ? 'text-foreground' : 'text-muted-foreground'}"
-								font-size="10"
+								font-size={current ? '11' : '10'}
+
 							>
 								{current
 									? truncateText(current.session.title, maxChars)
@@ -464,6 +522,7 @@ function getRoomAriaLabel(room: RoomData): string {
 									dominant-baseline="middle"
 									class="pointer-events-none fill-current text-muted-foreground"
 									font-size="8"
+	
 								>
 									{formatTime(current.slot.startTime)} – {formatTime(current.slot.endTime)}
 								</text>
@@ -478,56 +537,121 @@ function getRoomAriaLabel(room: RoomData): string {
 									dominant-baseline="middle"
 									class="pointer-events-none fill-current text-muted-foreground"
 									font-size="9"
+									opacity="0.7"
 								>
 									{layout.room.capacity} places
 								</text>
 							{/if}
 
-							<!-- "Now" dot on top face -->
+							<!-- Door(s) on front face sides -->
+							{@const doorH = WALL_H * 0.7}
+							{@const doorBottom = ISO_DY + WALL_H}
+							{@const doorTop = doorBottom - doorH}
+							{@const doorW = 26}
+							{@const isDoubleDoor = layout.widthUnits > FLOOR_W * 0.5}
+							{#if isDoubleDoor}
+								{@const gap = 1.5}
+								{@const leftDoorX = layout.x1 + 6}
+								{@const rightDoorX = layout.x2 - doorW - 6}
+								<!-- Left double door -->
+								<rect x={leftDoorX} y={doorTop} width={doorW / 2 - gap / 2} height={doorH} fill="none" stroke="var(--color-border, #3f3f46)" stroke-width="0.6" stroke-opacity="0.4" class="pointer-events-none" />
+								<rect x={leftDoorX + doorW / 2 + gap / 2} y={doorTop} width={doorW / 2 - gap / 2} height={doorH} fill="none" stroke="var(--color-border, #3f3f46)" stroke-width="0.6" stroke-opacity="0.4" class="pointer-events-none" />
+								<circle cx={leftDoorX + doorW / 2 - gap / 2 - 1} cy={doorTop + doorH / 2} r="0.8" fill="var(--color-border, #3f3f46)" opacity="0.5" class="pointer-events-none" />
+								<circle cx={leftDoorX + doorW / 2 + gap / 2 + 1} cy={doorTop + doorH / 2} r="0.8" fill="var(--color-border, #3f3f46)" opacity="0.5" class="pointer-events-none" />
+								<!-- Right double door -->
+								<rect x={rightDoorX} y={doorTop} width={doorW / 2 - gap / 2} height={doorH} fill="none" stroke="var(--color-border, #3f3f46)" stroke-width="0.6" stroke-opacity="0.4" class="pointer-events-none" />
+								<rect x={rightDoorX + doorW / 2 + gap / 2} y={doorTop} width={doorW / 2 - gap / 2} height={doorH} fill="none" stroke="var(--color-border, #3f3f46)" stroke-width="0.6" stroke-opacity="0.4" class="pointer-events-none" />
+								<circle cx={rightDoorX + doorW / 2 - gap / 2 - 1} cy={doorTop + doorH / 2} r="0.8" fill="var(--color-border, #3f3f46)" opacity="0.5" class="pointer-events-none" />
+								<circle cx={rightDoorX + doorW / 2 + gap / 2 + 1} cy={doorTop + doorH / 2} r="0.8" fill="var(--color-border, #3f3f46)" opacity="0.5" class="pointer-events-none" />
+							{:else}
+								{@const singleDoorX = layout.x1 + 6}
+								<!-- Single door on left side -->
+								<rect x={singleDoorX} y={doorTop} width={doorW} height={doorH} fill="none" stroke="var(--color-border, #3f3f46)" stroke-width="0.6" stroke-opacity="0.4" class="pointer-events-none" />
+								<circle cx={singleDoorX + doorW - 2} cy={doorTop + doorH / 2} r="0.8" fill="var(--color-border, #3f3f46)" opacity="0.5" class="pointer-events-none" />
+							{/if}
+
+							<!-- "Now" beacon on top face -->
 							{#if current}
+								<!-- Glow halo -->
 								<circle
-									cx={layout.x1 + ISO_DX + 6}
-									cy={6}
-									r="3.5"
+									cx={layout.x1 + ISO_DX + 8}
+									cy={8}
+									r="6"
 									fill="#22c55e"
+									filter="url(#dotGlow-{group.floor})"
+									opacity="0.5"
+									class="pointer-events-none"
+								/>
+								<!-- Ripple ring 1 -->
+								<circle
+									cx={layout.x1 + ISO_DX + 8}
+									cy={8}
+									r="4"
+									fill="none"
+									stroke="#22c55e"
+									stroke-width="1"
 									class="pointer-events-none"
 								>
-									<animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+									<animate attributeName="r" values="4;10" dur="2s" repeatCount="indefinite" />
+									<animate attributeName="opacity" values="0.6;0" dur="2s" repeatCount="indefinite" />
 								</circle>
+								<!-- Ripple ring 2 (staggered) -->
+								<circle
+									cx={layout.x1 + ISO_DX + 8}
+									cy={8}
+									r="4"
+									fill="none"
+									stroke="#22c55e"
+									stroke-width="0.75"
+									class="pointer-events-none"
+								>
+									<animate attributeName="r" values="4;10" dur="2s" begin="0.8s" repeatCount="indefinite" />
+									<animate attributeName="opacity" values="0.4;0" dur="2s" begin="0.8s" repeatCount="indefinite" />
+								</circle>
+								<!-- Core dot -->
+								<circle
+									cx={layout.x1 + ISO_DX + 8}
+									cy={8}
+									r="3"
+									fill="#22c55e"
+									class="pointer-events-none"
+								/>
 							{/if}
 						{/each}
 
 						<!-- Layer 2: Wireframe edges -->
 						<!-- Outer top face -->
 						<polygon
-							points="0,{ISO_DY} {FLOOR_W},{ISO_DY} {VB_W},0 {ISO_DX},0"
+							points="0,{ISO_DY} {FLOOR_W},{ISO_DY} {VB_W - 4},0 {ISO_DX},0"
 							fill="none"
 							stroke="var(--color-border, #3f3f46)"
-							stroke-width="1.5"
+							stroke-width="0.8"
+							stroke-opacity="0.6"
 							stroke-linejoin="round"
 							class="pointer-events-none"
 						/>
 						<!-- Front face -->
 						<polygon
-							points="0,{ISO_DY} {FLOOR_W},{ISO_DY} {FLOOR_W},{VB_H} 0,{VB_H}"
+							points="0,{ISO_DY} {FLOOR_W},{ISO_DY} {FLOOR_W},{ISO_DY + WALL_H} 0,{ISO_DY + WALL_H}"
 							fill="none"
 							stroke="var(--color-border, #3f3f46)"
-							stroke-width="1.5"
+							stroke-width="0.8"
+							stroke-opacity="0.6"
 							stroke-linejoin="round"
 							class="pointer-events-none"
 						/>
 						<!-- Right side face -->
 						<polygon
-							points="{FLOOR_W},{ISO_DY} {VB_W},0 {VB_W},{WALL_H} {FLOOR_W},{VB_H}"
-							fill="var(--color-muted, #3f3f46)"
-							fill-opacity="0.15"
+							points="{FLOOR_W},{ISO_DY} {VB_W - 4},0 {VB_W - 4},{WALL_H} {FLOOR_W},{ISO_DY + WALL_H}"
+							fill="none"
 							stroke="var(--color-border, #3f3f46)"
-							stroke-width="1.5"
+							stroke-width="0.8"
+							stroke-opacity="0.4"
 							stroke-linejoin="round"
 							class="pointer-events-none"
 						/>
 
-						<!-- Room divider lines -->
+						<!-- Room divider lines (solid) -->
 						{#each layouts as layout, i}
 							{#if i > 0}
 								<!-- Top face divider -->
@@ -537,8 +661,8 @@ function getRoomAriaLabel(room: RoomData): string {
 									x2={layout.x1 + ISO_DX}
 									y2={0}
 									stroke="var(--color-border, #3f3f46)"
-									stroke-width="0.75"
-									stroke-dasharray="3 2"
+									stroke-width="0.8"
+									stroke-opacity="0.5"
 									class="pointer-events-none"
 								/>
 								<!-- Front face divider -->
@@ -546,47 +670,82 @@ function getRoomAriaLabel(room: RoomData): string {
 									x1={layout.x1}
 									y1={ISO_DY}
 									x2={layout.x1}
-									y2={VB_H}
+									y2={ISO_DY + WALL_H}
 									stroke="var(--color-border, #3f3f46)"
-									stroke-width="0.75"
-									stroke-dasharray="3 2"
+									stroke-width="0.8"
+									stroke-opacity="0.5"
 									class="pointer-events-none"
 								/>
 							{/if}
 						{/each}
 
-						<!-- Selected room highlight border -->
+						<!-- Selected room highlight (front face glow + outline) -->
 						{#each layouts as layout}
 							{#if layout.room.id === activeRoomId}
-								<polygon
-									points="{layout.x1},{ISO_DY} {layout.x2},{ISO_DY} {layout.x2 + ISO_DX},0 {layout.x1 + ISO_DX},0"
+								<!-- Glow layer -->
+								<rect
+									x={layout.x1}
+									y={ISO_DY}
+									width={layout.x2 - layout.x1}
+									height={WALL_H}
 									fill="none"
 									stroke="var(--color-primary, #3b82f6)"
-									stroke-width="2"
-									stroke-linejoin="round"
-									class="pointer-events-none"
+									stroke-width="3"
+									stroke-opacity="0.4"
+									rx="2"
+									filter="url(#selectedGlow-{group.floor})"
+									class="pointer-events-none" style="animation: venue-glow-pulse 2.5s ease-in-out infinite"
 								/>
-								<line
-									x1={layout.x1}
-									y1={ISO_DY}
-									x2={layout.x1}
-									y2={VB_H}
+								<!-- Crisp border -->
+								<rect
+									x={layout.x1}
+									y={ISO_DY}
+									width={layout.x2 - layout.x1}
+									height={WALL_H}
+									fill="none"
 									stroke="var(--color-primary, #3b82f6)"
-									stroke-width="2"
-									class="pointer-events-none"
-								/>
-								<line
-									x1={layout.x2}
-									y1={ISO_DY}
-									x2={layout.x2}
-									y2={VB_H}
-									stroke="var(--color-primary, #3b82f6)"
-									stroke-width="2"
+									stroke-width="1.5"
+									rx="2"
 									class="pointer-events-none"
 								/>
 							{/if}
 						{/each}
 					</svg>
+
+					<!-- Floor amenities badges -->
+					{#if getFloorAmenities(group.floor).length > 0}
+						<div class="mt-2 flex flex-wrap gap-2">
+							{#each getFloorAmenities(group.floor) as amenity}
+								<span
+									class="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground"
+									title={getAmenityLabel(amenity)}
+								>
+									{#if amenity === 'toilets'}
+										<Bath class="h-3.5 w-3.5" />
+									{:else if amenity === 'elevator'}
+										<DoorOpen class="h-3.5 w-3.5" />
+									{:else if amenity === 'stairs'}
+										<Footprints class="h-3.5 w-3.5" />
+									{:else if amenity === 'cafeteria'}
+										<Coffee class="h-3.5 w-3.5" />
+									{:else if amenity === 'water_fountain'}
+										<Droplets class="h-3.5 w-3.5" />
+									{:else if amenity === 'first_aid'}
+										<ShieldPlus class="h-3.5 w-3.5" />
+									{:else if amenity === 'cloakroom'}
+										<Footprints class="h-3.5 w-3.5" />
+									{:else if amenity === 'charging_station'}
+										<Zap class="h-3.5 w-3.5" />
+									{:else if amenity === 'info_desk'}
+										<Info class="h-3.5 w-3.5" />
+									{:else if amenity === 'exit'}
+										<LogOut class="h-3.5 w-3.5" />
+									{/if}
+									<span>{getAmenityLabel(amenity)}</span>
+								</span>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -596,7 +755,7 @@ function getRoomAriaLabel(room: RoomData): string {
 	{#if selectedRoomDetails()}
 		{@const details = selectedRoomDetails()!}
 		<div
-			class="border-t bg-card px-4 py-3 safe-area-bottom"
+			class="border-t bg-card/90 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur-sm safe-area-bottom"
 			role="region"
 			aria-live="polite"
 			aria-label="{details.room.name} details"
@@ -675,3 +834,4 @@ function getRoomAriaLabel(room: RoomData): string {
 		</div>
 	{/if}
 </div>
+

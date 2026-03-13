@@ -20,11 +20,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const editionId = edition.id as string
   const event = edition.expand?.eventId as Record<string, unknown> | undefined
 
-  // Load app settings and feedback settings in parallel
+  // Load app settings, feedback settings, and rooms in parallel
   const appSettingsRepo = new AppSettingsRepository(locals.pb)
-  const [appSettings, feedbackSettings] = await Promise.all([
+  const [appSettings, feedbackSettings, rooms] = await Promise.all([
     appSettingsRepo.getByEdition(editionId),
-    new FeedbackSettingsRepository(locals.pb).getByEdition(editionId)
+    new FeedbackSettingsRepository(locals.pb).getByEdition(editionId),
+    locals.pb.collection('rooms').getFullList({
+      filter: `editionId = "${editionId}"`,
+      sort: 'order,name'
+    })
   ])
 
   // Build logo and header image URLs if they exist
@@ -59,7 +63,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       ? {
           ...appSettings,
           logoUrl,
-          headerImageUrl
+          headerImageUrl,
+          floorAmenities: (appSettings.floorAmenities || []) as Array<{
+            floor: string
+            amenities: string[]
+          }>
         }
       : null,
     defaultAppSettings: DEFAULT_APP_SETTINGS,
@@ -73,7 +81,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           feedbackIntroText: feedbackSettings.feedbackIntroText
         }
       : null,
-    defaultFeedbackSettings: DEFAULT_FEEDBACK_SETTINGS
+    defaultFeedbackSettings: DEFAULT_FEEDBACK_SETTINGS,
+    floors: [...new Set(rooms.map((r) => r.floor as string).filter(Boolean))].sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true })
+    )
   }
 }
 
@@ -200,7 +211,8 @@ export const actions: Actions = {
           showTicketsTab,
           showFeedbackTab,
           showFavoritesTab,
-          showNetworkingTab
+          showNetworkingTab,
+          floorAmenities: []
         })
       }
       return { success: true, action: 'features' }
@@ -261,6 +273,57 @@ export const actions: Actions = {
     } catch (err) {
       console.error('Failed to save feedback settings:', err)
       return fail(500, { error: 'Failed to save feedback settings', action: 'feedback' })
+    }
+  },
+
+  saveVenue: async ({ request, locals, params }) => {
+    const { editionSlug } = params
+
+    const editions = await locals.pb.collection('editions').getList(1, 1, {
+      filter: `slug = "${editionSlug}"`
+    })
+
+    if (editions.items.length === 0) {
+      throw error(404, 'Edition not found')
+    }
+
+    const edition = editions.items[0]
+    const editionId = edition.id as string
+
+    const formData = await request.formData()
+    const floorAmenitiesRaw = formData.get('floorAmenities') as string | null
+
+    let floorAmenities: Array<{ floor: string; amenities: string[] }> = []
+    try {
+      if (floorAmenitiesRaw) {
+        floorAmenities = JSON.parse(floorAmenitiesRaw)
+      }
+    } catch {
+      return fail(400, { error: 'Invalid floor amenities data', action: 'venue' })
+    }
+
+    const appSettingsRepo = new AppSettingsRepository(locals.pb)
+    const existingSettings = await appSettingsRepo.getByEdition(editionId)
+
+    try {
+      if (existingSettings) {
+        await locals.pb.collection('pwa_settings').update(existingSettings.id, { floorAmenities })
+      } else {
+        await locals.pb.collection('pwa_settings').create({
+          editionId,
+          floorAmenities,
+          showScheduleTab: true,
+          showSpeakersTab: true,
+          showTicketsTab: true,
+          showFeedbackTab: true,
+          showFavoritesTab: true,
+          showNetworkingTab: false
+        })
+      }
+      return { success: true, action: 'venue' }
+    } catch (err) {
+      console.error('Failed to save venue settings:', err)
+      return fail(500, { error: 'Failed to save venue settings', action: 'venue' })
     }
   },
 

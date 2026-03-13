@@ -7,6 +7,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Switch } from '$lib/components/ui/switch'
 import { Textarea } from '$lib/components/ui/textarea'
+import { FLOOR_AMENITY_TYPES, type FloorAmenityType } from '$lib/features/app/domain/app-settings'
 import { getAvailableRatingModes } from '$lib/features/feedback/domain/rating-mode'
 import * as m from '$lib/paraglide/messages'
 import {
@@ -19,6 +20,7 @@ import {
   Heart,
   ImageIcon,
   Loader2,
+  MapPin,
   MessageSquare,
   Mic,
   Palette,
@@ -43,7 +45,7 @@ const ratingModes = getAvailableRatingModes()
 const appUrl = `/app/${data.edition.slug}`
 
 // Active settings tab
-let activeTab = $state<'appearance' | 'features' | 'feedback'>('appearance')
+let activeTab = $state<'appearance' | 'features' | 'feedback' | 'venue'>('appearance')
 
 // Appearance settings state (live preview)
 let title = $state(data.appSettings?.title ?? data.edition.name)
@@ -112,12 +114,85 @@ $effect(() => {
     data.feedbackSettings?.feedbackIntroText ?? data.defaultFeedbackSettings.feedbackIntroText ?? ''
 })
 
+// Venue / floor amenities state
+let floorAmenities = $state<Map<string, Set<FloorAmenityType>>>(new Map())
+
+function initFloorAmenities(): void {
+  const map = new Map<string, Set<FloorAmenityType>>()
+  for (const floor of data.floors) {
+    map.set(floor, new Set())
+  }
+  const saved = data.appSettings?.floorAmenities ?? []
+  for (const entry of saved) {
+    if (map.has(entry.floor)) {
+      map.set(entry.floor, new Set(entry.amenities as FloorAmenityType[]))
+    }
+  }
+  floorAmenities = map
+}
+initFloorAmenities()
+
+function toggleAmenity(floor: string, amenity: FloorAmenityType): void {
+  const current = floorAmenities.get(floor) ?? new Set()
+  if (current.has(amenity)) {
+    current.delete(amenity)
+  } else {
+    current.add(amenity)
+  }
+  floorAmenities = new Map(floorAmenities)
+}
+
+function getFloorAmenitiesJson(): string {
+  const result: Array<{ floor: string; amenities: string[] }> = []
+  for (const [floor, amenities] of floorAmenities) {
+    if (amenities.size > 0) {
+      result.push({ floor, amenities: [...amenities] })
+    }
+  }
+  return JSON.stringify(result)
+}
+
+function getAmenityLabel(type: FloorAmenityType): string {
+  const labels: Record<FloorAmenityType, () => string> = {
+    toilets: () => m.amenity_toilets(),
+    elevator: () => m.amenity_elevator(),
+    stairs: () => m.amenity_stairs(),
+    cafeteria: () => m.amenity_cafeteria(),
+    water_fountain: () => m.amenity_water_fountain(),
+    first_aid: () => m.amenity_first_aid(),
+    cloakroom: () => m.amenity_cloakroom(),
+    charging_station: () => m.amenity_charging_station(),
+    info_desk: () => m.amenity_info_desk(),
+    exit: () => m.amenity_exit()
+  }
+  return labels[type]()
+}
+
+const AMENITY_ICONS: Record<FloorAmenityType, string> = {
+  toilets: '🚻',
+  elevator: '🛗',
+  stairs: '🪜',
+  cafeteria: '☕',
+  water_fountain: '🚰',
+  first_aid: '🏥',
+  cloakroom: '🧥',
+  charging_station: '🔌',
+  info_desk: 'ℹ️',
+  exit: '🚪'
+}
+
 // Loading states
 let isSavingAppearance = $state(false)
 let isSavingFeatures = $state(false)
 let isSavingFeedback = $state(false)
+let isSavingVenue = $state(false)
 let isResetting = $state(false)
 let showResetDialog = $state(false)
+
+// Sync venue amenities when data changes
+$effect(() => {
+  if (data.floors) initFloorAmenities()
+})
 
 // File preview handlers
 function handleLogoChange(event: Event) {
@@ -294,6 +369,14 @@ function handleHeaderChange(event: Event) {
 				>
 					<Star class="h-4 w-4" />
 					{m.admin_app_tab_feedback()}
+				</Button>
+				<Button
+					variant={activeTab === 'venue' ? 'default' : 'ghost'}
+					onclick={() => (activeTab = 'venue')}
+					class="flex items-center gap-2"
+				>
+					<MapPin class="h-4 w-4" />
+					{m.admin_app_tab_venue()}
 				</Button>
 			</div>
 
@@ -558,6 +641,70 @@ function handleHeaderChange(event: Event) {
 							{:else}
 								<Check class="mr-2 h-4 w-4" />
 								{m.admin_app_save_features()}
+							{/if}
+						</Button>
+					</div>
+				</form>
+			{/if}
+
+			<!-- Venue Tab -->
+			{#if activeTab === 'venue'}
+				<form
+					method="POST"
+					action="?/saveVenue"
+					use:enhance={() => {
+						isSavingVenue = true
+						return async ({ update }) => {
+							isSavingVenue = false
+							await update()
+						}
+					}}
+					class="space-y-6"
+				>
+					<input type="hidden" name="floorAmenities" value={getFloorAmenitiesJson()} />
+
+					<Card.Root>
+						<Card.Header>
+							<Card.Title class="flex items-center gap-2">
+								<MapPin class="h-5 w-5" />
+								{m.admin_app_venue_title()}
+							</Card.Title>
+							<Card.Description>{m.admin_app_venue_description()}</Card.Description>
+						</Card.Header>
+						<Card.Content class="space-y-6">
+							{#if data.floors.length === 0}
+								<p class="text-sm text-muted-foreground">{m.admin_app_venue_no_floors()}</p>
+							{:else}
+								{#each data.floors as floor}
+									<div class="space-y-3 rounded-lg border p-4">
+										<h4 class="font-medium">{m.app_map_floor({ floor })}</h4>
+										<div class="flex flex-wrap gap-2">
+											{#each FLOOR_AMENITY_TYPES as amenity}
+												{@const isActive = floorAmenities.get(floor)?.has(amenity) ?? false}
+												<button
+													type="button"
+													class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors {isActive ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}"
+													onclick={() => toggleAmenity(floor, amenity)}
+												>
+													<span>{AMENITY_ICONS[amenity]}</span>
+													{getAmenityLabel(amenity)}
+												</button>
+											{/each}
+										</div>
+									</div>
+								{/each}
+							{/if}
+						</Card.Content>
+					</Card.Root>
+
+					<div class="flex justify-end">
+						<Button type="submit" disabled={isSavingVenue || data.floors.length === 0}>
+							{#if isSavingVenue}
+								<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+								{m.admin_app_saving()}
+							{:else}
+								<Check class="mr-2 h-4 w-4" />
+								{m.admin_app_save_venue()}
 							{/if}
 						</Button>
 					</div>

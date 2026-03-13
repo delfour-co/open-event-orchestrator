@@ -107,3 +107,14 @@
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* Venue map glow pulse animation */
+@keyframes venue-glow-pulse {
+  0%,
+  100% {
+    stroke-opacity: 0.3;
+  }
+  50% {
+    stroke-opacity: 0.6;
+  }
+}

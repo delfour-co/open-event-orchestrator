@@ -30,7 +30,8 @@ export class AppSettingsRepository {
       showTicketsTab: data.showTicketsTab ?? true,
       showFeedbackTab: data.showFeedbackTab ?? true,
       showFavoritesTab: data.showFavoritesTab ?? true,
-      showNetworkingTab: data.showNetworkingTab ?? false
+      showNetworkingTab: data.showNetworkingTab ?? false,
+      floorAmenities: data.floorAmenities || []
     })
     return this.mapRecord(record)
   }
@@ -94,7 +95,8 @@ export class AppSettingsRepository {
       showTicketsTab: record.showTicketsTab ?? true,
       showFeedbackTab: record.showFeedbackTab ?? true,
       showFavoritesTab: record.showFavoritesTab ?? true,
-      showNetworkingTab: record.showNetworkingTab ?? false
+      showNetworkingTab: record.showNetworkingTab ?? false,
+      floorAmenities: record.floorAmenities || []
     }
   }
 }

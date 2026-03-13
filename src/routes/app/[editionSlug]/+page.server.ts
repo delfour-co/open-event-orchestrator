@@ -140,7 +140,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
           showTicketsTab: appSettings.showTicketsTab,
           showFeedbackTab: appSettings.showFeedbackTab,
           showFavoritesTab: appSettings.showFavoritesTab,
-          showNetworkingTab: appSettings.showNetworkingTab
+          showNetworkingTab: appSettings.showNetworkingTab,
+          floorAmenities: (appSettings.floorAmenities || []) as Array<{
+            floor: string
+            amenities: string[]
+          }>
         }
       : null,
     feedbackSettings: feedbackSettings
