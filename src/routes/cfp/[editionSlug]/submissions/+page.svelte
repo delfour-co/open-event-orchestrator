@@ -13,6 +13,7 @@ import {
   FileText,
   Loader2,
   Mail,
+  MessageSquare,
   Plus,
   ThumbsDown,
   ThumbsUp,
@@ -183,11 +184,21 @@ const statusColors: Record<string, string> = {
     <div class="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>
-            {data.speaker.firstName}
-            {data.speaker.lastName}
-          </CardTitle>
-          <CardDescription>{data.speaker.email}</CardDescription>
+          <div class="flex items-center justify-between">
+            <div>
+              <CardTitle>
+                {data.speaker.firstName}
+                {data.speaker.lastName}
+              </CardTitle>
+              <CardDescription>{data.speaker.email}</CardDescription>
+            </div>
+            <a href="/cfp/{data.edition.slug}/submissions/feedback">
+              <Button variant="outline" size="sm" class="gap-2">
+                <MessageSquare class="h-4 w-4" />
+                Feedback
+              </Button>
+            </a>
+          </div>
         </CardHeader>
       </Card>
 

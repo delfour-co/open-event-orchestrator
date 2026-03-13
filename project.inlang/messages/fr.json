@@ -3111,5 +3111,15 @@
   "feedback_overall_average": "Moyenne globale",
   "feedback_total_event_feedback": "Total retours evenement",
   "feedback_open_issues": "Problemes ouverts",
-  "feedback_update_status": "Modifier le statut"
+  "feedback_update_status": "Modifier le statut",
+  "speaker_feedback_title": "Mes retours - Open Event Orchestrator",
+  "speaker_feedback_heading": "Retours sur mes sessions",
+  "speaker_feedback_auth_required": "Authentification requise",
+  "speaker_feedback_auth_hint": "Accedez d'abord a vos soumissions pour consulter les retours sur vos sessions.",
+  "speaker_feedback_go_to_submissions": "Aller a mes soumissions",
+  "speaker_feedback_no_sessions": "Aucun retour disponible",
+  "speaker_feedback_no_sessions_hint": "Vos talks n'ont pas encore de sessions planifiees, ou aucun participant n'a soumis de retour.",
+  "speaker_feedback_total_responses": "Total des reponses",
+  "speaker_feedback_sessions_count": "Sessions avec retours",
+  "speaker_feedback_no_ratings": "Pas encore de notes"
 }

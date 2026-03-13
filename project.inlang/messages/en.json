@@ -3110,5 +3110,15 @@
   "feedback_overall_average": "Overall average",
   "feedback_total_event_feedback": "Total event feedback",
   "feedback_open_issues": "Open issues",
-  "feedback_update_status": "Update status"
+  "feedback_update_status": "Update status",
+  "speaker_feedback_title": "My Feedback - Open Event Orchestrator",
+  "speaker_feedback_heading": "Session Feedback",
+  "speaker_feedback_auth_required": "Authentication required",
+  "speaker_feedback_auth_hint": "Access your submissions first to view feedback on your sessions.",
+  "speaker_feedback_go_to_submissions": "Go to My Submissions",
+  "speaker_feedback_no_sessions": "No feedback available",
+  "speaker_feedback_no_sessions_hint": "Your talks don't have scheduled sessions yet, or no attendee has submitted feedback.",
+  "speaker_feedback_total_responses": "Total responses",
+  "speaker_feedback_sessions_count": "Sessions with feedback",
+  "speaker_feedback_no_ratings": "No ratings yet"
 }
