@@ -3,6 +3,7 @@ export {
   getBudgetNavItems,
   getCrmNavItems,
   getEmailsNavItems,
+  getFeedbackNavItems,
   getPlanningNavItems,
   getReportingNavItems,
   getSponsoringNavItems,

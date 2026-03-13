@@ -1,5 +1,6 @@
 import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
 import { createGetSpeakerSubmissionsUseCase } from '$lib/features/cfp/usecases'
+import { calculateFeedbackSummary } from '$lib/features/feedback/domain/session-feedback'
 import { sendCfpNotification } from '$lib/server/cfp-notifications'
 import {
   buildSubmissionsUrl,
@@ -16,6 +17,14 @@ interface CoSpeakerInvitation {
   status: string
 }
 
+interface TalkFeedback {
+  totalFeedback: number
+  averageRating: number | null
+  ratingDistribution: Record<number, number>
+  hasComments: boolean
+  comments: Array<{ comment: string; rating: number | null; createdAt: string }>
+}
+
 interface TalkWithCoSpeakers {
   id: string
   title: string
@@ -25,6 +34,7 @@ interface TalkWithCoSpeakers {
   createdAt: Date
   coSpeakerInvitations: CoSpeakerInvitation[]
   coSpeakers: Array<{ id: string; firstName: string; lastName: string; email: string }>
+  feedback: TalkFeedback | null
 }
 
 async function getSpeakerFromAuth(
@@ -123,6 +133,53 @@ export const load: PageServerLoad = async ({ parent, url, locals, cookies, param
       const coSpeakers = await speakerRepository.findByIds(talk.speakerIds)
       const currentSpeaker = result.speaker
 
+      // Load feedback for this talk's sessions
+      let feedback: TalkFeedback | null = null
+      try {
+        const sessions = await locals.pb.collection('sessions').getFullList({
+          filter: `talkId = "${talk.id}"`,
+          requestKey: null
+        })
+        if (sessions.length > 0) {
+          const sessionIds = sessions.map((s) => s.id as string)
+          const feedbackFilter = sessionIds.map((id) => `sessionId = "${id}"`).join(' || ')
+          const feedbackRecords = await locals.pb.collection('session_feedback').getFullList({
+            filter: feedbackFilter,
+            sort: '-created',
+            requestKey: null
+          })
+          if (feedbackRecords.length > 0) {
+            const mapped = feedbackRecords.map((f) => ({
+              id: f.id as string,
+              sessionId: f.sessionId as string,
+              editionId: f.editionId as string,
+              userId: f.userId as string,
+              ratingMode: f.ratingMode as 'stars' | 'scale_10' | 'thumbs' | 'yes_no',
+              numericValue: f.numericValue as number | null,
+              comment: f.comment as string | undefined,
+              createdAt: new Date(f.created as string),
+              updatedAt: new Date(f.updated as string)
+            }))
+            const summary = calculateFeedbackSummary(mapped)
+            feedback = {
+              totalFeedback: summary?.totalFeedback || 0,
+              averageRating: summary?.averageRating || null,
+              ratingDistribution: summary?.ratingDistribution || {},
+              hasComments: summary?.hasComments || false,
+              comments: mapped
+                .filter((f) => f.comment && f.comment.trim().length > 0)
+                .map((f) => ({
+                  comment: f.comment || '',
+                  rating: f.numericValue,
+                  createdAt: f.createdAt.toISOString()
+                }))
+            }
+          }
+        }
+      } catch {
+        // Feedback loading is non-critical
+      }
+
       return {
         ...talk,
         coSpeakerInvitations,
@@ -133,7 +190,8 @@ export const load: PageServerLoad = async ({ parent, url, locals, cookies, param
             firstName: s.firstName,
             lastName: s.lastName,
             email: s.email
-          }))
+          })),
+        feedback
       }
     })
   )

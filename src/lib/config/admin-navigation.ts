@@ -67,6 +67,14 @@ export const getReportingNavItems = (editionSlug: string): NavItem[] => [
 ]
 
 /**
+ * Generate feedback navigation items
+ */
+export const getFeedbackNavItems = (editionSlug: string): NavItem[] => [
+  { href: `/admin/feedback/${editionSlug}`, label: 'Sessions' },
+  { href: `/admin/feedback/${editionSlug}/event`, label: 'Event' }
+]
+
+/**
  * Generate planning navigation items
  */
 export const getPlanningNavItems = (editionSlug: string): NavItem[] => [

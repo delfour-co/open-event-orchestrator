@@ -3119,5 +3119,8 @@
   "speaker_feedback_no_sessions_hint": "Vos talks n'ont pas encore de sessions planifiees, ou aucun participant n'a soumis de retour.",
   "speaker_feedback_total_responses": "Total des reponses",
   "speaker_feedback_sessions_count": "Sessions avec retours",
-  "speaker_feedback_no_ratings": "Pas encore de notes"
+  "speaker_feedback_no_ratings": "Pas encore de notes",
+  "feedback_speaker_url_title": "Page feedback speakers",
+  "feedback_speaker_url_hint": "Partagez cette URL avec les speakers pour qu'ils puissent consulter les retours sur leurs sessions.",
+  "feedback_speaker_url_copied": "Copié !"
 }

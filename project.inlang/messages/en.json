@@ -3118,5 +3118,8 @@
   "speaker_feedback_no_sessions_hint": "Your talks don't have scheduled sessions yet, or no attendee has submitted feedback.",
   "speaker_feedback_total_responses": "Total responses",
   "speaker_feedback_sessions_count": "Sessions with feedback",
-  "speaker_feedback_no_ratings": "No ratings yet"
+  "speaker_feedback_no_ratings": "No ratings yet",
+  "feedback_speaker_url_title": "Speaker Feedback Page",
+  "feedback_speaker_url_hint": "Share this URL with speakers so they can view feedback on their sessions.",
+  "feedback_speaker_url_copied": "Copied!"
 }

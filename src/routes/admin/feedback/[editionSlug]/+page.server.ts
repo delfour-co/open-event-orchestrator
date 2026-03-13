@@ -1,6 +1,6 @@
 import { calculateFeedbackSummary } from '$lib/features/feedback/domain/session-feedback'
 import { error } from '@sveltejs/kit'
-import type { Actions, PageServerLoad } from './$types'
+import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const { editionSlug } = params
@@ -128,20 +128,5 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     eventFeedback,
     totalSessionFeedback: sessionFeedbackRecords.length,
     totalEventFeedback: eventFeedbackRecords.length
-  }
-}
-
-export const actions: Actions = {
-  updateStatus: async ({ request, locals }) => {
-    const formData = await request.formData()
-    const feedbackId = formData.get('feedbackId') as string
-    const status = formData.get('status') as string
-
-    if (!feedbackId || !status) {
-      return { success: false }
-    }
-
-    await locals.pb.collection('event_feedback').update(feedbackId, { status })
-    return { success: true }
   }
 }

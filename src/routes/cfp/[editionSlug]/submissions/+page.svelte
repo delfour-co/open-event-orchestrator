@@ -8,13 +8,16 @@ import { type TalkStatus, getStatusColor, getStatusLabel } from '$lib/features/c
 import {
   AlertTriangle,
   CheckCircle,
+  ChevronDown,
+  ChevronUp,
   Clock,
   Edit,
   FileText,
   Loader2,
   Mail,
-  MessageSquare,
+  MessageCircle,
   Plus,
+  Star,
   ThumbsDown,
   ThumbsUp,
   UserPlus,
@@ -36,6 +39,13 @@ let showWithdrawConfirm = $state<string | null>(null)
 let showDeclineConfirm = $state<string | null>(null)
 let showInviteForm = $state<string | null>(null)
 let cospeakerEmail = $state('')
+let expandedFeedback = $state<string | null>(null)
+
+function renderStars(rating: number | null, max = 5): string {
+  if (rating === null) return '-'
+  const full = Math.round(rating)
+  return Array.from({ length: max }, (_, i) => (i < full ? '\u2605' : '\u2606')).join('')
+}
 
 const canWithdraw = (status: string) => {
   return ['draft', 'submitted', 'under_review', 'accepted'].includes(status)
@@ -184,20 +194,12 @@ const statusColors: Record<string, string> = {
     <div class="space-y-6">
       <Card>
         <CardHeader>
-          <div class="flex items-center justify-between">
-            <div>
-              <CardTitle>
-                {data.speaker.firstName}
-                {data.speaker.lastName}
-              </CardTitle>
-              <CardDescription>{data.speaker.email}</CardDescription>
-            </div>
-            <a href="/cfp/{data.edition.slug}/submissions/feedback">
-              <Button variant="outline" size="sm" class="gap-2">
-                <MessageSquare class="h-4 w-4" />
-                Feedback
-              </Button>
-            </a>
+          <div>
+            <CardTitle>
+              {data.speaker.firstName}
+              {data.speaker.lastName}
+            </CardTitle>
+            <CardDescription>{data.speaker.email}</CardDescription>
           </div>
         </CardHeader>
       </Card>
@@ -446,6 +448,77 @@ const statusColors: Record<string, string> = {
                           Withdraw
                         </Button>
                       {/if}
+                    {/if}
+                  </div>
+                {/if}
+                <!-- Feedback section -->
+                {#if talk.feedback && talk.feedback.totalFeedback > 0}
+                  <div class="border-t pt-4">
+                    <button
+                      class="flex w-full items-center justify-between text-left"
+                      onclick={() => (expandedFeedback = expandedFeedback === talk.id ? null : talk.id)}
+                    >
+                      <div class="flex items-center gap-3">
+                        <Star class="h-4 w-4 text-amber-500" />
+                        <span class="text-sm font-medium">Feedback</span>
+                        <span class="text-lg font-bold text-amber-600 dark:text-amber-400">
+                          {talk.feedback.averageRating !== null ? talk.feedback.averageRating.toFixed(1) : '-'}
+                        </span>
+                        <span class="text-xs text-amber-500">{renderStars(talk.feedback.averageRating)}</span>
+                        <span class="text-xs text-muted-foreground">
+                          ({talk.feedback.totalFeedback} {talk.feedback.totalFeedback === 1 ? 'response' : 'responses'})
+                        </span>
+                      </div>
+                      <div class="text-muted-foreground">
+                        {#if expandedFeedback === talk.id}
+                          <ChevronUp class="h-4 w-4" />
+                        {:else}
+                          <ChevronDown class="h-4 w-4" />
+                        {/if}
+                      </div>
+                    </button>
+
+                    {#if expandedFeedback === talk.id}
+                      <div class="mt-4 space-y-4">
+                        <!-- Rating Distribution -->
+                        <div class="space-y-1">
+                          {#each [5, 4, 3, 2, 1] as star}
+                            {@const count = talk.feedback.ratingDistribution[star] || 0}
+                            {@const pct = talk.feedback.totalFeedback > 0 ? (count / talk.feedback.totalFeedback) * 100 : 0}
+                            <div class="flex items-center gap-2 text-sm">
+                              <span class="w-6 text-right text-muted-foreground">{star}</span>
+                              <Star class="h-3 w-3 text-amber-500" />
+                              <div class="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                                <div class="h-full rounded-full bg-amber-500" style="width: {pct}%"></div>
+                              </div>
+                              <span class="w-6 text-right text-xs text-muted-foreground">{count}</span>
+                            </div>
+                          {/each}
+                        </div>
+
+                        <!-- Comments -->
+                        {#if talk.feedback.hasComments}
+                          <div>
+                            <h4 class="mb-2 flex items-center gap-1 text-sm font-medium">
+                              <MessageCircle class="h-4 w-4" />
+                              {talk.feedback.comments.length} {talk.feedback.comments.length === 1 ? 'comment' : 'comments'}
+                            </h4>
+                            <div class="space-y-2">
+                              {#each talk.feedback.comments as fb}
+                                <div class="rounded-md bg-muted/50 p-3">
+                                  {#if fb.rating !== null}
+                                    <span class="text-xs text-amber-500">{renderStars(fb.rating)}</span>
+                                  {/if}
+                                  <p class="text-sm">{fb.comment}</p>
+                                  <p class="mt-1 text-xs text-muted-foreground">
+                                    {new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(fb.createdAt))}
+                                  </p>
+                                </div>
+                              {/each}
+                            </div>
+                          </div>
+                        {/if}
+                      </div>
                     {/if}
                   </div>
                 {/if}
