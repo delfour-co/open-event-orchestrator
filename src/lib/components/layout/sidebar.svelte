@@ -12,6 +12,7 @@ import {
   Home,
   LayoutGrid,
   Mail,
+  MessageSquare,
   Settings,
   Smartphone,
   Ticket,
@@ -50,6 +51,7 @@ const navLabels = {
   budget: () => m.nav_budget(),
   crm: () => m.nav_crm(),
   emails: () => m.nav_emails(),
+  feedback: () => m.nav_feedback(),
   reporting: () => m.nav_reporting(),
   api: () => m.nav_api(),
   settings: () => m.nav_settings()
@@ -87,6 +89,12 @@ const allNavItems: NavItem[] = [
   { href: '/admin/budget', icon: Wallet, labelKey: 'budget', requiresOrganizerAccess: true },
   { href: '/admin/crm', icon: Users, labelKey: 'crm', requiresOrganizerAccess: true },
   { href: '/admin/emails', icon: Mail, labelKey: 'emails', requiresOrganizerAccess: true },
+  {
+    href: '/admin/feedback',
+    icon: MessageSquare,
+    labelKey: 'feedback',
+    requiresOrganizerAccess: true
+  },
   {
     href: '/admin/reporting',
     icon: BarChart3,
