@@ -1,6 +1,6 @@
 <script lang="ts">
 import { browser } from '$app/environment'
-import { goto } from '$app/navigation'
+import { goto, invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
@@ -32,7 +32,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
-  Download,
   FileDown,
   Filter,
   Heart,
@@ -296,9 +295,9 @@ function exportAllNotes(): void {
 // Offline / connectivity state
 let online = $state(browser ? navigator.onLine : true)
 let lastSyncTime = $state<number | null>(null)
-let isSavingOffline = $state(false)
-let offlineSaveSuccess = $state(false)
 let isSyncing = $state(false)
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 // Generate anonymous user ID for feedback
 function getAnonymousUserId(): string {
@@ -472,6 +471,11 @@ async function loadCacheStats(): Promise<void> {
     const stats = await scheduleCacheService.getCacheStats(data.edition.slug)
     if (stats.lastUpdated) {
       lastSyncTime = stats.lastUpdated
+
+      // Auto-sync if cache is older than 24h and we're online
+      if (online && Date.now() - stats.lastUpdated > ONE_DAY_MS) {
+        syncData()
+      }
     }
   } catch {
     // Ignore errors
@@ -482,37 +486,15 @@ async function syncData(): Promise<void> {
   if (!browser || !online || isSyncing) return
   isSyncing = true
   try {
-    // Reload the page data by invalidating
-    window.location.reload()
+    // Fetch fresh data in background — existing data stays visible
+    await invalidateAll()
+    // Cache the fresh data for offline use
+    await cacheSchedule()
+    lastSyncTime = Date.now()
+  } catch (err) {
+    console.error('Sync failed:', err)
   } finally {
     isSyncing = false
-  }
-}
-
-async function saveForOffline(): Promise<void> {
-  if (!browser) return
-  isSavingOffline = true
-  offlineSaveSuccess = false
-  try {
-    await scheduleCacheService.cacheSchedule({
-      editionSlug: data.edition.slug,
-      edition: data.edition,
-      event: data.event,
-      rooms: data.rooms,
-      tracks: data.tracks,
-      slots: data.slots,
-      sessions: data.sessions,
-      talks: data.talks
-    })
-    lastSyncTime = Date.now()
-    offlineSaveSuccess = true
-    setTimeout(() => {
-      offlineSaveSuccess = false
-    }, 3000)
-  } catch (err) {
-    console.error('Failed to save for offline:', err)
-  } finally {
-    isSavingOffline = false
   }
 }
 
@@ -1141,40 +1123,25 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 					</div>
 				{/if}
 			</div>
-			<!-- Offline status & cache controls -->
+			<!-- Sync status -->
 			<div class="mt-3 flex flex-wrap items-center gap-3 text-xs">
-				<div class="flex items-center gap-1.5 {online ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}">
-					{#if online}
+				{#if online}
+					<div class="flex items-center gap-1.5 text-green-600 dark:text-green-400">
 						<Wifi class="h-3.5 w-3.5" />
 						<span>{m.app_online()}</span>
-					{:else}
+					</div>
+				{:else}
+					<div class="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
 						<WifiOff class="h-3.5 w-3.5" />
 						<span class="font-medium">{m.app_cached()}</span>
-					{/if}
-				</div>
+					</div>
+				{/if}
 				{#if lastSyncTime}
 					<span class="text-muted-foreground">
 						{m.app_last_sync({ time: formatLastSync(lastSyncTime) })}
 					</span>
 				{/if}
-				<button
-					type="button"
-					class="flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-50"
-					onclick={saveForOffline}
-					disabled={isSavingOffline}
-				>
-					{#if isSavingOffline}
-						<Loader2 class="h-3 w-3 animate-spin" />
-						<span>{m.app_offline_saving()}</span>
-					{:else if offlineSaveSuccess}
-						<CheckCircle2 class="h-3 w-3 text-green-600" />
-						<span>{m.app_offline_saved()}</span>
-					{:else}
-						<Download class="h-3 w-3" />
-						<span>{m.app_offline_save()}</span>
-					{/if}
-				</button>
-				{#if online && lastSyncTime}
+				{#if online}
 					<button
 						type="button"
 						class="flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-50"
@@ -1188,16 +1155,6 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 			</div>
 		</div>
 	</header>
-
-	<!-- Offline banner -->
-	{#if !online}
-		<div class="border-b bg-orange-50 dark:bg-orange-950 px-4 py-2 text-center text-sm text-orange-800 dark:text-orange-200" role="status">
-			<div class="flex items-center justify-center gap-2">
-				<WifiOff class="h-4 w-4" />
-				<span>{m.app_offline_banner()}</span>
-			</div>
-		</div>
-	{/if}
 
 	
 	<!-- Main Content -->
