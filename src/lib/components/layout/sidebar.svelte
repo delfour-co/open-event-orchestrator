@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from '$app/environment'
 import * as m from '$lib/paraglide/messages.js'
 import { cn } from '$lib/utils'
 import {
@@ -6,6 +7,7 @@ import {
   Building2,
   Calendar,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   Code2,
   Handshake,
@@ -38,6 +40,13 @@ type NavItem = {
   requiresOrganizerAccess?: boolean
 }
 
+type NavSection = {
+  id: string
+  labelFn: () => string
+  items: NavItem[]
+  requiresOrganizerAccess?: boolean
+}
+
 // Translation functions for navigation labels
 const navLabels = {
   dashboard: () => m.nav_dashboard(),
@@ -57,56 +66,145 @@ const navLabels = {
   settings: () => m.nav_settings()
 }
 
-const allNavItems: NavItem[] = [
-  { href: '/admin', icon: Home, labelKey: 'dashboard' },
+const STORAGE_KEY = 'oeo-sidebar-sections'
+
+function loadCollapsedSections(): Set<string> {
+  if (!browser) return new Set()
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) return new Set(JSON.parse(stored))
+  } catch {
+    // Ignore
+  }
+  return new Set()
+}
+
+function saveCollapsedSections(sections: Set<string>): void {
+  if (!browser) return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...sections]))
+  } catch {
+    // Ignore
+  }
+}
+
+let collapsedSections = $state(loadCollapsedSections())
+
+function toggleSection(sectionId: string): void {
+  const next = new Set(collapsedSections)
+  if (next.has(sectionId)) {
+    next.delete(sectionId)
+  } else {
+    next.add(sectionId)
+  }
+  collapsedSections = next
+  saveCollapsedSections(next)
+}
+
+// Dashboard stands alone at the top
+const dashboardItem: NavItem = { href: '/admin', icon: Home, labelKey: 'dashboard' }
+
+const allSections: NavSection[] = [
   {
-    href: '/admin/organizations',
-    icon: Building2,
-    labelKey: 'organizations',
-    requiresOrganizerAccess: true
-  },
-  { href: '/admin/events', icon: CalendarDays, labelKey: 'events', requiresOrganizerAccess: true },
-  { href: '/admin/cfp', icon: Calendar, labelKey: 'cfp' },
-  {
-    href: '/admin/planning',
-    icon: LayoutGrid,
-    labelKey: 'planning',
-    requiresOrganizerAccess: true
-  },
-  {
-    href: '/admin/app',
-    icon: Smartphone,
-    labelKey: 'attendeeApp',
-    requiresOrganizerAccess: true
-  },
-  { href: '/admin/billing', icon: Ticket, labelKey: 'billing', requiresOrganizerAccess: true },
-  {
-    href: '/admin/sponsoring',
-    icon: Handshake,
-    labelKey: 'sponsoring',
-    requiresOrganizerAccess: true
-  },
-  { href: '/admin/budget', icon: Wallet, labelKey: 'budget', requiresOrganizerAccess: true },
-  { href: '/admin/crm', icon: Users, labelKey: 'crm', requiresOrganizerAccess: true },
-  { href: '/admin/emails', icon: Mail, labelKey: 'emails', requiresOrganizerAccess: true },
-  {
-    href: '/admin/feedback',
-    icon: MessageSquare,
-    labelKey: 'feedback',
-    requiresOrganizerAccess: true
+    id: 'setup',
+    labelFn: () => m.sidebar_section_setup(),
+    requiresOrganizerAccess: true,
+    items: [
+      {
+        href: '/admin/organizations',
+        icon: Building2,
+        labelKey: 'organizations',
+        requiresOrganizerAccess: true
+      },
+      {
+        href: '/admin/events',
+        icon: CalendarDays,
+        labelKey: 'events',
+        requiresOrganizerAccess: true
+      }
+    ]
   },
   {
-    href: '/admin/reporting',
-    icon: BarChart3,
-    labelKey: 'reporting',
-    requiresOrganizerAccess: true
+    id: 'pre-event',
+    labelFn: () => m.sidebar_section_pre_event(),
+    items: [
+      { href: '/admin/cfp', icon: Calendar, labelKey: 'cfp' },
+      {
+        href: '/admin/planning',
+        icon: LayoutGrid,
+        labelKey: 'planning',
+        requiresOrganizerAccess: true
+      },
+      { href: '/admin/billing', icon: Ticket, labelKey: 'billing', requiresOrganizerAccess: true },
+      {
+        href: '/admin/sponsoring',
+        icon: Handshake,
+        labelKey: 'sponsoring',
+        requiresOrganizerAccess: true
+      }
+    ]
   },
-  { href: '/admin/api', icon: Code2, labelKey: 'api', requiresOrganizerAccess: true }
+  {
+    id: 'event',
+    labelFn: () => m.sidebar_section_event(),
+    requiresOrganizerAccess: true,
+    items: [
+      {
+        href: '/admin/app',
+        icon: Smartphone,
+        labelKey: 'attendeeApp',
+        requiresOrganizerAccess: true
+      }
+    ]
+  },
+  {
+    id: 'post-event',
+    labelFn: () => m.sidebar_section_post_event(),
+    requiresOrganizerAccess: true,
+    items: [
+      {
+        href: '/admin/feedback',
+        icon: MessageSquare,
+        labelKey: 'feedback',
+        requiresOrganizerAccess: true
+      },
+      {
+        href: '/admin/reporting',
+        icon: BarChart3,
+        labelKey: 'reporting',
+        requiresOrganizerAccess: true
+      }
+    ]
+  },
+  {
+    id: 'management',
+    labelFn: () => m.sidebar_section_management(),
+    requiresOrganizerAccess: true,
+    items: [
+      { href: '/admin/budget', icon: Wallet, labelKey: 'budget', requiresOrganizerAccess: true },
+      { href: '/admin/crm', icon: Users, labelKey: 'crm', requiresOrganizerAccess: true },
+      { href: '/admin/emails', icon: Mail, labelKey: 'emails', requiresOrganizerAccess: true }
+    ]
+  },
+  {
+    id: 'developer',
+    labelFn: () => m.sidebar_section_developer(),
+    requiresOrganizerAccess: true,
+    items: [{ href: '/admin/api', icon: Code2, labelKey: 'api', requiresOrganizerAccess: true }]
+  }
 ]
 
-// Filter nav items based on role
-const navItems = $derived(
-  isReviewerOnly ? allNavItems.filter((item) => !item.requiresOrganizerAccess) : allNavItems
+// Filter sections based on role
+const sections = $derived(
+  isReviewerOnly
+    ? allSections
+        .filter((s) => !s.requiresOrganizerAccess)
+        .map((s) => ({
+          ...s,
+          items: s.items.filter((item) => !item.requiresOrganizerAccess)
+        }))
+        .filter((s) => s.items.length > 0)
+    : allSections
 )
 
 // Get translated label for a nav item
@@ -136,27 +234,71 @@ function getLabel(labelKey: keyof typeof navLabels): string {
   </div>
 
   <!-- Navigation -->
-  <nav class="flex-1 space-y-1 p-2">
-    {#each navItems as item}
-      <a
-        href={item.href}
-        class={cn(
-          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-          collapsed && 'justify-center'
-        )}
-      >
-        <item.icon class="h-5 w-5 shrink-0" />
+  <nav class="flex-1 overflow-y-auto p-2">
+    <!-- Dashboard (always visible, standalone) -->
+    <a
+      href={dashboardItem.href}
+      title={collapsed ? getLabel(dashboardItem.labelKey) : undefined}
+      class={cn(
+        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        collapsed && 'justify-center'
+      )}
+    >
+      <dashboardItem.icon class="h-5 w-5 shrink-0" />
+      {#if !collapsed}
+        <span>{getLabel(dashboardItem.labelKey)}</span>
+      {/if}
+    </a>
+
+    <!-- Sections -->
+    {#each sections as section}
+      <div class="mt-3">
+        <!-- Section header -->
         {#if !collapsed}
-          <span>{getLabel(item.labelKey)}</span>
-          {#if item.badge}
-            <span
-              class="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-xs text-sidebar-primary-foreground"
-            >
-              {item.badge}
-            </span>
-          {/if}
+          <button
+            onclick={() => toggleSection(section.id)}
+            class="flex w-full items-center justify-between px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 transition-colors hover:text-muted-foreground"
+          >
+            <span>{section.labelFn()}</span>
+            <ChevronDown
+              class={cn(
+                'h-3 w-3 transition-transform',
+                collapsedSections.has(section.id) && '-rotate-90'
+              )}
+            />
+          </button>
+        {:else}
+          <div class="mx-auto my-1 h-px w-8 bg-sidebar-accent"></div>
         {/if}
-      </a>
+
+        <!-- Section items -->
+        {#if !collapsedSections.has(section.id) || collapsed}
+          <div class="mt-0.5 space-y-0.5">
+            {#each section.items as item}
+              <a
+                href={item.href}
+                title={collapsed ? getLabel(item.labelKey) : undefined}
+                class={cn(
+                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                  collapsed && 'justify-center'
+                )}
+              >
+                <item.icon class="h-5 w-5 shrink-0" />
+                {#if !collapsed}
+                  <span>{getLabel(item.labelKey)}</span>
+                  {#if item.badge}
+                    <span
+                      class="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-xs text-sidebar-primary-foreground"
+                    >
+                      {item.badge}
+                    </span>
+                  {/if}
+                {/if}
+              </a>
+            {/each}
+          </div>
+        {/if}
+      </div>
     {/each}
   </nav>
 
@@ -165,6 +307,7 @@ function getLabel(labelKey: keyof typeof navLabels): string {
     <div class="border-t p-2">
       <a
         href="/admin/settings"
+        title={collapsed ? m.nav_settings() : undefined}
         class={cn(
           'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
           collapsed && 'justify-center'
