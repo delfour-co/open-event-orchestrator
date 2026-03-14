@@ -466,12 +466,20 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 </a>
               </div>
             {/if}
-            <a href="/admin/editions/{edition.slug}/settings">
-              <Button class="w-full" variant="outline">
-                {m.admin_events_manage_edition()}
-                <ArrowRight class="ml-2 h-4 w-4" />
-              </Button>
-            </a>
+            <div class="grid grid-cols-2 gap-2">
+              <a href="/admin/events/{edition.eventSlug}/settings">
+                <Button class="w-full" variant="outline" size="sm">
+                  {m.admin_events_manage_event()}
+                  <ArrowRight class="ml-1 h-4 w-4" />
+                </Button>
+              </a>
+              <a href="/admin/editions/{edition.slug}/settings">
+                <Button class="w-full" variant="outline" size="sm">
+                  {m.admin_events_manage_edition()}
+                  <ArrowRight class="ml-1 h-4 w-4" />
+                </Button>
+              </a>
+            </div>
           </Card.Content>
         </Card.Root>
       {/each}
