@@ -70,6 +70,16 @@ export const eventSchema = z.object({
   logo: z.string().url().optional(),
   website: z.string().url().optional(),
   currency: currencySchema.default('USD'),
+  banner: z.string().optional(),
+  primaryColor: z.string().optional(),
+  secondaryColor: z.string().optional(),
+  twitter: z.string().url().optional(),
+  linkedin: z.string().url().optional(),
+  hashtag: z.string().optional(),
+  contactEmail: z.string().email().optional(),
+  codeOfConductUrl: z.string().url().optional(),
+  privacyPolicyUrl: z.string().url().optional(),
+  timezone: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })
@@ -84,6 +94,16 @@ export type CreateEventInput = {
   logo?: string
   website?: string
   currency?: Currency
+  banner?: string
+  primaryColor?: string
+  secondaryColor?: string
+  twitter?: string
+  linkedin?: string
+  hashtag?: string
+  contactEmail?: string
+  codeOfConductUrl?: string
+  privacyPolicyUrl?: string
+  timezone?: string
 }
 
 export type UpdateEventInput = Partial<Omit<CreateEventInput, 'organizationId'>>

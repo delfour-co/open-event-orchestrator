@@ -21,6 +21,16 @@ const mapToEvent = (record: RecordModel): Event => ({
   logo: record.logo || undefined,
   website: record.website || undefined,
   currency: record.currency || 'USD',
+  banner: record.banner || undefined,
+  primaryColor: record.primaryColor || undefined,
+  secondaryColor: record.secondaryColor || undefined,
+  twitter: record.twitter || undefined,
+  linkedin: record.linkedin || undefined,
+  hashtag: record.hashtag || undefined,
+  contactEmail: record.contactEmail || undefined,
+  codeOfConductUrl: record.codeOfConductUrl || undefined,
+  privacyPolicyUrl: record.privacyPolicyUrl || undefined,
+  timezone: record.timezone || undefined,
   createdAt: new Date(record.created),
   updatedAt: new Date(record.updated)
 })
