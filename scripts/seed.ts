@@ -1766,7 +1766,16 @@ async function updateUsersCollection(): Promise<void> {
         newFields.push(textField('name', true))
       }
       if (!hasRoleField) {
-        newFields.push(selectField('role', ['speaker', 'organizer', 'reviewer', 'admin']))
+        newFields.push(
+          selectField('role', [
+            'super_admin',
+            'admin',
+            'organizer',
+            'reviewer',
+            'speaker',
+            'attendee'
+          ])
+        )
       }
 
       updateData.fields = newFields
