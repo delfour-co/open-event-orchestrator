@@ -7,7 +7,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import * as m from '$lib/paraglide/messages'
-import { ArrowRight, Building2, Plus, Trash2 } from 'lucide-svelte'
+import { ArrowRight, Building2, Plus } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -37,17 +37,11 @@ const truncate = (text: string, maxLength: number): string => {
 </svelte:head>
 
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <h2 class="text-3xl font-bold tracking-tight">{m.admin_organizations_heading()}</h2>
-      <p class="text-muted-foreground">
-        {m.admin_organizations_description()}
-      </p>
-    </div>
-    <Button onclick={() => (showNewOrg = !showNewOrg)}>
-      <Plus class="mr-2 h-4 w-4" />
-      {m.admin_organizations_new()}
-    </Button>
+  <div>
+    <h2 class="text-3xl font-bold tracking-tight">{m.admin_organizations_heading()}</h2>
+    <p class="text-muted-foreground">
+      {m.admin_organizations_description()}
+    </p>
   </div>
 
   {#if form?.error}
@@ -119,84 +113,60 @@ const truncate = (text: string, maxLength: number): string => {
     </Card.Root>
   {/if}
 
-  <!-- Organizations List -->
-  {#if data.organizations.length === 0}
-    <Card.Root>
-      <Card.Content class="flex flex-col items-center justify-center py-12">
-        <Building2 class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">{m.admin_organizations_empty_title()}</h3>
-        <p class="mb-4 text-sm text-muted-foreground">
-          {m.admin_organizations_empty_description()}
-        </p>
-        <Button onclick={() => (showNewOrg = true)}>
+  <!-- Organizations Grid -->
+  <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    {#each data.organizations as org}
+      <Card.Root class="transition-shadow hover:shadow-md">
+        <Card.Header>
+          <div class="flex items-center gap-3">
+            {#if org.logoUrl}
+              <img
+                src={org.logoUrl}
+                alt={org.name}
+                class="h-10 w-10 rounded-lg object-cover"
+              />
+            {:else}
+              <div
+                class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
+              >
+                <Building2 class="h-5 w-5" />
+              </div>
+            {/if}
+            <div>
+              <Card.Title>{org.name}</Card.Title>
+              <Card.Description>/{org.slug}</Card.Description>
+            </div>
+          </div>
+        </Card.Header>
+        <Card.Content class="space-y-3">
+          {#if org.description}
+            <p class="text-sm text-muted-foreground">{truncate(org.description, 120)}</p>
+          {/if}
+          <div>
+            <Badge variant="secondary">
+              {m.admin_organizations_events_count({ count: org.eventsCount })}
+            </Badge>
+          </div>
+          <a href="/admin/organizations/{org.slug}/settings">
+            <Button class="w-full" variant="outline">
+              {m.admin_org_manage_button()}
+              <ArrowRight class="ml-2 h-4 w-4" />
+            </Button>
+          </a>
+        </Card.Content>
+      </Card.Root>
+    {/each}
+
+    <!-- Add Organization Card -->
+    <Card.Root class="border-dashed">
+      <Card.Content class="flex h-full min-h-[200px] flex-col items-center justify-center py-6">
+        <Plus class="mb-2 h-8 w-8 text-muted-foreground" />
+        <p class="mb-4 text-sm text-muted-foreground">{m.admin_organizations_new()}</p>
+        <Button variant="outline" onclick={() => (showNewOrg = true)}>
           <Plus class="mr-2 h-4 w-4" />
           {m.admin_organizations_create_button()}
         </Button>
       </Card.Content>
     </Card.Root>
-  {:else}
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {#each data.organizations as org}
-        <Card.Root class="transition-shadow hover:shadow-md">
-          <Card.Header>
-            <div class="flex items-start justify-between">
-              <div class="flex items-center gap-3">
-                {#if org.logoUrl}
-                  <img
-                    src={org.logoUrl}
-                    alt={org.name}
-                    class="h-10 w-10 rounded-lg object-cover"
-                  />
-                {:else}
-                  <div
-                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                  >
-                    <Building2 class="h-5 w-5" />
-                  </div>
-                {/if}
-                <div>
-                  <Card.Title>{org.name}</Card.Title>
-                  <Card.Description>/{org.slug}</Card.Description>
-                </div>
-              </div>
-              <form method="POST" action="?/delete" use:enhance>
-                <input type="hidden" name="id" value={org.id} />
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="icon"
-                  class="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  disabled={org.eventsCount > 0}
-                  title={org.eventsCount > 0 ? m.admin_organizations_delete_events_first() : m.admin_organizations_delete()}
-                  onclick={(e) => {
-                    if (!confirm(m.admin_organizations_delete_confirm())) {
-                      e.preventDefault()
-                    }
-                  }}
-                >
-                  <Trash2 class="h-4 w-4" />
-                </Button>
-              </form>
-            </div>
-          </Card.Header>
-          <Card.Content class="space-y-3">
-            {#if org.description}
-              <p class="text-sm text-muted-foreground">{truncate(org.description, 120)}</p>
-            {/if}
-            <div>
-              <Badge variant="secondary">
-                {m.admin_organizations_events_count({ count: org.eventsCount })}
-              </Badge>
-            </div>
-            <a href="/admin/organizations/{org.slug}/settings">
-              <Button class="w-full" variant="outline">
-                {m.admin_org_manage_button()}
-                <ArrowRight class="ml-2 h-4 w-4" />
-              </Button>
-            </a>
-          </Card.Content>
-        </Card.Root>
-      {/each}
-    </div>
-  {/if}
+  </div>
 </div>

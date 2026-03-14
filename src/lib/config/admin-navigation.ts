@@ -96,5 +96,5 @@ export const getOrgSettingsNavItems = (orgSlug: string): NavItem[] => [
   { href: `/admin/organizations/${orgSlug}/settings/social`, label: 'Social & Localization' },
   { href: `/admin/organizations/${orgSlug}/settings/legal`, label: 'Legal & Billing' },
   { href: `/admin/organizations/${orgSlug}/settings/team`, label: 'Team' },
-  { href: `/admin/organizations/${orgSlug}/settings/danger`, label: 'Danger Zone' }
+  { href: `/admin/organizations/${orgSlug}/audit-log`, label: 'Audit Log' }
 ]
