@@ -1,6 +1,12 @@
+import { getAvailableProviders } from '$lib/features/auth/services/social-auth-service'
 import { processPendingInvitations } from '$lib/server/invitations'
 import { fail, redirect } from '@sveltejs/kit'
-import type { Actions } from './$types'
+import type { Actions, PageServerLoad } from './$types'
+
+export const load: PageServerLoad = async ({ locals }) => {
+  const socialProviders = await getAvailableProviders(locals.pb)
+  return { socialProviders }
+}
 
 export const actions: Actions = {
   default: async ({ request, locals, url }) => {

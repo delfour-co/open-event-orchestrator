@@ -13,3 +13,11 @@ export {
   generateVerificationEmailText
 } from './email-verification-service'
 export type { SendVerificationEmailParams } from './email-verification-service'
+
+export {
+  getAvailableProviders,
+  getLinkedAccounts,
+  unlinkAccount,
+  getProviderLabel
+} from './social-auth-service'
+export type { SocialProvider, SocialAuthResult, LinkedAccount } from './social-auth-service'

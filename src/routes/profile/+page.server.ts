@@ -2,6 +2,11 @@ import { env } from '$env/dynamic/public'
 import { changePasswordSchema, updateProfileSchema } from '$lib/features/auth/domain'
 import type { UserSession } from '$lib/features/auth/domain/user-session'
 import { createUserSessionRepository } from '$lib/features/auth/infra'
+import {
+  getAvailableProviders,
+  getLinkedAccounts,
+  unlinkAccount
+} from '$lib/features/auth/services/social-auth-service'
 import { validateImageFile } from '$lib/server/file-validation'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -41,6 +46,10 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     console.error('Failed to load sessions:', err)
   }
 
+  // Load linked social accounts
+  const linkedAccounts = await getLinkedAccounts(locals.pb, user.id)
+  const socialProviders = await getAvailableProviders(locals.pb)
+
   return {
     user: {
       id: user.id as string,
@@ -52,7 +61,9 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
       created: user.created as string
     },
     sessions,
-    currentSessionId
+    currentSessionId,
+    linkedAccounts,
+    socialProviders
   }
 }
 
@@ -213,6 +224,27 @@ export const actions: Actions = {
       console.error('Session revoke error:', err)
       return fail(500, { error: 'Failed to revoke session', action: 'revokeSession' })
     }
+  },
+
+  unlinkAccount: async ({ request, locals }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const formData = await request.formData()
+    const provider = formData.get('provider') as string
+
+    if (!provider) {
+      return fail(400, { error: 'Provider is required', action: 'unlinkAccount' })
+    }
+
+    const result = await unlinkAccount(locals.pb, locals.user.id, provider)
+
+    if (!result.success) {
+      return fail(500, { error: result.error, action: 'unlinkAccount' })
+    }
+
+    return { success: true, action: 'unlinkAccount' }
   },
 
   revokeAllSessions: async ({ locals, cookies }) => {

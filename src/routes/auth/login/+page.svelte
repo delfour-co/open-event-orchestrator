@@ -4,13 +4,16 @@ import { page } from '$app/stores'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
+import { SocialLoginButtons } from '$lib/features/auth/ui'
 import * as m from '$lib/paraglide/messages'
+import type { ActionData, PageData } from './$types'
 
-type Props = {
-  form: { error?: string } | null
+interface Props {
+  data: PageData
+  form: ActionData
 }
 
-const { form }: Props = $props()
+const { data, form }: Props = $props()
 
 // Get redirect URL from query params
 const redirectUrl = $derived($page.url.searchParams.get('redirect'))
@@ -49,6 +52,8 @@ const redirectUrl = $derived($page.url.searchParams.get('redirect'))
 
         <Button type="submit" class="w-full">{m.auth_login_sign_in()}</Button>
       </form>
+
+      <SocialLoginButtons providers={data.socialProviders} {redirectUrl} />
     </Card.Content>
     <Card.Footer class="flex flex-col space-y-2">
       <p class="text-center text-sm text-muted-foreground">
