@@ -505,6 +505,16 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
           </div>
         {/if}
       {/each}
+
+      <!-- Add Event Card -->
+      <div class="rounded-lg border border-dashed p-6 text-center">
+        <Plus class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+        <p class="mb-4 text-sm text-muted-foreground">{m.admin_events_new()}</p>
+        <Button variant="outline" onclick={() => (showNewEvent = true)}>
+          <Plus class="mr-2 h-4 w-4" />
+          {m.admin_events_create_button()}
+        </Button>
+      </div>
     </div>
   {/if}
 </div>
