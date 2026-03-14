@@ -87,6 +87,20 @@ export const changePasswordSchema = z
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
+export const notificationPreferencesSchema = z.object({
+  eventUpdates: z.boolean().default(true),
+  teamActivity: z.boolean().default(true),
+  marketing: z.boolean().default(false)
+})
+
+export type NotificationPreferences = z.infer<typeof notificationPreferencesSchema>
+
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Password is required to confirm account deletion')
+})
+
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>
+
 /**
  * Calculates password strength score (0-4)
  * 0 = Very weak, 1 = Weak, 2 = Fair, 3 = Good, 4 = Strong

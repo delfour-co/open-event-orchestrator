@@ -8,6 +8,8 @@ export {
   registerSchema,
   updateProfileSchema,
   changePasswordSchema,
+  notificationPreferencesSchema,
+  deleteAccountSchema,
   calculatePasswordStrength,
   isUserVerified
 } from './user'
@@ -20,7 +22,9 @@ export type {
   LoginInput,
   RegisterInput,
   UpdateProfileInput,
-  ChangePasswordInput
+  ChangePasswordInput,
+  NotificationPreferences,
+  DeleteAccountInput
 } from './user'
 
 export {
