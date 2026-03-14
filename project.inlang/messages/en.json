@@ -3121,5 +3121,19 @@
   "speaker_feedback_no_ratings": "No ratings yet",
   "feedback_speaker_url_title": "Speaker Feedback Page",
   "feedback_speaker_url_hint": "Share this URL with speakers so they can view feedback on their sessions.",
-  "feedback_speaker_url_copied": "Copied!"
+  "feedback_speaker_url_copied": "Copied!",
+  "audit_log_title": "Audit Log",
+  "audit_log_description": "View organization activity history.",
+  "audit_log_filter_action": "Action",
+  "audit_log_filter_user": "User",
+  "audit_log_filter_all_actions": "All Actions",
+  "audit_log_filter_all_users": "All Users",
+  "audit_log_export_csv": "Export CSV",
+  "audit_log_column_date": "Date",
+  "audit_log_column_user": "User",
+  "audit_log_column_action": "Action",
+  "audit_log_column_entity": "Entity",
+  "audit_log_column_ip": "IP Address",
+  "audit_log_no_entries": "No audit log entries found.",
+  "audit_log_retention": "Showing last 90 days of activity."
 }

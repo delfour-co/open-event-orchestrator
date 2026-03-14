@@ -3122,5 +3122,19 @@
   "speaker_feedback_no_ratings": "Pas encore de notes",
   "feedback_speaker_url_title": "Page feedback speakers",
   "feedback_speaker_url_hint": "Partagez cette URL avec les speakers pour qu'ils puissent consulter les retours sur leurs sessions.",
-  "feedback_speaker_url_copied": "Copié !"
+  "feedback_speaker_url_copied": "Copié !",
+  "audit_log_title": "Journal d'audit",
+  "audit_log_description": "Consultez l'historique des activités de l'organisation.",
+  "audit_log_filter_action": "Action",
+  "audit_log_filter_user": "Utilisateur",
+  "audit_log_filter_all_actions": "Toutes les actions",
+  "audit_log_filter_all_users": "Tous les utilisateurs",
+  "audit_log_export_csv": "Exporter CSV",
+  "audit_log_column_date": "Date",
+  "audit_log_column_user": "Utilisateur",
+  "audit_log_column_action": "Action",
+  "audit_log_column_entity": "Entité",
+  "audit_log_column_ip": "Adresse IP",
+  "audit_log_no_entries": "Aucune entrée dans le journal d'audit.",
+  "audit_log_retention": "Affichage des 90 derniers jours d'activité."
 }

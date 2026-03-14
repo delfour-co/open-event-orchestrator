@@ -9,3 +9,6 @@ export type { EditionRepository } from './edition-repository'
 
 export { createTeamMemberRepository } from './team-member-repository'
 export type { TeamMemberRepository } from './team-member-repository'
+
+export { createAuditLogRepository } from './audit-log-repository'
+export type { AuditLogRepository } from './audit-log-repository'

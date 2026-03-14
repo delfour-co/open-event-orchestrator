@@ -8,6 +8,23 @@ export { editionSchema, editionStatusSchema, validateEditionDates } from './edit
 export type { Edition, EditionStatus, CreateEditionInput, UpdateEditionInput } from './edition'
 
 export {
+  auditActionSchema,
+  auditEntityTypeSchema,
+  auditLogSchema,
+  auditLogFiltersSchema,
+  AUDIT_RETENTION_DAYS,
+  getAuditActionLabel,
+  getAuditActionColor
+} from './audit-log'
+export type {
+  AuditAction,
+  AuditEntityType,
+  AuditLog,
+  AuditLogFilters,
+  PaginatedAuditLogs
+} from './audit-log'
+
+export {
   teamMemberSchema,
   socialLinkSchema,
   createTeamMemberSchema,
