@@ -407,108 +407,104 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
       </Card.Content>
     </Card.Root>
   {:else}
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {#each allEditions() as edition}
-        <Card.Root class="transition-shadow hover:shadow-md {edition.status === 'archived' ? 'opacity-60' : ''}">
-          <Card.Header class="pb-3">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <Card.Title class="flex items-center gap-2">
-                  <Calendar class="h-5 w-5" />
-                  {edition.name}
-                </Card.Title>
-                <Card.Description class="mt-1">
-                  <a href="/admin/events/{edition.eventSlug}/settings" class="hover:underline">{edition.eventName}</a> · {edition.organizationName}
-                </Card.Description>
-              </div>
-              <div class="flex items-center gap-2">
-                <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
-                  <StatusBadge status={edition.status} size="sm" />
-                </a>
-                <a href="/admin/app/{edition.slug}" title={m.admin_events_attendee_app()}>
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <Smartphone class="h-4 w-4" />
-                  </Button>
-                </a>
-                <a href="/admin/editions/{edition.slug}/team" title={m.admin_events_team_members()}>
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <Users class="h-4 w-4" />
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </Card.Header>
-          <Card.Content class="space-y-3">
-            <div class="space-y-1 text-sm text-muted-foreground">
-              <div class="flex items-center gap-2">
-                <CalendarDays class="h-4 w-4" />
-                <span>{formatDate(edition.startDate)} - {formatDate(edition.endDate)}</span>
-              </div>
-              {#if edition.venue || edition.city || edition.country}
-                <div class="flex items-center gap-2">
-                  <MapPin class="h-4 w-4" />
-                  <span>{[edition.venue, edition.city, edition.country].filter(Boolean).join(', ')}</span>
+    <div class="space-y-8">
+      {#each filteredEvents as event}
+        {@const eventEditions = allEditions().filter((e) => e.eventId === event.id)}
+        {#if eventEditions.length > 0}
+          <div class="space-y-4">
+            <!-- Event Header -->
+            <div class="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <CalendarDays class="h-5 w-5" />
                 </div>
-              {/if}
-            </div>
-            {#if edition.status === 'published'}
-              <div class="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
-                <Smartphone class="h-4 w-4 text-muted-foreground" />
-                <code class="flex-1 text-xs">/app/{edition.slug}</code>
-                <a
-                  href="/app/{edition.slug}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-primary hover:text-primary/80"
-                  title="Open attendee app"
-                >
-                  <ExternalLink class="h-4 w-4" />
-                </a>
+                <div>
+                  <h3 class="text-lg font-semibold">{event.name}</h3>
+                  <p class="text-sm text-muted-foreground">{event.organizationName}</p>
+                </div>
               </div>
-            {/if}
-            <div class="grid grid-cols-2 gap-2">
-              <a href="/admin/events/{edition.eventSlug}/settings">
-                <Button class="w-full" variant="outline" size="sm">
-                  {m.admin_events_manage_event()}
-                  <ArrowRight class="ml-1 h-4 w-4" />
+              <div class="flex items-center gap-2">
+                <a href="/admin/events/{event.slug}/settings">
+                  <Button variant="outline" size="sm">
+                    {m.admin_events_manage_event()}
+                    <ArrowRight class="ml-1 h-4 w-4" />
+                  </Button>
+                </a>
+                <Button variant="ghost" size="sm" onclick={() => (showNewEdition = event.id)}>
+                  <Plus class="mr-1 h-4 w-4" />
+                  {m.admin_events_create_edition()}
                 </Button>
-              </a>
-              <a href="/admin/editions/{edition.slug}/settings">
-                <Button class="w-full" variant="outline" size="sm">
-                  {m.admin_events_manage_edition()}
-                  <ArrowRight class="ml-1 h-4 w-4" />
-                </Button>
-              </a>
+              </div>
             </div>
-          </Card.Content>
-        </Card.Root>
-      {/each}
 
-      <!-- Add Edition Card -->
-      {#if data.events.length > 0}
-        <Card.Root class="border-dashed">
-          <Card.Content class="flex h-full min-h-[200px] flex-col items-center justify-center py-6">
-            <Plus class="mb-2 h-8 w-8 text-muted-foreground" />
-            <p class="mb-4 text-sm text-muted-foreground">{m.admin_events_add_edition()}</p>
-            <select
-              class="rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value=""
-              onchange={(e) => {
-                const value = (e.target as HTMLSelectElement).value
-                if (value) {
-                  showNewEdition = value
-                  ;(e.target as HTMLSelectElement).value = ''
-                }
-              }}
-            >
-              <option value="" disabled>{m.admin_events_select_event()}</option>
-              {#each data.events as event}
-                <option value={event.id}>{event.name}</option>
+            <!-- Editions Grid -->
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {#each eventEditions as edition}
+                <Card.Root class="transition-shadow hover:shadow-md {edition.status === 'archived' ? 'opacity-60' : ''}">
+                  <Card.Header class="pb-3">
+                    <div class="flex items-start justify-between">
+                      <Card.Title class="flex items-center gap-2">
+                        <Calendar class="h-5 w-5" />
+                        {edition.name}
+                      </Card.Title>
+                      <div class="flex items-center gap-2">
+                        <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
+                          <StatusBadge status={edition.status} size="sm" />
+                        </a>
+                        <a href="/admin/app/{edition.slug}" title={m.admin_events_attendee_app()}>
+                          <Button variant="ghost" size="icon" class="h-8 w-8">
+                            <Smartphone class="h-4 w-4" />
+                          </Button>
+                        </a>
+                        <a href="/admin/editions/{edition.slug}/team" title={m.admin_events_team_members()}>
+                          <Button variant="ghost" size="icon" class="h-8 w-8">
+                            <Users class="h-4 w-4" />
+                          </Button>
+                        </a>
+                      </div>
+                    </div>
+                  </Card.Header>
+                  <Card.Content class="space-y-3">
+                    <div class="space-y-1 text-sm text-muted-foreground">
+                      <div class="flex items-center gap-2">
+                        <CalendarDays class="h-4 w-4" />
+                        <span>{formatDate(edition.startDate)} - {formatDate(edition.endDate)}</span>
+                      </div>
+                      {#if edition.venue || edition.city || edition.country}
+                        <div class="flex items-center gap-2">
+                          <MapPin class="h-4 w-4" />
+                          <span>{[edition.venue, edition.city, edition.country].filter(Boolean).join(', ')}</span>
+                        </div>
+                      {/if}
+                    </div>
+                    {#if edition.status === 'published'}
+                      <div class="flex items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
+                        <Smartphone class="h-4 w-4 text-muted-foreground" />
+                        <code class="flex-1 text-xs">/app/{edition.slug}</code>
+                        <a
+                          href="/app/{edition.slug}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="text-primary hover:text-primary/80"
+                          title="Open attendee app"
+                        >
+                          <ExternalLink class="h-4 w-4" />
+                        </a>
+                      </div>
+                    {/if}
+                    <a href="/admin/editions/{edition.slug}/settings">
+                      <Button class="w-full" variant="outline" size="sm">
+                        {m.admin_events_manage_edition()}
+                        <ArrowRight class="ml-1 h-4 w-4" />
+                      </Button>
+                    </a>
+                  </Card.Content>
+                </Card.Root>
               {/each}
-            </select>
-          </Card.Content>
-        </Card.Root>
-      {/if}
+            </div>
+          </div>
+        {/if}
+      {/each}
     </div>
   {/if}
 </div>
