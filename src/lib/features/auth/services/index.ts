@@ -22,3 +22,12 @@ export {
   generatePasswordResetEmailText
 } from './password-reset-service'
 export type { SendPasswordResetEmailParams } from './password-reset-service'
+
+export {
+  generateTotpSecret,
+  verifyTotpCode,
+  generateBackupCodes,
+  hashBackupCode,
+  verifyBackupCode,
+  generateDeviceHash
+} from './totp-service'

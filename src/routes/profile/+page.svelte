@@ -466,9 +466,68 @@ const otherSessions = $derived(data.sessions.filter((s) => s.id !== data.current
             </Card.Description>
           </Card.Header>
           <Card.Content>
-            <p class="text-sm text-muted-foreground">
-              {m.profile_security_2fa_coming_soon()}
-            </p>
+            {#if data.twoFactorEnabled}
+              <div class="space-y-4">
+                <div class="flex items-center gap-2 text-green-600">
+                  <Shield class="h-5 w-5" />
+                  <span class="font-medium">{m.profile_2fa_enabled()}</span>
+                </div>
+                <p class="text-sm text-muted-foreground">
+                  {m.profile_2fa_backup_remaining({ count: String(data.backupCodesRemaining) })}
+                </p>
+                <form method="POST" action="?/disable2fa" use:enhance class="space-y-3">
+                  <div class="space-y-2">
+                    <Label for="disable2fa-password">{m.profile_2fa_disable_confirm()}</Label>
+                    <Input id="disable2fa-password" name="password" type="password" required />
+                  </div>
+                  {#if form?.error && form?.action === 'disable2fa'}
+                    <p class="text-sm text-destructive">{form.error}</p>
+                  {/if}
+                  <Button type="submit" variant="destructive" size="sm">{m.profile_2fa_disable_button()}</Button>
+                </form>
+              </div>
+            {:else}
+              {#if form?.action === 'setup2fa' && form?.totpUri}
+                <div class="space-y-4">
+                  <p class="text-sm">{m.profile_2fa_setup_description()}</p>
+                  <div class="flex justify-center rounded-lg border bg-white p-4">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(form.totpUri)}`} alt="QR Code" class="h-48 w-48" />
+                  </div>
+                  <div class="space-y-2">
+                    <Label>{m.profile_2fa_manual_entry()}</Label>
+                    <code class="block rounded bg-muted p-2 text-center font-mono text-sm tracking-wider">{form.totpSecret}</code>
+                  </div>
+                  {#if form.backupCodes}
+                    <div class="space-y-2">
+                      <Label>{m.profile_2fa_backup_codes_title()}</Label>
+                      <p class="text-xs text-muted-foreground">{m.profile_2fa_backup_codes_description()}</p>
+                      <div class="grid grid-cols-2 gap-1 rounded border bg-muted p-3 font-mono text-sm">
+                        {#each form.backupCodes as code}
+                          <span>{code}</span>
+                        {/each}
+                      </div>
+                    </div>
+                  {/if}
+                  <form method="POST" action="?/enable2fa" use:enhance class="space-y-3">
+                    <div class="space-y-2">
+                      <Label for="totp-code">{m.profile_2fa_verify_code()}</Label>
+                      <Input id="totp-code" name="code" type="text" inputmode="numeric" maxlength={6} placeholder="000000" autocomplete="one-time-code" required class="text-center text-lg tracking-widest" />
+                    </div>
+                    {#if form?.error && form?.action === 'enable2fa'}
+                      <p class="text-sm text-destructive">{form.error}</p>
+                    {/if}
+                    <Button type="submit">{m.profile_2fa_enable_button()}</Button>
+                  </form>
+                </div>
+              {:else}
+                <form method="POST" action="?/setup2fa" use:enhance>
+                  <Button variant="outline">
+                    <Shield class="mr-2 h-4 w-4" />
+                    {m.profile_2fa_setup_button()}
+                  </Button>
+                </form>
+              {/if}
+            {/if}
           </Card.Content>
         </Card.Root>
 
