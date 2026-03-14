@@ -3274,5 +3274,22 @@
   "admin_events_manage_event": "Manage Event",
   "admin_events_select_organization": "Select an organization",
   "admin_events_show_empty": "Show events without editions",
-  "admin_events_hide_empty": "Hide events without editions"
+  "admin_events_hide_empty": "Hide events without editions",
+  "admin_settings_oauth_title": "OAuth2 Authentication",
+  "admin_settings_oauth_description": "Configure social login providers for Google and GitHub.",
+  "admin_settings_oauth_enabled": "Enable OAuth2",
+  "admin_settings_oauth_enabled_description": "Allow users to sign in with their Google or GitHub accounts.",
+  "admin_settings_oauth_google_title": "Google",
+  "admin_settings_oauth_google_client_id": "Client ID",
+  "admin_settings_oauth_google_client_secret": "Client Secret",
+  "admin_settings_oauth_google_help": "Create OAuth credentials at Google Cloud Console → APIs & Services → Credentials",
+  "admin_settings_oauth_github_title": "GitHub",
+  "admin_settings_oauth_github_client_id": "Client ID",
+  "admin_settings_oauth_github_client_secret": "Client Secret",
+  "admin_settings_oauth_github_help": "Create an OAuth app at GitHub → Settings → Developer settings → OAuth Apps",
+  "admin_settings_oauth_configured": "Configured",
+  "admin_settings_oauth_not_configured": "Not configured",
+  "admin_settings_oauth_secret_placeholder": "Leave empty to keep current secret",
+  "admin_settings_oauth_save": "Save OAuth Settings",
+  "admin_settings_oauth_saved": "OAuth settings saved successfully."
 }
