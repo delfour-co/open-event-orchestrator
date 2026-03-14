@@ -145,100 +145,6 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
     </div>
   {/if}
 
-  <!-- New Event Form -->
-  {#if showNewEvent}
-    <Card.Root>
-      <Card.Header>
-        <div class="flex items-center justify-between">
-          <div>
-            <Card.Title class="flex items-center gap-2">
-              <CalendarDays class="h-5 w-5" />
-              {m.admin_events_create_title()}
-            </Card.Title>
-            <Card.Description>
-              {m.admin_events_create_description()}
-            </Card.Description>
-          </div>
-          <Button variant="ghost" size="icon" onclick={() => (showNewEvent = false)}>
-            <X class="h-4 w-4" />
-          </Button>
-        </div>
-      </Card.Header>
-      <Card.Content>
-        {#if data.organizations.length === 0}
-          <div class="flex flex-col items-center py-6">
-            <Building2 class="mb-2 h-8 w-8 text-muted-foreground" />
-            <p class="mb-4 text-center text-muted-foreground">
-              {m.admin_events_create_org_first()}
-            </p>
-            <a href="/admin/organizations">
-              <Button variant="outline">{m.admin_events_go_to_orgs()}</Button>
-            </a>
-          </div>
-        {:else}
-          <form
-            method="POST"
-            action="?/createEvent"
-            use:enhance={() => {
-              return async ({ update }) => {
-                await update()
-                showNewEvent = false
-              }
-            }}
-            class="space-y-4"
-          >
-            <div class="space-y-2">
-              <Label for="event-org">{m.admin_events_organization()}</Label>
-              <select
-                id="event-org"
-                name="organizationId"
-                required
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {#each data.organizations as org}
-                  <option value={org.id} selected={org.id === selectedOrgId}>{org.name}</option>
-                {/each}
-              </select>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="space-y-2">
-                <Label for="event-name">{m.admin_events_name()}</Label>
-                <Input
-                  id="event-name"
-                  name="name"
-                  placeholder="DevFest"
-                  required
-                  oninput={(e) => {
-                    const slugInput = document.getElementById('event-slug') as HTMLInputElement
-                    if (slugInput)
-                      slugInput.value = generateSlug((e.target as HTMLInputElement).value)
-                  }}
-                />
-              </div>
-              <div class="space-y-2">
-                <Label for="event-slug">{m.admin_events_slug()}</Label>
-                <Input id="event-slug" name="slug" placeholder="devfest" required />
-              </div>
-            </div>
-            <div class="space-y-2">
-              <Label for="event-description">{m.admin_events_description_label()}</Label>
-              <Textarea
-                id="event-description"
-                name="description"
-                placeholder={m.admin_events_description_placeholder()}
-              />
-            </div>
-            <div class="flex gap-2">
-              <Button type="submit">{m.admin_events_create_button()}</Button>
-              <Button type="button" variant="ghost" onclick={() => (showNewEvent = false)}>
-                {m.action_cancel()}
-              </Button>
-            </div>
-          </form>
-        {/if}
-      </Card.Content>
-    </Card.Root>
-  {/if}
 
   <!-- New Edition Form -->
   {#if showNewEdition}
@@ -512,15 +418,98 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
         {/if}
       {/each}
 
-      <!-- Add Event Card -->
-      <div class="rounded-lg border border-dashed p-6 text-center">
-        <Plus class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-        <p class="mb-4 text-sm text-muted-foreground">{m.admin_events_new()}</p>
-        <Button variant="outline" onclick={() => (showNewEvent = true)}>
-          <Plus class="mr-2 h-4 w-4" />
-          {m.admin_events_create_button()}
-        </Button>
-      </div>
+      <!-- Add Event -->
+      {#if showNewEvent}
+        <Card.Root>
+          <Card.Header>
+            <div class="flex items-center justify-between">
+              <div>
+                <Card.Title class="flex items-center gap-2">
+                  <CalendarDays class="h-5 w-5" />
+                  {m.admin_events_create_title()}
+                </Card.Title>
+                <Card.Description>
+                  {m.admin_events_create_description()}
+                </Card.Description>
+              </div>
+              <Button variant="ghost" size="icon" onclick={() => (showNewEvent = false)}>
+                <X class="h-4 w-4" />
+              </Button>
+            </div>
+          </Card.Header>
+          <Card.Content>
+            <form
+              method="POST"
+              action="?/createEvent"
+              use:enhance={() => {
+                return async ({ update }) => {
+                  await update()
+                  showNewEvent = false
+                }
+              }}
+              class="space-y-4"
+            >
+              <div class="space-y-2">
+                <Label for="new-event-org">{m.admin_events_organization()}</Label>
+                <select
+                  id="new-event-org"
+                  name="organizationId"
+                  class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  required
+                >
+                  <option value="">{m.admin_events_select_organization()}</option>
+                  {#each data.organizations as org}
+                    <option value={org.id}>{org.name}</option>
+                  {/each}
+                </select>
+              </div>
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="space-y-2">
+                  <Label for="new-event-name">{m.admin_events_name()}</Label>
+                  <Input
+                    id="new-event-name"
+                    name="name"
+                    required
+                    placeholder="DevFest, MiXiT, ..."
+                    oninput={(e) => {
+                      const slugInput = document.getElementById('new-event-slug') as HTMLInputElement
+                      if (slugInput) {
+                        slugInput.value = (e.target as HTMLInputElement).value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, '-')
+                          .replace(/^-|-$/g, '')
+                      }
+                    }}
+                  />
+                </div>
+                <div class="space-y-2">
+                  <Label for="new-event-slug">{m.admin_events_slug()}</Label>
+                  <Input id="new-event-slug" name="slug" required placeholder="devfest" />
+                </div>
+              </div>
+              <div class="space-y-2">
+                <Label for="new-event-description">{m.admin_events_description_label()}</Label>
+                <Textarea id="new-event-description" name="description" rows={2} />
+              </div>
+              <div class="flex gap-2">
+                <Button type="submit">{m.admin_events_create_button()}</Button>
+                <Button type="button" variant="ghost" onclick={() => (showNewEvent = false)}>
+                  {m.action_cancel()}
+                </Button>
+              </div>
+            </form>
+          </Card.Content>
+        </Card.Root>
+      {:else}
+        <div class="rounded-lg border border-dashed p-6 text-center">
+          <Plus class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+          <p class="mb-4 text-sm text-muted-foreground">{m.admin_events_new()}</p>
+          <Button variant="outline" onclick={() => (showNewEvent = true)}>
+            <Plus class="mr-2 h-4 w-4" />
+            {m.admin_events_create_button()}
+          </Button>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
