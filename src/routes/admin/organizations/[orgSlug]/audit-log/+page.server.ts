@@ -55,7 +55,8 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
       members,
       filters: { action, userId }
     }
-  } catch {
+  } catch (err) {
+    console.error('[AuditLog] Load error:', err)
     throw redirect(303, '/admin/organizations')
   }
 }

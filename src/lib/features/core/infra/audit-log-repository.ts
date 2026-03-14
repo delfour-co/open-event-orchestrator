@@ -30,12 +30,16 @@ function mapRecordToAuditLog(record: Record<string, unknown>): AuditLog {
   }
 }
 
+function toPbDate(date: Date): string {
+  return date.toISOString().replace('T', ' ').replace('Z', '')
+}
+
 function buildFilterParts(organizationId: string, filters?: AuditLogFilters): string[] {
   const filterParts: string[] = [`organizationId="${organizationId}"`]
 
   const retentionDate = new Date()
   retentionDate.setDate(retentionDate.getDate() - AUDIT_RETENTION_DAYS)
-  filterParts.push(`created >= "${retentionDate.toISOString()}"`)
+  filterParts.push(`created >= "${toPbDate(retentionDate)}"`)
 
   if (filters?.action) {
     filterParts.push(`action="${filters.action}"`)
@@ -44,10 +48,10 @@ function buildFilterParts(organizationId: string, filters?: AuditLogFilters): st
     filterParts.push(`userId="${filters.userId}"`)
   }
   if (filters?.startDate) {
-    filterParts.push(`created >= "${filters.startDate.toISOString()}"`)
+    filterParts.push(`created >= "${toPbDate(filters.startDate)}"`)
   }
   if (filters?.endDate) {
-    filterParts.push(`created <= "${filters.endDate.toISOString()}"`)
+    filterParts.push(`created <= "${toPbDate(filters.endDate)}"`)
   }
 
   return filterParts
