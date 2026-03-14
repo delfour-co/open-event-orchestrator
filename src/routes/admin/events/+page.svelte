@@ -317,7 +317,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
     <div class="space-y-8">
       {#each filteredEvents as event}
         {@const eventEditions = allEditions().filter((e) => e.eventId === event.id)}
-        {#if eventEditions.length > 0}
+        {#if eventEditions.length > 0 || event.editions.length === 0}
           <div class="space-y-4">
             <!-- Event Header -->
             <div class="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
