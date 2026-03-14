@@ -88,6 +88,16 @@ export const getPlanningNavItems = (editionSlug: string): NavItem[] => [
 ]
 
 /**
+ * Generate event settings navigation items
+ */
+export const getEventSettingsNavItems = (eventSlug: string): NavItem[] => [
+  { href: `/admin/events/${eventSlug}/settings`, label: 'General' },
+  { href: `/admin/events/${eventSlug}/settings/branding`, label: 'Branding' },
+  { href: `/admin/events/${eventSlug}/settings/social`, label: 'Social & Localization' },
+  { href: `/admin/events/${eventSlug}/settings/policies`, label: 'Policies' }
+]
+
+/**
  * Generate organization settings navigation items
  */
 export const getOrgSettingsNavItems = (orgSlug: string): NavItem[] => [
