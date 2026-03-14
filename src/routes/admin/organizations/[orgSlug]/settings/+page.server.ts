@@ -1,3 +1,5 @@
+import { env } from '$env/dynamic/public'
+import { validateImageFile } from '$lib/server/file-validation'
 import { sendInvitationEmail } from '$lib/server/invitation-notifications'
 import { canAccessSettings } from '$lib/server/permissions'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
@@ -74,6 +76,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       filter: `organizationId="${organization.id}"`
     })
 
+    const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
+    let logoUrl: string | null = null
+    if (organization.logo) {
+      logoUrl = `${pbUrl}/api/files/organizations/${organization.id}/${organization.logo}`
+    }
+
     return {
       organization: {
         id: organization.id as string,
@@ -93,11 +101,21 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         city: (organization.city as string) || '',
         postalCode: (organization.postalCode as string) || '',
         country: (organization.country as string) || '',
+        primaryColor: (organization.primaryColor as string) || '',
+        secondaryColor: (organization.secondaryColor as string) || '',
+        twitter: (organization.twitter as string) || '',
+        linkedin: (organization.linkedin as string) || '',
+        github: (organization.github as string) || '',
+        youtube: (organization.youtube as string) || '',
+        timezone: (organization.timezone as string) || '',
+        defaultLocale: (organization.defaultLocale as string) || '',
+        logo: (organization.logo as string) || '',
         ownerId: (organization.ownerId as string) || null,
         ownerName: organization.expand?.ownerId
           ? ((organization.expand.ownerId as Record<string, unknown>).name as string)
           : null
       },
+      logoUrl,
       members,
       invitations,
       eventsCount: events.length
@@ -133,6 +151,14 @@ export const actions: Actions = {
     const city = formData.get('city') as string
     const postalCode = formData.get('postalCode') as string
     const country = formData.get('country') as string
+    const primaryColor = formData.get('primaryColor') as string
+    const secondaryColor = formData.get('secondaryColor') as string
+    const twitter = formData.get('twitter') as string
+    const linkedin = formData.get('linkedin') as string
+    const github = formData.get('github') as string
+    const youtube = formData.get('youtube') as string
+    const timezone = formData.get('timezone') as string
+    const defaultLocale = formData.get('defaultLocale') as string
 
     if (!name || !slug) {
       return fail(400, { error: 'Name and slug are required' })
@@ -174,7 +200,15 @@ export const actions: Actions = {
         address: address || null,
         city: city || null,
         postalCode: postalCode || null,
-        country: country || null
+        country: country || null,
+        primaryColor: primaryColor || null,
+        secondaryColor: secondaryColor || null,
+        twitter: twitter || null,
+        linkedin: linkedin || null,
+        github: github || null,
+        youtube: youtube || null,
+        timezone: timezone || null,
+        defaultLocale: defaultLocale || null
       })
 
       // If slug changed, redirect to new URL
@@ -187,6 +221,56 @@ export const actions: Actions = {
       if (isRedirect(e)) throw e
       console.error('Failed to update organization:', e)
       return fail(500, { error: 'Failed to update organization' })
+    }
+  },
+
+  uploadLogo: async ({ request, locals, params }) => {
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify organization settings' })
+    }
+
+    const formData = await request.formData()
+    const logo = formData.get('logo') as File
+
+    if (!logo || logo.size === 0) {
+      return fail(400, { error: 'Logo file is required' })
+    }
+
+    const validation = validateImageFile(logo, { maxSizeMB: 2 })
+    if (!validation.valid) {
+      return fail(400, { error: validation.error })
+    }
+
+    try {
+      const organization = await locals.pb
+        .collection('organizations')
+        .getFirstListItem(`slug="${params.orgSlug}"`)
+      const uploadFormData = new FormData()
+      uploadFormData.append('logo', logo)
+      await locals.pb.collection('organizations').update(organization.id, uploadFormData)
+      return { success: true, message: 'Logo uploaded successfully' }
+    } catch (e) {
+      console.error('Failed to upload logo:', e)
+      return fail(500, { error: 'Failed to upload logo' })
+    }
+  },
+
+  removeLogo: async ({ locals, params }) => {
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify organization settings' })
+    }
+
+    try {
+      const organization = await locals.pb
+        .collection('organizations')
+        .getFirstListItem(`slug="${params.orgSlug}"`)
+      await locals.pb.collection('organizations').update(organization.id, { logo: null })
+      return { success: true, message: 'Logo removed successfully' }
+    } catch (e) {
+      console.error('Failed to remove logo:', e)
+      return fail(500, { error: 'Failed to remove logo' })
     }
   },
 

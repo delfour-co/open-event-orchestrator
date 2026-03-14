@@ -18,6 +18,14 @@ const mapToOrganization = (record: RecordModel): Organization => ({
   description: record.description || undefined,
   logo: record.logo || undefined,
   website: record.website || undefined,
+  primaryColor: record.primaryColor || undefined,
+  secondaryColor: record.secondaryColor || undefined,
+  twitter: record.twitter || undefined,
+  linkedin: record.linkedin || undefined,
+  github: record.github || undefined,
+  youtube: record.youtube || undefined,
+  timezone: record.timezone || undefined,
+  defaultLocale: record.defaultLocale || undefined,
   createdAt: new Date(record.created),
   updatedAt: new Date(record.updated)
 })

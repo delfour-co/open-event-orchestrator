@@ -11,10 +11,14 @@ import {
   AlertTriangle,
   ArrowLeft,
   Clock,
+  Globe,
   Loader2,
   Mail,
+  Palette,
   Plus,
+  Share2,
   Trash2,
+  Upload,
   UserPlus,
   Users,
   X
@@ -116,6 +120,14 @@ const getRoleBadgeColor = (role: string) => {
         <input type="hidden" name="city" value={data.organization.city} />
         <input type="hidden" name="postalCode" value={data.organization.postalCode} />
         <input type="hidden" name="country" value={data.organization.country} />
+        <input type="hidden" name="primaryColor" value={data.organization.primaryColor} />
+        <input type="hidden" name="secondaryColor" value={data.organization.secondaryColor} />
+        <input type="hidden" name="twitter" value={data.organization.twitter} />
+        <input type="hidden" name="linkedin" value={data.organization.linkedin} />
+        <input type="hidden" name="github" value={data.organization.github} />
+        <input type="hidden" name="youtube" value={data.organization.youtube} />
+        <input type="hidden" name="timezone" value={data.organization.timezone} />
+        <input type="hidden" name="defaultLocale" value={data.organization.defaultLocale} />
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
@@ -214,6 +226,409 @@ const getRoleBadgeColor = (role: string) => {
     </Card.Content>
   </Card.Root>
 
+  <!-- Branding Card -->
+  <Card.Root>
+    <Card.Header>
+      <Card.Title class="flex items-center gap-2">
+        <Palette class="h-5 w-5" />
+        {m.admin_org_branding_title()}
+      </Card.Title>
+      <Card.Description>{m.admin_org_branding_description()}</Card.Description>
+    </Card.Header>
+    <Card.Content class="space-y-6">
+      <!-- Logo Upload -->
+      <div class="space-y-2">
+        <Label>{m.admin_org_branding_logo()}</Label>
+        <p class="text-sm text-muted-foreground">{m.admin_org_branding_logo_description()}</p>
+        <div class="flex items-center gap-4">
+          {#if data.logoUrl}
+            <img
+              src={data.logoUrl}
+              alt="Organization logo"
+              class="h-16 w-16 rounded-md border object-contain"
+            />
+          {:else}
+            <div class="flex h-16 w-16 items-center justify-center rounded-md border bg-muted text-muted-foreground">
+              <Palette class="h-8 w-8" />
+            </div>
+          {/if}
+          <div class="flex gap-2">
+            <form
+              method="POST"
+              action="?/uploadLogo"
+              enctype="multipart/form-data"
+              use:enhance={() => {
+                isSubmitting = true
+                return async ({ update }) => {
+                  isSubmitting = false
+                  await update()
+                  await invalidateAll()
+                }
+              }}
+            >
+              <input
+                type="file"
+                name="logo"
+                id="logo-upload"
+                accept="image/jpeg,image/png,image/svg+xml,image/webp"
+                class="hidden"
+                onchange={(e) => {
+                  const form = (e.target as HTMLInputElement).closest('form')
+                  if (form) form.requestSubmit()
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isSubmitting}
+                onclick={() => document.getElementById('logo-upload')?.click()}
+              >
+                <Upload class="mr-2 h-4 w-4" />
+                {m.admin_org_branding_upload_logo()}
+              </Button>
+            </form>
+            {#if data.organization.logo}
+              <form
+                method="POST"
+                action="?/removeLogo"
+                use:enhance={() => {
+                  isSubmitting = true
+                  return async ({ update }) => {
+                    isSubmitting = false
+                    await update()
+                    await invalidateAll()
+                  }
+                }}
+              >
+                <Button type="submit" variant="ghost" size="sm" class="text-destructive hover:text-destructive" disabled={isSubmitting}>
+                  <Trash2 class="mr-2 h-4 w-4" />
+                  {m.admin_org_branding_remove_logo()}
+                </Button>
+              </form>
+            {/if}
+          </div>
+        </div>
+      </div>
+
+      <!-- Colors -->
+      <form
+        method="POST"
+        action="?/updateOrganization"
+        use:enhance={() => {
+          isSubmitting = true
+          return async ({ update }) => {
+            isSubmitting = false
+            await update()
+            await invalidateAll()
+          }
+        }}
+        class="space-y-4"
+      >
+        <!-- Hidden fields to preserve existing data -->
+        <input type="hidden" name="name" value={data.organization.name} />
+        <input type="hidden" name="slug" value={data.organization.slug} />
+        <input type="hidden" name="description" value={data.organization.description} />
+        <input type="hidden" name="website" value={data.organization.website} />
+        <input type="hidden" name="contactEmail" value={data.organization.contactEmail} />
+        <input type="hidden" name="vatRate" value={String(data.organization.vatRate)} />
+        <input type="hidden" name="legalName" value={data.organization.legalName} />
+        <input type="hidden" name="legalForm" value={data.organization.legalForm} />
+        <input type="hidden" name="rcsNumber" value={data.organization.rcsNumber} />
+        <input type="hidden" name="shareCapital" value={data.organization.shareCapital} />
+        <input type="hidden" name="siret" value={data.organization.siret} />
+        <input type="hidden" name="vatNumber" value={data.organization.vatNumber} />
+        <input type="hidden" name="address" value={data.organization.address} />
+        <input type="hidden" name="city" value={data.organization.city} />
+        <input type="hidden" name="postalCode" value={data.organization.postalCode} />
+        <input type="hidden" name="country" value={data.organization.country} />
+        <input type="hidden" name="twitter" value={data.organization.twitter} />
+        <input type="hidden" name="linkedin" value={data.organization.linkedin} />
+        <input type="hidden" name="github" value={data.organization.github} />
+        <input type="hidden" name="youtube" value={data.organization.youtube} />
+        <input type="hidden" name="timezone" value={data.organization.timezone} />
+        <input type="hidden" name="defaultLocale" value={data.organization.defaultLocale} />
+
+        <p class="text-sm text-muted-foreground">{m.admin_org_branding_colors_description()}</p>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="org-primary-color">{m.admin_org_branding_primary_color()}</Label>
+            <div class="flex items-center gap-2">
+              <input
+                type="color"
+                id="org-primary-color-picker"
+                value={data.organization.primaryColor || '#000000'}
+                class="h-10 w-10 cursor-pointer rounded border"
+                oninput={(e) => {
+                  const textInput = document.getElementById('org-primary-color') as HTMLInputElement
+                  if (textInput) textInput.value = (e.target as HTMLInputElement).value
+                }}
+              />
+              <Input
+                id="org-primary-color"
+                name="primaryColor"
+                value={data.organization.primaryColor}
+                placeholder="#3B82F6"
+                oninput={(e) => {
+                  const colorInput = document.getElementById('org-primary-color-picker') as HTMLInputElement
+                  if (colorInput) colorInput.value = (e.target as HTMLInputElement).value
+                }}
+              />
+            </div>
+          </div>
+          <div class="space-y-2">
+            <Label for="org-secondary-color">{m.admin_org_branding_secondary_color()}</Label>
+            <div class="flex items-center gap-2">
+              <input
+                type="color"
+                id="org-secondary-color-picker"
+                value={data.organization.secondaryColor || '#000000'}
+                class="h-10 w-10 cursor-pointer rounded border"
+                oninput={(e) => {
+                  const textInput = document.getElementById('org-secondary-color') as HTMLInputElement
+                  if (textInput) textInput.value = (e.target as HTMLInputElement).value
+                }}
+              />
+              <Input
+                id="org-secondary-color"
+                name="secondaryColor"
+                value={data.organization.secondaryColor}
+                placeholder="#10B981"
+                oninput={(e) => {
+                  const colorInput = document.getElementById('org-secondary-color-picker') as HTMLInputElement
+                  if (colorInput) colorInput.value = (e.target as HTMLInputElement).value
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <Button type="submit" disabled={isSubmitting}>
+            {#if isSubmitting}
+              <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+              {m.admin_org_settings_saving()}
+            {:else}
+              {m.admin_org_settings_save()}
+            {/if}
+          </Button>
+        </div>
+      </form>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Social Links Card -->
+  <Card.Root>
+    <Card.Header>
+      <Card.Title class="flex items-center gap-2">
+        <Share2 class="h-5 w-5" />
+        {m.admin_org_social_title()}
+      </Card.Title>
+      <Card.Description>{m.admin_org_social_description()}</Card.Description>
+    </Card.Header>
+    <Card.Content>
+      <form
+        method="POST"
+        action="?/updateOrganization"
+        use:enhance={() => {
+          isSubmitting = true
+          return async ({ update }) => {
+            isSubmitting = false
+            await update()
+            await invalidateAll()
+          }
+        }}
+        class="space-y-4"
+      >
+        <!-- Hidden fields to preserve existing data -->
+        <input type="hidden" name="name" value={data.organization.name} />
+        <input type="hidden" name="slug" value={data.organization.slug} />
+        <input type="hidden" name="description" value={data.organization.description} />
+        <input type="hidden" name="website" value={data.organization.website} />
+        <input type="hidden" name="contactEmail" value={data.organization.contactEmail} />
+        <input type="hidden" name="vatRate" value={String(data.organization.vatRate)} />
+        <input type="hidden" name="legalName" value={data.organization.legalName} />
+        <input type="hidden" name="legalForm" value={data.organization.legalForm} />
+        <input type="hidden" name="rcsNumber" value={data.organization.rcsNumber} />
+        <input type="hidden" name="shareCapital" value={data.organization.shareCapital} />
+        <input type="hidden" name="siret" value={data.organization.siret} />
+        <input type="hidden" name="vatNumber" value={data.organization.vatNumber} />
+        <input type="hidden" name="address" value={data.organization.address} />
+        <input type="hidden" name="city" value={data.organization.city} />
+        <input type="hidden" name="postalCode" value={data.organization.postalCode} />
+        <input type="hidden" name="country" value={data.organization.country} />
+        <input type="hidden" name="primaryColor" value={data.organization.primaryColor} />
+        <input type="hidden" name="secondaryColor" value={data.organization.secondaryColor} />
+        <input type="hidden" name="timezone" value={data.organization.timezone} />
+        <input type="hidden" name="defaultLocale" value={data.organization.defaultLocale} />
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="org-twitter">{m.admin_org_social_twitter()}</Label>
+            <Input
+              id="org-twitter"
+              name="twitter"
+              type="url"
+              value={data.organization.twitter}
+              placeholder="https://x.com/yourorg"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="org-linkedin">{m.admin_org_social_linkedin()}</Label>
+            <Input
+              id="org-linkedin"
+              name="linkedin"
+              type="url"
+              value={data.organization.linkedin}
+              placeholder="https://linkedin.com/company/yourorg"
+            />
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="org-github">{m.admin_org_social_github()}</Label>
+            <Input
+              id="org-github"
+              name="github"
+              type="url"
+              value={data.organization.github}
+              placeholder="https://github.com/yourorg"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="org-youtube">{m.admin_org_social_youtube()}</Label>
+            <Input
+              id="org-youtube"
+              name="youtube"
+              type="url"
+              value={data.organization.youtube}
+              placeholder="https://youtube.com/@yourorg"
+            />
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <Button type="submit" disabled={isSubmitting}>
+            {#if isSubmitting}
+              <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+              {m.admin_org_settings_saving()}
+            {:else}
+              {m.admin_org_settings_save()}
+            {/if}
+          </Button>
+        </div>
+      </form>
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Localization Card -->
+  <Card.Root>
+    <Card.Header>
+      <Card.Title class="flex items-center gap-2">
+        <Globe class="h-5 w-5" />
+        {m.admin_org_localization_title()}
+      </Card.Title>
+      <Card.Description>{m.admin_org_localization_description()}</Card.Description>
+    </Card.Header>
+    <Card.Content>
+      <form
+        method="POST"
+        action="?/updateOrganization"
+        use:enhance={() => {
+          isSubmitting = true
+          return async ({ update }) => {
+            isSubmitting = false
+            await update()
+            await invalidateAll()
+          }
+        }}
+        class="space-y-4"
+      >
+        <!-- Hidden fields to preserve existing data -->
+        <input type="hidden" name="name" value={data.organization.name} />
+        <input type="hidden" name="slug" value={data.organization.slug} />
+        <input type="hidden" name="description" value={data.organization.description} />
+        <input type="hidden" name="website" value={data.organization.website} />
+        <input type="hidden" name="contactEmail" value={data.organization.contactEmail} />
+        <input type="hidden" name="vatRate" value={String(data.organization.vatRate)} />
+        <input type="hidden" name="legalName" value={data.organization.legalName} />
+        <input type="hidden" name="legalForm" value={data.organization.legalForm} />
+        <input type="hidden" name="rcsNumber" value={data.organization.rcsNumber} />
+        <input type="hidden" name="shareCapital" value={data.organization.shareCapital} />
+        <input type="hidden" name="siret" value={data.organization.siret} />
+        <input type="hidden" name="vatNumber" value={data.organization.vatNumber} />
+        <input type="hidden" name="address" value={data.organization.address} />
+        <input type="hidden" name="city" value={data.organization.city} />
+        <input type="hidden" name="postalCode" value={data.organization.postalCode} />
+        <input type="hidden" name="country" value={data.organization.country} />
+        <input type="hidden" name="primaryColor" value={data.organization.primaryColor} />
+        <input type="hidden" name="secondaryColor" value={data.organization.secondaryColor} />
+        <input type="hidden" name="twitter" value={data.organization.twitter} />
+        <input type="hidden" name="linkedin" value={data.organization.linkedin} />
+        <input type="hidden" name="github" value={data.organization.github} />
+        <input type="hidden" name="youtube" value={data.organization.youtube} />
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="org-timezone">{m.admin_org_localization_timezone()}</Label>
+            <select
+              id="org-timezone"
+              name="timezone"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="" selected={!data.organization.timezone}>--</option>
+              <option value="Europe/Paris" selected={data.organization.timezone === 'Europe/Paris'}>Europe/Paris</option>
+              <option value="Europe/London" selected={data.organization.timezone === 'Europe/London'}>Europe/London</option>
+              <option value="Europe/Berlin" selected={data.organization.timezone === 'Europe/Berlin'}>Europe/Berlin</option>
+              <option value="Europe/Madrid" selected={data.organization.timezone === 'Europe/Madrid'}>Europe/Madrid</option>
+              <option value="Europe/Rome" selected={data.organization.timezone === 'Europe/Rome'}>Europe/Rome</option>
+              <option value="Europe/Brussels" selected={data.organization.timezone === 'Europe/Brussels'}>Europe/Brussels</option>
+              <option value="Europe/Amsterdam" selected={data.organization.timezone === 'Europe/Amsterdam'}>Europe/Amsterdam</option>
+              <option value="Europe/Zurich" selected={data.organization.timezone === 'Europe/Zurich'}>Europe/Zurich</option>
+              <option value="America/New_York" selected={data.organization.timezone === 'America/New_York'}>America/New_York</option>
+              <option value="America/Chicago" selected={data.organization.timezone === 'America/Chicago'}>America/Chicago</option>
+              <option value="America/Denver" selected={data.organization.timezone === 'America/Denver'}>America/Denver</option>
+              <option value="America/Los_Angeles" selected={data.organization.timezone === 'America/Los_Angeles'}>America/Los_Angeles</option>
+              <option value="America/Toronto" selected={data.organization.timezone === 'America/Toronto'}>America/Toronto</option>
+              <option value="America/Sao_Paulo" selected={data.organization.timezone === 'America/Sao_Paulo'}>America/Sao_Paulo</option>
+              <option value="Asia/Tokyo" selected={data.organization.timezone === 'Asia/Tokyo'}>Asia/Tokyo</option>
+              <option value="Asia/Shanghai" selected={data.organization.timezone === 'Asia/Shanghai'}>Asia/Shanghai</option>
+              <option value="Asia/Singapore" selected={data.organization.timezone === 'Asia/Singapore'}>Asia/Singapore</option>
+              <option value="Asia/Dubai" selected={data.organization.timezone === 'Asia/Dubai'}>Asia/Dubai</option>
+              <option value="Australia/Sydney" selected={data.organization.timezone === 'Australia/Sydney'}>Australia/Sydney</option>
+              <option value="Pacific/Auckland" selected={data.organization.timezone === 'Pacific/Auckland'}>Pacific/Auckland</option>
+              <option value="UTC" selected={data.organization.timezone === 'UTC'}>UTC</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <Label for="org-locale">{m.admin_org_localization_locale()}</Label>
+            <select
+              id="org-locale"
+              name="defaultLocale"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="" selected={!data.organization.defaultLocale}>--</option>
+              <option value="en" selected={data.organization.defaultLocale === 'en'}>English</option>
+              <option value="fr" selected={data.organization.defaultLocale === 'fr'}>Français</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <Button type="submit" disabled={isSubmitting}>
+            {#if isSubmitting}
+              <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+              {m.admin_org_settings_saving()}
+            {:else}
+              {m.admin_org_settings_save()}
+            {/if}
+          </Button>
+        </div>
+      </form>
+    </Card.Content>
+  </Card.Root>
+
   <!-- Legal & Billing Information Card -->
   <Card.Root>
     <Card.Header>
@@ -241,6 +656,14 @@ const getRoleBadgeColor = (role: string) => {
         <input type="hidden" name="website" value={data.organization.website} />
         <input type="hidden" name="contactEmail" value={data.organization.contactEmail} />
         <input type="hidden" name="vatRate" value={String(data.organization.vatRate)} />
+        <input type="hidden" name="primaryColor" value={data.organization.primaryColor} />
+        <input type="hidden" name="secondaryColor" value={data.organization.secondaryColor} />
+        <input type="hidden" name="twitter" value={data.organization.twitter} />
+        <input type="hidden" name="linkedin" value={data.organization.linkedin} />
+        <input type="hidden" name="github" value={data.organization.github} />
+        <input type="hidden" name="youtube" value={data.organization.youtube} />
+        <input type="hidden" name="timezone" value={data.organization.timezone} />
+        <input type="hidden" name="defaultLocale" value={data.organization.defaultLocale} />
 
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
