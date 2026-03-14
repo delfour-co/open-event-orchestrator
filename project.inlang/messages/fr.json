@@ -3247,5 +3247,19 @@
   "profile_2fa_disable_button": "Désactiver la 2FA",
   "profile_2fa_disable_confirm": "Entrez votre mot de passe pour désactiver la 2FA",
   "profile_2fa_setup_button": "Configurer la 2FA",
-  "profile_2fa_backup_remaining": "{count} codes de secours restants"
+  "profile_2fa_backup_remaining": "{count} codes de secours restants",
+  "audit_log_title": "Journal d'audit",
+  "audit_log_description": "Consultez l'historique des activités de l'organisation.",
+  "audit_log_filter_action": "Action",
+  "audit_log_filter_user": "Utilisateur",
+  "audit_log_filter_all_actions": "Toutes les actions",
+  "audit_log_filter_all_users": "Tous les utilisateurs",
+  "audit_log_export_csv": "Exporter CSV",
+  "audit_log_column_date": "Date",
+  "audit_log_column_user": "Utilisateur",
+  "audit_log_column_action": "Action",
+  "audit_log_column_entity": "Entité",
+  "audit_log_column_ip": "Adresse IP",
+  "audit_log_no_entries": "Aucune entrée dans le journal d'audit.",
+  "audit_log_retention": "Affichage des 90 derniers jours d'activité."
 }

@@ -16,6 +16,23 @@ export {
 export type { Invitation, CsvInvitationRow } from './invitation'
 
 export {
+  auditActionSchema,
+  auditEntityTypeSchema,
+  auditLogSchema,
+  auditLogFiltersSchema,
+  AUDIT_RETENTION_DAYS,
+  getAuditActionLabel,
+  getAuditActionColor
+} from './audit-log'
+export type {
+  AuditAction,
+  AuditEntityType,
+  AuditLog,
+  AuditLogFilters,
+  PaginatedAuditLogs
+} from './audit-log'
+
+export {
   teamMemberSchema,
   socialLinkSchema,
   createTeamMemberSchema,

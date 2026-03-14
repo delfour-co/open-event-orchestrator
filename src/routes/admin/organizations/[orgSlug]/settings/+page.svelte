@@ -17,6 +17,7 @@ import {
   Palette,
   Plus,
   RefreshCw,
+  ScrollText,
   Share2,
   Trash2,
   Upload,
@@ -77,6 +78,12 @@ const getRoleBadgeColor = (role: string) => {
       <h2 class="text-3xl font-bold tracking-tight">{data.organization.name}</h2>
       <p class="text-muted-foreground">{m.admin_org_settings_heading()}</p>
     </div>
+    <a href="/admin/organizations/{data.organization.slug}/audit-log">
+      <Button variant="outline">
+        <ScrollText class="mr-2 h-4 w-4" />
+        {m.audit_log_title()}
+      </Button>
+    </a>
   </div>
 
   {#if form?.error}
