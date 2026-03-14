@@ -1,3 +1,9 @@
+import {
+  DEFAULT_BRANDING,
+  type EmailBranding,
+  emailFooter,
+  textFooter
+} from '$lib/server/email-branding'
 import type { Order, OrderItem, Ticket, TicketType } from '../domain'
 import { getContrastColor } from '../domain/ticket-template'
 
@@ -22,6 +28,7 @@ export interface OrderConfirmationData {
   template?: TicketTemplateColors
   venue?: string
   startDate?: Date
+  branding?: EmailBranding
 }
 
 export const generateOrderConfirmationHtml = (data: OrderConfirmationData): string => {
@@ -161,9 +168,10 @@ export const generateOrderConfirmationHtml = (data: OrderConfirmationData): stri
 		${ticketRows}
 
 		<p style="color: #666; margin-top: 30px; font-size: 12px;">
-			This email was sent by ${data.eventName}. If you have any questions, please contact the organizers.
+			If you have any questions, please contact the organizers.
 		</p>
 	</div>
+	${emailFooter(data.branding || DEFAULT_BRANDING)}
 </body>
 </html>
 `
@@ -175,6 +183,7 @@ export interface OrderRefundData {
   editionName: string
   eventName: string
   template?: TicketTemplateColors
+  branding?: EmailBranding
 }
 
 export const generateOrderRefundHtml = (data: OrderRefundData): string => {
@@ -235,9 +244,10 @@ export const generateOrderRefundHtml = (data: OrderRefundData): string => {
 		<p style="color: ${template.textColor};">All tickets associated with this order have been cancelled. If the order was paid by card, the refund will appear on your statement within 5-10 business days.</p>
 
 		<p style="color: #666; margin-top: 30px; font-size: 12px;">
-			This email was sent by ${data.eventName}. If you have any questions, please contact the organizers.
+			If you have any questions, please contact the organizers.
 		</p>
 	</div>
+	${emailFooter(data.branding || DEFAULT_BRANDING)}
 </body>
 </html>
 `
@@ -266,7 +276,7 @@ ${items}
 
 All tickets associated with this order have been cancelled. If the order was paid by card, the refund will appear on your statement within 5-10 business days.
 
-This email was sent by ${data.eventName}.`
+${textFooter(data.branding || DEFAULT_BRANDING)}`
 }
 
 export const generateOrderConfirmationText = (data: OrderConfirmationData): string => {
@@ -307,5 +317,5 @@ ${tickets}
 
 Present your ticket number at the entrance for check-in.
 
-This email was sent by ${data.eventName}.`
+${textFooter(data.branding || DEFAULT_BRANDING)}`
 }

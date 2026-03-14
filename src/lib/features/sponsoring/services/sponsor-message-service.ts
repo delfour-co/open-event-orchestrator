@@ -1,4 +1,11 @@
 import type { EmailService } from '$lib/features/cfp/services/email-service'
+import {
+  DEFAULT_BRANDING,
+  type EmailBranding,
+  emailButton,
+  textFooter,
+  wrapEmail
+} from '$lib/server/email-branding'
 import type { CreateSponsorMessage, EditionSponsorExpanded, SponsorMessage } from '../domain'
 import type { SponsorMessageRepository } from '../infra/sponsor-message-repository'
 
@@ -98,40 +105,33 @@ export type SponsorMessageService = ReturnType<typeof createSponsorMessageServic
 
 const generateMessageEmailHtml = (
   senderType: 'organizer' | 'sponsor',
-  data: MessageEmailTemplateData
+  data: MessageEmailTemplateData,
+  branding: EmailBranding = DEFAULT_BRANDING
 ): string => {
   const isFromOrganizer = senderType === 'organizer'
   const buttonUrl = isFromOrganizer ? data.portalUrl : data.adminUrl
   const buttonText = isFromOrganizer ? 'View in Sponsor Portal' : 'View in Admin'
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Message</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #2563eb;">New Message${data.subject ? `: ${data.subject}` : ''}</h1>
-  <p>Dear ${data.recipientName},</p>
-  <p>You have received a new message regarding <strong>${data.eventName}</strong> sponsorship${!isFromOrganizer ? ` from ${data.sponsorName}` : ''}.</p>
+  const bodyContent = `
+    <p>Dear ${data.recipientName},</p>
+    <p>You have received a new message regarding <strong>${data.eventName}</strong> sponsorship${!isFromOrganizer ? ` from ${data.sponsorName}` : ''}.</p>
 
-  <div style="background: #f8f9fa; border-left: 4px solid #2563eb; padding: 16px; margin: 20px 0;">
-    <p style="margin: 0 0 8px 0; font-weight: 600;">${data.senderName}</p>
-    <p style="margin: 0; white-space: pre-wrap;">${data.messagePreview}${data.messagePreview.length >= 200 ? '...' : ''}</p>
-  </div>
+    <div style="background: #f8f9fa; border-left: 4px solid ${branding.primaryColor}; padding: 16px; margin: 20px 0;">
+      <p style="margin: 0 0 8px 0; font-weight: 600;">${data.senderName}</p>
+      <p style="margin: 0; white-space: pre-wrap;">${data.messagePreview}${data.messagePreview.length >= 200 ? '...' : ''}</p>
+    </div>
 
-  ${buttonUrl ? `<p><a href="${buttonUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">${buttonText}</a></p>` : ''}
+    ${buttonUrl ? emailButton(branding, buttonText, buttonUrl) : ''}
 
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+
+  return wrapEmail(branding, `New Message${data.subject ? `: ${data.subject}` : ''}`, bodyContent)
 }
 
 const generateMessageEmailText = (
   senderType: 'organizer' | 'sponsor',
-  data: MessageEmailTemplateData
+  data: MessageEmailTemplateData,
+  branding: EmailBranding = DEFAULT_BRANDING
 ): string => {
   const isFromOrganizer = senderType === 'organizer'
   const buttonUrl = isFromOrganizer ? data.portalUrl : data.adminUrl
@@ -151,5 +151,7 @@ ${buttonUrl ? `View the full message: ${buttonUrl}` : ''}
 
 Best regards,
 The ${data.eventName} Team
+
+${textFooter(branding)}
 `.trim()
 }

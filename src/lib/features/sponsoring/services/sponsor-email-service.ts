@@ -1,4 +1,11 @@
 import type { EmailAttachment, EmailService } from '$lib/features/cfp/services/email-service'
+import {
+  DEFAULT_BRANDING,
+  type EmailBranding,
+  emailButton,
+  textFooter,
+  wrapEmail
+} from '$lib/server/email-branding'
 import type { EditionSponsorExpanded } from '../domain'
 import { formatPackagePrice } from '../domain'
 
@@ -220,164 +227,119 @@ export type SponsorEmailService = ReturnType<typeof createSponsorEmailService>
 
 const generateSponsorEmailHtml = (
   type: SponsorEmailType,
-  data: SponsorEmailTemplateData
+  data: SponsorEmailTemplateData,
+  branding: EmailBranding = DEFAULT_BRANDING
 ): string => {
   const greeting = data.contactName ? `Dear ${data.contactName}` : `Dear ${data.sponsorName} team`
+  const b = branding
 
-  const templates: Record<SponsorEmailType, string> = {
-    portal_invitation: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sponsor Portal Access</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #2563eb;">Sponsor Portal Access</h1>
-  <p>${greeting},</p>
-  <p>You have been granted access to the ${data.eventName} Sponsor Portal.</p>
-  ${data.packageName ? `<p>Your sponsorship package: <strong>${data.packageName}</strong></p>` : ''}
-  <p>Click the button below to access your sponsor portal where you can:</p>
-  <ul>
-    <li>Update your company profile</li>
-    <li>Upload your logo</li>
-    <li>View your benefits</li>
-  </ul>
-  <p><a href="${data.portalUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Access Sponsor Portal</a></p>
-  <p style="color: #666; font-size: 0.9em;">This link is unique to your organization. Please do not share it.</p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+  const bodyTemplates: Record<SponsorEmailType, { title: string; body: string }> = {
+    portal_invitation: {
+      title: 'Sponsor Portal Access',
+      body: `
+    <p>${greeting},</p>
+    <p>You have been granted access to the ${data.eventName} Sponsor Portal.</p>
+    ${data.packageName ? `<p>Your sponsorship package: <strong>${data.packageName}</strong></p>` : ''}
+    <p>Click the button below to access your sponsor portal where you can:</p>
+    <ul>
+      <li>Update your company profile</li>
+      <li>Upload your logo</li>
+      <li>View your benefits</li>
+    </ul>
+    ${emailButton(b, 'Access Sponsor Portal', data.portalUrl || '#')}
+    <p style="color: #666; font-size: 0.9em;">This link is unique to your organization. Please do not share it.</p>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    status_confirmed: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sponsorship Confirmed</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #16a34a;">Sponsorship Confirmed!</h1>
-  <p>${greeting},</p>
-  <p>We are thrilled to confirm your sponsorship of <strong>${data.eventName}</strong>!</p>
-  ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
-  ${data.amount ? `<p>Amount: <strong>${data.amount}</strong></p>` : ''}
-  <p>Thank you for your support! We look forward to showcasing your brand at our event.</p>
-  ${data.portalUrl ? `<p><a href="${data.portalUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Access Sponsor Portal</a></p>` : ''}
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    status_confirmed: {
+      title: 'Sponsorship Confirmed!',
+      body: `
+    <p>${greeting},</p>
+    <p>We are thrilled to confirm your sponsorship of <strong>${data.eventName}</strong>!</p>
+    ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
+    ${data.amount ? `<p>Amount: <strong>${data.amount}</strong></p>` : ''}
+    <p>Thank you for your support! We look forward to showcasing your brand at our event.</p>
+    ${
+      data.portalUrl
+        ? `<div style="text-align: center; margin: 30px 0;">
+      <a href="${data.portalUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Access Sponsor Portal</a>
+    </div>`
+        : ''
+    }
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    status_declined: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sponsorship Update</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #64748b;">Sponsorship Update</h1>
-  <p>${greeting},</p>
-  <p>Thank you for considering sponsorship of ${data.eventName}.</p>
-  <p>We understand that this may not be the right time for your organization. Please don't hesitate to reach out if you'd like to discuss sponsorship opportunities for future events.</p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    status_declined: {
+      title: 'Sponsorship Update',
+      body: `
+    <p>${greeting},</p>
+    <p>Thank you for considering sponsorship of ${data.eventName}.</p>
+    <p>We understand that this may not be the right time for your organization. Please don't hesitate to reach out if you'd like to discuss sponsorship opportunities for future events.</p>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    payment_received: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Received</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #16a34a;">Payment Received</h1>
-  <p>${greeting},</p>
-  <p>We have received your payment for ${data.eventName} sponsorship.</p>
-  ${data.amount ? `<p>Amount received: <strong>${data.amount}</strong></p>` : ''}
-  <p>Thank you for your support!</p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    payment_received: {
+      title: 'Payment Received',
+      body: `
+    <p>${greeting},</p>
+    <p>We have received your payment for ${data.eventName} sponsorship.</p>
+    ${data.amount ? `<p>Amount received: <strong>${data.amount}</strong></p>` : ''}
+    <p>Thank you for your support!</p>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    welcome: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome Sponsor</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #8b5cf6;">Welcome to ${data.eventName}!</h1>
-  <p>${greeting},</p>
-  <p>Welcome aboard as a sponsor of <strong>${data.eventName}</strong>!</p>
-  ${data.packageName ? `<p>Your package: <strong>${data.packageName}</strong></p>` : ''}
-  <p>We're excited to have you as part of our event. Here's what happens next:</p>
-  <ol>
-    <li>Access your sponsor portal to complete your profile</li>
-    <li>Upload your logo and company information</li>
-    <li>Review your benefits and deliverables</li>
-  </ol>
-  <p><a href="${data.portalUrl}" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Get Started</a></p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    welcome: {
+      title: `Welcome to ${data.eventName}!`,
+      body: `
+    <p>${greeting},</p>
+    <p>Welcome aboard as a sponsor of <strong>${data.eventName}</strong>!</p>
+    ${data.packageName ? `<p>Your package: <strong>${data.packageName}</strong></p>` : ''}
+    <p>We're excited to have you as part of our event. Here's what happens next:</p>
+    <ol>
+      <li>Access your sponsor portal to complete your profile</li>
+      <li>Upload your logo and company information</li>
+      <li>Review your benefits and deliverables</li>
+    </ol>
+    ${emailButton(b, 'Get Started', data.portalUrl || '#')}
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    invoice: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sponsorship Invoice</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #2563eb;">Sponsorship Invoice</h1>
-  <p>${greeting},</p>
-  <p>Thank you for your sponsorship of <strong>${data.eventName}</strong>!</p>
-  ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
-  ${data.amount ? `<p>Amount: <strong>${data.amount}</strong></p>` : ''}
-  <p>Please find your invoice attached to this email.</p>
-  ${data.portalUrl ? `<p>You can also download your invoice at any time from your sponsor portal:</p><p><a href="${data.portalUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Access Sponsor Portal</a></p>` : ''}
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    invoice: {
+      title: 'Sponsorship Invoice',
+      body: `
+    <p>${greeting},</p>
+    <p>Thank you for your sponsorship of <strong>${data.eventName}</strong>!</p>
+    ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
+    ${data.amount ? `<p>Amount: <strong>${data.amount}</strong></p>` : ''}
+    <p>Please find your invoice attached to this email.</p>
+    ${data.portalUrl ? `<p>You can also download your invoice at any time from your sponsor portal:</p>${emailButton(b, 'Access Sponsor Portal', data.portalUrl)}` : ''}
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    refund: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sponsorship Refund</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #dc2626;">Sponsorship Refund</h1>
-  <p>${greeting},</p>
-  <p>We are writing to inform you that your sponsorship of <strong>${data.eventName}</strong> has been refunded.</p>
-  ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
-  ${data.amount ? `<p>Refunded amount: <strong>${data.amount}</strong></p>` : ''}
-  <p>Please find the credit note attached to this email. The refund will be processed to your original payment method.</p>
-  <p>If you have any questions, please don't hesitate to reach out.</p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`
+    refund: {
+      title: 'Sponsorship Refund',
+      body: `
+    <p>${greeting},</p>
+    <p>We are writing to inform you that your sponsorship of <strong>${data.eventName}</strong> has been refunded.</p>
+    ${data.packageName ? `<p>Package: <strong>${data.packageName}</strong></p>` : ''}
+    ${data.amount ? `<p>Refunded amount: <strong>${data.amount}</strong></p>` : ''}
+    <p>Please find the credit note attached to this email. The refund will be processed to your original payment method.</p>
+    <p>If you have any questions, please don't hesitate to reach out.</p>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    }
   }
 
-  return templates[type]
+  const { title, body } = bodyTemplates[type]
+  return wrapEmail(b, title, body)
 }
 
 const generateSponsorEmailText = (
   type: SponsorEmailType,
-  data: SponsorEmailTemplateData
+  data: SponsorEmailTemplateData,
+  branding: EmailBranding = DEFAULT_BRANDING
 ): string => {
   const greeting = data.contactName ? `Dear ${data.contactName}` : `Dear ${data.sponsorName} team`
+  const footer = textFooter(branding)
 
   const templates: Record<SponsorEmailType, string> = {
     portal_invitation: `
@@ -393,7 +355,9 @@ Access your portal here: ${data.portalUrl}
 This link is unique to your organization. Please do not share it.
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     status_confirmed: `
 Sponsorship Confirmed!
@@ -408,7 +372,9 @@ Thank you for your support!
 ${data.portalUrl ? `Access your portal: ${data.portalUrl}` : ''}
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     status_declined: `
 Sponsorship Update
@@ -420,7 +386,9 @@ Thank you for considering sponsorship of ${data.eventName}.
 We understand that this may not be the right time for your organization. Please don't hesitate to reach out for future events.
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     payment_received: `
 Payment Received
@@ -433,7 +401,9 @@ ${data.amount ? `Amount received: ${data.amount}` : ''}
 Thank you for your support!
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     welcome: `
 Welcome to ${data.eventName}!
@@ -446,7 +416,9 @@ ${data.packageName ? `Your package: ${data.packageName}` : ''}
 Get started here: ${data.portalUrl}
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     invoice: `
 Sponsorship Invoice
@@ -461,7 +433,9 @@ Please find your invoice attached to this email.
 ${data.portalUrl ? `You can also download your invoice from your sponsor portal: ${data.portalUrl}` : ''}
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     refund: `
 Sponsorship Refund
@@ -477,7 +451,9 @@ Please find the credit note attached to this email. The refund will be processed
 If you have any questions, please don't hesitate to reach out.
 
 Best regards,
-The ${data.eventName} Team`
+The ${data.eventName} Team
+
+${footer}`
   }
 
   return templates[type].trim()

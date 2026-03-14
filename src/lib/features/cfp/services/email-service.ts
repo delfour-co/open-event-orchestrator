@@ -1,3 +1,10 @@
+import {
+  DEFAULT_BRANDING,
+  type EmailBranding,
+  emailButton,
+  textFooter,
+  wrapEmail
+} from '$lib/server/email-branding'
 import nodemailer from 'nodemailer'
 import type { NotificationType } from '../domain/notification'
 
@@ -82,123 +89,96 @@ export const createSmtpEmailService = (config: SmtpConfig): EmailService => {
   }
 }
 
-export const generateEmailHtml = (type: NotificationType, data: EmailTemplateData): string => {
-  const templates: Record<NotificationType, string> = {
-    submission_confirmed: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Submission Confirmed</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #2563eb;">Thank you for your submission!</h1>
-  <p>Dear ${data.speakerName},</p>
-  <p>We have received your talk submission <strong>"${data.talkTitle}"</strong> for <strong>${data.editionName}</strong>.</p>
-  <p>Our team will review your proposal and get back to you soon.</p>
-  <p>You can view and manage your submissions here:</p>
-  <p><a href="${data.cfpUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">View My Submissions</a></p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+export const generateEmailHtml = (
+  type: NotificationType,
+  data: EmailTemplateData,
+  branding: EmailBranding = DEFAULT_BRANDING
+): string => {
+  const b = branding
 
-    talk_accepted: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Talk Accepted</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #16a34a;">Congratulations! Your talk has been accepted!</h1>
-  <p>Dear ${data.speakerName},</p>
-  <p>We are thrilled to inform you that your talk <strong>"${data.talkTitle}"</strong> has been accepted for <strong>${data.editionName}</strong>!</p>
-  <p>Please confirm your participation by clicking the button below:</p>
-  <p><a href="${data.confirmationUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Confirm My Participation</a></p>
-  <p>We look forward to seeing you at the event!</p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+  const bodyTemplates: Record<NotificationType, { title: string; body: string }> = {
+    submission_confirmed: {
+      title: 'Thank you for your submission!',
+      body: `
+    <p>Dear ${data.speakerName},</p>
+    <p>We have received your talk submission <strong>"${data.talkTitle}"</strong> for <strong>${data.editionName}</strong>.</p>
+    <p>Our team will review your proposal and get back to you soon.</p>
+    <p>You can view and manage your submissions here:</p>
+    ${emailButton(b, 'View My Submissions', data.cfpUrl || '#')}
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    talk_rejected: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Talk Status Update</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #64748b;">Thank you for your submission</h1>
-  <p>Dear ${data.speakerName},</p>
-  <p>Thank you for submitting your talk <strong>"${data.talkTitle}"</strong> to <strong>${data.editionName}</strong>.</p>
-  <p>After careful consideration, we regret to inform you that we were unable to include your talk in this year's program. We received many excellent proposals, and the selection process was challenging.</p>
-  <p>We encourage you to submit again for future editions!</p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    talk_accepted: {
+      title: 'Congratulations! Your talk has been accepted!',
+      body: `
+    <p>Dear ${data.speakerName},</p>
+    <p>We are thrilled to inform you that your talk <strong>"${data.talkTitle}"</strong> has been accepted for <strong>${data.editionName}</strong>!</p>
+    <p>Please confirm your participation by clicking the button below:</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${data.confirmationUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Confirm My Participation</a>
+    </div>
+    <p>We look forward to seeing you at the event!</p>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    confirmation_reminder: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Confirmation Reminder</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #f59e0b;">Please confirm your participation</h1>
-  <p>Dear ${data.speakerName},</p>
-  <p>This is a friendly reminder that your talk <strong>"${data.talkTitle}"</strong> has been accepted for <strong>${data.editionName}</strong>, but we haven't received your confirmation yet.</p>
-  <p>Please confirm your participation as soon as possible:</p>
-  <p><a href="${data.confirmationUrl}" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Confirm My Participation</a></p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    talk_rejected: {
+      title: 'Thank you for your submission',
+      body: `
+    <p>Dear ${data.speakerName},</p>
+    <p>Thank you for submitting your talk <strong>"${data.talkTitle}"</strong> to <strong>${data.editionName}</strong>.</p>
+    <p>After careful consideration, we regret to inform you that we were unable to include your talk in this year's program. We received many excellent proposals, and the selection process was challenging.</p>
+    <p>We encourage you to submit again for future editions!</p>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    cfp_closing_reminder: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CFP Closing Soon</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #dc2626;">CFP Closing Soon!</h1>
-  <p>Dear ${data.speakerName},</p>
-  <p>This is a reminder that the Call for Papers for <strong>${data.editionName}</strong> is closing on <strong>${data.cfpDeadline}</strong>.</p>
-  <p>Don't miss your chance to submit a talk!</p>
-  <p><a href="${data.cfpUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Submit a Talk Now</a></p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`,
+    confirmation_reminder: {
+      title: 'Please confirm your participation',
+      body: `
+    <p>Dear ${data.speakerName},</p>
+    <p>This is a friendly reminder that your talk <strong>"${data.talkTitle}"</strong> has been accepted for <strong>${data.editionName}</strong>, but we haven't received your confirmation yet.</p>
+    <p>Please confirm your participation as soon as possible:</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${data.confirmationUrl}" style="display: inline-block; background: #f59e0b; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Confirm My Participation</a>
+    </div>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
 
-    cospeaker_invitation: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Co-Speaker Invitation</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #8b5cf6;">You've Been Invited as a Co-Speaker!</h1>
-  <p>Dear ${data.speakerName},</p>
-  <p>You have been invited to co-present the talk <strong>"${data.talkTitle}"</strong> at <strong>${data.editionName}</strong>.</p>
-  <p>Click the button below to view the talk and accept or decline this invitation:</p>
-  <p><a href="${data.confirmationUrl}" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">View Invitation</a></p>
-  <p>Best regards,<br>The ${data.eventName} Team</p>
-</body>
-</html>`
+    cfp_closing_reminder: {
+      title: 'CFP Closing Soon!',
+      body: `
+    <p>Dear ${data.speakerName},</p>
+    <p>This is a reminder that the Call for Papers for <strong>${data.editionName}</strong> is closing on <strong>${data.cfpDeadline}</strong>.</p>
+    <p>Don't miss your chance to submit a talk!</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${data.cfpUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Submit a Talk Now</a>
+    </div>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
+
+    cospeaker_invitation: {
+      title: "You've Been Invited as a Co-Speaker!",
+      body: `
+    <p>Dear ${data.speakerName},</p>
+    <p>You have been invited to co-present the talk <strong>"${data.talkTitle}"</strong> at <strong>${data.editionName}</strong>.</p>
+    <p>Click the button below to view the talk and accept or decline this invitation:</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${data.confirmationUrl}" style="display: inline-block; background: #8b5cf6; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">View Invitation</a>
+    </div>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    }
   }
 
-  return templates[type]
+  const { title, body } = bodyTemplates[type]
+  return wrapEmail(b, title, body)
 }
 
-export const generateEmailText = (type: NotificationType, data: EmailTemplateData): string => {
+export const generateEmailText = (
+  type: NotificationType,
+  data: EmailTemplateData,
+  branding: EmailBranding = DEFAULT_BRANDING
+): string => {
+  const footer = textFooter(branding)
+
   const templates: Record<NotificationType, string> = {
     submission_confirmed: `
 Thank you for your submission!
@@ -212,7 +192,9 @@ Our team will review your proposal and get back to you soon.
 You can view and manage your submissions here: ${data.cfpUrl}
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     talk_accepted: `
 Congratulations! Your talk has been accepted!
@@ -226,7 +208,9 @@ Please confirm your participation here: ${data.confirmationUrl}
 We look forward to seeing you at the event!
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     talk_rejected: `
 Thank you for your submission
@@ -240,7 +224,9 @@ After careful consideration, we regret to inform you that we were unable to incl
 We encourage you to submit again for future editions!
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     confirmation_reminder: `
 Please confirm your participation
@@ -252,7 +238,9 @@ This is a friendly reminder that your talk "${data.talkTitle}" has been accepted
 Please confirm your participation here: ${data.confirmationUrl}
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     cfp_closing_reminder: `
 CFP Closing Soon!
@@ -264,7 +252,9 @@ This is a reminder that the Call for Papers for ${data.editionName} is closing o
 Don't miss your chance to submit a talk: ${data.cfpUrl}
 
 Best regards,
-The ${data.eventName} Team`,
+The ${data.eventName} Team
+
+${footer}`,
 
     cospeaker_invitation: `
 You've Been Invited as a Co-Speaker!
@@ -276,7 +266,9 @@ You have been invited to co-present the talk "${data.talkTitle}" at ${data.editi
 Click here to view the talk and accept or decline this invitation: ${data.confirmationUrl}
 
 Best regards,
-The ${data.eventName} Team`
+The ${data.eventName} Team
+
+${footer}`
   }
 
   return templates[type].trim()

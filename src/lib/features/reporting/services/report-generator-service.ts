@@ -1,3 +1,10 @@
+import {
+  DEFAULT_BRANDING,
+  type EmailBranding,
+  emailFooter,
+  emailHeader,
+  textFooter
+} from '$lib/server/email-branding'
 import type PocketBase from 'pocketbase'
 import type { EditionMetrics } from '../domain/metrics'
 import type { ReportConfig } from '../domain/report-config'
@@ -208,7 +215,11 @@ const formatPercentage = (value: number): string => {
 /**
  * Generate HTML report content
  */
-export const generateHtmlReport = (data: ReportData, config: ReportConfig): string => {
+export const generateHtmlReport = (
+  data: ReportData,
+  config: ReportConfig,
+  branding: EmailBranding = DEFAULT_BRANDING
+): string => {
   const sections: string[] = []
 
   if (data.cfp) {
@@ -395,8 +406,19 @@ export const generateHtmlReport = (data: ReportData, config: ReportConfig): stri
     `)
   }
 
-  return `
-<!DOCTYPE html>
+  const bodyContent = `
+    <p style="margin: 0 0 8px 0; font-size: 14px;">
+      ${data.eventName} - ${data.editionName}
+    </p>
+    <p style="margin: 0 0 16px 0; color: #666; font-size: 12px;">
+      Period: ${formatDate(data.period.start)} - ${formatDate(data.period.end)}
+    </p>
+    ${sections.join('')}
+    <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+      <p>This report was automatically generated on ${formatDate(data.generatedAt)}</p>
+    </div>`
+
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -404,24 +426,11 @@ export const generateHtmlReport = (data: ReportData, config: ReportConfig): stri
   <title>${config.name}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9fafb;">
-  <div style="background: #1f2937; color: white; padding: 24px; border-radius: 8px 8px 0 0;">
-    <h1 style="margin: 0; font-size: 24px;">${config.name}</h1>
-    <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 14px;">
-      ${data.eventName} - ${data.editionName}
-    </p>
-    <p style="margin: 4px 0 0 0; opacity: 0.7; font-size: 12px;">
-      Period: ${formatDate(data.period.start)} - ${formatDate(data.period.end)}
-    </p>
+  ${emailHeader(branding, config.name)}
+  <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+    ${bodyContent}
   </div>
-
-  <div style="background: white; padding: 24px; border-radius: 0 0 8px 8px;">
-    ${sections.join('')}
-
-    <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
-      <p>This report was automatically generated on ${formatDate(data.generatedAt)}</p>
-      <p>Open Event Orchestrator</p>
-    </div>
-  </div>
+  ${emailFooter(branding)}
 </body>
 </html>
 `
@@ -430,7 +439,11 @@ export const generateHtmlReport = (data: ReportData, config: ReportConfig): stri
 /**
  * Generate plain text report content
  */
-export const generateTextReport = (data: ReportData, config: ReportConfig): string => {
+export const generateTextReport = (
+  data: ReportData,
+  config: ReportConfig,
+  branding: EmailBranding = DEFAULT_BRANDING
+): string => {
   const lines: string[] = [
     `${config.name}`,
     `${'='.repeat(config.name.length)}`,
@@ -510,11 +523,7 @@ export const generateTextReport = (data: ReportData, config: ReportConfig): stri
     )
   }
 
-  lines.push(
-    '---',
-    `Report generated on ${formatDate(data.generatedAt)}`,
-    'Open Event Orchestrator'
-  )
+  lines.push(`Report generated on ${formatDate(data.generatedAt)}`, '', textFooter(branding))
 
   return lines.join('\n')
 }

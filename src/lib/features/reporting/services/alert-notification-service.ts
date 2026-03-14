@@ -1,3 +1,11 @@
+import {
+  DEFAULT_BRANDING,
+  type EmailBranding,
+  emailButton,
+  emailFooter,
+  emailHeader,
+  textFooter
+} from '$lib/server/email-branding'
 import type { EmailService } from '../../cfp/services/email-service'
 import type { Alert } from '../domain/alert'
 import { getAlertLevelLabel, getMetricSourceLabel } from '../domain/alert-threshold'
@@ -29,48 +37,48 @@ export type AlertEmailData = {
  */
 export const generateAlertEmailHtml = (
   data: AlertEmailData,
-  config: AlertNotificationConfig
+  config: AlertNotificationConfig,
+  branding: EmailBranding = DEFAULT_BRANDING
 ): string => {
   const levelColor = getLevelColorHex(data.alert.level)
   const levelLabel = getAlertLevelLabel(data.alert.level)
   const sourceLabel = getMetricSourceLabel(data.alert.metricSource)
 
-  return `
-<!DOCTYPE html>
+  const bodyContent = `
+    <div style="border-left: 4px solid ${levelColor}; padding-left: 16px; margin-bottom: 20px;">
+      <span style="background: ${levelColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+        ${levelLabel.toUpperCase()}
+      </span>
+      <h2 style="color: ${levelColor}; margin: 16px 0 8px 0;">${data.alert.title}</h2>
+      <p style="color: #666; margin: 0;">${sourceLabel} - ${data.editionName}</p>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+      <p style="margin: 0;"><strong>Current Value:</strong> ${data.alert.currentValue}</p>
+      <p style="margin: 8px 0 0 0;"><strong>Threshold:</strong> ${data.alert.thresholdValue}</p>
+    </div>
+
+    <p>${data.alert.message}</p>
+
+    ${emailButton(branding, 'View Dashboard', data.dashboardUrl)}
+
+    <p style="color: #666; font-size: 12px;">
+      This alert was triggered by ${config.appName}.<br>
+      You can manage your alert settings in the <a href="${data.dashboardUrl}/alerts">dashboard</a>.
+    </p>`
+
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alert: ${data.alert.title}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="border-left: 4px solid ${levelColor}; padding-left: 16px; margin-bottom: 20px;">
-    <span style="background: ${levelColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">
-      ${levelLabel.toUpperCase()}
-    </span>
-    <h1 style="color: ${levelColor}; margin: 16px 0 8px 0;">${data.alert.title}</h1>
-    <p style="color: #666; margin: 0;">${sourceLabel} - ${data.editionName}</p>
+  ${emailHeader(branding, `Alert: ${data.alert.title}`)}
+  <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+    ${bodyContent}
   </div>
-
-  <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-    <p style="margin: 0;"><strong>Current Value:</strong> ${data.alert.currentValue}</p>
-    <p style="margin: 8px 0 0 0;"><strong>Threshold:</strong> ${data.alert.thresholdValue}</p>
-  </div>
-
-  <p>${data.alert.message}</p>
-
-  <p>
-    <a href="${data.dashboardUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-      View Dashboard
-    </a>
-  </p>
-
-  <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
-
-  <p style="color: #666; font-size: 12px;">
-    This alert was triggered by ${config.appName}.<br>
-    You can manage your alert settings in the <a href="${data.dashboardUrl}/alerts">dashboard</a>.
-  </p>
+  ${emailFooter(branding)}
 </body>
 </html>`
 }
@@ -80,7 +88,8 @@ export const generateAlertEmailHtml = (
  */
 export const generateAlertEmailText = (
   data: AlertEmailData,
-  config: AlertNotificationConfig
+  config: AlertNotificationConfig,
+  branding: EmailBranding = DEFAULT_BRANDING
 ): string => {
   const levelLabel = getAlertLevelLabel(data.alert.level)
   const sourceLabel = getMetricSourceLabel(data.alert.metricSource)
@@ -97,9 +106,10 @@ ${data.alert.message}
 
 View Dashboard: ${data.dashboardUrl}
 
----
 This alert was triggered by ${config.appName}.
 You can manage your alert settings in the dashboard: ${data.dashboardUrl}/alerts
+
+${textFooter(branding)}
 `.trim()
 }
 
