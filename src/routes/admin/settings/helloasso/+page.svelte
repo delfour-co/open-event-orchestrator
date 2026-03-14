@@ -7,7 +7,6 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
   CheckCircle2,
   Eye,
@@ -34,41 +33,22 @@ let showClientSecret = $state(false)
 let testing = $state(false)
 </script>
 
-<svelte:head>
-  <title>HelloAsso Settings</title>
-</svelte:head>
-
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <a href="/admin/settings/integrations">
-        <Button variant="ghost" size="icon">
-          <ArrowLeft class="h-5 w-5" />
-        </Button>
-      </a>
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight">HelloAsso</h2>
-        <p class="text-muted-foreground">
-          Accept payments via HelloAsso for associations (0% commission)
-        </p>
-      </div>
-    </div>
-    <div class="flex items-center gap-2">
-      {#if data.helloasso.hasClientId && data.helloasso.hasClientSecret && data.helloasso.helloassoEnabled}
-        <Badge variant="default">
-          <CheckCircle2 class="mr-1 h-3 w-3" />
-          Configured
-        </Badge>
-      {:else}
-        <Badge variant="secondary">
-          <AlertCircle class="mr-1 h-3 w-3" />
-          Not configured
-        </Badge>
-      {/if}
-      <Badge variant={data.helloasso.helloassoSandbox ? 'outline' : 'destructive'}>
-        {data.helloasso.helloassoSandbox ? 'Sandbox' : 'Production'}
+  <div class="flex items-center gap-2">
+    {#if data.helloasso.hasClientId && data.helloasso.hasClientSecret && data.helloasso.helloassoEnabled}
+      <Badge variant="default">
+        <CheckCircle2 class="mr-1 h-3 w-3" />
+        Configured
       </Badge>
-    </div>
+    {:else}
+      <Badge variant="secondary">
+        <AlertCircle class="mr-1 h-3 w-3" />
+        Not configured
+      </Badge>
+    {/if}
+    <Badge variant={data.helloasso.helloassoSandbox ? 'outline' : 'destructive'}>
+      {data.helloasso.helloassoSandbox ? 'Sandbox' : 'Production'}
+    </Badge>
   </div>
 
   {#if form?.success && form?.action === 'save'}

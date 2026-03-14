@@ -8,7 +8,6 @@ import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
   CheckCircle2,
   CreditCard,
@@ -35,46 +34,27 @@ let showWebhookSecret = $state(false)
 let testing = $state(false)
 </script>
 
-<svelte:head>
-  <title>{m.admin_stripe_title()}</title>
-</svelte:head>
-
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <a href="/admin/settings/integrations">
-        <Button variant="ghost" size="icon">
-          <ArrowLeft class="h-5 w-5" />
-        </Button>
-      </a>
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight">{m.admin_stripe_heading()}</h2>
-        <p class="text-muted-foreground">
-          {m.admin_stripe_description()}
-        </p>
-      </div>
-    </div>
-    <div class="flex items-center gap-2">
-      {#if data.stripe.isConfigured && data.stripe.isLocalMock}
-        <Badge variant="outline" class="border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300">
-          <CheckCircle2 class="mr-1 h-3 w-3" />
-          Local Mock
-        </Badge>
-      {:else if data.stripe.isConfigured}
-        <Badge variant="default">
-          <CheckCircle2 class="mr-1 h-3 w-3" />
-          {m.admin_stripe_configured()}
-        </Badge>
-      {:else}
-        <Badge variant="secondary">
-          <AlertCircle class="mr-1 h-3 w-3" />
-          {m.admin_stripe_not_configured()}
-        </Badge>
-      {/if}
-      <Badge variant={data.stripe.mode === 'live' ? 'destructive' : 'outline'}>
-        {m.admin_stripe_mode_label({ mode: data.stripe.mode === 'live' ? m.admin_stripe_live_mode() : m.admin_stripe_test_mode() })}
+  <div class="flex items-center gap-2">
+    {#if data.stripe.isConfigured && data.stripe.isLocalMock}
+      <Badge variant="outline" class="border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300">
+        <CheckCircle2 class="mr-1 h-3 w-3" />
+        Local Mock
       </Badge>
-    </div>
+    {:else if data.stripe.isConfigured}
+      <Badge variant="default">
+        <CheckCircle2 class="mr-1 h-3 w-3" />
+        {m.admin_stripe_configured()}
+      </Badge>
+    {:else}
+      <Badge variant="secondary">
+        <AlertCircle class="mr-1 h-3 w-3" />
+        {m.admin_stripe_not_configured()}
+      </Badge>
+    {/if}
+    <Badge variant={data.stripe.mode === 'live' ? 'destructive' : 'outline'}>
+      {m.admin_stripe_mode_label({ mode: data.stripe.mode === 'live' ? m.admin_stripe_live_mode() : m.admin_stripe_test_mode() })}
+    </Badge>
   </div>
 
   {#if form?.success && form?.action === 'save'}

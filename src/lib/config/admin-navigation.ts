@@ -98,6 +98,19 @@ export const getEventSettingsNavItems = (eventSlug: string): NavItem[] => [
 ]
 
 /**
+ * Generate admin settings navigation items
+ */
+export const getAdminSettingsNavItems = (): NavItem[] => [
+  { href: '/admin/settings', label: 'Email (SMTP)' },
+  { href: '/admin/settings/integrations', label: 'Integrations' },
+  { href: '/admin/settings/oauth', label: 'OAuth2' },
+  { href: '/admin/settings/stripe', label: 'Stripe' },
+  { href: '/admin/settings/helloasso', label: 'HelloAsso' },
+  { href: '/admin/settings/slack', label: 'Slack' },
+  { href: '/admin/settings/discord', label: 'Discord' }
+]
+
+/**
  * Generate organization settings navigation items
  */
 export const getOrgSettingsNavItems = (orgSlug: string): NavItem[] => [

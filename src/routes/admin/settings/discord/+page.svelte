@@ -8,7 +8,6 @@ import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
   CheckCircle2,
   Eye,
@@ -33,38 +32,19 @@ let showWebhookUrl = $state(false)
 let testing = $state(false)
 </script>
 
-<svelte:head>
-  <title>{m.admin_discord_title()}</title>
-</svelte:head>
-
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <a href="/admin/settings/integrations">
-        <Button variant="ghost" size="icon">
-          <ArrowLeft class="h-5 w-5" />
-        </Button>
-      </a>
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight">{m.admin_discord_heading()}</h2>
-        <p class="text-muted-foreground">
-          {m.admin_discord_description()}
-        </p>
-      </div>
-    </div>
-    <div class="flex items-center gap-2">
-      {#if data.discord.isConfigured}
-        <Badge variant="default">
-          <CheckCircle2 class="mr-1 h-3 w-3" />
-          {m.admin_discord_configured()}
-        </Badge>
-      {:else}
-        <Badge variant="secondary">
-          <AlertCircle class="mr-1 h-3 w-3" />
-          {m.admin_discord_not_configured()}
-        </Badge>
-      {/if}
-    </div>
+  <div class="flex items-center gap-2">
+    {#if data.discord.isConfigured}
+      <Badge variant="default">
+        <CheckCircle2 class="mr-1 h-3 w-3" />
+        {m.admin_discord_configured()}
+      </Badge>
+    {:else}
+      <Badge variant="secondary">
+        <AlertCircle class="mr-1 h-3 w-3" />
+        {m.admin_discord_not_configured()}
+      </Badge>
+    {/if}
   </div>
 
   {#if form?.success && form?.action === 'save'}

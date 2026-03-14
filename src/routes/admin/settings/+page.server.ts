@@ -4,10 +4,6 @@ import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
-  if (!canAccessSettings(locals.user?.role)) {
-    throw error(403, 'Access denied')
-  }
-
   const smtp = await getSmtpSettings(locals.pb)
 
   return {

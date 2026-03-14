@@ -5,7 +5,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
-import { ArrowRight, Check, Eye, EyeOff, Mail, Plug, Send, Server } from 'lucide-svelte'
+import { Check, Eye, EyeOff, Mail, Send, Server } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -20,25 +20,7 @@ let testEmailAddress = $state('')
 let smtpEnabled = $state(data.smtp.smtpEnabled)
 </script>
 
-<svelte:head>
-  <title>{m.admin_settings_title()}</title>
-</svelte:head>
-
 <div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <h2 class="text-3xl font-bold tracking-tight">{m.admin_settings_heading()}</h2>
-      <p class="text-muted-foreground">{m.admin_settings_description()}</p>
-    </div>
-<a href="/admin/settings/integrations">
-      <Button variant="outline">
-        <Plug class="mr-2 h-4 w-4" />
-        {m.admin_settings_view_integrations()}
-        <ArrowRight class="ml-2 h-4 w-4" />
-      </Button>
-    </a>
-  </div>
-
   {#if form?.success && form?.action === 'saveSmtp'}
     <div
       class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"

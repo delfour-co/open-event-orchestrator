@@ -6,7 +6,6 @@ import * as m from '$lib/paraglide/messages'
 import type { IntegrationEntry } from '$lib/server/integration-registry'
 import {
   AlertCircle,
-  ArrowLeft,
   CheckCircle2,
   CreditCard,
   ExternalLink,
@@ -88,25 +87,7 @@ function getConfigPath(integration: IntegrationEntry): string | null {
 }
 </script>
 
-<svelte:head>
-  <title>{m.admin_integrations_title()}</title>
-</svelte:head>
-
 <div class="space-y-6">
-<div class="flex items-center gap-4">
-    <a href="/admin/settings">
-      <Button variant="ghost" size="icon">
-        <ArrowLeft class="h-5 w-5" />
-      </Button>
-    </a>
-    <div>
-      <h2 class="text-3xl font-bold tracking-tight">{m.admin_integrations_heading()}</h2>
-      <p class="text-muted-foreground">
-        {m.admin_integrations_description()}
-      </p>
-    </div>
-  </div>
-
   <!-- Summary stats -->
   <div class="grid gap-4 md:grid-cols-3">
     <Card.Root>
