@@ -14,7 +14,9 @@ import {
   Loader2,
   Mail,
   Plus,
+  RefreshCw,
   Trash2,
+  Upload,
   UserPlus,
   Users,
   X
@@ -31,6 +33,7 @@ const { data, form }: Props = $props()
 let isSubmitting = $state(false)
 let showDeleteConfirm = $state(false)
 let showAddMember = $state(false)
+let showBulkImport = $state(false)
 
 const generateSlug = (name: string) => {
   return name
@@ -370,10 +373,16 @@ const getRoleBadgeColor = (role: string) => {
           </Card.Title>
           <Card.Description>Manage who has access to this organization</Card.Description>
         </div>
-        <Button size="sm" variant="outline" onclick={() => (showAddMember = !showAddMember)}>
-          <UserPlus class="mr-2 h-4 w-4" />
-          Add Member
-        </Button>
+        <div class="flex gap-2">
+          <Button size="sm" variant="outline" onclick={() => (showBulkImport = !showBulkImport)}>
+            <Upload class="mr-2 h-4 w-4" />
+            {m.invitation_bulk_title()}
+          </Button>
+          <Button size="sm" variant="outline" onclick={() => (showAddMember = !showAddMember)}>
+            <UserPlus class="mr-2 h-4 w-4" />
+            Add Member
+          </Button>
+        </div>
       </div>
     </Card.Header>
     <Card.Content>
@@ -422,6 +431,47 @@ const getRoleBadgeColor = (role: string) => {
               Add Member
             </Button>
             <Button type="button" variant="ghost" size="sm" onclick={() => (showAddMember = false)}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      {/if}
+
+      {#if showBulkImport}
+        <form
+          method="POST"
+          action="?/bulkInvite"
+          use:enhance={() => {
+            return async ({ update }) => {
+              await update()
+              await invalidateAll()
+            }
+          }}
+          class="mb-4 rounded-md border bg-muted/50 p-4"
+        >
+          <div class="space-y-2">
+            <Label for="csv-input">{m.invitation_bulk_description()}</Label>
+            <Textarea
+              id="csv-input"
+              name="csv"
+              rows={5}
+              placeholder={m.invitation_bulk_placeholder()}
+            />
+            <p class="text-xs text-muted-foreground">
+              One entry per line. Roles: admin, organizer, reviewer
+            </p>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <Button type="submit" size="sm">
+              <Upload class="mr-2 h-4 w-4" />
+              {m.invitation_bulk_import()}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onclick={() => (showBulkImport = false)}
+            >
               Cancel
             </Button>
           </div>
@@ -522,12 +572,37 @@ const getRoleBadgeColor = (role: string) => {
                   <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
                     pending
                   </span>
-                  <form method="POST" action="?/cancelInvitation" use:enhance={() => {
-                    return async ({ update }) => {
-                      await update()
-                      await invalidateAll()
-                    }
-                  }}>
+                  <form
+                    method="POST"
+                    action="?/resendInvitation"
+                    use:enhance={() => {
+                      return async ({ update }) => {
+                        await update()
+                        await invalidateAll()
+                      }
+                    }}
+                  >
+                    <input type="hidden" name="invitationId" value={invitation.id} />
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8"
+                      title={m.invitation_resend_button()}
+                    >
+                      <RefreshCw class="h-4 w-4" />
+                    </Button>
+                  </form>
+                  <form
+                    method="POST"
+                    action="?/cancelInvitation"
+                    use:enhance={() => {
+                      return async ({ update }) => {
+                        await update()
+                        await invalidateAll()
+                      }
+                    }}
+                  >
                     <input type="hidden" name="invitationId" value={invitation.id} />
                     <Button
                       type="submit"

@@ -7,17 +7,21 @@ export interface SendInvitationEmailParams {
   organizationName: string
   role: string
   invitedByName: string
-  registerUrl: string
+  acceptUrl: string
+  logoUrl?: string
 }
 
 export async function sendInvitationEmail(
   params: SendInvitationEmailParams
 ): Promise<{ success: boolean; error?: string }> {
-  const { pb, email, organizationName, role, invitedByName, registerUrl } = params
+  const { pb, email, organizationName, role, invitedByName, acceptUrl, logoUrl } = params
 
   const emailService = await getEmailService(pb)
-
   const subject = `You've been invited to join ${organizationName}`
+
+  const logoSection = logoUrl
+    ? `<img src="${logoUrl}" alt="${organizationName}" style="max-height: 48px; max-width: 200px;" />`
+    : ''
 
   const html = `
 <!DOCTYPE html>
@@ -28,30 +32,52 @@ export async function sendInvitationEmail(
   <title>Organization Invitation</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <h1 style="color: #2563eb;">You've been invited!</h1>
-  <p>Hello,</p>
-  <p><strong>${invitedByName}</strong> has invited you to join <strong>${organizationName}</strong> as <strong>${role}</strong>.</p>
-  <p>To accept this invitation, create an account or sign in with the email address <strong>${email}</strong>:</p>
-  <p><a href="${registerUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Join ${organizationName}</a></p>
-  <p style="color: #64748b; font-size: 14px;">This invitation will expire in 30 days.</p>
-  <p>Best regards,<br>The Open Event Orchestrator Team</p>
+  <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+    ${logoSection}
+    <h1 style="color: white; margin: 10px 0 0; font-size: 24px;">You're Invited!</h1>
+  </div>
+
+  <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+    <p style="margin-top: 0;">Hello,</p>
+
+    <p><strong>${invitedByName}</strong> has invited you to join <strong>${organizationName}</strong> as <strong>${role}</strong>.</p>
+
+    <p>Click the button below to accept the invitation:</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${acceptUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Accept Invitation</a>
+    </div>
+
+    <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+    <p style="word-break: break-all; color: #2563eb; font-size: 14px;">${acceptUrl}</p>
+
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+
+    <p style="color: #64748b; font-size: 14px; margin-bottom: 0;">
+      <strong>Note:</strong> This invitation will expire in 30 days. If you didn't expect this invitation, you can safely ignore this email.
+    </p>
+  </div>
+
+  <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
+    <p style="margin: 0;">Open Event Orchestrator</p>
+    <p style="margin: 5px 0;">All-in-one platform for event management</p>
+  </div>
 </body>
 </html>`
 
-  const text = `You've been invited!
+  const text = `You're Invited!
 
 Hello,
 
 ${invitedByName} has invited you to join ${organizationName} as ${role}.
 
-To accept this invitation, create an account or sign in with the email address ${email}:
-
-${registerUrl}
+Accept the invitation: ${acceptUrl}
 
 This invitation will expire in 30 days.
 
-Best regards,
-The Open Event Orchestrator Team`
+---
+Open Event Orchestrator
+All-in-one platform for event management`
 
   try {
     const result = await emailService.send({ to: email, subject, html, text })
