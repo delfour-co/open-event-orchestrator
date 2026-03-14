@@ -9,6 +9,7 @@ import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import * as m from '$lib/paraglide/messages'
 import {
+  ArrowRight,
   Building2,
   Calendar,
   CalendarDays,
@@ -17,7 +18,6 @@ import {
   EyeOff,
   MapPin,
   Plus,
-  Settings,
   Smartphone,
   Users,
   X
@@ -136,10 +136,6 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
           {/if}
         </Button>
       {/if}
-      <Button onclick={() => (showNewEvent = !showNewEvent)}>
-        <Plus class="mr-2 h-4 w-4" />
-        {m.admin_events_new()}
-      </Button>
     </div>
   </div>
 
@@ -434,11 +430,6 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                     <Smartphone class="h-4 w-4" />
                   </Button>
                 </a>
-                <a href="/admin/editions/{edition.slug}/settings" title={m.admin_events_edition_settings()}>
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <Settings class="h-4 w-4" />
-                  </Button>
-                </a>
                 <a href="/admin/editions/{edition.slug}/team" title={m.admin_events_team_members()}>
                   <Button variant="ghost" size="icon" class="h-8 w-8">
                     <Users class="h-4 w-4" />
@@ -475,6 +466,12 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 </a>
               </div>
             {/if}
+            <a href="/admin/editions/{edition.slug}/settings">
+              <Button class="w-full" variant="outline">
+                {m.admin_events_manage_edition()}
+                <ArrowRight class="ml-2 h-4 w-4" />
+              </Button>
+            </a>
           </Card.Content>
         </Card.Root>
       {/each}

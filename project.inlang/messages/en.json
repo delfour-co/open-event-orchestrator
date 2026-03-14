@@ -2772,7 +2772,6 @@
   "app_calendar_outlook": "Outlook",
   "app_calendar_apple": "Apple Calendar",
   "app_calendar_export_favorites": "Export all favorites",
-
   "app_notes_placeholder": "Add a note...",
   "app_notes_saved": "Saved",
   "app_notes_export": "Export notes",
@@ -2780,14 +2779,12 @@
   "app_notes_indicator": "Has note",
   "app_notes_search_placeholder": "Search notes...",
   "app_notes_search_no_results": "No notes match your search",
-
   "app_reminder_set": "Reminder set",
   "app_reminder_remove": "Remove reminder",
   "app_reminder_before": "{minutes} min before",
   "app_reminder_permission": "Allow notifications to set reminders",
   "app_reminder_settings": "Reminder time",
   "app_reminder_default_label": "Default reminder time",
-
   "api_title": "API - Open Event Orchestrator",
   "api_heading": "API",
   "api_description": "Manage API keys, webhooks, and access the API documentation.",
@@ -3267,5 +3264,6 @@
   "audit_log_column_entity": "Entity",
   "audit_log_column_ip": "IP Address",
   "audit_log_no_entries": "No audit log entries found.",
-  "audit_log_retention": "Showing last 90 days of activity."
+  "audit_log_retention": "Showing last 90 days of activity.",
+  "admin_events_manage_edition": "Manage Edition"
 }

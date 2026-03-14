@@ -2766,7 +2766,6 @@
   "app_search_clear": "Effacer la recherche",
   "app_search_hint": "Tapez pour rechercher sessions et speakers",
   "app_search_button": "Rechercher",
-
   "app_notes_placeholder": "Ajouter une note...",
   "app_notes_saved": "Enregistre",
   "app_notes_export": "Exporter les notes",
@@ -2774,21 +2773,18 @@
   "app_notes_indicator": "Note ajoutee",
   "app_notes_search_placeholder": "Rechercher dans les notes...",
   "app_notes_search_no_results": "Aucune note ne correspond a votre recherche",
-
   "app_reminder_set": "Rappel active",
   "app_reminder_remove": "Supprimer le rappel",
   "app_reminder_before": "{minutes} min avant",
   "app_reminder_permission": "Autorisez les notifications pour activer les rappels",
   "app_reminder_settings": "Delai de rappel",
   "app_reminder_default_label": "Delai de rappel par defaut",
-
   "app_calendar_add": "Ajouter au calendrier",
   "app_calendar_download_ics": "Télécharger .ics",
   "app_calendar_google": "Google Calendar",
   "app_calendar_outlook": "Outlook",
   "app_calendar_apple": "Apple Calendar",
   "app_calendar_export_favorites": "Exporter tous les favoris",
-
   "api_title": "API - Open Event Orchestrator",
   "api_heading": "API",
   "api_description": "Gerer les cles API, webhooks et acceder a la documentation API.",
@@ -3268,5 +3264,6 @@
   "audit_log_column_entity": "Entité",
   "audit_log_column_ip": "Adresse IP",
   "audit_log_no_entries": "Aucune entrée dans le journal d'audit.",
-  "audit_log_retention": "Affichage des 90 derniers jours d'activité."
+  "audit_log_retention": "Affichage des 90 derniers jours d'activité.",
+  "admin_events_manage_edition": "Gérer l'édition"
 }
