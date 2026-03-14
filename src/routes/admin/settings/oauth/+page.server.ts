@@ -78,11 +78,12 @@ export const actions: Actions = {
 
           await adminPb.collection('_superusers').authWithPassword(pbAdminEmail, pbAdminPassword)
 
-          // Get current PB settings
-          const currentSettings = await adminPb.settings.getAll()
-          const currentProviders = (currentSettings.oauth2?.providers || []) as Array<
-            Record<string, unknown>
-          >
+          // Update OAuth2 config on the users collection (PB v0.36+ stores it there)
+          const usersCollection = await adminPb.collections.getOne('users')
+          const currentOAuth = (usersCollection.oauth2 ||
+            usersCollection.options?.oauth2 ||
+            {}) as Record<string, unknown>
+          const currentProviders = (currentOAuth.providers || []) as Array<Record<string, unknown>>
 
           // Build providers array
           const providers: Array<Record<string, unknown>> = currentProviders.filter(
@@ -118,10 +119,15 @@ export const actions: Actions = {
             })
           }
 
-          await adminPb.settings.update({
+          // Update the collection's OAuth2 options
+          await adminPb.collections.update('users', {
             oauth2: {
               enabled: oauth2Enabled,
-              providers
+              providers,
+              mappedFields: {
+                name: 'name',
+                avatarURL: 'avatar'
+              }
             }
           })
         } catch (err) {
