@@ -2,23 +2,7 @@ import { env } from '$env/dynamic/private'
 import { env as publicEnv } from '$env/dynamic/public'
 import { createConsoleEmailService, createSmtpEmailService } from '$lib/features/cfp/services'
 import type { EmailService } from '$lib/features/cfp/services'
-import PocketBaseClient from 'pocketbase'
 import type PocketBase from 'pocketbase'
-
-// =============================================================================
-// PocketBase Admin Helper
-// =============================================================================
-
-async function createAdminPb(): Promise<PocketBaseClient> {
-  const adminPb = new PocketBaseClient(publicEnv.PUBLIC_POCKETBASE_URL || 'http://localhost:8090')
-  const email = env.PB_ADMIN_EMAIL
-  const password = env.PB_ADMIN_PASSWORD
-  if (!email || !password) {
-    throw new Error('PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD env vars are required')
-  }
-  await adminPb.collection('_superusers').authWithPassword(email, password)
-  return adminPb
-}
 
 // =============================================================================
 // SMTP Settings (reads/writes PocketBase's own SMTP config)
@@ -80,28 +64,9 @@ export async function saveSmtpSettings(pb: PocketBase, settings: SmtpSettings): 
     await pb.collection('app_settings').create(data)
   }
 
-  // Also sync to PocketBase's own SMTP settings (used for auth emails: password reset, etc.)
-  try {
-    const adminPb = await createAdminPb()
-    await adminPb.settings.update({
-      smtp: {
-        enabled: settings.smtpEnabled,
-        host: settings.smtpHost,
-        port: settings.smtpPort,
-        username: settings.smtpUser,
-        password: settings.smtpPass,
-        tls: settings.smtpPort === 465,
-        authMethod: settings.smtpUser ? 'PLAIN' : '',
-        localName: 'localhost'
-      },
-      meta: {
-        senderAddress: settings.smtpFrom,
-        senderName: 'Open Event Orchestrator'
-      }
-    })
-  } catch (err) {
-    console.error('[SMTP] Failed to sync settings to PocketBase:', err)
-  }
+  // Note: PocketBase's own SMTP is configured via migration 0028 for auth emails (password reset).
+  // If you change SMTP settings here, PB's internal SMTP won't be updated automatically.
+  // To update PB SMTP, use the PocketBase admin dashboard.
 }
 
 export async function getEmailService(pb: PocketBase): Promise<EmailService> {

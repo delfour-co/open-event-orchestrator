@@ -18,14 +18,16 @@ const SUPPORTED_PROVIDERS: readonly SocialProvider[] = ['google', 'github'] as c
 
 export async function getAvailableProviders(pb: PocketBase): Promise<SocialProvider[]> {
   try {
-    const authMethods = await pb.collection('users').listAuthMethods()
-    const available: SocialProvider[] = []
+    // Read OAuth2 config from app_settings
+    const records = await pb.collection('app_settings').getList(1, 1)
+    if (records.items.length === 0) return []
 
-    for (const provider of authMethods.oauth2?.providers || []) {
-      if (SUPPORTED_PROVIDERS.includes(provider.name as SocialProvider)) {
-        available.push(provider.name as SocialProvider)
-      }
-    }
+    const record = records.items[0]
+    if (!record.oauth2Enabled) return []
+
+    const available: SocialProvider[] = []
+    if (record.googleOAuthClientId) available.push('google')
+    if (record.githubOAuthClientId) available.push('github')
 
     return available
   } catch {
