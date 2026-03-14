@@ -65,17 +65,20 @@ export const actions: Actions = {
       return fail(400, { error: 'Invalid verification code' })
     }
 
-    // Complete authentication - restore the saved auth token
-    const pending2faToken = cookies.get('oeo_2fa_token')
-    if (pending2faToken) {
-      locals.pb.authStore.save(pending2faToken)
+    // Complete authentication - restore the saved auth cookie
+    const pending2faAuth = cookies.get('oeo_2fa_auth')
+    if (pending2faAuth) {
+      locals.pb.authStore.loadFromCookie(pending2faAuth)
       try {
         await locals.pb.collection('users').authRefresh()
       } catch {
         cookies.delete('oeo_2fa_pending', { path: '/' })
-        cookies.delete('oeo_2fa_token', { path: '/' })
+        cookies.delete('oeo_2fa_auth', { path: '/' })
         throw redirect(303, '/auth/login')
       }
+    } else {
+      cookies.delete('oeo_2fa_pending', { path: '/' })
+      throw redirect(303, '/auth/login')
     }
 
     // Trust device if requested
@@ -92,7 +95,7 @@ export const actions: Actions = {
 
     // Clear 2FA pending cookies
     cookies.delete('oeo_2fa_pending', { path: '/' })
-    cookies.delete('oeo_2fa_token', { path: '/' })
+    cookies.delete('oeo_2fa_auth', { path: '/' })
 
     throw redirect(303, '/admin')
   }

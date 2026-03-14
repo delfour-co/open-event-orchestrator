@@ -49,7 +49,8 @@ async function check2faAndRedirect(
     sameSite: 'lax',
     maxAge: 300
   })
-  cookies.set('oeo_2fa_token', authData.token, {
+  // Save the full PB auth cookie so we can restore it after 2FA verification
+  cookies.set('oeo_2fa_auth', pb.authStore.exportToCookie(), {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
