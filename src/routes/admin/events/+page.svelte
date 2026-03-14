@@ -457,7 +457,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                   class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   required
                 >
-                  <option value="">{m.admin_events_select_organization()}</option>
+                  <option value="" disabled selected>{m.admin_events_select_organization()}</option>
                   {#each data.organizations as org}
                     <option value={org.id}>{org.name}</option>
                   {/each}

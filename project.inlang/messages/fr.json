@@ -2334,7 +2334,7 @@
   "admin_events_slug": "Slug",
   "admin_events_description_label": "Description",
   "admin_events_description_placeholder": "Le plus grand festival de developpeurs...",
-  "admin_events_create_button": "Creer l'evenement",
+  "admin_events_create_button": "Créer un événement",
   "admin_events_new_edition_for": "Nouvelle edition pour {name}",
   "admin_events_new_edition_description": "Creez une nouvelle edition (occurrence annuelle) pour cet evenement.",
   "admin_events_edition_name": "Nom",
