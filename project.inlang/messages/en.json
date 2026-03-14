@@ -3267,5 +3267,6 @@
   "audit_log_retention": "Showing last 90 days of activity.",
   "admin_events_manage_edition": "Manage Edition",
   "invitation_landing_accept": "Accept & Join",
-  "admin_events_manage_event": "Manage Event"
+  "admin_events_manage_event": "Manage Event",
+  "admin_events_select_organization": "Select an organization"
 }

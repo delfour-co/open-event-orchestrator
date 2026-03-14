@@ -3267,5 +3267,6 @@
   "audit_log_retention": "Affichage des 90 derniers jours d'activité.",
   "admin_events_manage_edition": "Gérer l'édition",
   "invitation_landing_accept": "Accepter et rejoindre",
-  "admin_events_manage_event": "Gérer l'événement"
+  "admin_events_manage_event": "Gérer l'événement",
+  "admin_events_select_organization": "Sélectionner une organisation"
 }
