@@ -5,8 +5,6 @@ import {
 import { generateDeviceHash } from '$lib/features/auth/services/totp-service'
 import { processPendingInvitations } from '$lib/server/invitations'
 import { fail, redirect } from '@sveltejs/kit'
-import type { Cookies } from '@sveltejs/kit'
-import type PocketBase from 'pocketbase'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -21,55 +19,6 @@ export const load: PageServerLoad = async ({ locals }) => {
   }
 
   return { socialProviders }
-}
-
-async function check2faAndRedirect(
-  pb: PocketBase,
-  request: Request,
-  cookies: Cookies,
-  authData: { record: { id: string }; token: string }
-): Promise<void> {
-  const totpRepo = createTotpRepository(pb)
-  const totp = await totpRepo.findByUserId(authData.record.id)
-
-  if (!totp?.enabled) return
-
-  const userAgent = request.headers.get('user-agent') || ''
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '0.0.0.0'
-  const deviceHash = generateDeviceHash(userAgent, ip)
-
-  const trustedRepo = createTrustedDeviceRepository(pb)
-  const isTrusted = await trustedRepo.isTrusted(authData.record.id, deviceHash)
-
-  if (isTrusted) return
-
-  cookies.set('oeo_2fa_pending', authData.record.id, {
-    path: '/',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 300
-  })
-  // Save the full PB auth cookie so we can restore it after 2FA verification
-  cookies.set('oeo_2fa_auth', pb.authStore.exportToCookie(), {
-    path: '/',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 300
-  })
-
-  pb.authStore.clear()
-  throw redirect(303, '/auth/verify-2fa')
-}
-
-function resolveRedirectUrl(redirectTo: string | null, url: URL): string {
-  if (redirectTo?.startsWith('/') && !redirectTo.startsWith('//')) {
-    return redirectTo
-  }
-  const queryRedirect = url.searchParams.get('redirect')
-  if (queryRedirect?.startsWith('/') && !queryRedirect.startsWith('//')) {
-    return queryRedirect
-  }
-  return '/admin'
 }
 
 export const actions: Actions = {
@@ -96,13 +45,46 @@ export const actions: Actions = {
       return fail(401, { error: 'Invalid email or password' })
     }
 
+    // Check if 2FA is required
     try {
-      await check2faAndRedirect(locals.pb, request, cookies, authData)
+      const totpRepo = createTotpRepository(locals.pb)
+      const totp = await totpRepo.findByUserId(authData.record.id)
+
+      if (totp?.enabled) {
+        const userAgent = request.headers.get('user-agent') || ''
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '0.0.0.0'
+        const deviceHash = generateDeviceHash(userAgent, ip)
+
+        const trustedRepo = createTrustedDeviceRepository(locals.pb)
+        const isTrusted = await trustedRepo.isTrusted(authData.record.id, deviceHash)
+
+        if (!isTrusted) {
+          // Keep auth valid but set a flag requiring 2FA verification
+          cookies.set('oeo_2fa_required', authData.record.id, {
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: 300
+          })
+          throw redirect(303, '/auth/verify-2fa')
+        }
+      }
     } catch (e) {
       if (e && typeof e === 'object' && 'status' in e) throw e
       console.error('[2FA] Error checking 2FA status:', e)
     }
 
-    throw redirect(303, resolveRedirectUrl(redirectTo, url))
+    // Resolve redirect URL
+    let targetUrl = '/admin'
+    if (redirectTo?.startsWith('/') && !redirectTo.startsWith('//')) {
+      targetUrl = redirectTo
+    } else {
+      const queryRedirect = url.searchParams.get('redirect')
+      if (queryRedirect?.startsWith('/') && !queryRedirect.startsWith('//')) {
+        targetUrl = queryRedirect
+      }
+    }
+
+    throw redirect(303, targetUrl)
   }
 }

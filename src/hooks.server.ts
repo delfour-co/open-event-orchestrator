@@ -89,6 +89,21 @@ export const handle: Handle = async ({ event, resolve }) => {
   event.locals.pb = pb
   event.locals.user = pb.authStore.model
 
+  // Block access to protected routes if 2FA verification is pending
+  const twoFaRequired = getCookieValue(cookie, 'oeo_2fa_required')
+  if (twoFaRequired && pb.authStore.isValid) {
+    const path = event.url.pathname
+    const allowedPaths = ['/auth/verify-2fa', '/auth/login', '/auth/logout']
+    const isAllowed =
+      allowedPaths.some((p) => path === p) || path.startsWith('/api/') || path.startsWith('/_app/')
+    if (!isAllowed) {
+      return new Response(null, {
+        status: 303,
+        headers: { location: '/auth/verify-2fa' }
+      })
+    }
+  }
+
   // API key authentication and rate limiting for /api/v1/* routes
   if (event.url.pathname.startsWith('/api/v1/')) {
     const authHeader = event.request.headers.get('Authorization')

@@ -11,10 +11,10 @@ import {
 import { fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ cookies }) => {
-  const pending2faUserId = cookies.get('oeo_2fa_pending')
+export const load: PageServerLoad = async ({ cookies, locals }) => {
+  const pending2faUserId = cookies.get('oeo_2fa_required')
   if (!pending2faUserId) {
-    throw redirect(303, '/auth/login')
+    throw redirect(303, locals.user ? '/admin' : '/auth/login')
   }
 
   return {
@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 
 export const actions: Actions = {
   default: async ({ request, locals, cookies }) => {
-    const pending2faUserId = cookies.get('oeo_2fa_pending')
+    const pending2faUserId = cookies.get('oeo_2fa_required')
     if (!pending2faUserId) {
       throw redirect(303, '/auth/login')
     }
@@ -41,8 +41,8 @@ export const actions: Actions = {
     const totp = await totpRepo.findByUserId(pending2faUserId)
 
     if (!totp || !totp.enabled) {
-      cookies.delete('oeo_2fa_pending', { path: '/' })
-      throw redirect(303, '/auth/login')
+      cookies.delete('oeo_2fa_required', { path: '/' })
+      throw redirect(303, '/admin')
     }
 
     // Try TOTP code first
@@ -65,22 +65,6 @@ export const actions: Actions = {
       return fail(400, { error: 'Invalid verification code' })
     }
 
-    // Complete authentication - restore the saved auth cookie
-    const pending2faAuth = cookies.get('oeo_2fa_auth')
-    if (pending2faAuth) {
-      locals.pb.authStore.loadFromCookie(pending2faAuth)
-      try {
-        await locals.pb.collection('users').authRefresh()
-      } catch {
-        cookies.delete('oeo_2fa_pending', { path: '/' })
-        cookies.delete('oeo_2fa_auth', { path: '/' })
-        throw redirect(303, '/auth/login')
-      }
-    } else {
-      cookies.delete('oeo_2fa_pending', { path: '/' })
-      throw redirect(303, '/auth/login')
-    }
-
     // Trust device if requested
     if (rememberDevice) {
       const userAgent = request.headers.get('user-agent') || ''
@@ -93,9 +77,8 @@ export const actions: Actions = {
       await trustedRepo.trust(pending2faUserId, deviceHash, expiresAt)
     }
 
-    // Clear 2FA pending cookies
-    cookies.delete('oeo_2fa_pending', { path: '/' })
-    cookies.delete('oeo_2fa_auth', { path: '/' })
+    // Clear 2FA required flag — verification complete
+    cookies.delete('oeo_2fa_required', { path: '/' })
 
     throw redirect(303, '/admin')
   }
