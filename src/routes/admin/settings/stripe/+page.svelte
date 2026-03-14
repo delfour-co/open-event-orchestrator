@@ -32,30 +32,32 @@ let showSecretKey = $state(false)
 let showPublishableKey = $state(false)
 let showWebhookSecret = $state(false)
 let testing = $state(false)
+
+const isActive = $derived(data.stripe.stripeEnabled && data.stripe.isConfigured)
 </script>
 
 <div class="space-y-6">
-  <div class="flex items-center gap-2">
-    {#if data.stripe.isConfigured && data.stripe.isLocalMock}
-      <Badge variant="outline" class="border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300">
-        <CheckCircle2 class="mr-1 h-3 w-3" />
-        Local Mock
-      </Badge>
-    {:else if data.stripe.isConfigured}
-      <Badge variant="default">
-        <CheckCircle2 class="mr-1 h-3 w-3" />
-        {m.admin_stripe_configured()}
-      </Badge>
-    {:else}
-      <Badge variant="secondary">
-        <AlertCircle class="mr-1 h-3 w-3" />
-        {m.admin_stripe_not_configured()}
-      </Badge>
-    {/if}
-    <Badge variant={data.stripe.mode === 'live' ? 'destructive' : 'outline'}>
-      {m.admin_stripe_mode_label({ mode: data.stripe.mode === 'live' ? m.admin_stripe_live_mode() : m.admin_stripe_test_mode() })}
-    </Badge>
-  </div>
+  <!-- Status -->
+  <Card.Root>
+    <Card.Content class="flex items-center justify-between py-4">
+      <div class="flex items-center gap-3">
+        <div class="h-3 w-3 rounded-full {isActive ? 'bg-green-500' : 'bg-gray-300'}"></div>
+        <span class="text-sm font-medium">
+          {isActive ? m.admin_settings_status_active() : m.admin_settings_status_inactive()}
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        {#if data.stripe.isLocalMock}
+          <Badge variant="outline" class="border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-300">
+            Local Mock
+          </Badge>
+        {/if}
+        <Badge variant={data.stripe.mode === 'live' ? 'destructive' : 'outline'}>
+          {m.admin_stripe_mode_label({ mode: data.stripe.mode === 'live' ? m.admin_stripe_live_mode() : m.admin_stripe_test_mode() })}
+        </Badge>
+      </div>
+    </Card.Content>
+  </Card.Root>
 
   {#if form?.success && form?.action === 'save'}
     <div

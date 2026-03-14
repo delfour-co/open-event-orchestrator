@@ -5,6 +5,7 @@ import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertCircle,
   Check,
@@ -31,25 +32,27 @@ let helloassoSandbox = $state(data.helloasso.helloassoSandbox)
 let showClientId = $state(false)
 let showClientSecret = $state(false)
 let testing = $state(false)
+
+const isActive = $derived(
+  data.helloasso.helloassoEnabled && data.helloasso.hasClientId && data.helloasso.hasClientSecret
+)
 </script>
 
 <div class="space-y-6">
-  <div class="flex items-center gap-2">
-    {#if data.helloasso.hasClientId && data.helloasso.hasClientSecret && data.helloasso.helloassoEnabled}
-      <Badge variant="default">
-        <CheckCircle2 class="mr-1 h-3 w-3" />
-        Configured
+  <!-- Status -->
+  <Card.Root>
+    <Card.Content class="flex items-center justify-between py-4">
+      <div class="flex items-center gap-3">
+        <div class="h-3 w-3 rounded-full {isActive ? 'bg-green-500' : 'bg-gray-300'}"></div>
+        <span class="text-sm font-medium">
+          {isActive ? m.admin_settings_status_active() : m.admin_settings_status_inactive()}
+        </span>
+      </div>
+      <Badge variant={data.helloasso.helloassoSandbox ? 'outline' : 'destructive'}>
+        {data.helloasso.helloassoSandbox ? 'Sandbox' : 'Production'}
       </Badge>
-    {:else}
-      <Badge variant="secondary">
-        <AlertCircle class="mr-1 h-3 w-3" />
-        Not configured
-      </Badge>
-    {/if}
-    <Badge variant={data.helloasso.helloassoSandbox ? 'outline' : 'destructive'}>
-      {data.helloasso.helloassoSandbox ? 'Sandbox' : 'Production'}
-    </Badge>
-  </div>
+    </Card.Content>
+  </Card.Root>
 
   {#if form?.success && form?.action === 'save'}
     <div

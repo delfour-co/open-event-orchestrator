@@ -6,17 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
-import {
-  AlertCircle,
-  ArrowLeft,
-  Check,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  Github,
-  Key,
-  Shield
-} from 'lucide-svelte'
+import { AlertCircle, Check, CheckCircle2, Eye, EyeOff, Github, Key, Shield } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -29,6 +19,8 @@ const { data, form }: Props = $props()
 let oauth2Enabled = $state(data.oauth2Enabled)
 let showGoogleSecret = $state(false)
 let showGithubSecret = $state(false)
+
+const isActive = $derived(data.oauth2Enabled && (data.google.enabled || data.github.enabled))
 </script>
 
 <svelte:head>
@@ -36,21 +28,17 @@ let showGithubSecret = $state(false)
 </svelte:head>
 
 <div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-4">
-			<a href="/admin/settings/integrations">
-				<Button variant="ghost" size="icon">
-					<ArrowLeft class="h-5 w-5" />
-				</Button>
-			</a>
-			<div>
-				<h2 class="text-3xl font-bold tracking-tight">{m.admin_settings_oauth_title()}</h2>
-				<p class="text-muted-foreground">
-					{m.admin_settings_oauth_description()}
-				</p>
+	<!-- Status -->
+	<Card.Root>
+		<Card.Content class="flex items-center justify-between py-4">
+			<div class="flex items-center gap-3">
+				<div class="h-3 w-3 rounded-full {isActive ? 'bg-green-500' : 'bg-gray-300'}"></div>
+				<span class="text-sm font-medium">
+					{isActive ? m.admin_settings_status_active() : m.admin_settings_status_inactive()}
+				</span>
 			</div>
-		</div>
-	</div>
+		</Card.Content>
+	</Card.Root>
 
 	{#if form?.success}
 		<div

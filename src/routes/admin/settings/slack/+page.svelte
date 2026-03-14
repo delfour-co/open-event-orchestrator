@@ -1,6 +1,5 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -29,22 +28,22 @@ const { data, form }: Props = $props()
 let slackEnabled = $state(data.slack.slackEnabled)
 let showWebhookUrl = $state(false)
 let testing = $state(false)
+
+const isActive = $derived(data.slack.isConfigured)
 </script>
 
 <div class="space-y-6">
-  <div class="flex items-center gap-2">
-    {#if data.slack.isConfigured}
-      <Badge variant="default">
-        <CheckCircle2 class="mr-1 h-3 w-3" />
-        {m.admin_slack_configured()}
-      </Badge>
-    {:else}
-      <Badge variant="secondary">
-        <AlertCircle class="mr-1 h-3 w-3" />
-        {m.admin_slack_not_configured()}
-      </Badge>
-    {/if}
-  </div>
+  <!-- Status -->
+  <Card.Root>
+    <Card.Content class="flex items-center justify-between py-4">
+      <div class="flex items-center gap-3">
+        <div class="h-3 w-3 rounded-full {isActive ? 'bg-green-500' : 'bg-gray-300'}"></div>
+        <span class="text-sm font-medium">
+          {isActive ? m.admin_settings_status_active() : m.admin_settings_status_inactive()}
+        </span>
+      </div>
+    </Card.Content>
+  </Card.Root>
 
   {#if form?.success && form?.action === 'save'}
     <div

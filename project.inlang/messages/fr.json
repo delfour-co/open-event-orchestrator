@@ -3291,5 +3291,7 @@
   "admin_settings_oauth_not_configured": "Non configuré",
   "admin_settings_oauth_secret_placeholder": "Laisser vide pour garder le secret actuel",
   "admin_settings_oauth_save": "Enregistrer les paramètres OAuth",
-  "admin_settings_oauth_saved": "Paramètres OAuth enregistrés avec succès."
+  "admin_settings_oauth_saved": "Paramètres OAuth enregistrés avec succès.",
+  "admin_settings_status_active": "Actif",
+  "admin_settings_status_inactive": "Inactif"
 }
