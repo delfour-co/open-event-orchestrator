@@ -418,7 +418,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                   {edition.name}
                 </Card.Title>
                 <Card.Description class="mt-1">
-                  {edition.eventName} · {edition.organizationName}
+                  <a href="/admin/events/{edition.eventSlug}/settings" class="hover:underline">{edition.eventName}</a> · {edition.organizationName}
                 </Card.Description>
               </div>
               <div class="flex items-center gap-2">
