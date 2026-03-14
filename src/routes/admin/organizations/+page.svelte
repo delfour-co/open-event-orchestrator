@@ -1,12 +1,13 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import * as m from '$lib/paraglide/messages'
-import { Building2, CalendarDays, Plus, Settings, Trash2 } from 'lucide-svelte'
+import { ArrowRight, Building2, Plus, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -23,6 +24,11 @@ const generateSlug = (name: string) => {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+const truncate = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) return text
+  return `${text.slice(0, maxLength)}...`
 }
 </script>
 
@@ -129,62 +135,66 @@ const generateSlug = (name: string) => {
       </Card.Content>
     </Card.Root>
   {:else}
-    <div class="space-y-4">
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {#each data.organizations as org}
-        <Card.Root>
-          <Card.Header class="pb-3">
-            <div class="flex items-center justify-between">
+        <Card.Root class="transition-shadow hover:shadow-md">
+          <Card.Header>
+            <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
-                <div
-                  class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                >
-                  <Building2 class="h-5 w-5" />
-                </div>
+                {#if org.logoUrl}
+                  <img
+                    src={org.logoUrl}
+                    alt={org.name}
+                    class="h-10 w-10 rounded-lg object-cover"
+                  />
+                {:else}
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                  >
+                    <Building2 class="h-5 w-5" />
+                  </div>
+                {/if}
                 <div>
                   <Card.Title>{org.name}</Card.Title>
-                  <Card.Description>
-                    /{org.slug} - {m.admin_organizations_events_count({ count: org.eventsCount })}
-                  </Card.Description>
+                  <Card.Description>/{org.slug}</Card.Description>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
-                <a href="/admin/events?org={org.id}">
-                  <Button variant="outline" size="sm">
-                    <CalendarDays class="mr-2 h-4 w-4" />
-                    {m.admin_organizations_view_events()}
-                  </Button>
-                </a>
-                <a href="/admin/organizations/{org.slug}/settings" title={m.admin_organizations_settings()}>
-                  <Button variant="ghost" size="icon" class="h-8 w-8">
-                    <Settings class="h-4 w-4" />
-                  </Button>
-                </a>
-                <form method="POST" action="?/delete" use:enhance>
-                  <input type="hidden" name="id" value={org.id} />
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    size="icon"
-                    class="h-8 w-8 text-destructive hover:text-destructive"
-                    disabled={org.eventsCount > 0}
-                    title={org.eventsCount > 0 ? m.admin_organizations_delete_events_first() : m.admin_organizations_delete()}
-                    onclick={(e) => {
-                      if (!confirm(m.admin_organizations_delete_confirm())) {
-                        e.preventDefault()
-                      }
-                    }}
-                  >
-                    <Trash2 class="h-4 w-4" />
-                  </Button>
-                </form>
-              </div>
+              <form method="POST" action="?/delete" use:enhance>
+                <input type="hidden" name="id" value={org.id} />
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="icon"
+                  class="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  disabled={org.eventsCount > 0}
+                  title={org.eventsCount > 0 ? m.admin_organizations_delete_events_first() : m.admin_organizations_delete()}
+                  onclick={(e) => {
+                    if (!confirm(m.admin_organizations_delete_confirm())) {
+                      e.preventDefault()
+                    }
+                  }}
+                >
+                  <Trash2 class="h-4 w-4" />
+                </Button>
+              </form>
             </div>
           </Card.Header>
-          {#if org.description}
-            <Card.Content class="pt-0">
-              <p class="text-sm text-muted-foreground">{org.description}</p>
-            </Card.Content>
-          {/if}
+          <Card.Content class="space-y-3">
+            {#if org.description}
+              <p class="text-sm text-muted-foreground">{truncate(org.description, 120)}</p>
+            {/if}
+            <div>
+              <Badge variant="secondary">
+                {m.admin_organizations_events_count({ count: org.eventsCount })}
+              </Badge>
+            </div>
+            <a href="/admin/organizations/{org.slug}/settings">
+              <Button class="w-full" variant="outline">
+                {m.admin_org_manage_button()}
+                <ArrowRight class="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+          </Card.Content>
         </Card.Root>
       {/each}
     </div>

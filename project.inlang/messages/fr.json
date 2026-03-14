@@ -2266,6 +2266,7 @@
   "admin_organizations_delete_events_first": "Supprimez d'abord les evenements",
   "admin_organizations_delete_confirm": "Supprimer cette organisation ?",
   "admin_organizations_events_count": "{count} evenement(s)",
+  "admin_org_manage_button": "Gerer l'organisation",
   "admin_org_settings_title": "Parametres de l'organisation - {name} - Open Event Orchestrator",
   "admin_org_settings_heading": "Parametres de l'organisation",
   "admin_org_settings_details": "Details de l'organisation",

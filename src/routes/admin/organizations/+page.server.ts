@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public'
 import { canManageOrganizations } from '$lib/server/permissions'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -8,6 +9,9 @@ export const load: PageServerLoad = async ({ locals }) => {
   if (!canManageOrganizations(userRole)) {
     throw error(403, 'You do not have permission to manage organizations')
   }
+
+  const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
+
   const organizations = await locals.pb.collection('organizations').getFullList({
     sort: 'name'
   })
@@ -16,14 +20,19 @@ export const load: PageServerLoad = async ({ locals }) => {
   const events = await locals.pb.collection('events').getFullList()
 
   return {
-    organizations: organizations.map((o) => ({
-      id: o.id as string,
-      name: o.name as string,
-      slug: o.slug as string,
-      description: (o.description as string) || '',
-      eventsCount: events.filter((e) => e.organizationId === o.id).length,
-      createdAt: new Date(o.created as string)
-    }))
+    organizations: organizations.map((o) => {
+      const logo = (o.logo as string) || ''
+      return {
+        id: o.id as string,
+        name: o.name as string,
+        slug: o.slug as string,
+        description: (o.description as string) || '',
+        logo,
+        logoUrl: logo ? `${pbUrl}/api/files/organizations/${o.id}/${logo}` : '',
+        eventsCount: events.filter((e) => e.organizationId === o.id).length,
+        createdAt: new Date(o.created as string)
+      }
+    })
   }
 }
 
