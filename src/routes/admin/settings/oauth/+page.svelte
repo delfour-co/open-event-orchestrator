@@ -269,7 +269,17 @@ const isActive = $derived(data.oauth2Enabled && (data.google.enabled || data.git
 					Enter your PocketBase superuser password to sync OAuth providers to PocketBase. This is required for the OAuth flow to work. Your password is not stored.
 				</Card.Description>
 			</Card.Header>
-			<Card.Content>
+			<Card.Content class="space-y-4">
+				<div class="space-y-2">
+					<Label for="pbAdminEmail">PB Superuser Email</Label>
+					<Input
+						id="pbAdminEmail"
+						name="pbAdminEmail"
+						type="email"
+						placeholder="admin@pocketbase.local"
+						required
+					/>
+				</div>
 				<div class="space-y-2">
 					<Label for="pbAdminPassword">PB Superuser Password</Label>
 					<Input

@@ -47,6 +47,7 @@ export const actions: Actions = {
     const googleClientSecret = (formData.get('googleClientSecret') as string) || ''
     const githubClientId = (formData.get('githubClientId') as string)?.trim() || ''
     const githubClientSecret = (formData.get('githubClientSecret') as string) || ''
+    const pbAdminEmail = (formData.get('pbAdminEmail') as string)?.trim() || ''
     const pbAdminPassword = (formData.get('pbAdminPassword') as string) || ''
 
     try {
@@ -69,16 +70,13 @@ export const actions: Actions = {
       }
 
       // Sync to PocketBase internal settings (requires PB superuser auth)
-      if (pbAdminPassword) {
+      if (pbAdminEmail && pbAdminPassword) {
         try {
           const adminPb = new PocketBaseClient(
             publicEnv.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
           )
 
-          // Try to auth as PB superuser using the provided password
-          // The email is the current user's email (they must be a PB superuser)
-          const userEmail = locals.user?.email as string
-          await adminPb.collection('_superusers').authWithPassword(userEmail, pbAdminPassword)
+          await adminPb.collection('_superusers').authWithPassword(pbAdminEmail, pbAdminPassword)
 
           // Get current PB settings
           const currentSettings = await adminPb.settings.getAll()
