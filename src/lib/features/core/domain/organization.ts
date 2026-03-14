@@ -22,6 +22,14 @@ export const organizationSchema = z.object({
   legalForm: z.string().optional(),
   rcsNumber: z.string().optional(),
   shareCapital: z.string().optional(),
+  primaryColor: z.string().optional(),
+  secondaryColor: z.string().optional(),
+  twitter: z.string().url().optional(),
+  linkedin: z.string().url().optional(),
+  github: z.string().url().optional(),
+  youtube: z.string().url().optional(),
+  timezone: z.string().optional(),
+  defaultLocale: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date()
 })
@@ -45,6 +53,14 @@ export type CreateOrganizationInput = {
   legalForm?: string
   rcsNumber?: string
   shareCapital?: string
+  primaryColor?: string
+  secondaryColor?: string
+  twitter?: string
+  linkedin?: string
+  github?: string
+  youtube?: string
+  timezone?: string
+  defaultLocale?: string
 }
 
 export type UpdateOrganizationInput = Partial<CreateOrganizationInput>
