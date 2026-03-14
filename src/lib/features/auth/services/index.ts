@@ -13,3 +13,12 @@ export {
   generateVerificationEmailText
 } from './email-verification-service'
 export type { SendVerificationEmailParams } from './email-verification-service'
+
+export {
+  sendPasswordResetEmail,
+  requestPasswordReset,
+  confirmPasswordReset,
+  generatePasswordResetEmailHtml,
+  generatePasswordResetEmailText
+} from './password-reset-service'
+export type { SendPasswordResetEmailParams } from './password-reset-service'

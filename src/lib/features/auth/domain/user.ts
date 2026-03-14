@@ -87,6 +87,25 @@ export const changePasswordSchema = z
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address')
+})
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'Token is required'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    passwordConfirm: z.string()
+  })
+  .refine((data) => data.password === data.passwordConfirm, {
+    message: 'Passwords do not match',
+    path: ['passwordConfirm']
+  })
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
+
 /**
  * Calculates password strength score (0-4)
  * 0 = Very weak, 1 = Weak, 2 = Fair, 3 = Good, 4 = Strong

@@ -14,6 +14,7 @@ const { form }: Props = $props()
 
 // Get redirect URL from query params
 const redirectUrl = $derived($page.url.searchParams.get('redirect'))
+const resetSuccess = $derived($page.url.searchParams.get('resetSuccess') === 'true')
 </script>
 
 <svelte:head>
@@ -31,6 +32,11 @@ const redirectUrl = $derived($page.url.searchParams.get('redirect'))
         {#if redirectUrl}
           <input type="hidden" name="redirect" value={redirectUrl} />
         {/if}
+        {#if resetSuccess}
+          <div class="rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-950/30 dark:text-green-200">
+            {m.auth_reset_password_success()}
+          </div>
+        {/if}
         {#if form?.error}
           <div class="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
             {form.error}
@@ -43,7 +49,10 @@ const redirectUrl = $derived($page.url.searchParams.get('redirect'))
         </div>
 
         <div class="space-y-2">
-          <label for="password" class="text-sm font-medium">{m.auth_password()}</label>
+          <div class="flex items-center justify-between">
+            <label for="password" class="text-sm font-medium">{m.auth_password()}</label>
+            <a href="/auth/forgot-password" class="text-sm text-primary hover:underline">{m.auth_forgot_password_link()}</a>
+          </div>
           <Input id="password" name="password" type="password" required />
         </div>
 
