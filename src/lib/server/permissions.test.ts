@@ -24,8 +24,8 @@ describe('Permissions', () => {
       expect(ADMIN_ROLES).toContain('reviewer')
     })
 
-    it('should have exactly 4 roles', () => {
-      expect(ADMIN_ROLES).toHaveLength(4)
+    it('should have exactly 6 roles', () => {
+      expect(ADMIN_ROLES).toHaveLength(6)
     })
   })
 

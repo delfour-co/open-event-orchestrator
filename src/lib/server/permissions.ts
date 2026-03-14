@@ -8,57 +8,83 @@
  * - reviewer: Can only view submissions, add reviews and comments
  */
 
-export type OrgRole = 'super_admin' | 'admin' | 'organizer' | 'reviewer'
+export type OrgRole =
+  | 'super_admin'
+  | 'org_admin'
+  | 'org_member'
+  | 'admin'
+  | 'organizer'
+  | 'reviewer'
 
-export const ADMIN_ROLES: OrgRole[] = ['super_admin', 'admin', 'organizer', 'reviewer']
+export const ADMIN_ROLES: OrgRole[] = [
+  'super_admin',
+  'org_admin',
+  'org_member',
+  'admin',
+  'organizer',
+  'reviewer'
+]
+
+/**
+ * Check if role has organizer-level access (can modify settings, manage content)
+ */
+function isOrganizerOrAbove(role: string | undefined): boolean {
+  return (
+    role === 'super_admin' ||
+    role === 'org_admin' ||
+    role === 'admin' ||
+    role === 'org_member' ||
+    role === 'organizer'
+  )
+}
 
 /**
  * Check if user can access settings pages (organization, event, edition, CFP settings)
  */
 export function canAccessSettings(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
  * Check if user can manage organizations (create, update, delete)
  */
 export function canManageOrganizations(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
  * Check if user can manage events (create, update, delete)
  */
 export function canManageEvents(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
  * Check if user can change talk status (accept, reject, etc.)
  */
 export function canChangeTalkStatus(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
  * Check if user can delete talks
  */
 export function canDeleteTalks(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
  * Check if user can export data
  */
 export function canExportData(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
  * Check if user can manage CFP settings (categories, formats, dates)
  */
 export function canManageCfpSettings(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
@@ -79,14 +105,14 @@ export function canAddComments(role: string | undefined): boolean {
  * Check if user can manage billing (ticket types, orders, check-in)
  */
 export function canManageBilling(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
  * Check if user can manage CRM (contacts, segments, campaigns)
  */
 export function canManageCRM(role: string | undefined): boolean {
-  return role === 'super_admin' || role === 'admin' || role === 'organizer'
+  return isOrganizerOrAbove(role)
 }
 
 /**
