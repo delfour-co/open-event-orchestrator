@@ -258,6 +258,31 @@ const isActive = $derived(data.oauth2Enabled && (data.google.enabled || data.git
 			</Card.Content>
 		</Card.Root>
 
+		<!-- PB Superuser Confirmation -->
+		<Card.Root>
+			<Card.Header>
+				<Card.Title class="flex items-center gap-2">
+					<Key class="h-5 w-5" />
+					PocketBase Superuser
+				</Card.Title>
+				<Card.Description>
+					Enter your PocketBase superuser password to sync OAuth providers to PocketBase. This is required for the OAuth flow to work. Your password is not stored.
+				</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<div class="space-y-2">
+					<Label for="pbAdminPassword">PB Superuser Password</Label>
+					<Input
+						id="pbAdminPassword"
+						name="pbAdminPassword"
+						type="password"
+						placeholder="Required to apply changes"
+						required
+					/>
+				</div>
+			</Card.Content>
+		</Card.Root>
+
 		<div class="flex justify-end">
 			<Button type="submit">
 				<Check class="mr-2 h-4 w-4" />
