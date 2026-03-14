@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public'
 import { processPendingInvitations } from '$lib/server/invitations'
 import { error, redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
@@ -22,9 +23,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       throw error(410, 'This invitation has expired')
     }
 
-    const organizationName = invitation.expand?.organizationId
-      ? ((invitation.expand.organizationId as Record<string, unknown>).name as string)
-      : 'the organization'
+    const org = invitation.expand?.organizationId as Record<string, unknown> | undefined
+    const organizationName = org ? (org.name as string) : 'the organization'
+
+    let logoUrl: string | undefined
+    if (org?.logo) {
+      const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
+      logoUrl = `${pbUrl}/api/files/organizations/${org.id}/${org.logo}`
+    }
 
     // If user is already logged in, auto-accept
     if (locals.user) {
@@ -43,7 +49,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       organizationName,
       role: invitation.role as string,
       email: invitation.email as string,
-      token
+      token,
+      logoUrl
     }
   } catch (e) {
     if (e && typeof e === 'object' && 'status' in e) throw e // Re-throw HTTP errors and redirects

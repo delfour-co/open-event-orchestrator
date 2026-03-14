@@ -9,15 +9,18 @@ export interface SendInvitationEmailParams {
   invitedByName: string
   acceptUrl: string
   logoUrl?: string
+  primaryColor?: string
 }
 
 export async function sendInvitationEmail(
   params: SendInvitationEmailParams
 ): Promise<{ success: boolean; error?: string }> {
-  const { pb, email, organizationName, role, invitedByName, acceptUrl, logoUrl } = params
+  const { pb, email, organizationName, role, invitedByName, acceptUrl, logoUrl, primaryColor } =
+    params
 
   const emailService = await getEmailService(pb)
   const subject = `You've been invited to join ${organizationName}`
+  const brandColor = primaryColor || '#2563eb'
 
   const logoSection = logoUrl
     ? `<img src="${logoUrl}" alt="${organizationName}" style="max-height: 48px; max-width: 200px;" />`
@@ -32,7 +35,7 @@ export async function sendInvitationEmail(
   <title>Organization Invitation</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+  <div style="background: ${brandColor}; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
     ${logoSection}
     <h1 style="color: white; margin: 10px 0 0; font-size: 24px;">You're Invited!</h1>
   </div>
@@ -45,11 +48,11 @@ export async function sendInvitationEmail(
     <p>Click the button below to accept the invitation:</p>
 
     <div style="text-align: center; margin: 30px 0;">
-      <a href="${acceptUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Accept Invitation</a>
+      <a href="${acceptUrl}" style="display: inline-block; background: ${brandColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Accept Invitation</a>
     </div>
 
     <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
-    <p style="word-break: break-all; color: #2563eb; font-size: 14px;">${acceptUrl}</p>
+    <p style="word-break: break-all; color: ${brandColor}; font-size: 14px;">${acceptUrl}</p>
 
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
 

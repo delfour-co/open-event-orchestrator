@@ -65,13 +65,18 @@ export const actions: Actions = {
 
         const invitedByName = locals.user?.name || 'A team member'
         const acceptUrl = `${url.origin}/auth/invite/${token}`
+        const logoUrl = organization.logo
+          ? `${url.origin}/api/files/organizations/${organization.id}/${organization.logo}`
+          : undefined
         await sendInvitationEmail({
           pb: locals.pb,
           email,
           organizationName: organization.name as string,
           role,
           invitedByName,
-          acceptUrl
+          acceptUrl,
+          logoUrl,
+          primaryColor: (organization.primaryColor as string) || undefined
         })
 
         return { success: true, message: `Invitation sent to ${email}` }
@@ -222,6 +227,9 @@ export const actions: Actions = {
 
       const invitedByName = locals.user?.name || 'A team member'
       const acceptUrl = `${url.origin}/auth/invite/${token}`
+      const logoUrl = organization.logo
+        ? `${url.origin}/api/files/organizations/${organization.id}/${organization.logo}`
+        : undefined
 
       await sendInvitationEmail({
         pb: locals.pb,
@@ -229,7 +237,9 @@ export const actions: Actions = {
         organizationName: organization.name as string,
         role: invitation.role as string,
         invitedByName,
-        acceptUrl
+        acceptUrl,
+        logoUrl,
+        primaryColor: (organization.primaryColor as string) || undefined
       })
 
       return { success: true, message: `Invitation resent to ${invitation.email}` }
@@ -301,13 +311,18 @@ export const actions: Actions = {
         })
 
         const acceptUrl = `${url.origin}/auth/invite/${token}`
+        const logoUrl = organization.logo
+          ? `${url.origin}/api/files/organizations/${organization.id}/${organization.logo}`
+          : undefined
         await sendInvitationEmail({
           pb: locals.pb,
           email: row.email,
           organizationName: organization.name as string,
           role: row.role,
           invitedByName,
-          acceptUrl
+          acceptUrl,
+          logoUrl,
+          primaryColor: (organization.primaryColor as string) || undefined
         })
         sentCount++
       }

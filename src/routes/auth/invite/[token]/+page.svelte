@@ -19,11 +19,21 @@ const { data }: Props = $props()
 <div class="flex min-h-screen items-center justify-center bg-muted/50 p-4">
   <Card.Root class="w-full max-w-md">
     <Card.Header class="text-center">
-      <div
-        class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10"
-      >
-        <Building2 class="h-8 w-8 text-primary" />
-      </div>
+      {#if data.logoUrl}
+        <div class="mx-auto mb-4 flex h-16 items-center justify-center">
+          <img
+            src={data.logoUrl}
+            alt={data.organizationName}
+            class="max-h-16 max-w-48 object-contain"
+          />
+        </div>
+      {:else}
+        <div
+          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10"
+        >
+          <Building2 class="h-8 w-8 text-primary" />
+        </div>
+      {/if}
       <Card.Title class="text-2xl">{m.invitation_landing_heading()}</Card.Title>
       <Card.Description>
         {m.invitation_landing_description({
