@@ -3265,5 +3265,6 @@
   "audit_log_column_ip": "IP Address",
   "audit_log_no_entries": "No audit log entries found.",
   "audit_log_retention": "Showing last 90 days of activity.",
-  "admin_events_manage_edition": "Manage Edition"
+  "admin_events_manage_edition": "Manage Edition",
+  "invitation_landing_accept": "Accept & Join"
 }

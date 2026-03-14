@@ -3265,5 +3265,6 @@
   "audit_log_column_ip": "Adresse IP",
   "audit_log_no_entries": "Aucune entrée dans le journal d'audit.",
   "audit_log_retention": "Affichage des 90 derniers jours d'activité.",
-  "admin_events_manage_edition": "Gérer l'édition"
+  "admin_events_manage_edition": "Gérer l'édition",
+  "invitation_landing_accept": "Accepter et rejoindre"
 }
