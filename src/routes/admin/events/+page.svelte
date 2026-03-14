@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
 import { StatusBadge } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
@@ -445,6 +446,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 return async ({ update }) => {
                   await update()
                   showNewEvent = false
+                  await invalidateAll()
                 }
               }}
               class="space-y-4"
