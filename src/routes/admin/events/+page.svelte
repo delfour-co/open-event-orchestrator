@@ -501,6 +501,18 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                   </Card.Content>
                 </Card.Root>
               {/each}
+
+              <!-- Add Edition Card -->
+              <Card.Root class="border-dashed">
+                <Card.Content class="flex h-full min-h-[180px] flex-col items-center justify-center py-6">
+                  <Plus class="mb-2 h-8 w-8 text-muted-foreground" />
+                  <p class="mb-4 text-sm text-muted-foreground">{m.admin_events_add_edition()}</p>
+                  <Button variant="outline" size="sm" onclick={() => (showNewEdition = event.id)}>
+                    <Plus class="mr-2 h-4 w-4" />
+                    {m.admin_events_create_edition()}
+                  </Button>
+                </Card.Content>
+              </Card.Root>
             </div>
           </div>
         {/if}
