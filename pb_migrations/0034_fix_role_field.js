@@ -4,16 +4,12 @@ migrate(
   (app) => {
     const collection = app.findCollectionByNameOrId('users')
 
-    // Remove the old role field
-    const roleField = collection.fields.getByName('role')
-    if (roleField) {
-      collection.fields.removeById(roleField.id)
-    }
-
-    // Add new role field with updated values
+    // Update the role field's allowed values using addMarshaledJSON
+    // which merges by field name instead of removing+re-adding
     collection.fields.addMarshaledJSON(
       JSON.stringify([
         {
+          id: 'role',
           type: 'select',
           name: 'role',
           required: false,
@@ -28,14 +24,10 @@ migrate(
   (app) => {
     const collection = app.findCollectionByNameOrId('users')
 
-    const roleField = collection.fields.getByName('role')
-    if (roleField) {
-      collection.fields.removeById(roleField.id)
-    }
-
     collection.fields.addMarshaledJSON(
       JSON.stringify([
         {
+          id: 'role',
           type: 'select',
           name: 'role',
           required: false,
