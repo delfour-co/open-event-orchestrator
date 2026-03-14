@@ -1,3 +1,5 @@
+import { env } from '$env/dynamic/public'
+import { validateImageFile } from '$lib/server/file-validation'
 import { canAccessSettings } from '$lib/server/permissions'
 import { error, fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -20,6 +22,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
       filter: `eventId="${event.id}"`
     })
 
+    const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
+    let logoUrl: string | null = null
+    let bannerUrl: string | null = null
+    if (event.logo) {
+      logoUrl = `${pbUrl}/api/files/events/${event.id}/${event.logo}`
+    }
+    if (event.banner) {
+      bannerUrl = `${pbUrl}/api/files/events/${event.id}/${event.banner}`
+    }
+
     return {
       event: {
         id: event.id as string,
@@ -33,7 +45,20 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         organizationId: event.organizationId as string,
         organizationName: event.expand?.organizationId
           ? ((event.expand.organizationId as Record<string, unknown>).name as string)
-          : 'Unknown Organization'
+          : 'Unknown Organization',
+        primaryColor: (event.primaryColor as string) || '',
+        secondaryColor: (event.secondaryColor as string) || '',
+        twitter: (event.twitter as string) || '',
+        linkedin: (event.linkedin as string) || '',
+        hashtag: (event.hashtag as string) || '',
+        contactEmail: (event.contactEmail as string) || '',
+        codeOfConductUrl: (event.codeOfConductUrl as string) || '',
+        privacyPolicyUrl: (event.privacyPolicyUrl as string) || '',
+        timezone: (event.timezone as string) || '',
+        logo: (event.logo as string) || '',
+        banner: (event.banner as string) || '',
+        logoUrl,
+        bannerUrl
       },
       editionsCount: editions.length
     }
@@ -58,6 +83,15 @@ export const actions: Actions = {
     const defaultVenue = formData.get('defaultVenue') as string
     const defaultCity = formData.get('defaultCity') as string
     const defaultCountry = formData.get('defaultCountry') as string
+    const primaryColor = formData.get('primaryColor') as string
+    const secondaryColor = formData.get('secondaryColor') as string
+    const twitter = formData.get('twitter') as string
+    const linkedin = formData.get('linkedin') as string
+    const hashtag = formData.get('hashtag') as string
+    const contactEmail = formData.get('contactEmail') as string
+    const codeOfConductUrl = formData.get('codeOfConductUrl') as string
+    const privacyPolicyUrl = formData.get('privacyPolicyUrl') as string
+    const timezone = formData.get('timezone') as string
 
     if (!name || !slug) {
       return fail(400, { error: 'Name and slug are required' })
@@ -90,7 +124,16 @@ export const actions: Actions = {
         website: website || null,
         defaultVenue: defaultVenue || null,
         defaultCity: defaultCity || null,
-        defaultCountry: defaultCountry || null
+        defaultCountry: defaultCountry || null,
+        primaryColor: primaryColor || null,
+        secondaryColor: secondaryColor || null,
+        twitter: twitter || null,
+        linkedin: linkedin || null,
+        hashtag: hashtag || null,
+        contactEmail: contactEmail || null,
+        codeOfConductUrl: codeOfConductUrl || null,
+        privacyPolicyUrl: privacyPolicyUrl || null,
+        timezone: timezone || null
       })
 
       // If slug changed, redirect to new URL
@@ -103,6 +146,116 @@ export const actions: Actions = {
       if (isRedirect(e)) throw e // Re-throw redirects
       console.error('Failed to update event:', e)
       return fail(500, { error: 'Failed to update event' })
+    }
+  },
+
+  uploadLogo: async ({ request, locals, params }) => {
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify event settings' })
+    }
+
+    const formData = await request.formData()
+    const logo = formData.get('logo') as File
+
+    if (!logo || logo.size === 0) {
+      return fail(400, { error: 'Logo file is required' })
+    }
+
+    const validation = validateImageFile(logo, { maxSizeMB: 5 })
+    if (!validation.valid) {
+      return fail(400, { error: validation.error })
+    }
+
+    try {
+      const event = await locals.pb
+        .collection('events')
+        .getFirstListItem(`slug="${params.eventSlug}"`)
+
+      const uploadFormData = new FormData()
+      uploadFormData.append('logo', logo)
+
+      await locals.pb.collection('events').update(event.id, uploadFormData)
+
+      return { success: true, message: 'Logo uploaded successfully' }
+    } catch (e) {
+      console.error('Failed to upload logo:', e)
+      return fail(500, { error: 'Failed to upload logo' })
+    }
+  },
+
+  removeLogo: async ({ locals, params }) => {
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify event settings' })
+    }
+
+    try {
+      const event = await locals.pb
+        .collection('events')
+        .getFirstListItem(`slug="${params.eventSlug}"`)
+
+      await locals.pb.collection('events').update(event.id, { logo: null })
+
+      return { success: true, message: 'Logo removed successfully' }
+    } catch (e) {
+      console.error('Failed to remove logo:', e)
+      return fail(500, { error: 'Failed to remove logo' })
+    }
+  },
+
+  uploadBanner: async ({ request, locals, params }) => {
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify event settings' })
+    }
+
+    const formData = await request.formData()
+    const banner = formData.get('banner') as File
+
+    if (!banner || banner.size === 0) {
+      return fail(400, { error: 'Banner file is required' })
+    }
+
+    const validation = validateImageFile(banner, { maxSizeMB: 5 })
+    if (!validation.valid) {
+      return fail(400, { error: validation.error })
+    }
+
+    try {
+      const event = await locals.pb
+        .collection('events')
+        .getFirstListItem(`slug="${params.eventSlug}"`)
+
+      const uploadFormData = new FormData()
+      uploadFormData.append('banner', banner)
+
+      await locals.pb.collection('events').update(event.id, uploadFormData)
+
+      return { success: true, message: 'Banner uploaded successfully' }
+    } catch (e) {
+      console.error('Failed to upload banner:', e)
+      return fail(500, { error: 'Failed to upload banner' })
+    }
+  },
+
+  removeBanner: async ({ locals, params }) => {
+    const userRole = locals.user?.role as string | undefined
+    if (!canAccessSettings(userRole)) {
+      return fail(403, { error: 'You do not have permission to modify event settings' })
+    }
+
+    try {
+      const event = await locals.pb
+        .collection('events')
+        .getFirstListItem(`slug="${params.eventSlug}"`)
+
+      await locals.pb.collection('events').update(event.id, { banner: null })
+
+      return { success: true, message: 'Banner removed successfully' }
+    } catch (e) {
+      console.error('Failed to remove banner:', e)
+      return fail(500, { error: 'Failed to remove banner' })
     }
   },
 
