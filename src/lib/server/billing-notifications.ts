@@ -19,6 +19,7 @@ import {
 import { recordCreditNote, recordIncome } from '$lib/features/budget/services'
 import type { EmailAttachment } from '$lib/features/cfp/services/email-service'
 import { getEmailService } from '$lib/server/app-settings'
+import { getEventBranding } from '$lib/server/email-branding'
 import type PocketBase from 'pocketbase'
 
 export interface SendOrderEmailParams {
@@ -49,6 +50,9 @@ export async function sendOrderConfirmationEmail(
     const tickets = await ticketRepo.findByOrder(orderId)
 
     const emailService = await getEmailService(pb)
+
+    // Load event branding (falls back to org branding, then default)
+    const branding = await getEventBranding(pb, order.editionId)
 
     // Fetch ticket template and edition details for proper rendering
     let template: TicketTemplateColors | undefined
@@ -91,7 +95,8 @@ export async function sendOrderConfirmationEmail(
       eventName,
       template,
       venue,
-      startDate
+      startDate,
+      branding
     })
 
     const text = generateOrderConfirmationText({
@@ -99,7 +104,8 @@ export async function sendOrderConfirmationEmail(
       items,
       tickets,
       editionName,
-      eventName
+      eventName,
+      branding
     })
 
     const subject = `Order Confirmation #${order.orderNumber} - ${editionName}`
@@ -234,8 +240,11 @@ export async function sendOrderRefundEmail(
     const items = await orderItemRepo.findByOrder(orderId)
     const emailService = await getEmailService(pb)
 
-    const html = generateOrderRefundHtml({ order, items, editionName, eventName })
-    const text = generateOrderRefundText({ order, items, editionName, eventName })
+    // Load event branding (falls back to org branding, then default)
+    const branding = await getEventBranding(pb, order.editionId)
+
+    const html = generateOrderRefundHtml({ order, items, editionName, eventName, branding })
+    const text = generateOrderRefundText({ order, items, editionName, eventName, branding })
     const subject = `Order Refunded #${order.orderNumber} - ${editionName}`
 
     // Generate credit note PDF if original invoice exists

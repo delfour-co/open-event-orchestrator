@@ -916,9 +916,9 @@ function formatSpeakers(speakers: Array<{ firstName: string; lastName: string }>
   return speakers.map((s) => `${s.firstName} ${s.lastName}`).join(', ')
 }
 
-// Custom color styles from app settings
+// Custom color styles from app settings, falling back to event branding
 const customStyles = $derived(() => {
-  const primary = data.appSettings?.primaryColor
+  const primary = data.appSettings?.primaryColor || data.eventBranding?.primaryColor
   const accent = data.appSettings?.accentColor
   if (!primary && !accent) return undefined
   let style = ''
@@ -926,6 +926,12 @@ const customStyles = $derived(() => {
   if (accent) style += `--color-accent: ${accent};`
   return style
 })
+
+// Effective logo and header image: appSettings overrides event branding
+const effectiveLogoUrl = $derived(data.appSettings?.logoUrl || data.eventBranding?.logoUrl)
+const effectiveHeaderImageUrl = $derived(
+  data.appSettings?.headerImageUrl || data.eventBranding?.bannerUrl
+)
 
 // Theme toggle state
 let currentTheme = $state<'light' | 'dark' | 'system'>('system')
@@ -1037,8 +1043,8 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 	<meta property="og:title" content="{data.appSettings?.title || data.edition.name} - {m.app_title_suffix()}" />
 	<meta property="og:description" content={m.app_meta_description({ title: data.appSettings?.title || data.edition.name })} />
 	<meta property="og:type" content="website" />
-	{#if data.appSettings?.logoUrl}
-		<meta property="og:image" content={data.appSettings.logoUrl} />
+	{#if effectiveLogoUrl}
+		<meta property="og:image" content={effectiveLogoUrl} />
 	{/if}
 </svelte:head>
 
@@ -1053,10 +1059,10 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 
 	<!-- Header -->
 	<header class="relative border-b bg-card overflow-hidden">
-		{#if data.appSettings?.headerImageUrl}
+		{#if effectiveHeaderImageUrl}
 			<div class="absolute inset-0">
 				<img
-					src={data.appSettings.headerImageUrl}
+					src={effectiveHeaderImageUrl}
 					alt=""
 					aria-hidden="true"
 					class="h-full w-full object-cover opacity-20"
@@ -1067,9 +1073,9 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 		<div class="relative mx-auto max-w-4xl px-4 py-6">
 			<div class="flex items-start justify-between">
 				<div class="flex items-center gap-4">
-					{#if data.appSettings?.logoUrl}
+					{#if effectiveLogoUrl}
 						<img
-							src={data.appSettings.logoUrl}
+							src={effectiveLogoUrl}
 							alt="{data.appSettings?.title || data.edition.name} logo"
 							class="h-12 w-12 rounded-lg object-contain"
 						/>

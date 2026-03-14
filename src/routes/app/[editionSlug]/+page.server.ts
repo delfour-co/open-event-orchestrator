@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public'
 import { AppSettingsRepository } from '$lib/features/app/infra'
 import { FeedbackSettingsRepository } from '$lib/features/feedback/infra'
 import { error } from '@sveltejs/kit'
@@ -30,8 +31,63 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     throw error(500, 'Edition has no associated event')
   }
 
-  // Get the event for organization info
+  // Get the event for organization info and branding
   const event = await locals.pb.collection('events').getOne(eventId)
+
+  // Build event-level branding (used as fallback when appSettings not set)
+  let eventBranding: {
+    logoUrl?: string
+    bannerUrl?: string
+    primaryColor?: string
+    secondaryColor?: string
+    hashtag?: string
+  } = {}
+
+  try {
+    const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
+    let logoUrl: string | undefined
+    let bannerUrl: string | undefined
+
+    if (event.logo) {
+      logoUrl = `${pbUrl}/api/files/events/${eventId}/${event.logo}`
+    }
+    if (event.banner) {
+      bannerUrl = `${pbUrl}/api/files/events/${eventId}/${event.banner}`
+    }
+
+    let primaryColor = (event.primaryColor as string) || undefined
+    let secondaryColor = (event.secondaryColor as string) || undefined
+
+    // Fall back to organization branding
+    if (!logoUrl || !primaryColor || !secondaryColor) {
+      try {
+        const org = await locals.pb
+          .collection('organizations')
+          .getOne(event.organizationId as string)
+        if (!logoUrl && org.logo) {
+          logoUrl = `${pbUrl}/api/files/organizations/${org.id}/${org.logo}`
+        }
+        if (!primaryColor && org.primaryColor) {
+          primaryColor = org.primaryColor as string
+        }
+        if (!secondaryColor && org.secondaryColor) {
+          secondaryColor = org.secondaryColor as string
+        }
+      } catch {
+        // Ignore org fetch errors
+      }
+    }
+
+    eventBranding = {
+      logoUrl,
+      bannerUrl,
+      primaryColor,
+      secondaryColor,
+      hashtag: (event.hashtag as string) || undefined
+    }
+  } catch {
+    // Ignore branding errors
+  }
 
   // Load feedback settings and app settings
   const feedbackSettingsRepo = new FeedbackSettingsRepository(locals.pb)
@@ -185,6 +241,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       type: (s.type as string) || 'talk',
       description: s.description as string | undefined
     })),
-    talks
+    talks,
+    eventBranding
   }
 }

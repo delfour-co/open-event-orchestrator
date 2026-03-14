@@ -12,6 +12,8 @@ interface Props {
 
 const { data }: Props = $props()
 
+const primaryColor = data.eventBranding?.primaryColor
+
 let quantities = $state<Record<string, number>>({})
 
 const formatPrice = (priceInCents: number, currency: string) => {
@@ -164,7 +166,7 @@ function proceedToCheckout() {
 									: formatPrice(totalAmount(), data.ticketTypes[0].currency)}
 							</div>
 						</div>
-						<Button size="lg" onclick={proceedToCheckout} class="gap-2">
+						<Button size="lg" onclick={proceedToCheckout} class="gap-2" style={primaryColor ? `background: ${primaryColor}; border-color: ${primaryColor};` : ''}>
 							<ShoppingCart class="h-5 w-5" />
 							{m.billing_tickets_continue_checkout()}
 						</Button>

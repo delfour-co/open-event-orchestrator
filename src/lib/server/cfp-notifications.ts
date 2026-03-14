@@ -11,6 +11,7 @@ import {
   generateEmailText
 } from '$lib/features/cfp/services'
 import { getEmailService } from '$lib/server/app-settings'
+import { getEventBranding } from '$lib/server/email-branding'
 import type PocketBase from 'pocketbase'
 
 export interface SendCfpNotificationParams {
@@ -77,10 +78,13 @@ export async function sendCfpNotification(params: SendCfpNotificationParams): Pr
       confirmationUrl: submissionsUrl
     }
 
+    // Load event branding (falls back to org branding, then default)
+    const branding = await getEventBranding(pb, editionId)
+
     // Generate email content
     const subject = getNotificationSubject(type, editionName, talk.title)
-    const html = generateEmailHtml(type, templateData)
-    const text = generateEmailText(type, templateData)
+    const html = generateEmailHtml(type, templateData, branding)
+    const text = generateEmailText(type, templateData, branding)
 
     // Create pending email log
     const emailLog = await emailLogRepo.create({

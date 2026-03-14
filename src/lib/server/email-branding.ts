@@ -41,6 +41,44 @@ export async function getOrgBranding(
 }
 
 /**
+ * Load event branding from PocketBase, falling back to org branding.
+ * Traverses edition -> event -> organization chain.
+ */
+export async function getEventBranding(pb: PocketBase, editionId: string): Promise<EmailBranding> {
+  try {
+    const edition = await pb.collection('editions').getOne(editionId, { expand: 'eventId' })
+    const event = edition.expand?.eventId as Record<string, unknown> | undefined
+
+    if (!event) return DEFAULT_BRANDING
+
+    const eventId = event.id as string
+    const organizationId = event.organizationId as string
+
+    // Get org branding as base
+    const orgBranding = await getOrgBranding(pb, organizationId)
+
+    // Get event record for branding overrides
+    const eventRecord = await pb.collection('events').getOne(eventId)
+
+    const pbUrl = 'http://localhost:8090'
+    let logoUrl = orgBranding.logoUrl
+    if (eventRecord.logo) {
+      logoUrl = `${pbUrl}/api/files/events/${eventId}/${eventRecord.logo}`
+    }
+
+    return {
+      orgName: (eventRecord.name as string) || orgBranding.orgName,
+      logoUrl,
+      primaryColor: (eventRecord.primaryColor as string) || orgBranding.primaryColor,
+      secondaryColor: (eventRecord.secondaryColor as string) || orgBranding.secondaryColor,
+      website: (eventRecord.website as string) || orgBranding.website
+    }
+  } catch {
+    return DEFAULT_BRANDING
+  }
+}
+
+/**
  * Generate branded email header HTML
  */
 export function emailHeader(branding: EmailBranding, title: string): string {
