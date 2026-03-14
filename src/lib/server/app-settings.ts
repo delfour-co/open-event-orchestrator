@@ -2,10 +2,26 @@ import { env } from '$env/dynamic/private'
 import { env as publicEnv } from '$env/dynamic/public'
 import { createConsoleEmailService, createSmtpEmailService } from '$lib/features/cfp/services'
 import type { EmailService } from '$lib/features/cfp/services'
+import PocketBaseClient from 'pocketbase'
 import type PocketBase from 'pocketbase'
 
 // =============================================================================
-// SMTP Settings
+// PocketBase Admin Helper
+// =============================================================================
+
+async function createAdminPb(): Promise<PocketBaseClient> {
+  const adminPb = new PocketBaseClient(publicEnv.PUBLIC_POCKETBASE_URL || 'http://localhost:8090')
+  const email = env.PB_ADMIN_EMAIL
+  const password = env.PB_ADMIN_PASSWORD
+  if (!email || !password) {
+    throw new Error('PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD env vars are required')
+  }
+  await adminPb.collection('_superusers').authWithPassword(email, password)
+  return adminPb
+}
+
+// =============================================================================
+// SMTP Settings (reads/writes PocketBase's own SMTP config)
 // =============================================================================
 
 export interface SmtpSettings {
@@ -47,6 +63,7 @@ export async function getSmtpSettings(pb: PocketBase): Promise<SmtpSettings> {
 }
 
 export async function saveSmtpSettings(pb: PocketBase, settings: SmtpSettings): Promise<void> {
+  // Save to app_settings (used by nodemailer for app emails)
   const records = await pb.collection('app_settings').getList(1, 1)
   const data = {
     smtpHost: settings.smtpHost,
@@ -62,6 +79,29 @@ export async function saveSmtpSettings(pb: PocketBase, settings: SmtpSettings): 
   } else {
     await pb.collection('app_settings').create(data)
   }
+
+  // Also sync to PocketBase's own SMTP settings (used for auth emails: password reset, etc.)
+  try {
+    const adminPb = await createAdminPb()
+    await adminPb.settings.update({
+      smtp: {
+        enabled: settings.smtpEnabled,
+        host: settings.smtpHost,
+        port: settings.smtpPort,
+        username: settings.smtpUser,
+        password: settings.smtpPass,
+        tls: settings.smtpPort === 465,
+        authMethod: settings.smtpUser ? 'PLAIN' : '',
+        localName: 'localhost'
+      },
+      meta: {
+        senderAddress: settings.smtpFrom,
+        senderName: 'Open Event Orchestrator'
+      }
+    })
+  } catch (err) {
+    console.error('[SMTP] Failed to sync settings to PocketBase:', err)
+  }
 }
 
 export async function getEmailService(pb: PocketBase): Promise<EmailService> {
@@ -71,8 +111,14 @@ export async function getEmailService(pb: PocketBase): Promise<EmailService> {
     return createConsoleEmailService()
   }
 
+  // Resolve Docker internal hostnames to localhost for dev (SvelteKit runs outside Docker)
+  let host = settings.smtpHost
+  if (host === 'mailpit' || host === 'oeo-mailpit') {
+    host = 'localhost'
+  }
+
   return createSmtpEmailService({
-    host: settings.smtpHost,
+    host,
     port: settings.smtpPort,
     user: settings.smtpUser || undefined,
     pass: settings.smtpPass || undefined,

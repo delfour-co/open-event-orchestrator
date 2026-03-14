@@ -2,9 +2,9 @@
 
 migrate(
   (app) => {
+    // Configure SMTP to use Mailpit in Docker network
     const settings = app.settings()
 
-    // Configure SMTP to use Mailpit (or any local SMTP in Docker network)
     if (!settings.smtp.host || settings.smtp.host === 'smtp.example.com') {
       settings.smtp.enabled = true
       settings.smtp.host = 'mailpit'
@@ -16,50 +16,50 @@ migrate(
       settings.smtp.localName = 'localhost'
     }
 
-    // Set sender info if not configured
     if (!settings.meta.senderAddress || settings.meta.senderAddress === 'support@example.com') {
       settings.meta.senderName = 'Open Event Orchestrator'
       settings.meta.senderAddress = 'noreply@oeo.local'
     }
 
-    // Set app URL to SvelteKit dev server
     if (!settings.meta.appURL || settings.meta.appURL === 'http://localhost:8090') {
       settings.meta.appURL = 'http://localhost:5173'
     }
 
+    settings.meta.appName = 'Open Event Orchestrator'
+
     app.save(settings)
 
-    // Customize the password reset email template to point to our SvelteKit route
-    const usersCollection = app.findCollectionByNameOrId('users')
-    const options = usersCollection.options || {}
+    // Update password reset email template to point to SvelteKit route
+    try {
+      const usersCollection = app.findCollectionByNameOrId('users')
 
-    if (options.resetPasswordTemplate) {
-      options.resetPasswordTemplate.body =
-        '<p>Hello,</p>\n' +
-        '<p>Click on the button below to reset your password.</p>\n' +
-        '<p>\n' +
-        '  <a class="btn" href="{APP_URL}/auth/reset-password/{TOKEN}" target="_blank" rel="noopener">Reset password</a>\n' +
-        '</p>\n' +
-        "<p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>\n" +
-        '<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>'
+      // In PB v0.36+, resetPasswordTemplate is a direct property on auth collections
+      if (usersCollection.resetPasswordTemplate) {
+        usersCollection.resetPasswordTemplate.body =
+          '<p>Hello,</p>\n' +
+          '<p>Click on the button below to reset your password.</p>\n' +
+          '<p>\n' +
+          '  <a class="btn" href="{APP_URL}/auth/reset-password/{TOKEN}" target="_blank" rel="noopener">Reset password</a>\n' +
+          '</p>\n' +
+          "<p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>\n" +
+          '<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>'
+        app.save(usersCollection)
+      } else if (usersCollection.options?.resetPasswordTemplate) {
+        usersCollection.options.resetPasswordTemplate.body =
+          '<p>Hello,</p>\n' +
+          '<p>Click on the button below to reset your password.</p>\n' +
+          '<p>\n' +
+          '  <a class="btn" href="{APP_URL}/auth/reset-password/{TOKEN}" target="_blank" rel="noopener">Reset password</a>\n' +
+          '</p>\n' +
+          "<p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>\n" +
+          '<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>'
+        app.save(usersCollection)
+      }
+    } catch (e) {
+      console.log('[Migration 0028] Could not update reset template:', e)
     }
-
-    if (options.verificationTemplate) {
-      options.verificationTemplate.body =
-        '<p>Hello,</p>\n' +
-        '<p>Thank you for joining {APP_NAME}.</p>\n' +
-        '<p>Click on the button below to verify your email address.</p>\n' +
-        '<p>\n' +
-        '  <a class="btn" href="{APP_URL}/auth/verify-email/{TOKEN}" target="_blank" rel="noopener">Verify</a>\n' +
-        '</p>\n' +
-        "<p>If you didn't ask to verify your email, you can ignore this email.</p>\n" +
-        '<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>'
-    }
-
-    usersCollection.options = options
-    app.save(usersCollection)
   },
   (app) => {
-    // No rollback needed — settings can be manually reconfigured
+    // No rollback needed
   }
 )
