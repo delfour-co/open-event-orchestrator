@@ -37,7 +37,7 @@ const users = [
     password: 'admin123',
     passwordConfirm: 'admin123',
     name: 'Admin User',
-    role: 'org_admin'
+    role: 'admin'
   },
   {
     email: 'speaker@example.com',
@@ -58,7 +58,7 @@ const users = [
     password: 'reviewer123',
     passwordConfirm: 'reviewer123',
     name: 'Bob Reviewer',
-    role: 'org_member'
+    role: 'organizer'
   },
   // Additional team members for room assignments
   {
@@ -66,21 +66,21 @@ const users = [
     password: 'volunteer123',
     passwordConfirm: 'volunteer123',
     name: 'Marie Dupont',
-    role: 'org_member'
+    role: 'organizer'
   },
   {
     email: 'pierre@example.com',
     password: 'volunteer123',
     passwordConfirm: 'volunteer123',
     name: 'Pierre Martin',
-    role: 'org_member'
+    role: 'organizer'
   },
   {
     email: 'sophie@example.com',
     password: 'volunteer123',
     passwordConfirm: 'volunteer123',
     name: 'Sophie Bernard',
-    role: 'org_member'
+    role: 'organizer'
   }
 ]
 

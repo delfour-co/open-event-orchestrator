@@ -1,41 +1,22 @@
 /**
  * Permission helpers for role-based access control
  *
- * Roles hierarchy:
+ * Roles hierarchy (unified with organization_members.role):
  * - super_admin: Full access to everything (initial setup admin)
- * - admin: Full access to everything
+ * - admin: Organization admin — full access to everything
  * - organizer: Can manage events, editions, CFP settings, and change talk statuses
  * - reviewer: Can only view submissions, add reviews and comments
  */
 
-export type OrgRole =
-  | 'super_admin'
-  | 'org_admin'
-  | 'org_member'
-  | 'admin'
-  | 'organizer'
-  | 'reviewer'
+export type OrgRole = 'super_admin' | 'admin' | 'organizer' | 'reviewer'
 
-export const ADMIN_ROLES: OrgRole[] = [
-  'super_admin',
-  'org_admin',
-  'org_member',
-  'admin',
-  'organizer',
-  'reviewer'
-]
+export const ADMIN_ROLES: OrgRole[] = ['super_admin', 'admin', 'organizer', 'reviewer']
 
 /**
  * Check if role has organizer-level access (can modify settings, manage content)
  */
 function isOrganizerOrAbove(role: string | undefined): boolean {
-  return (
-    role === 'super_admin' ||
-    role === 'org_admin' ||
-    role === 'admin' ||
-    role === 'org_member' ||
-    role === 'organizer'
-  )
+  return role === 'super_admin' || role === 'admin' || role === 'organizer'
 }
 
 /**

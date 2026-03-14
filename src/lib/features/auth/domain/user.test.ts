@@ -12,14 +12,16 @@ describe('Auth schemas', () => {
   describe('userRoleSchema', () => {
     it('should accept valid roles', () => {
       expect(userRoleSchema.safeParse('super_admin').success).toBe(true)
-      expect(userRoleSchema.safeParse('org_admin').success).toBe(true)
-      expect(userRoleSchema.safeParse('org_member').success).toBe(true)
+      expect(userRoleSchema.safeParse('admin').success).toBe(true)
+      expect(userRoleSchema.safeParse('organizer').success).toBe(true)
+      expect(userRoleSchema.safeParse('reviewer').success).toBe(true)
       expect(userRoleSchema.safeParse('speaker').success).toBe(true)
       expect(userRoleSchema.safeParse('attendee').success).toBe(true)
     })
 
     it('should reject invalid roles', () => {
-      expect(userRoleSchema.safeParse('admin').success).toBe(false)
+      expect(userRoleSchema.safeParse('org_admin').success).toBe(false)
+      expect(userRoleSchema.safeParse('org_member').success).toBe(false)
       expect(userRoleSchema.safeParse('').success).toBe(false)
     })
   })

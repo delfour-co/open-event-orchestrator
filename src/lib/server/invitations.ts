@@ -8,24 +8,6 @@ const ROLE_PRIORITY: Record<string, number> = {
 }
 
 /**
- * Map organization member role to user role.
- * Org roles: admin, organizer, reviewer
- * User roles: super_admin, org_admin, org_member, speaker, attendee
- */
-function orgRoleToUserRole(orgRole: string): string {
-  switch (orgRole) {
-    case 'admin':
-      return 'org_admin'
-    case 'organizer':
-      return 'org_member'
-    case 'reviewer':
-      return 'org_member'
-    default:
-      return 'org_member'
-  }
-}
-
-/**
  * Process pending organization invitations for a user.
  * Called after login or registration to automatically add the user
  * to organizations they've been invited to.
@@ -98,23 +80,12 @@ export async function processPendingInvitations(
       acceptedCount++
     }
 
-    // Update user role to the highest granted role (mapped to user role)
+    // Update user role to the highest granted role (unified — no mapping needed)
     if (highestRole) {
-      const userRole = orgRoleToUserRole(highestRole)
       const currentUser = await pb.collection('users').getOne(userId)
       const currentRole = currentUser.role as string | undefined
-      const USER_ROLE_PRIORITY: Record<string, number> = {
-        super_admin: 4,
-        org_admin: 3,
-        org_member: 2,
-        speaker: 1,
-        attendee: 0
-      }
-      if (
-        !currentRole ||
-        (USER_ROLE_PRIORITY[userRole] || 0) > (USER_ROLE_PRIORITY[currentRole] || 0)
-      ) {
-        await pb.collection('users').update(userId, { role: userRole })
+      if (!currentRole || (ROLE_PRIORITY[highestRole] || 0) > (ROLE_PRIORITY[currentRole] || 0)) {
+        await pb.collection('users').update(userId, { role: highestRole })
       }
     }
   } catch (error) {
