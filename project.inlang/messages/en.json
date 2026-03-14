@@ -3268,5 +3268,7 @@
   "admin_events_manage_edition": "Manage Edition",
   "invitation_landing_accept": "Accept & Join",
   "admin_events_manage_event": "Manage Event",
-  "admin_events_select_organization": "Select an organization"
+  "admin_events_select_organization": "Select an organization",
+  "admin_events_show_empty": "Show events without editions",
+  "admin_events_hide_empty": "Hide events without editions"
 }

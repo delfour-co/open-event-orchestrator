@@ -36,6 +36,7 @@ let showNewEvent = $state(false)
 let showNewEdition = $state<string | null>(null)
 let selectedOrgId = $state<string>($page.url.searchParams.get('org') || '')
 let showArchived = $state(false)
+let hideEmptyEvents = $state(false)
 
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -137,6 +138,15 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
           {/if}
         </Button>
       {/if}
+      <Button variant="outline" onclick={() => (hideEmptyEvents = !hideEmptyEvents)}>
+        {#if hideEmptyEvents}
+          <Eye class="mr-2 h-4 w-4" />
+          {m.admin_events_show_empty()}
+        {:else}
+          <EyeOff class="mr-2 h-4 w-4" />
+          {m.admin_events_hide_empty()}
+        {/if}
+      </Button>
     </div>
   </div>
 
@@ -317,7 +327,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
     <div class="space-y-8">
       {#each filteredEvents as event}
         {@const eventEditions = allEditions().filter((e) => e.eventId === event.id)}
-        {#if eventEditions.length > 0 || event.editions.length === 0}
+        {#if eventEditions.length > 0 || (event.editions.length === 0 && !hideEmptyEvents)}
           <div class="space-y-4">
             <!-- Event Header -->
             <div class="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
