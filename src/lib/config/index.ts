@@ -4,6 +4,7 @@ export {
   getCrmNavItems,
   getEmailsNavItems,
   getFeedbackNavItems,
+  getOrgSettingsNavItems,
   getPlanningNavItems,
   getReportingNavItems,
   getSponsoringNavItems,

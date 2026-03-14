@@ -86,3 +86,15 @@ export const getPlanningNavItems = (editionSlug: string): NavItem[] => [
   { href: `/admin/planning/${editionSlug}/staff`, label: 'Staff' },
   { href: `/admin/planning/${editionSlug}/settings`, label: 'Settings' }
 ]
+
+/**
+ * Generate organization settings navigation items
+ */
+export const getOrgSettingsNavItems = (orgSlug: string): NavItem[] => [
+  { href: `/admin/organizations/${orgSlug}/settings`, label: 'General' },
+  { href: `/admin/organizations/${orgSlug}/settings/branding`, label: 'Branding' },
+  { href: `/admin/organizations/${orgSlug}/settings/social`, label: 'Social & Localization' },
+  { href: `/admin/organizations/${orgSlug}/settings/legal`, label: 'Legal & Billing' },
+  { href: `/admin/organizations/${orgSlug}/settings/team`, label: 'Team' },
+  { href: `/admin/organizations/${orgSlug}/settings/danger`, label: 'Danger Zone' }
+]
