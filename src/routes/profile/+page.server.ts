@@ -2,6 +2,7 @@ import { env } from '$env/dynamic/public'
 import { changePasswordSchema, updateProfileSchema } from '$lib/features/auth/domain'
 import type { UserSession } from '$lib/features/auth/domain/user-session'
 import { createUserSessionRepository } from '$lib/features/auth/infra'
+import { createTotpRepository } from '$lib/features/auth/infra/totp-repository'
 import { validateImageFile } from '$lib/server/file-validation'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -41,6 +42,20 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     console.error('Failed to load sessions:', err)
   }
 
+  // Check 2FA status
+  let twoFactorEnabled = false
+  let backupCodesRemaining = 0
+  try {
+    const totpRepo = createTotpRepository(locals.pb)
+    const totp = await totpRepo.findByUserId(user.id as string)
+    if (totp?.enabled) {
+      twoFactorEnabled = true
+      backupCodesRemaining = totp.backupCodes.length
+    }
+  } catch {
+    // Collection might not exist yet
+  }
+
   return {
     user: {
       id: user.id as string,
@@ -52,7 +67,9 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
       created: user.created as string
     },
     sessions,
-    currentSessionId
+    currentSessionId,
+    twoFactorEnabled,
+    backupCodesRemaining
   }
 }
 
@@ -233,5 +250,105 @@ export const actions: Actions = {
       console.error('Revoke all sessions error:', err)
       return fail(500, { error: 'Failed to revoke sessions', action: 'revokeAllSessions' })
     }
+  },
+
+  setup2fa: async ({ locals }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const { generateTotpSecret, generateBackupCodes, hashBackupCode } = await import(
+      '$lib/features/auth/services/totp-service'
+    )
+
+    const totpRepo = createTotpRepository(locals.pb)
+
+    // Check if already has TOTP
+    const existing = await totpRepo.findByUserId(locals.user.id)
+    if (existing?.enabled) {
+      return fail(400, { error: '2FA is already enabled', action: 'setup2fa' })
+    }
+
+    const { secret, uri } = generateTotpSecret(locals.user.email as string)
+    const backupCodes = generateBackupCodes()
+    const hashedCodes = backupCodes.map(hashBackupCode)
+
+    // Create or update TOTP record (not yet enabled)
+    if (existing) {
+      await totpRepo.delete(existing.id)
+    }
+    await totpRepo.create({
+      userId: locals.user.id,
+      secret,
+      enabled: false,
+      backupCodes: hashedCodes
+    })
+
+    return {
+      success: true,
+      action: 'setup2fa',
+      totpUri: uri,
+      totpSecret: secret,
+      backupCodes
+    }
+  },
+
+  enable2fa: async ({ request, locals }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const formData = await request.formData()
+    const code = formData.get('code') as string
+
+    if (!code) {
+      return fail(400, { error: 'Code is required', action: 'enable2fa' })
+    }
+
+    const { verifyTotpCode } = await import('$lib/features/auth/services/totp-service')
+
+    const totpRepo = createTotpRepository(locals.pb)
+    const totp = await totpRepo.findByUserId(locals.user.id)
+
+    if (!totp) {
+      return fail(400, { error: '2FA setup not found', action: 'enable2fa' })
+    }
+
+    if (!verifyTotpCode(totp.secret, code)) {
+      return fail(400, { error: 'Invalid code. Try again.', action: 'enable2fa' })
+    }
+
+    await totpRepo.enable(totp.id, totp.backupCodes)
+
+    return { success: true, action: 'enable2fa' }
+  },
+
+  disable2fa: async ({ request, locals }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const formData = await request.formData()
+    const password = formData.get('password') as string
+
+    if (!password) {
+      return fail(400, { error: 'Password required', action: 'disable2fa' })
+    }
+
+    // Verify password
+    try {
+      await locals.pb.collection('users').authWithPassword(locals.user.email as string, password)
+    } catch {
+      return fail(400, { error: 'Invalid password', action: 'disable2fa' })
+    }
+
+    const totpRepo = createTotpRepository(locals.pb)
+    const totp = await totpRepo.findByUserId(locals.user.id)
+
+    if (totp) {
+      await totpRepo.disable(totp.id)
+    }
+
+    return { success: true, action: 'disable2fa' }
   }
 }

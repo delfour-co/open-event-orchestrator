@@ -33,3 +33,12 @@ export {
   generateOrganizationSlug
 } from './setup-token'
 export type { SetupToken, InitialSetupInput } from './setup-token'
+
+export {
+	totpSecretSchema,
+	verifyTotpSchema,
+	TOTP_ISSUER,
+	BACKUP_CODE_COUNT,
+	TRUSTED_DEVICE_DAYS
+} from './totp'
+export type { TotpSecret, VerifyTotpInput } from './totp'

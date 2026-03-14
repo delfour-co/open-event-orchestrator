@@ -16,17 +16,21 @@ import {
   ArrowLeft,
   Camera,
   Check,
+  Copy,
   Eye,
   EyeOff,
   Key,
   Laptop,
   Monitor,
+  Shield,
+  ShieldCheck,
   Smartphone,
   Tablet,
   Trash2,
   Upload,
   User
 } from 'lucide-svelte'
+import QRCode from 'qrcode'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -50,6 +54,39 @@ let avatarInput: HTMLInputElement
 let isUploadingAvatar = $state(false)
 let isRevokingSession = $state<string | null>(null)
 let isRevokingAll = $state(false)
+
+// 2FA state
+let twoFactorStep = $state<'idle' | 'setup' | 'verify'>('idle')
+let totpUri = $state('')
+let totpSecret = $state('')
+let backupCodes = $state<string[]>([])
+let qrCodeDataUrl = $state('')
+let showDisableForm = $state(false)
+let copiedSecret = $state(false)
+let copiedBackupCodes = $state(false)
+
+async function generateQrCode(uri: string): Promise<void> {
+  try {
+    qrCodeDataUrl = await QRCode.toDataURL(uri, { width: 256, margin: 2 })
+  } catch {
+    qrCodeDataUrl = ''
+  }
+}
+
+function copyToClipboard(text: string, type: 'secret' | 'backup'): void {
+  navigator.clipboard.writeText(text)
+  if (type === 'secret') {
+    copiedSecret = true
+    setTimeout(() => {
+      copiedSecret = false
+    }, 2000)
+  } else {
+    copiedBackupCodes = true
+    setTimeout(() => {
+      copiedBackupCodes = false
+    }, 2000)
+  }
+}
 
 // Format creation date based on current language
 const formatDate = (dateStr: string): string => {
@@ -132,6 +169,14 @@ const otherSessions = $derived(data.sessions.filter((s) => s.id !== data.current
 
       {#if form?.success && form?.action === 'revokeAllSessions'}
         <Alert variant="success">{m.profile_sessions_all_revoked()}</Alert>
+      {/if}
+
+      {#if form?.success && form?.action === 'enable2fa'}
+        <Alert variant="success">{m.profile_2fa_enabled()}</Alert>
+      {/if}
+
+      {#if form?.success && form?.action === 'disable2fa'}
+        <Alert variant="success">2FA has been disabled.</Alert>
       {/if}
 
       {#if form?.error && !form?.errors}
@@ -412,6 +457,211 @@ const otherSessions = $derived(data.sessions.filter((s) => s.id !== data.current
               </Button>
             </div>
           </form>
+        </Card.Content>
+      </Card.Root>
+
+      <!-- Two-Factor Authentication -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="flex items-center gap-2">
+            <ShieldCheck class="h-5 w-5" />
+            {m.auth_2fa_verify_heading()}
+          </Card.Title>
+          <Card.Description>
+            {m.profile_2fa_setup_description()}
+          </Card.Description>
+        </Card.Header>
+        <Card.Content>
+          {#if data.twoFactorEnabled && twoFactorStep === 'idle'}
+            <!-- 2FA is enabled -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+                <Shield class="h-5 w-5 text-green-600 dark:text-green-400" />
+                <div>
+                  <p class="font-medium text-green-800 dark:text-green-200">{m.profile_2fa_enabled()}</p>
+                  <p class="text-sm text-green-600 dark:text-green-400">
+                    {m.profile_2fa_backup_remaining({ count: data.backupCodesRemaining.toString() })}
+                  </p>
+                </div>
+              </div>
+
+              {#if !showDisableForm}
+                <Button
+                  variant="destructive"
+                  onclick={() => (showDisableForm = true)}
+                >
+                  {m.profile_2fa_disable_button()}
+                </Button>
+              {:else}
+                <form
+                  method="POST"
+                  action="?/disable2fa"
+                  use:enhance={() => {
+                    return async ({ update }) => {
+                      showDisableForm = false
+                      await update()
+                    }
+                  }}
+                  class="space-y-3"
+                >
+                  <p class="text-sm text-muted-foreground">{m.profile_2fa_disable_confirm()}</p>
+                  <Input
+                    name="password"
+                    type="password"
+                    placeholder="Password"
+                    required
+                    autocomplete="current-password"
+                  />
+                  {#if form?.error && form?.action === 'disable2fa'}
+                    <p class="text-sm text-destructive">{form.error}</p>
+                  {/if}
+                  <div class="flex gap-2">
+                    <Button type="submit" variant="destructive">{m.profile_2fa_disable_button()}</Button>
+                    <Button type="button" variant="outline" onclick={() => (showDisableForm = false)}>
+                      {m.action_cancel()}
+                    </Button>
+                  </div>
+                </form>
+              {/if}
+            </div>
+          {:else if twoFactorStep === 'idle'}
+            <!-- 2FA not enabled - show setup button -->
+            <form
+              method="POST"
+              action="?/setup2fa"
+              use:enhance={() => {
+                return async ({ result, update }) => {
+                  if (result.type === 'success' && result.data) {
+                    const resultData = result.data as { totpUri: string; totpSecret: string; backupCodes: string[] }
+                    totpUri = resultData.totpUri
+                    totpSecret = resultData.totpSecret
+                    backupCodes = resultData.backupCodes
+                    await generateQrCode(totpUri)
+                    twoFactorStep = 'setup'
+                  } else {
+                    await update()
+                  }
+                }
+              }}
+            >
+              <Button type="submit">
+                <ShieldCheck class="mr-2 h-4 w-4" />
+                {m.profile_2fa_setup_button()}
+              </Button>
+            </form>
+          {:else if twoFactorStep === 'setup'}
+            <!-- Setup flow: show QR code and backup codes -->
+            <div class="space-y-6">
+              <!-- QR Code -->
+              <div class="space-y-3">
+                <h4 class="font-medium">{m.profile_2fa_setup_title()}</h4>
+                {#if qrCodeDataUrl}
+                  <div class="flex justify-center">
+                    <img src={qrCodeDataUrl} alt="TOTP QR Code" class="rounded-lg border" />
+                  </div>
+                {/if}
+
+                <!-- Manual entry -->
+                <div class="space-y-1">
+                  <p class="text-sm text-muted-foreground">{m.profile_2fa_manual_entry()}</p>
+                  <div class="flex items-center gap-2">
+                    <code class="flex-1 rounded bg-muted px-3 py-2 text-sm font-mono break-all">
+                      {totpSecret}
+                    </code>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onclick={() => copyToClipboard(totpSecret, 'secret')}
+                    >
+                      {#if copiedSecret}
+                        <Check class="h-4 w-4" />
+                      {:else}
+                        <Copy class="h-4 w-4" />
+                      {/if}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Backup Codes -->
+              <div class="space-y-3">
+                <h4 class="font-medium">{m.profile_2fa_backup_codes_title()}</h4>
+                <p class="text-sm text-muted-foreground">{m.profile_2fa_backup_codes_description()}</p>
+                <div class="grid grid-cols-2 gap-2 rounded-lg border bg-muted/50 p-4">
+                  {#each backupCodes as code}
+                    <code class="text-sm font-mono">{code}</code>
+                  {/each}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onclick={() => copyToClipboard(backupCodes.join('\n'), 'backup')}
+                >
+                  <Copy class="mr-2 h-4 w-4" />
+                  {#if copiedBackupCodes}
+                    Copied!
+                  {:else}
+                    Copy codes
+                  {/if}
+                </Button>
+              </div>
+
+              <!-- Verify code to enable -->
+              <div class="space-y-3 border-t pt-4">
+                <p class="text-sm font-medium">{m.profile_2fa_verify_code()}</p>
+                <form
+                  method="POST"
+                  action="?/enable2fa"
+                  use:enhance={() => {
+                    return async ({ result, update }) => {
+                      if (result.type === 'success') {
+                        twoFactorStep = 'idle'
+                        totpUri = ''
+                        totpSecret = ''
+                        backupCodes = []
+                        qrCodeDataUrl = ''
+                      }
+                      await update()
+                    }
+                  }}
+                  class="flex gap-2"
+                >
+                  <Input
+                    name="code"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    maxlength={6}
+                    placeholder="000000"
+                    autocomplete="one-time-code"
+                    required
+                    class="max-w-[200px] text-center text-lg tracking-widest"
+                  />
+                  <Button type="submit">
+                    <Key class="mr-2 h-4 w-4" />
+                    {m.profile_2fa_enable_button()}
+                  </Button>
+                </form>
+                {#if form?.error && form?.action === 'enable2fa'}
+                  <p class="text-sm text-destructive">{form.error}</p>
+                {/if}
+              </div>
+
+              <!-- Cancel -->
+              <Button
+                variant="outline"
+                onclick={() => {
+                  twoFactorStep = 'idle'
+                  totpUri = ''
+                  totpSecret = ''
+                  backupCodes = []
+                  qrCodeDataUrl = ''
+                }}
+              >
+                {m.action_cancel()}
+              </Button>
+            </div>
+          {/if}
         </Card.Content>
       </Card.Root>
 

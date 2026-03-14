@@ -13,3 +13,12 @@ export {
   generateVerificationEmailText
 } from './email-verification-service'
 export type { SendVerificationEmailParams } from './email-verification-service'
+
+export {
+	generateTotpSecret,
+	verifyTotpCode,
+	generateBackupCodes,
+	hashBackupCode,
+	verifyBackupCode,
+	generateDeviceHash
+} from './totp-service'
