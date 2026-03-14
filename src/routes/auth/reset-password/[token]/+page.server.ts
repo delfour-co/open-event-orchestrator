@@ -1,6 +1,26 @@
 import { resetPasswordSchema } from '$lib/features/auth/domain'
 import { fail, redirect } from '@sveltejs/kit'
-import type { Actions } from './$types'
+import type { Actions, PageServerLoad } from './$types'
+
+export const load: PageServerLoad = async ({ params, locals }) => {
+  const { token } = params
+
+  // Verify token exists and is valid
+  try {
+    const record = await locals.pb
+      .collection('password_reset_tokens')
+      .getFirstListItem(`token="${token}" && used=false`)
+
+    const expiresAt = new Date(record.expiresAt as string)
+    if (expiresAt < new Date()) {
+      return { error: 'expired' }
+    }
+
+    return { tokenValid: true }
+  } catch {
+    return { error: 'invalid' }
+  }
+}
 
 export const actions: Actions = {
   default: async ({ request, locals, params }) => {
@@ -19,8 +39,29 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('users').confirmPasswordReset(token, password, passwordConfirm)
-    } catch {
+      // Find the token record
+      const record = await locals.pb
+        .collection('password_reset_tokens')
+        .getFirstListItem(`token="${token}" && used=false`)
+
+      // Check expiry
+      const expiresAt = new Date(record.expiresAt as string)
+      if (expiresAt < new Date()) {
+        return fail(400, { error: 'invalid_token' })
+      }
+
+      const userId = record.userId as string
+
+      // Update the user's password
+      await locals.pb.collection('users').update(userId, {
+        password,
+        passwordConfirm
+      })
+
+      // Mark token as used
+      await locals.pb.collection('password_reset_tokens').update(record.id, { used: true })
+    } catch (err) {
+      console.error('Password reset error:', err)
       return fail(400, { error: 'invalid_token' })
     }
 
