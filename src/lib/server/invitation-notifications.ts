@@ -1,4 +1,11 @@
 import { getEmailService } from '$lib/server/app-settings'
+import {
+  DEFAULT_BRANDING,
+  type EmailBranding,
+  emailButton,
+  textFooter,
+  wrapEmail
+} from '$lib/server/email-branding'
 import type PocketBase from 'pocketbase'
 
 export interface SendInvitationEmailParams {
@@ -20,53 +27,32 @@ export async function sendInvitationEmail(
 
   const emailService = await getEmailService(pb)
   const subject = `You've been invited to join ${organizationName}`
-  const brandColor = primaryColor || '#2563eb'
 
-  const logoSection = logoUrl
-    ? `<img src="${logoUrl}" alt="${organizationName}" style="max-height: 48px; max-width: 200px;" />`
-    : ''
+  const branding: EmailBranding = {
+    ...DEFAULT_BRANDING,
+    orgName: organizationName,
+    logoUrl,
+    primaryColor: primaryColor || DEFAULT_BRANDING.primaryColor
+  }
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Organization Invitation</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: ${brandColor}; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-    ${logoSection}
-    <h1 style="color: white; margin: 10px 0 0; font-size: 24px;">You're Invited!</h1>
-  </div>
-
-  <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-    <p style="margin-top: 0;">Hello,</p>
+  const bodyHtml = `<p style="margin-top: 0;">Hello,</p>
 
     <p><strong>${invitedByName}</strong> has invited you to join <strong>${organizationName}</strong> as <strong>${role}</strong>.</p>
 
     <p>Click the button below to accept the invitation:</p>
 
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${acceptUrl}" style="display: inline-block; background: ${brandColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Accept Invitation</a>
-    </div>
+    ${emailButton(branding, 'Accept Invitation', acceptUrl)}
 
     <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
-    <p style="word-break: break-all; color: ${brandColor}; font-size: 14px;">${acceptUrl}</p>
+    <p style="word-break: break-all; color: ${branding.primaryColor}; font-size: 14px;">${acceptUrl}</p>
 
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
 
     <p style="color: #64748b; font-size: 14px; margin-bottom: 0;">
       <strong>Note:</strong> This invitation will expire in 30 days. If you didn't expect this invitation, you can safely ignore this email.
-    </p>
-  </div>
+    </p>`
 
-  <div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
-    <p style="margin: 0;">Open Event Orchestrator</p>
-    <p style="margin: 5px 0;">All-in-one platform for event management</p>
-  </div>
-</body>
-</html>`
+  const html = wrapEmail(branding, "You're Invited!", bodyHtml)
 
   const text = `You're Invited!
 
@@ -78,9 +64,7 @@ Accept the invitation: ${acceptUrl}
 
 This invitation will expire in 30 days.
 
----
-Open Event Orchestrator
-All-in-one platform for event management`
+${textFooter(branding)}`
 
   try {
     const result = await emailService.send({ to: email, subject, html, text })

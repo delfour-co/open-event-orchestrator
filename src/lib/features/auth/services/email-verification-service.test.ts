@@ -96,7 +96,7 @@ describe('Email Verification Service', () => {
       })
 
       expect(text).toContain('Open Event Orchestrator')
-      expect(text).toContain('All-in-one platform for event management')
+      expect(text).toContain('---')
     })
   })
 
