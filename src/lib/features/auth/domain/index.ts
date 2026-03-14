@@ -10,6 +10,8 @@ export {
   changePasswordSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  notificationPreferencesSchema,
+  deleteAccountSchema,
   calculatePasswordStrength,
   isUserVerified
 } from './user'
@@ -24,7 +26,9 @@ export type {
   UpdateProfileInput,
   ChangePasswordInput,
   ForgotPasswordInput,
-  ResetPasswordInput
+  ResetPasswordInput,
+  NotificationPreferences,
+  DeleteAccountInput
 } from './user'
 
 export {

@@ -41,6 +41,14 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     console.error('Failed to load sessions:', err)
   }
 
+  // Load notification preferences
+  const rawPrefs = user.notificationPreferences as Record<string, boolean> | null | undefined
+  const notificationPreferences = {
+    eventUpdates: rawPrefs?.eventUpdates ?? true,
+    teamActivity: rawPrefs?.teamActivity ?? true,
+    marketing: rawPrefs?.marketing ?? false
+  }
+
   return {
     user: {
       id: user.id as string,
@@ -52,7 +60,8 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
       created: user.created as string
     },
     sessions,
-    currentSessionId
+    currentSessionId,
+    notificationPreferences
   }
 }
 
@@ -233,5 +242,59 @@ export const actions: Actions = {
       console.error('Revoke all sessions error:', err)
       return fail(500, { error: 'Failed to revoke sessions', action: 'revokeAllSessions' })
     }
+  },
+
+  updateNotifications: async ({ request, locals }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const formData = await request.formData()
+    const notificationPreferences = {
+      eventUpdates: formData.get('eventUpdates') === 'on',
+      teamActivity: formData.get('teamActivity') === 'on',
+      marketing: formData.get('marketing') === 'on'
+    }
+
+    try {
+      await locals.pb.collection('users').update(locals.user.id, { notificationPreferences })
+      return { success: true, action: 'updateNotifications' }
+    } catch (err) {
+      console.error('Notification preferences update error:', err)
+      return fail(500, {
+        error: 'Failed to update notification preferences',
+        action: 'updateNotifications'
+      })
+    }
+  },
+
+  requestAccountDeletion: async ({ request, locals, cookies }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const formData = await request.formData()
+    const password = formData.get('password') as string
+
+    if (!password) {
+      return fail(400, { error: 'Password is required', action: 'requestAccountDeletion' })
+    }
+
+    try {
+      // Verify password by attempting auth
+      await locals.pb.collection('users').authWithPassword(locals.user.email as string, password)
+
+      // Delete the user account
+      await locals.pb.collection('users').delete(locals.user.id)
+
+      // Clear auth
+      locals.pb.authStore.clear()
+      cookies.delete('pb_auth', { path: '/' })
+    } catch (err) {
+      console.error('Account deletion error:', err)
+      return fail(400, { error: 'Invalid password', action: 'requestAccountDeletion' })
+    }
+
+    throw redirect(303, '/auth/login')
   }
 }
