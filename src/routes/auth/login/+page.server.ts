@@ -2,22 +2,14 @@ import {
   createTotpRepository,
   createTrustedDeviceRepository
 } from '$lib/features/auth/infra/totp-repository'
+import { getAvailableProviders } from '$lib/features/auth/services/social-auth-service'
 import { generateDeviceHash } from '$lib/features/auth/services/totp-service'
 import { processPendingInvitations } from '$lib/server/invitations'
 import { fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
-  let socialProviders: string[] = []
-  try {
-    const authMethods = await locals.pb.collection('users').listAuthMethods()
-    socialProviders = (authMethods.oauth2?.providers || [])
-      .filter((p: { name: string }) => p.name === 'google' || p.name === 'github')
-      .map((p: { name: string }) => p.name)
-  } catch {
-    /* ignore */
-  }
-
+  const socialProviders = await getAvailableProviders(locals.pb)
   return { socialProviders }
 }
 

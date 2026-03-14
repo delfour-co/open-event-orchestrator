@@ -32,7 +32,7 @@ async function handleSocialLogin(provider: string) {
 </script>
 
 {#if providers.length > 0}
-	<div class="space-y-3">
+	<div class="mt-4 space-y-3">
 		<div class="relative">
 			<div class="absolute inset-0 flex items-center">
 				<span class="w-full border-t"></span>
