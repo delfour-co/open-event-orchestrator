@@ -22,6 +22,10 @@ async function handleSocialLogin(provider: string) {
   try {
     const pb = new PocketBase(env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090')
     await pb.collection('users').authWithOAuth2({ provider })
+
+    // Export the PB auth cookie so the server-side SvelteKit picks it up
+    document.cookie = pb.authStore.exportToCookie({ httpOnly: false, sameSite: 'lax' })
+
     // Full page reload to sync server-side session
     window.location.href = redirectUrl || '/admin'
   } catch {
