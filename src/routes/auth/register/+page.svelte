@@ -3,13 +3,16 @@ import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
+import { SocialLoginButtons } from '$lib/features/auth/ui'
 import * as m from '$lib/paraglide/messages'
+import type { ActionData, PageData } from './$types'
 
-type Props = {
-  form: { error?: string; errors?: Record<string, string> } | null
+interface Props {
+  data: PageData
+  form: ActionData
 }
 
-const { form }: Props = $props()
+const { data, form }: Props = $props()
 </script>
 
 <svelte:head>
@@ -64,6 +67,8 @@ const { form }: Props = $props()
 
         <Button type="submit" class="w-full">{m.auth_register_create_account()}</Button>
       </form>
+
+      <SocialLoginButtons providers={data.socialProviders} />
     </Card.Content>
     <Card.Footer class="flex flex-col space-y-2">
       <p class="text-center text-sm text-muted-foreground">

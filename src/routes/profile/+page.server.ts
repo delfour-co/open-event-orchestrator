@@ -64,6 +64,19 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     // Collection might not exist yet
   }
 
+  // Get linked accounts
+  let linkedAccounts: Array<{ id: string; provider: string; providerId: string }> = []
+  try {
+    const accounts = await locals.pb.collection('users').listExternalAuths(user.id as string)
+    linkedAccounts = accounts.map((a: { id: string; provider: string; providerId: string }) => ({
+      id: a.id,
+      provider: a.provider,
+      providerId: a.providerId
+    }))
+  } catch {
+    /* ignore */
+  }
+
   return {
     user: {
       id: user.id as string,
@@ -78,7 +91,8 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     currentSessionId,
     notificationPreferences,
     twoFactorEnabled,
-    backupCodesRemaining
+    backupCodesRemaining,
+    linkedAccounts
   }
 }
 
@@ -410,5 +424,26 @@ export const actions: Actions = {
     }
 
     return { success: true, action: 'disable2fa' }
+  },
+
+  unlinkAccount: async ({ request, locals }) => {
+    if (!locals.user) {
+      throw error(401, 'Not authenticated')
+    }
+
+    const formData = await request.formData()
+    const provider = formData.get('provider') as string
+
+    if (!provider) {
+      return fail(400, { error: 'Provider is required', action: 'unlinkAccount' })
+    }
+
+    try {
+      await locals.pb.collection('users').unlinkExternalAuth(locals.user.id, provider)
+      return { success: true, action: 'unlinkAccount' }
+    } catch (err) {
+      console.error('Failed to unlink account:', err)
+      return fail(500, { error: 'Failed to unlink account', action: 'unlinkAccount' })
+    }
   }
 }

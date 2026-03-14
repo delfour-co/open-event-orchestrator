@@ -31,3 +31,11 @@ export {
   verifyBackupCode,
   generateDeviceHash
 } from './totp-service'
+
+export {
+  getAvailableProviders,
+  getLinkedAccounts,
+  unlinkAccount,
+  getProviderLabel
+} from './social-auth-service'
+export type { SocialProvider, SocialAuthResult, LinkedAccount } from './social-auth-service'

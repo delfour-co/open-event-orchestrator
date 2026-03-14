@@ -7,7 +7,21 @@ import { processPendingInvitations } from '$lib/server/invitations'
 import { fail, redirect } from '@sveltejs/kit'
 import type { Cookies } from '@sveltejs/kit'
 import type PocketBase from 'pocketbase'
-import type { Actions } from './$types'
+import type { Actions, PageServerLoad } from './$types'
+
+export const load: PageServerLoad = async ({ locals }) => {
+  let socialProviders: string[] = []
+  try {
+    const authMethods = await locals.pb.collection('users').listAuthMethods()
+    socialProviders = (authMethods.oauth2?.providers || [])
+      .filter((p: { name: string }) => p.name === 'google' || p.name === 'github')
+      .map((p: { name: string }) => p.name)
+  } catch {
+    /* ignore */
+  }
+
+  return { socialProviders }
+}
 
 async function check2faAndRedirect(
   pb: PocketBase,
