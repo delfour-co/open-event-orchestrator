@@ -16,6 +16,7 @@ import {
   Mail,
   Palette,
   Plus,
+  RefreshCw,
   Share2,
   Trash2,
   Upload,
@@ -35,6 +36,7 @@ const { data, form }: Props = $props()
 let isSubmitting = $state(false)
 let showDeleteConfirm = $state(false)
 let showAddMember = $state(false)
+let showBulkImport = $state(false)
 
 const generateSlug = (name: string) => {
   return name
@@ -793,13 +795,61 @@ const getRoleBadgeColor = (role: string) => {
           </Card.Title>
           <Card.Description>Manage who has access to this organization</Card.Description>
         </div>
-        <Button size="sm" variant="outline" onclick={() => (showAddMember = !showAddMember)}>
-          <UserPlus class="mr-2 h-4 w-4" />
-          Add Member
-        </Button>
+        <div class="flex gap-2">
+          <Button size="sm" variant="outline" onclick={() => (showAddMember = !showAddMember)}>
+            <UserPlus class="mr-2 h-4 w-4" />
+            Add Member
+          </Button>
+          <Button size="sm" variant="outline" onclick={() => (showBulkImport = !showBulkImport)}>
+            <Upload class="mr-2 h-4 w-4" />
+            Bulk Import
+          </Button>
+        </div>
       </div>
     </Card.Header>
     <Card.Content>
+      {#if showBulkImport}
+        <form
+          method="POST"
+          action="?/bulkInvite"
+          use:enhance={() => {
+            return async ({ update }) => {
+              await update()
+              await invalidateAll()
+              showBulkImport = false
+            }
+          }}
+          class="mb-4 rounded-md border bg-muted/50 p-4"
+        >
+          <div class="space-y-2">
+            <Label for="csv-input">CSV Content (email,role per line)</Label>
+            <Textarea
+              id="csv-input"
+              name="csv"
+              rows={5}
+              placeholder={"john@example.com,organizer\njane@example.com,reviewer"}
+            />
+            <p class="text-xs text-muted-foreground">
+              One entry per line. Roles: admin, organizer, reviewer
+            </p>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <Button type="submit" size="sm">
+              <Upload class="mr-2 h-4 w-4" />
+              Import
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onclick={() => (showBulkImport = false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      {/if}
+
       {#if showAddMember}
         <form
           method="POST"
@@ -945,6 +995,23 @@ const getRoleBadgeColor = (role: string) => {
                   <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
                     pending
                   </span>
+                  <form method="POST" action="?/resendInvitation" use:enhance={() => {
+                    return async ({ update }) => {
+                      await update()
+                      await invalidateAll()
+                    }
+                  }}>
+                    <input type="hidden" name="invitationId" value={invitation.id} />
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8"
+                      title="Resend invitation"
+                    >
+                      <RefreshCw class="h-4 w-4" />
+                    </Button>
+                  </form>
                   <form method="POST" action="?/cancelInvitation" use:enhance={() => {
                     return async ({ update }) => {
                       await update()

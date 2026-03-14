@@ -3203,5 +3203,18 @@
   "admin_event_policies_contact_email": "Contact Email",
   "admin_event_policies_coc_url": "Code of Conduct URL",
   "admin_event_policies_privacy_url": "Privacy Policy URL",
-  "admin_event_localization_timezone": "Timezone"
+  "admin_event_localization_timezone": "Timezone",
+  "invitation_landing_title": "Accept Invitation - Open Event Orchestrator",
+  "invitation_landing_heading": "You've Been Invited",
+  "invitation_landing_description": "You've been invited to join {organization} as {role}.",
+  "invitation_landing_invited_as": "You're invited as",
+  "invitation_landing_at_org": "at {organization}",
+  "invitation_landing_create_account": "Create Account",
+  "invitation_landing_sign_in": "Sign In with Existing Account",
+  "invitation_resend_button": "Resend",
+  "invitation_resend_success": "Invitation resent successfully.",
+  "invitation_bulk_title": "Bulk Import",
+  "invitation_bulk_description": "Import multiple invitations from CSV (email,role per line).",
+  "invitation_bulk_import": "Import",
+  "invitation_bulk_placeholder": "john@example.com,organizer\njane@example.com,reviewer"
 }
