@@ -423,18 +423,12 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                   <p class="text-sm text-muted-foreground">{event.organizationName}</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
-                <a href="/admin/events/{event.slug}/settings">
-                  <Button variant="outline" size="sm">
-                    {m.admin_events_manage_event()}
-                    <ArrowRight class="ml-1 h-4 w-4" />
-                  </Button>
-                </a>
-                <Button variant="ghost" size="sm" onclick={() => (showNewEdition = event.id)}>
-                  <Plus class="mr-1 h-4 w-4" />
-                  {m.admin_events_create_edition()}
+              <a href="/admin/events/{event.slug}/settings">
+                <Button variant="outline" size="sm">
+                  {m.admin_events_manage_event()}
+                  <ArrowRight class="ml-1 h-4 w-4" />
                 </Button>
-              </div>
+              </a>
             </div>
 
             <!-- Editions Grid -->
