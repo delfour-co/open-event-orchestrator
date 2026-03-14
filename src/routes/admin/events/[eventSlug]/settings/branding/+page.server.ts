@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { validateImageFile } from '$lib/server/file-validation'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail } from '@sveltejs/kit'
@@ -32,6 +33,19 @@ export const actions: Actions = {
 
       await locals.pb.collection('events').update(event.id, uploadFormData)
 
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_update',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: event.name as string,
+        details: { field: 'branding', change: 'logo_upload' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true, message: 'Logo uploaded successfully' }
     } catch (e) {
       console.error('Failed to upload logo:', e)
@@ -39,7 +53,7 @@ export const actions: Actions = {
     }
   },
 
-  removeLogo: async ({ locals, params }) => {
+  removeLogo: async ({ request, locals, params }) => {
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
       return fail(403, { error: 'You do not have permission to modify event settings' })
@@ -51,6 +65,19 @@ export const actions: Actions = {
         .getFirstListItem(`slug="${params.eventSlug}"`)
 
       await locals.pb.collection('events').update(event.id, { logo: null })
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_update',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: event.name as string,
+        details: { field: 'branding', change: 'logo_remove' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
 
       return { success: true, message: 'Logo removed successfully' }
     } catch (e) {
@@ -87,6 +114,19 @@ export const actions: Actions = {
 
       await locals.pb.collection('events').update(event.id, uploadFormData)
 
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_update',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: event.name as string,
+        details: { field: 'branding', change: 'banner_upload' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true, message: 'Banner uploaded successfully' }
     } catch (e) {
       console.error('Failed to upload banner:', e)
@@ -94,7 +134,7 @@ export const actions: Actions = {
     }
   },
 
-  removeBanner: async ({ locals, params }) => {
+  removeBanner: async ({ request, locals, params }) => {
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
       return fail(403, { error: 'You do not have permission to modify event settings' })
@@ -106,6 +146,19 @@ export const actions: Actions = {
         .getFirstListItem(`slug="${params.eventSlug}"`)
 
       await locals.pb.collection('events').update(event.id, { banner: null })
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_update',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: event.name as string,
+        details: { field: 'branding', change: 'banner_remove' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
 
       return { success: true, message: 'Banner removed successfully' }
     } catch (e) {
@@ -132,6 +185,19 @@ export const actions: Actions = {
       await locals.pb.collection('events').update(event.id, {
         primaryColor: primaryColor || null,
         secondaryColor: secondaryColor || null
+      })
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_update',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: event.name as string,
+        details: { field: 'branding', change: 'colors' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
       })
 
       return { success: true, message: 'Branding updated successfully' }

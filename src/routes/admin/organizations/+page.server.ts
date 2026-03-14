@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/public'
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { canManageOrganizations } from '$lib/server/permissions'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -66,11 +67,24 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('organizations').create({
+      const created = await locals.pb.collection('organizations').create({
         name,
         slug,
         description
       })
+
+      writeAuditLog(locals.pb, {
+        organizationId: created.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_create',
+        entityType: 'organization',
+        entityId: created.id,
+        entityName: name,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true }
     } catch (e) {
       console.error('Failed to create organization:', e)
@@ -101,6 +115,20 @@ export const actions: Actions = {
         slug,
         description
       })
+
+      writeAuditLog(locals.pb, {
+        organizationId: id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_update',
+        entityType: 'organization',
+        entityId: id,
+        entityName: name,
+        details: { field: 'general' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true }
     } catch (e) {
       console.error('Failed to update organization:', e)
@@ -135,6 +163,18 @@ export const actions: Actions = {
       }
 
       await locals.pb.collection('organizations').delete(id)
+
+      writeAuditLog(locals.pb, {
+        organizationId: id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_delete',
+        entityType: 'organization',
+        entityId: id,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true }
     } catch (e) {
       console.error('Failed to delete organization:', e)

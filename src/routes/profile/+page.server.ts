@@ -3,6 +3,7 @@ import { changePasswordSchema, updateProfileSchema } from '$lib/features/auth/do
 import type { UserSession } from '$lib/features/auth/domain/user-session'
 import { createUserSessionRepository } from '$lib/features/auth/infra'
 import { createTotpRepository } from '$lib/features/auth/infra/totp-repository'
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { validateImageFile } from '$lib/server/file-validation'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -218,6 +219,28 @@ export const actions: Actions = {
         .collection('users')
         .authWithPassword(locals.user.email as string, data.password)
 
+      // Log password change to all user's organizations
+      try {
+        const memberRecords = await locals.pb.collection('organization_members').getFullList({
+          filter: `userId="${locals.user.id}"`
+        })
+        for (const member of memberRecords) {
+          writeAuditLog(locals.pb, {
+            organizationId: member.organizationId as string,
+            userId: locals.user.id,
+            userName: locals.user.name as string,
+            action: 'password_change',
+            entityType: 'user',
+            entityId: locals.user.id,
+            entityName: locals.user.name as string,
+            ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+            userAgent: request.headers.get('user-agent') || ''
+          })
+        }
+      } catch {
+        /* ignore */
+      }
+
       return { success: true, action: 'changePassword' }
     } catch (err) {
       console.error('Password change error:', err)
@@ -395,6 +418,28 @@ export const actions: Actions = {
 
     await totpRepo.enable(totp.id, totp.backupCodes)
 
+    // Log 2FA enable to all user's organizations
+    try {
+      const memberRecords = await locals.pb.collection('organization_members').getFullList({
+        filter: `userId="${locals.user.id}"`
+      })
+      for (const member of memberRecords) {
+        writeAuditLog(locals.pb, {
+          organizationId: member.organizationId as string,
+          userId: locals.user.id,
+          userName: locals.user.name as string,
+          action: '2fa_enable',
+          entityType: 'user',
+          entityId: locals.user.id,
+          entityName: locals.user.name as string,
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+          userAgent: request.headers.get('user-agent') || ''
+        })
+      }
+    } catch {
+      /* ignore */
+    }
+
     return { success: true, action: 'enable2fa' }
   },
 
@@ -421,6 +466,28 @@ export const actions: Actions = {
 
     if (totp) {
       await totpRepo.disable(totp.id)
+    }
+
+    // Log 2FA disable to all user's organizations
+    try {
+      const memberRecords = await locals.pb.collection('organization_members').getFullList({
+        filter: `userId="${locals.user.id}"`
+      })
+      for (const member of memberRecords) {
+        writeAuditLog(locals.pb, {
+          organizationId: member.organizationId as string,
+          userId: locals.user.id,
+          userName: locals.user.name as string,
+          action: '2fa_disable',
+          entityType: 'user',
+          entityId: locals.user.id,
+          entityName: locals.user.name as string,
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+          userAgent: request.headers.get('user-agent') || ''
+        })
+      }
+    } catch {
+      /* ignore */
     }
 
     return { success: true, action: 'disable2fa' }

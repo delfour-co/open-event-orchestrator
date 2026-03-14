@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { validateImageFile } from '$lib/server/file-validation'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail } from '@sveltejs/kit'
@@ -29,6 +30,20 @@ export const actions: Actions = {
       const uploadFormData = new FormData()
       uploadFormData.append('logo', logo)
       await locals.pb.collection('organizations').update(organization.id, uploadFormData)
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_update',
+        entityType: 'organization',
+        entityId: organization.id,
+        entityName: organization.name as string,
+        details: { field: 'branding', change: 'logo_upload' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true, message: 'Logo uploaded successfully' }
     } catch (e) {
       console.error('Failed to upload logo:', e)
@@ -36,7 +51,7 @@ export const actions: Actions = {
     }
   },
 
-  removeLogo: async ({ locals, params }) => {
+  removeLogo: async ({ request, locals, params }) => {
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
       return fail(403, { error: 'You do not have permission to modify organization settings' })
@@ -47,6 +62,20 @@ export const actions: Actions = {
         .collection('organizations')
         .getFirstListItem(`slug="${params.orgSlug}"`)
       await locals.pb.collection('organizations').update(organization.id, { logo: null })
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_update',
+        entityType: 'organization',
+        entityId: organization.id,
+        entityName: organization.name as string,
+        details: { field: 'branding', change: 'logo_remove' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true, message: 'Logo removed successfully' }
     } catch (e) {
       console.error('Failed to remove logo:', e)
@@ -72,6 +101,19 @@ export const actions: Actions = {
       await locals.pb.collection('organizations').update(organization.id, {
         primaryColor: primaryColor || null,
         secondaryColor: secondaryColor || null
+      })
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_update',
+        entityType: 'organization',
+        entityId: organization.id,
+        entityName: organization.name as string,
+        details: { field: 'branding', change: 'colors' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
       })
 
       return { success: true, message: 'Branding updated successfully' }

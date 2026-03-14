@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail } from '@sveltejs/kit'
 import type { Actions } from './$types'
@@ -25,6 +26,19 @@ export const actions: Actions = {
         linkedin: linkedin || null,
         hashtag: hashtag || null,
         timezone: timezone || null
+      })
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_update',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: event.name as string,
+        details: { field: 'social' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
       })
 
       return { success: true, message: 'Social links updated successfully' }

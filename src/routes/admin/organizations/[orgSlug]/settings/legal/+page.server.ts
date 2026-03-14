@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail } from '@sveltejs/kit'
 import type { Actions } from './$types'
@@ -37,6 +38,19 @@ export const actions: Actions = {
         city: city || null,
         postalCode: postalCode || null,
         country: country || null
+      })
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_update',
+        entityType: 'organization',
+        entityId: organization.id,
+        entityName: organization.name as string,
+        details: { field: 'legal' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
       })
 
       return { success: true, message: 'Legal information updated successfully' }

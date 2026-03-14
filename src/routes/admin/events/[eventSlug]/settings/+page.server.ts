@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
@@ -53,6 +54,19 @@ export const actions: Actions = {
         defaultCountry: defaultCountry || null
       })
 
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_update',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: name,
+        details: { field: 'general' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       // If slug changed, redirect to new URL
       if (slug !== params.eventSlug) {
         throw redirect(303, `/admin/events/${slug}/settings`)
@@ -66,7 +80,7 @@ export const actions: Actions = {
     }
   },
 
-  deleteEvent: async ({ locals, params }) => {
+  deleteEvent: async ({ request, locals, params }) => {
     // Check permission
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
@@ -90,6 +104,19 @@ export const actions: Actions = {
       }
 
       await locals.pb.collection('events').delete(event.id)
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_delete',
+        entityType: 'event',
+        entityId: event.id,
+        entityName: event.name as string,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       throw redirect(303, '/admin/events')
     } catch (e) {
       if (isRedirect(e)) throw e // Re-throw redirects

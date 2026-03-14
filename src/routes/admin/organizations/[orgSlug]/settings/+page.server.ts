@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
@@ -52,6 +53,19 @@ export const actions: Actions = {
         vatRate: vatRate !== undefined ? vatRate : null
       })
 
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_update',
+        entityType: 'organization',
+        entityId: organization.id,
+        entityName: name,
+        details: { field: 'general' },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       // If slug changed, redirect to new URL
       if (slug !== params.orgSlug) {
         throw redirect(303, `/admin/organizations/${slug}/settings`)
@@ -65,7 +79,7 @@ export const actions: Actions = {
     }
   },
 
-  deleteOrganization: async ({ locals, params }) => {
+  deleteOrganization: async ({ request, locals, params }) => {
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
       return fail(403, { error: 'You do not have permission to delete organizations' })
@@ -95,6 +109,19 @@ export const actions: Actions = {
       }
 
       await locals.pb.collection('organizations').delete(organization.id)
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'org_delete',
+        entityType: 'organization',
+        entityId: organization.id,
+        entityName: organization.name as string,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       throw redirect(303, '/admin/organizations')
     } catch (e) {
       if (isRedirect(e)) throw e

@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { canManageEvents } from '$lib/server/permissions'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -78,12 +79,25 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('events').create({
+      const created = await locals.pb.collection('events').create({
         organizationId,
         name,
         slug,
         description
       })
+
+      writeAuditLog(locals.pb, {
+        organizationId,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_create',
+        entityType: 'event',
+        entityId: created.id,
+        entityName: name,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true }
     } catch (e) {
       console.error('Failed to create event:', e)
@@ -114,7 +128,7 @@ export const actions: Actions = {
     }
 
     try {
-      await locals.pb.collection('editions').create({
+      const created = await locals.pb.collection('editions').create({
         eventId,
         name,
         slug,
@@ -126,6 +140,22 @@ export const actions: Actions = {
         country: country || undefined,
         status: 'draft'
       })
+
+      // Get the event to find the organizationId
+      const event = await locals.pb.collection('events').getOne(eventId)
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'edition_create',
+        entityType: 'edition',
+        entityId: created.id,
+        entityName: name,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true }
     } catch (e) {
       console.error('Failed to create edition:', e)
@@ -155,8 +185,24 @@ export const actions: Actions = {
       for (const edition of editions) {
         await locals.pb.collection('editions').delete(edition.id)
       }
+      // Get the event before deleting to capture org and name
+      const event = await locals.pb.collection('events').getOne(eventId)
+
       // Then delete the event
       await locals.pb.collection('events').delete(eventId)
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'event_delete',
+        entityType: 'event',
+        entityId: eventId,
+        entityName: event.name as string,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true }
     } catch (e) {
       console.error('Failed to delete event:', e)
@@ -179,7 +225,23 @@ export const actions: Actions = {
     }
 
     try {
+      const edition = await locals.pb.collection('editions').getOne(editionId)
+      const event = await locals.pb.collection('events').getOne(edition.eventId as string)
+
       await locals.pb.collection('editions').delete(editionId)
+
+      writeAuditLog(locals.pb, {
+        organizationId: event.organizationId as string,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'edition_delete',
+        entityType: 'edition',
+        entityId: editionId,
+        entityName: edition.name as string,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true }
     } catch (e) {
       console.error('Failed to delete edition:', e)

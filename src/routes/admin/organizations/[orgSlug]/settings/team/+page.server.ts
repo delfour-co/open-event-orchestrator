@@ -1,3 +1,4 @@
+import { writeAuditLog } from '$lib/server/audit-log-service'
 import { getEventBus } from '$lib/server/event-bus'
 import { sendInvitationEmail } from '$lib/server/invitation-notifications'
 import { canAccessSettings } from '$lib/server/permissions'
@@ -79,6 +80,19 @@ export const actions: Actions = {
           primaryColor: (organization.primaryColor as string) || undefined
         })
 
+        writeAuditLog(locals.pb, {
+          organizationId: organization.id,
+          userId: locals.user?.id,
+          userName: locals.user?.name as string,
+          action: 'invitation_send',
+          entityType: 'invitation',
+          entityId: email,
+          entityName: email,
+          details: { role },
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+          userAgent: request.headers.get('user-agent') || ''
+        })
+
         return { success: true, message: `Invitation sent to ${email}` }
       }
 
@@ -108,6 +122,19 @@ export const actions: Actions = {
         userEmail: email,
         role,
         timestamp: new Date()
+      })
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'member_add',
+        entityType: 'member',
+        entityId: user.id,
+        entityName: user.name,
+        details: { role, email },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
       })
 
       return { success: true, message: `${user.name} added as ${role}` }
@@ -142,7 +169,7 @@ export const actions: Actions = {
     }
   },
 
-  updateMemberRole: async ({ request, locals }) => {
+  updateMemberRole: async ({ request, locals, params }) => {
     // Check permission
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
@@ -162,7 +189,26 @@ export const actions: Actions = {
     }
 
     try {
+      const member = await locals.pb.collection('organization_members').getOne(memberId)
       await locals.pb.collection('organization_members').update(memberId, { role })
+
+      const organization = await locals.pb
+        .collection('organizations')
+        .getFirstListItem(`slug="${params.orgSlug}"`)
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'member_role_change',
+        entityType: 'member',
+        entityId: memberId,
+        entityName: member.userId as string,
+        details: { newRole: role },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true, message: 'Member role updated' }
     } catch (e) {
       console.error('Failed to update member role:', e)
@@ -170,7 +216,7 @@ export const actions: Actions = {
     }
   },
 
-  removeMember: async ({ request, locals }) => {
+  removeMember: async ({ request, locals, params }) => {
     // Check permission
     const userRole = locals.user?.role as string | undefined
     if (!canAccessSettings(userRole)) {
@@ -185,7 +231,25 @@ export const actions: Actions = {
     }
 
     try {
+      const member = await locals.pb.collection('organization_members').getOne(memberId)
       await locals.pb.collection('organization_members').delete(memberId)
+
+      const organization = await locals.pb
+        .collection('organizations')
+        .getFirstListItem(`slug="${params.orgSlug}"`)
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'member_remove',
+        entityType: 'member',
+        entityId: memberId,
+        entityName: member.userId as string,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
+      })
+
       return { success: true, message: 'Member removed' }
     } catch (e) {
       console.error('Failed to remove member:', e)
@@ -240,6 +304,19 @@ export const actions: Actions = {
         acceptUrl,
         logoUrl,
         primaryColor: (organization.primaryColor as string) || undefined
+      })
+
+      writeAuditLog(locals.pb, {
+        organizationId: organization.id,
+        userId: locals.user?.id,
+        userName: locals.user?.name as string,
+        action: 'invitation_send',
+        entityType: 'invitation',
+        entityId: invitationId,
+        entityName: invitation.email as string,
+        details: { resend: true },
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        userAgent: request.headers.get('user-agent') || ''
       })
 
       return { success: true, message: `Invitation resent to ${invitation.email}` }
@@ -330,6 +407,20 @@ export const actions: Actions = {
       let message = `${sentCount} invitation(s) sent`
       if (skipCount > 0) message += `, ${skipCount} skipped (already pending)`
       if (errors.length > 0) message += `, ${errors.length} line(s) had errors`
+
+      if (sentCount > 0) {
+        writeAuditLog(locals.pb, {
+          organizationId: organization.id,
+          userId: locals.user?.id,
+          userName: locals.user?.name as string,
+          action: 'invitation_send',
+          entityType: 'invitation',
+          entityName: 'bulk invite',
+          details: { sentCount, skipCount, errorCount: errors.length },
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+          userAgent: request.headers.get('user-agent') || ''
+        })
+      }
 
       return { success: true, message }
     } catch (e) {
