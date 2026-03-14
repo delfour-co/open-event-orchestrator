@@ -5,6 +5,11 @@ migrate(
     const collection = new Collection()
     collection.name = 'audit_logs'
     collection.type = 'base'
+    collection.listRule = '@request.auth.id != ""'
+    collection.viewRule = '@request.auth.id != ""'
+    collection.createRule = '@request.auth.id != ""'
+    collection.updateRule = ''
+    collection.deleteRule = ''
     collection.fields.addMarshaledJSON(
       JSON.stringify([
         { type: 'text', name: 'organizationId', required: true },

@@ -6,6 +6,11 @@ migrate(
     const totpSecrets = new Collection()
     totpSecrets.name = 'user_totp_secrets'
     totpSecrets.type = 'base'
+    totpSecrets.listRule = 'userId = @request.auth.id'
+    totpSecrets.viewRule = 'userId = @request.auth.id'
+    totpSecrets.createRule = '@request.auth.id != ""'
+    totpSecrets.updateRule = 'userId = @request.auth.id'
+    totpSecrets.deleteRule = 'userId = @request.auth.id'
     totpSecrets.fields.addMarshaledJSON(
       JSON.stringify([
         { type: 'text', name: 'userId', required: true },
@@ -21,6 +26,11 @@ migrate(
     const trustedDevices = new Collection()
     trustedDevices.name = 'trusted_devices'
     trustedDevices.type = 'base'
+    trustedDevices.listRule = 'userId = @request.auth.id'
+    trustedDevices.viewRule = 'userId = @request.auth.id'
+    trustedDevices.createRule = '@request.auth.id != ""'
+    trustedDevices.updateRule = 'userId = @request.auth.id'
+    trustedDevices.deleteRule = 'userId = @request.auth.id'
     trustedDevices.fields.addMarshaledJSON(
       JSON.stringify([
         { type: 'text', name: 'userId', required: true },
