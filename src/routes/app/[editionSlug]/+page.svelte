@@ -2,60 +2,30 @@
 import { browser } from '$app/environment'
 import { goto, invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
-import { Badge } from '$lib/components/ui/badge'
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
-import { Card } from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
-import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { notesService, reminderService } from '$lib/features/app/services'
-import {
-  AddToCalendarMenu,
-  AppFilterPanel,
-  AppSearchDialog,
-  BadgeScannerView,
-  ReminderButton,
-  SessionNoteEditor,
-  SessionShareButton,
-  VenueMap
-} from '$lib/features/app/ui'
+import { AppSearchDialog, BadgeScannerView, VenueMap } from '$lib/features/app/ui'
 import { RatingInput } from '$lib/features/feedback/ui'
 import type { IcalEventInfo, IcalSession } from '$lib/features/planning/domain/ical-export'
 import { scheduleCacheService } from '$lib/features/planning/services/schedule-cache-service'
 import * as m from '$lib/paraglide/messages'
 import { isOnline } from '$lib/stores/connectivity'
-import { isMotionReduced, reducedMotion, toggleReducedMotion } from '$lib/stores/reduced-motion'
-import {
-  AlertCircle,
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  FileDown,
-  Filter,
-  Heart,
-  Loader2,
-  Mail,
-  Map as MapIcon,
-  MapPin,
-  MessageSquare,
-  Moon,
-  QrCode,
-  RefreshCw,
-  ScanLine,
-  Search,
-  Star,
-  StickyNote,
-  Sun,
-  Ticket,
-  Users,
-  Wifi,
-  WifiOff,
-  Zap,
-  ZapOff
-} from 'lucide-svelte'
+import { reducedMotion, toggleReducedMotion } from '$lib/stores/reduced-motion'
+import { AlertCircle, CheckCircle2, Loader2, Star } from 'lucide-svelte'
 import type { PageData } from './$types'
+import {
+  AppBottomNav,
+  AppFavorites,
+  AppFeedback,
+  AppHeader,
+  AppSchedule,
+  AppSpeakers,
+  AppTicket
+} from './components'
 
 interface Props {
   data: PageData
@@ -728,11 +698,11 @@ function formatTime(time: string): string {
 }
 
 function formatDate(date: string): string {
-  return new Intl.DateTimeFormat('en-US', {
+  return sharedFormatDate(date, {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
-  }).format(new Date(date))
+  })
 }
 
 // Get unique dates
@@ -977,7 +947,6 @@ $effect(() => {
 
 function handleToggleReducedMotion(): void {
   toggleReducedMotion()
-  // applyReducedMotion is handled by the layout subscription
 }
 
 // Expanded session state for keyboard accessibility
@@ -1058,813 +1027,136 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 	</a>
 
 	<!-- Header -->
-	<header class="relative border-b bg-card overflow-hidden">
-		{#if effectiveHeaderImageUrl}
-			<div class="absolute inset-0">
-				<img
-					src={effectiveHeaderImageUrl}
-					alt=""
-					aria-hidden="true"
-					class="h-full w-full object-cover opacity-20"
-				/>
-				<div class="absolute inset-0 bg-gradient-to-b from-transparent to-card"></div>
-			</div>
-		{/if}
-		<div class="relative mx-auto max-w-4xl px-4 py-6">
-			<div class="flex items-start justify-between">
-				<div class="flex items-center gap-4">
-					{#if effectiveLogoUrl}
-						<img
-							src={effectiveLogoUrl}
-							alt="{data.appSettings?.title || data.edition.name} logo"
-							class="h-12 w-12 rounded-lg object-contain"
-						/>
-					{/if}
-					<div>
-						<h1 data-testid="edition-name" class="text-2xl font-bold tracking-tight">{data.appSettings?.title || data.edition.name}</h1>
-						{#if data.appSettings?.subtitle}
-							<p class="text-sm text-muted-foreground">{data.appSettings.subtitle}</p>
-						{/if}
-					</div>
-				</div>
-				<div class="flex items-center gap-1">
-					<!-- Search Button -->
-					<Button onclick={() => (showSearchDialog = true)} variant="ghost" size="icon" class="shrink-0" title={m.app_search_button()} data-testid="search-button">
-						<Search class="h-5 w-5" />
-						<span class="sr-only">{m.app_search_button()}</span>
-					</Button>
-					<!-- Export Notes Button -->
-					<Button onclick={exportAllNotes} variant="ghost" size="icon" class="shrink-0" title={m.app_notes_export()} data-testid="export-notes-button">
-						<FileDown class="h-5 w-5" />
-						<span class="sr-only">{m.app_notes_export()}</span>
-					</Button>
-					<!-- Reduced Motion Toggle -->
-					<Button onclick={handleToggleReducedMotion} variant="ghost" size="icon" class="shrink-0" title={m.app_toggle_reduced_motion()}>
-						{#if isMotionReduced(currentReducedMotion)}
-							<ZapOff class="h-5 w-5" />
-						{:else}
-							<Zap class="h-5 w-5" />
-						{/if}
-						<span class="sr-only">{m.app_toggle_reduced_motion()}</span>
-					</Button>
-					<!-- Theme Toggle -->
-					<Button onclick={toggleTheme} variant="ghost" size="icon" class="shrink-0" title={m.app_toggle_theme()}>
-						{#if currentTheme === 'dark'}
-							<Sun class="h-5 w-5" />
-						{:else}
-							<Moon class="h-5 w-5" />
-						{/if}
-						<span class="sr-only">{m.app_toggle_theme()}</span>
-					</Button>
-				</div>
-			</div>
-			<div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-				<div class="flex items-center gap-1.5">
-					<Calendar class="h-4 w-4" />
-					<span>{formatDate(data.edition.startDate)}</span>
-				</div>
-				{#if data.edition.venue}
-					<div class="flex items-center gap-1.5">
-						<MapPin class="h-4 w-4" />
-						<span>{data.edition.venue}</span>
-					</div>
-				{/if}
-			</div>
-			<!-- Sync status -->
-			<div class="mt-3 flex flex-wrap items-center gap-3 text-xs">
-				{#if online}
-					<div class="flex items-center gap-1.5 text-green-600 dark:text-green-400">
-						<Wifi class="h-3.5 w-3.5" />
-						<span>{m.app_online()}</span>
-					</div>
-				{:else}
-					<div class="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
-						<WifiOff class="h-3.5 w-3.5" />
-						<span class="font-medium">{m.app_cached()}</span>
-					</div>
-				{/if}
-				{#if lastSyncTime}
-					<span class="text-muted-foreground">
-						{m.app_last_sync({ time: formatLastSync(lastSyncTime) })}
-					</span>
-				{/if}
-				{#if online}
-					<button
-						type="button"
-						class="flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-50"
-						onclick={syncData}
-						disabled={isSyncing}
-					>
-						<RefreshCw class="h-3 w-3 {isSyncing ? 'animate-spin' : ''}" />
-						<span>{m.app_sync_now()}</span>
-					</button>
-				{/if}
-			</div>
-		</div>
-	</header>
+	<AppHeader
+		editionName={data.edition.name}
+		appTitle={data.appSettings?.title}
+		appSubtitle={data.appSettings?.subtitle}
+		logoUrl={effectiveLogoUrl}
+		headerImageUrl={effectiveHeaderImageUrl}
+		startDate={data.edition.startDate}
+		venue={data.edition.venue}
+		{online}
+		{isSyncing}
+		{lastSyncTime}
+		{currentTheme}
+		{currentReducedMotion}
+		{formatLastSync}
+		onSearch={() => (showSearchDialog = true)}
+		onExportNotes={exportAllNotes}
+		onToggleReducedMotion={handleToggleReducedMotion}
+		onToggleTheme={toggleTheme}
+		onSyncData={syncData}
+		{formatDate}
+	/>
 
-	
+
 	<!-- Main Content -->
 	<main id="main-content" tabindex="-1" class="flex-1 pb-20 outline-none" aria-label={m.app_main_content()}>
 		{#if currentView === 'schedule'}
-			<div class="mx-auto max-w-4xl">
-				<h2 class="sr-only">{m.app_schedule_heading()}</h2>
-				<!-- Day Selector -->
-				{#if uniqueDates().length > 0}
-					<div class="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
-						<div class="flex gap-2 overflow-x-auto px-4 py-3">
-							{#each uniqueDates() as dateStr}
-								<button
-									type="button"
-									data-testid="day-selector-{dateStr}"
-									class="shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors {selectedDay === dateStr ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80'}"
-									onclick={() => (selectedDay = dateStr)}
-								>
-									{formatDate(dateStr)}
-								</button>
-							{/each}
-						</div>
-					</div>
-				{/if}
-
-				<!-- Advanced Filters Button -->
-				<div class="border-b bg-muted/30 px-4 py-2" role="group" aria-label={m.app_filter_sessions()}>
-					<div class="flex items-center gap-2">
-						<Button
-							variant="outline"
-							size="sm"
-							class="h-8 gap-1.5 text-xs"
-							onclick={() => (showFilterPanel = true)}
-							data-testid="open-filters-button"
-						>
-							<Filter class="h-3.5 w-3.5" />
-							{m.app_filter_title()}
-							{#if activeFilterCount > 0}
-								<span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
-									{activeFilterCount}
-								</span>
-							{/if}
-						</Button>
-						{#if activeFilterCount > 0}
-							<Button
-								variant="ghost"
-								size="sm"
-								class="h-8 text-xs text-muted-foreground"
-								onclick={() => applyFilters({ trackIds: new Set(), types: new Set(), roomIds: new Set() })}
-							>
-								{m.app_filter_clear_all()}
-							</Button>
-						{/if}
-						{#if data.rooms.length > 0}
-							<Button
-								variant="outline"
-								size="sm"
-								class="h-8 gap-1.5 text-xs ml-auto"
-								onclick={() => openVenueMap()}
-								data-testid="open-map-button"
-							>
-								<MapIcon class="h-3.5 w-3.5" />
-								{m.app_map_button()}
-							</Button>
-						{/if}
-					</div>
-				</div>
-
-				<!-- Session List -->
-				<div class="space-y-2 p-4" aria-live="polite">
-					{#if sessionsForDay().length === 0}
-						<Card class="p-12 text-center">
-							<Calendar class="mx-auto h-12 w-12 text-muted-foreground" />
-							<h3 class="mt-4 text-lg font-semibold">{m.app_schedule_empty_title()}</h3>
-							<p class="mt-2 text-sm text-muted-foreground">
-								{m.app_schedule_empty_description()}
-							</p>
-						</Card>
-					{:else}
-						{#each sessionsForDay() as { session, slot, room, track, talk }}
-							{@const isExpanded = expandedSessionId === session.id}
-							<Card
-								data-testid="session-card-{session.id}"
-								class="group relative overflow-hidden transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-primary/50 {highlightedSessionId === session.id ? 'ring-2 ring-primary ring-offset-2' : ''}"
-								tabindex={0}
-								role="button"
-								aria-expanded={isExpanded}
-								aria-label="{session.title} — {isExpanded ? m.app_collapse_session() : m.app_expand_session()}"
-								onkeydown={(e: KeyboardEvent) => handleSessionKeydown(e, session.id)}
-								onclick={() => toggleSessionExpanded(session.id)}
-							>
-								<div class="p-4">
-									<!-- Time, Room & Favorite -->
-									<div class="mb-2 flex items-center justify-between">
-										<div class="flex items-center gap-3 text-xs text-muted-foreground">
-											{#if slot}
-												<span class="flex items-center gap-1 font-mono">
-													<Clock class="h-3 w-3" />
-													{formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-												</span>
-											{/if}
-											{#if room}
-												<button
-													type="button"
-													class="flex items-center gap-1 hover:text-primary hover:underline"
-													onclick={(e) => { e.stopPropagation(); openVenueMap(room.id) }}
-													aria-label="{room.name} - {m.app_map_title()}"
-													data-testid="room-link-{room.id}"
-												>
-													<MapPin class="h-3 w-3" />
-													{room.name}
-												</button>
-											{/if}
-										</div>
-										<!-- Stop propagation on interactive children so card click/keydown doesn't fire -->
-										<div class="flex items-center gap-0.5" onclick={(e: MouseEvent) => e.stopPropagation()} onkeydown={(e: KeyboardEvent) => e.stopPropagation()} role="presentation">
-											<AddToCalendarMenu
-												sessions={[toIcalSession(session, slot, room, track, talk)]}
-												eventInfo={calendarEventInfo}
-												mode="single"
-											/>
-											<SessionShareButton
-												sessionTitle={session.title}
-												sessionUrl={browser ? `${window.location.origin}/app/${data.edition.slug}?session=${session.id}` : ''}
-											/>
-											{#if showFavorites}
-												<button
-													type="button"
-													data-testid="favorite-button-{session.id}"
-													class="rounded-full p-1.5 transition-colors hover:bg-muted"
-													onclick={() => toggleFavorite(session.id)}
-													aria-label={favorites.has(session.id) ? m.app_favorite_remove() : m.app_favorite_add()}
-													aria-pressed={favorites.has(session.id)}
-												>
-													<Heart
-														class="h-4 w-4 {favorites.has(session.id) ? 'fill-red-500 text-red-500' : 'text-muted-foreground hover:text-red-500'}"
-														aria-hidden="true"
-													/>
-												</button>
-											{/if}
-											<ReminderButton
-												sessionId={session.id}
-												sessionTitle={session.title}
-												roomName={room?.name ?? ''}
-												startTime={buildSessionStartTime(slot)}
-												editionSlug={data.edition.slug}
-												onReminderChange={() => syncRemindersToServiceWorker()}
-											/>
-											<button
-												type="button"
-												data-testid="note-button-{session.id}"
-												class="rounded-full p-1.5 transition-colors hover:bg-muted"
-												onclick={() => toggleNoteEditor(session.id)}
-												aria-label={m.app_notes_indicator()}
-												aria-pressed={expandedNoteSessionId === session.id}
-											>
-												<StickyNote
-													class="h-4 w-4 {sessionHasNote(session.id) ? 'fill-amber-200 text-amber-600 dark:fill-amber-800 dark:text-amber-400' : 'text-muted-foreground hover:text-amber-500'}"
-													aria-hidden="true"
-												/>
-											</button>
-										</div>
-									</div>
-
-									<!-- Title & Type -->
-									<div class="flex items-start justify-between gap-2">
-										<div class="flex-1 space-y-1">
-											<h3 class="font-semibold leading-snug">{session.title}</h3>
-											{#if talk?.speakers && talk.speakers.length > 0}
-												<p class="text-sm text-muted-foreground">
-													{formatSpeakers(talk.speakers)}
-												</p>
-											{/if}
-										</div>
-										<Badge variant="outline" class="shrink-0 {getTypeColor(session.type)}">
-											{session.type}
-										</Badge>
-									</div>
-
-									<!-- Track & Feedback Row -->
-									<div class="mt-3 flex items-center justify-between gap-2">
-										{#if track}
-											<div class="flex items-center gap-1.5 text-xs">
-												<span
-													class="h-2 w-2 rounded-full"
-													style="background-color: {track.color}"
-												></span>
-												<span class="text-muted-foreground">{track.name}</span>
-											</div>
-										{:else}
-											<div></div>
-										{/if}
-										<!-- Stop propagation on feedback button -->
-										<div onclick={(e: MouseEvent) => e.stopPropagation()} onkeydown={(e: KeyboardEvent) => e.stopPropagation()} role="presentation">
-											{#if showSessionFeedback}
-												<Button
-													variant="outline"
-													size="sm"
-													class="h-7 text-xs"
-													onclick={() => openSessionRatingDialog(session.id, session.title)}
-												>
-													{#if userFeedback.has(session.id)}
-														{m.app_feedback_modify()}
-													{:else}
-														{m.app_feedback_give()}
-													{/if}
-												</Button>
-											{/if}
-										</div>
-									</div>
-
-													{#if expandedNoteSessionId === session.id}
-														<SessionNoteEditor
-															sessionId={session.id}
-															sessionTitle={session.title}
-															onSaved={handleNoteSaved}
-														/>
-													{/if}
-								</div>
-							</Card>
-						{/each}
-					{/if}
-				</div>
-			</div>
+			<AppSchedule
+				uniqueDates={uniqueDates()}
+				{selectedDay}
+				sessionsForDay={sessionsForDay()}
+				{favorites}
+				{showFavorites}
+				{showSessionFeedback}
+				{showFilterPanel}
+				{activeFilterCount}
+				tracks={data.tracks}
+				rooms={data.rooms}
+				sessionTypes={availableSessionTypes()}
+				{selectedTrackIds}
+				{selectedTypes}
+				{selectedRoomIds}
+				{expandedSessionId}
+				{highlightedSessionId}
+				{expandedNoteSessionId}
+				{userFeedback}
+				{calendarEventInfo}
+				editionSlug={data.edition.slug}
+				{formatDate}
+				{formatTime}
+				{getTypeColor}
+				{formatSpeakers}
+				{toIcalSession}
+				{buildSessionStartTime}
+				{sessionHasNote}
+				onSelectDay={(day) => (selectedDay = day)}
+				onToggleFavorite={toggleFavorite}
+				onToggleSessionExpanded={toggleSessionExpanded}
+				onHandleSessionKeydown={handleSessionKeydown}
+				onOpenVenueMap={openVenueMap}
+				onOpenFilterPanel={() => (showFilterPanel = true)}
+				onCloseFilterPanel={() => (showFilterPanel = false)}
+				onApplyFilters={applyFilters}
+				onOpenSessionRating={openSessionRatingDialog}
+				onToggleNoteEditor={toggleNoteEditor}
+				onNoteSaved={handleNoteSaved}
+				onSyncReminders={syncRemindersToServiceWorker}
+			/>
 		{:else if currentView === 'speakers'}
-			<div class="mx-auto max-w-4xl p-4">
-				<h2 class="sr-only">{m.app_speakers_heading()}</h2>
-				{#if uniqueSpeakers().length === 0}
-					<Card class="p-12 text-center">
-						<Users class="mx-auto h-12 w-12 text-muted-foreground" />
-						<h3 class="mt-4 text-lg font-semibold">{m.app_speakers_empty_title()}</h3>
-						<p class="mt-2 text-sm text-muted-foreground">
-							{m.app_speakers_empty_description()}
-						</p>
-					</Card>
-				{:else}
-					<div class="grid gap-4 sm:grid-cols-2">
-						{#each uniqueSpeakers() as speaker}
-							<Card class="p-4">
-								<div class="flex gap-3">
-									{#if speaker.photoUrl}
-										<img
-											src={speaker.photoUrl}
-											alt="{speaker.firstName} {speaker.lastName}"
-											class="h-14 w-14 shrink-0 rounded-full object-cover"
-										/>
-									{:else}
-										<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted">
-											<Users class="h-7 w-7 text-muted-foreground" />
-										</div>
-									{/if}
-									<div class="flex-1 min-w-0">
-										<h3 class="font-semibold">{speaker.firstName} {speaker.lastName}</h3>
-										{#if speaker.company}
-											<p class="text-sm text-muted-foreground">{speaker.company}</p>
-										{/if}
-									</div>
-								</div>
-								{#if speaker.talks.length > 0}
-									<div class="mt-3 space-y-2 border-t pt-3">
-										{#each speaker.talks as talk}
-											<div class="rounded-md bg-muted/50 p-2">
-												<p class="text-sm font-medium leading-snug">{talk.title}</p>
-												{#if talk.startTime || talk.roomName}
-													<div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-														{#if talk.date && talk.startTime}
-															<span class="flex items-center gap-1">
-																<Clock class="h-3 w-3" />
-																{formatDate(talk.date)} · {formatTime(talk.startTime)}{#if talk.endTime}-{formatTime(talk.endTime)}{/if}
-															</span>
-														{/if}
-														{#if talk.roomName}
-															<span class="flex items-center gap-1">
-																<MapPin class="h-3 w-3" />
-																{talk.roomName}
-															</span>
-														{/if}
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{/if}
-							</Card>
-						{/each}
-					</div>
-				{/if}
-			</div>
+			<AppSpeakers
+				speakers={uniqueSpeakers()}
+				{formatDate}
+				{formatTime}
+			/>
 		{:else if currentView === 'favorites'}
-			<div class="mx-auto max-w-4xl p-4">
-				<h2 class="sr-only">{m.app_favorites_heading()}</h2>
-				{#if favoriteSessions().length === 0}
-					<Card class="p-12 text-center">
-						<Heart class="mx-auto h-12 w-12 text-muted-foreground" />
-						<h3 class="mt-4 text-lg font-semibold">{m.app_favorites_empty_title()}</h3>
-						<p class="mt-2 text-sm text-muted-foreground">
-							{m.app_favorites_empty_description()}
-						</p>
-					</Card>
-				{:else}
-					<div class="mb-4 flex justify-end">
-						<AddToCalendarMenu
-							sessions={favoriteSessions().map(({ session, slot, room, track, talk }) => toIcalSession(session, slot, room, track, talk))}
-							eventInfo={calendarEventInfo}
-							mode="bulk"
-						/>
-					</div>
-					{@const sessionsByDate = favoriteSessions().reduce<
-						Record<string, ReturnType<typeof favoriteSessions>>
-					>((acc, item) => {
-						if (!item.slot) return acc
-						const date = item.slot.date.split('T')[0]
-						if (!acc[date]) acc[date] = []
-						acc[date].push(item)
-						return acc
-					}, {})}
-
-					<div class="space-y-6">
-						{#each Object.entries(sessionsByDate).sort(([a], [b]) => a.localeCompare(b)) as [date, sessions]}
-							<div>
-								<h2 class="mb-3 text-sm font-semibold text-muted-foreground">
-									{formatDate(date)}
-								</h2>
-								<div class="space-y-2">
-									{#each sessions as { session, slot, room, track, talk }}
-										<Card class="p-4">
-											<!-- Time, Room & Favorite -->
-											<div class="mb-2 flex items-center justify-between">
-												<div class="flex items-center gap-3 text-xs text-muted-foreground">
-													{#if slot}
-														<span class="flex items-center gap-1 font-mono">
-															<Clock class="h-3 w-3" />
-															{formatTime(slot.startTime)}
-														</span>
-													{/if}
-													{#if room}
-														<span class="flex items-center gap-1">
-															<MapPin class="h-3 w-3" />
-															{room.name}
-														</span>
-													{/if}
-												</div>
-												<div class="flex items-center gap-0.5">
-													<AddToCalendarMenu
-														sessions={[toIcalSession(session, slot, room, track, talk)]}
-														eventInfo={calendarEventInfo}
-														mode="single"
-													/>
-													<SessionShareButton
-														sessionTitle={session.title}
-														sessionUrl={browser ? `${window.location.origin}/app/${data.edition.slug}?session=${session.id}` : ''}
-													/>
-													<button
-														type="button"
-														class="rounded-full p-1.5 transition-colors hover:bg-muted"
-														onclick={() => toggleFavorite(session.id)}
-														aria-label={m.app_favorite_remove_agenda()}
-													>
-														<Heart class="h-4 w-4 fill-red-500 text-red-500" aria-hidden="true" />
-													</button>
-													<ReminderButton
-														sessionId={session.id}
-														sessionTitle={session.title}
-														roomName={room?.name ?? ''}
-														startTime={buildSessionStartTime(slot)}
-														editionSlug={data.edition.slug}
-														onReminderChange={() => syncRemindersToServiceWorker()}
-													/>
-												</div>
-											</div>
-											<!-- Title & Type -->
-											<div class="flex items-start justify-between gap-2">
-												<h3 class="font-semibold">{session.title}</h3>
-												<Badge variant="outline" class="shrink-0 {getTypeColor(session.type)}">
-													{session.type}
-												</Badge>
-											</div>
-											{#if talk?.speakers && talk.speakers.length > 0}
-												<p class="mt-1 text-sm text-muted-foreground">
-													{formatSpeakers(talk.speakers)}
-												</p>
-											{/if}
-											{#if showSessionFeedback}
-												<div class="mt-3 flex justify-end">
-													<Button
-														variant="outline"
-														size="sm"
-														class="h-7 text-xs"
-														onclick={() => openSessionRatingDialog(session.id, session.title)}
-													>
-														{#if userFeedback.has(session.id)}
-															{m.app_feedback_modify()}
-														{:else}
-															{m.app_feedback_give()}
-														{/if}
-													</Button>
-												</div>
-											{/if}
-										</Card>
-									{/each}
-								</div>
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</div>
+			<AppFavorites
+				favoriteSessions={favoriteSessions()}
+				{userFeedback}
+				{showSessionFeedback}
+				{calendarEventInfo}
+				editionSlug={data.edition.slug}
+				{formatDate}
+				{formatTime}
+				{getTypeColor}
+				{formatSpeakers}
+				{toIcalSession}
+				{buildSessionStartTime}
+				onToggleFavorite={toggleFavorite}
+				onOpenSessionRating={openSessionRatingDialog}
+				onSyncReminders={syncRemindersToServiceWorker}
+			/>
 		{:else if currentView === 'feedback'}
-			<div class="mx-auto max-w-2xl p-4">
-				<h2 class="sr-only">{m.app_feedback_heading()}</h2>
-				{#if showEventFeedback}
-					<div class="space-y-4">
-						<button
-							type="button"
-							class="w-full text-left"
-							onclick={() => openEventFeedbackDialog('general')}
-						>
-							<Card class="p-6 transition-colors hover:bg-muted/50">
-								<div class="flex items-start gap-3">
-									<MessageSquare class="mt-0.5 h-5 w-5 text-primary" />
-									<div class="flex-1">
-										<h3 class="font-semibold">{m.app_feedback_general()}</h3>
-										<p class="mt-1 text-sm text-muted-foreground">
-											{m.app_feedback_general_description()}
-										</p>
-									</div>
-									<ChevronRight class="h-5 w-5 text-muted-foreground" />
-								</div>
-							</Card>
-						</button>
-
-						<button
-							type="button"
-							class="w-full text-left"
-							onclick={() => openEventFeedbackDialog('problem')}
-						>
-							<Card class="p-6 transition-colors hover:bg-muted/50">
-								<div class="flex items-start gap-3">
-									<AlertCircle class="mt-0.5 h-5 w-5 text-orange-600" />
-									<div class="flex-1">
-										<h3 class="font-semibold">{m.app_feedback_problem()}</h3>
-										<p class="mt-1 text-sm text-muted-foreground">
-											{m.app_feedback_problem_description()}
-										</p>
-									</div>
-									<ChevronRight class="h-5 w-5 text-muted-foreground" />
-								</div>
-							</Card>
-						</button>
-					</div>
-
-					{#if data.feedbackSettings?.feedbackIntroText}
-						<p class="mt-6 text-center text-sm text-muted-foreground">
-							{data.feedbackSettings.feedbackIntroText}
-						</p>
-					{/if}
-				{:else if showSessionFeedback}
-					<div class="text-center py-8">
-						<MessageSquare class="mx-auto h-12 w-12 text-muted-foreground/50" />
-						<h3 class="mt-4 text-lg font-medium">{m.app_feedback_session_title()}</h3>
-						<p class="mt-2 text-sm text-muted-foreground">
-							{m.app_feedback_session_description()}
-						</p>
-					</div>
-				{:else}
-					<div class="text-center py-8">
-						<MessageSquare class="mx-auto h-12 w-12 text-muted-foreground/50" />
-						<h3 class="mt-4 text-lg font-medium">{m.app_feedback_unavailable_title()}</h3>
-						<p class="mt-2 text-sm text-muted-foreground">
-							{m.app_feedback_unavailable_description()}
-						</p>
-					</div>
-				{/if}
-			</div>
+			<AppFeedback
+				{showEventFeedback}
+				{showSessionFeedback}
+				feedbackIntroText={data.feedbackSettings?.feedbackIntroText}
+				onOpenEventFeedback={openEventFeedbackDialog}
+			/>
 		{:else if currentView === 'ticket'}
-			<div class="mx-auto max-w-2xl p-4" aria-live="polite">
-				<h2 class="sr-only">{m.app_ticket_heading()}</h2>
-				{#if !ticketLookupDone}
-					<!-- Ticket Lookup Form -->
-					<Card class="p-6">
-						<div class="space-y-4">
-							<div class="flex items-center gap-3">
-								<Ticket class="h-6 w-6 text-primary" />
-								<div>
-									<h3 class="font-semibold">{m.app_ticket_find_title()}</h3>
-									<p class="text-sm text-muted-foreground">
-										{m.app_ticket_find_description()}
-									</p>
-								</div>
-							</div>
-
-							<div class="space-y-2">
-								<Label for="ticket-email">{m.app_ticket_email_label()}</Label>
-								<div class="flex gap-2">
-									<Input
-										id="ticket-email"
-										type="email"
-										placeholder={m.app_ticket_email_placeholder()}
-										bind:value={ticketEmail}
-										class="flex-1"
-										onkeydown={(e) => e.key === 'Enter' && lookupTickets()}
-									/>
-									<Button onclick={lookupTickets} disabled={isLoadingTickets || !ticketEmail.trim()} aria-label={m.app_ticket_lookup_button()}>
-										{#if isLoadingTickets}
-											<Loader2 class="h-4 w-4 animate-spin" aria-hidden="true" />
-										{:else}
-											<Mail class="h-4 w-4" aria-hidden="true" />
-										{/if}
-									</Button>
-								</div>
-							</div>
-
-							{#if ticketError}
-								<div class="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive" role="alert">
-									<AlertCircle class="mr-2 inline h-4 w-4" />
-									{ticketError}
-								</div>
-							{/if}
-						</div>
-					</Card>
-				{:else if ticketResults.length === 0}
-					<!-- No Tickets Found -->
-					<Card class="p-12 text-center">
-						<Ticket class="mx-auto h-12 w-12 text-muted-foreground" />
-						<h3 class="mt-4 text-lg font-semibold">{m.app_ticket_not_found_title()}</h3>
-						<p class="mt-2 text-sm text-muted-foreground">
-							{m.app_ticket_not_found_description({ email: ticketEmail })}
-						</p>
-						<Button class="mt-4" variant="outline" onclick={resetTicketLookup}>
-							{m.app_ticket_try_another()}
-						</Button>
-					</Card>
-				{:else}
-					<!-- Ticket Results -->
-					<div class="space-y-4">
-						<div class="flex items-center justify-between">
-							<p class="text-sm text-muted-foreground">
-								{ticketResults.length === 1
-									? m.app_ticket_found_one({ email: ticketEmail })
-									: m.app_ticket_found_many({ count: ticketResults.length, email: ticketEmail })}
-							</p>
-							<Button variant="ghost" size="sm" onclick={resetTicketLookup}>
-								{m.app_ticket_change_email()}
-							</Button>
-						</div>
-
-						{#each ticketResults as ticket}
-							<Card class="overflow-hidden">
-								<div class="bg-primary p-4 text-primary-foreground">
-									<div class="flex items-center justify-between">
-										<div>
-											<p class="text-xs opacity-80">{m.app_ticket_number({ number: ticket.ticketNumber })}</p>
-											<p class="text-lg font-bold">
-												{ticket.attendeeFirstName} {ticket.attendeeLastName}
-											</p>
-										</div>
-										<div class="rounded-full bg-white/20 px-3 py-1 text-xs font-medium">
-											{ticket.status === 'valid' ? m.app_ticket_status_valid() : ticket.status === 'used' ? m.app_ticket_status_checked_in() : ticket.status}
-										</div>
-									</div>
-								</div>
-
-								<div class="p-4 space-y-4">
-									{#if ticket.ticketType}
-										<div>
-											<p class="text-sm font-medium">{ticket.ticketType.name}</p>
-											{#if ticket.ticketType.description}
-												<p class="text-xs text-muted-foreground">{ticket.ticketType.description}</p>
-											{/if}
-										</div>
-									{/if}
-
-									<div class="grid grid-cols-2 gap-4 text-sm">
-										<div>
-											<p class="text-muted-foreground">{m.app_ticket_event()}</p>
-											<p class="font-medium">{data.edition.name}</p>
-										</div>
-										<div>
-											<p class="text-muted-foreground">{m.app_ticket_date()}</p>
-											<p class="font-medium">{formatDate(data.edition.startDate)}</p>
-										</div>
-										{#if data.edition.venue}
-											<div class="col-span-2">
-												<p class="text-muted-foreground">{m.app_ticket_venue()}</p>
-												<p class="font-medium">{data.edition.venue}</p>
-											</div>
-										{/if}
-									</div>
-
-									{#if ticket.qrCode && ticket.status === 'valid'}
-										<div class="flex flex-col items-center border-t pt-4">
-											<QrCode class="h-6 w-6 text-muted-foreground mb-2" />
-											<p class="text-xs text-muted-foreground mb-2">{m.app_ticket_qr_tap_enlarge()}</p>
-											<button
-												type="button"
-												class="bg-white p-4 rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
-												onclick={() => expandedQrCode = { qrCode: ticket.qrCode!, ticketNumber: ticket.ticketNumber }}
-												aria-label={m.app_qr_code_enlarge({ number: ticket.ticketNumber })}
-											>
-												<img
-													src={ticket.qrCode}
-													alt={m.app_qr_code_alt()}
-													class="h-48 w-48"
-												/>
-											</button>
-											<p class="mt-2 font-mono text-xs text-muted-foreground">{ticket.ticketNumber}</p>
-										</div>
-									{/if}
-
-									{#if ticket.checkedInAt}
-										<div class="rounded-md bg-green-50 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
-											<CheckCircle2 class="mr-2 inline h-4 w-4" />
-											{m.app_ticket_checked_in_on({ date: new Date(ticket.checkedInAt).toLocaleString() })}
-										</div>
-									{/if}
-								</div>
-							</Card>
-						{/each}
-					</div>
-				{/if}
-			</div>
+			<AppTicket
+				{ticketEmail}
+				{ticketResults}
+				{isLoadingTickets}
+				{ticketError}
+				{ticketLookupDone}
+				{expandedQrCode}
+				editionName={data.edition.name}
+				startDate={data.edition.startDate}
+				venue={data.edition.venue}
+				{formatDate}
+				onLookupTickets={lookupTickets}
+				onResetTicketLookup={resetTicketLookup}
+				onExpandQrCode={(qr) => expandedQrCode = qr}
+				onEmailChange={(email) => ticketEmail = email}
+			/>
 		{:else if currentView === 'networking'}
 			<BadgeScannerView editionSlug={data.edition.slug} />
 		{/if}
 	</main>
 
 	<!-- Bottom Navigation -->
-	<nav class="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur safe-area-bottom" aria-label={m.app_nav_label()}>
-		<div class="mx-auto flex max-w-4xl">
-			<button
-				type="button"
-				data-testid="schedule-tab"
-				class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'schedule' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
-				onclick={() => switchView('schedule')}
-				aria-current={currentView === 'schedule' ? 'page' : undefined}
-			>
-				<Calendar class="h-5 w-5" aria-hidden="true" />
-				<span>{m.app_nav_schedule()}</span>
-			</button>
-			{#if showFavorites}
-				<button
-					type="button"
-					data-testid="favorites-tab"
-					class="relative flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'favorites' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
-					onclick={() => switchView('favorites')}
-					aria-current={currentView === 'favorites' ? 'page' : undefined}
-				>
-					<Heart class="h-5 w-5" aria-hidden="true" />
-					<span>{m.app_nav_favorites()}</span>
-					{#if favorites.size > 0}
-						<span class="absolute right-1/4 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground" aria-hidden="true">{favorites.size}</span>
-					{/if}
-				</button>
-			{/if}
-			{#if showSpeakers}
-				<button
-					type="button"
-					data-testid="speakers-tab"
-					class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'speakers' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
-					onclick={() => switchView('speakers')}
-					aria-current={currentView === 'speakers' ? 'page' : undefined}
-				>
-					<Users class="h-5 w-5" aria-hidden="true" />
-					<span>{m.app_nav_speakers()}</span>
-				</button>
-			{/if}
-			{#if showTickets}
-				<button
-					type="button"
-					data-testid="tickets-tab"
-					class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'ticket' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
-					onclick={() => switchView('ticket')}
-					aria-current={currentView === 'ticket' ? 'page' : undefined}
-				>
-					<Ticket class="h-5 w-5" aria-hidden="true" />
-					<span>{m.app_nav_my_ticket()}</span>
-				</button>
-			{/if}
-			{#if showNetworking}
-				<button
-					type="button"
-					data-testid="networking-tab"
-					class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'networking' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
-					onclick={() => switchView('networking')}
-					aria-current={currentView === 'networking' ? 'page' : undefined}
-				>
-					<ScanLine class="h-5 w-5" aria-hidden="true" />
-					<span>{m.app_nav_networking()}</span>
-				</button>
-			{/if}
-			{#if showFeedback}
-				<button
-					type="button"
-					data-testid="feedback-tab"
-					class="flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors {currentView === 'feedback' ? 'text-primary border-t-2 border-primary' : 'text-muted-foreground hover:text-foreground'}"
-					onclick={() => switchView('feedback')}
-					aria-current={currentView === 'feedback' ? 'page' : undefined}
-				>
-					<MessageSquare class="h-5 w-5" aria-hidden="true" />
-					<span>{m.app_nav_feedback()}</span>
-				</button>
-			{/if}
-		</div>
-	</nav>
+	<AppBottomNav
+		{currentView}
+		{showSpeakers}
+		{showFavorites}
+		{showTickets}
+		{showNetworking}
+		{showFeedback}
+		favoritesCount={favorites.size}
+		onSwitchView={switchView}
+	/>
 </div>
 
 <!-- Session Rating Dialog -->
@@ -2021,19 +1313,6 @@ function handleSearchSelectSpeaker(_speakerId: string): void {
 		{/if}
 	</Dialog.Content>
 {/if}
-
-<!-- Advanced Filter Panel -->
-<AppFilterPanel
-  open={showFilterPanel}
-  tracks={data.tracks}
-  rooms={data.rooms}
-  sessionTypes={availableSessionTypes()}
-  {selectedTrackIds}
-  {selectedTypes}
-  {selectedRoomIds}
-  onApply={applyFilters}
-  onClose={() => (showFilterPanel = false)}
-/>
 
 <!-- Fullscreen QR Code Overlay -->
 {#if expandedQrCode}

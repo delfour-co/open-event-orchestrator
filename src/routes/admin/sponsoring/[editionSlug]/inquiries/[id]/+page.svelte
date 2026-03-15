@@ -1,6 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
@@ -36,16 +36,15 @@ const { data, form }: Props = $props()
 
 let isSubmitting = $state<Record<string, boolean>>({})
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+const formatDate = (date: Date) =>
+  sharedFormatDate(date, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  }).format(date)
-}
+  })
 
 const formatShortDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {

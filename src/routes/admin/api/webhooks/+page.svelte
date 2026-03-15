@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { formatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
@@ -18,14 +19,6 @@ const { data, form }: Props = $props()
 
 let confirmingDelete = $state<string | null>(null)
 let isSubmitting = $state(false)
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
 
 const getScopeBadge = (webhook: (typeof data.webhooks)[0]) => {
   if (webhook.edition) return m.api_webhooks_scope_edition({ name: webhook.edition.name })

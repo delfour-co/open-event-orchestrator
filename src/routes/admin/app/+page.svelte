@@ -1,5 +1,5 @@
 <script lang="ts">
-import { StatusBadge } from '$lib/components/shared'
+import { StatusBadge, formatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as m from '$lib/paraglide/messages'
@@ -21,14 +21,6 @@ const filteredEditions = $derived(
 
 // Count archived editions
 const archivedCount = $derived(data.editions.filter((e) => e.status === 'archived').length)
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
 </script>
 
 <svelte:head>

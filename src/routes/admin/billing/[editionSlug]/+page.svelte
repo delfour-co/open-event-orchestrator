@@ -1,6 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
@@ -59,14 +59,6 @@ const formatPrice = (priceInCents: number, currency: string) => {
     style: 'currency',
     currency
   }).format(amount)
-}
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
 }
 
 const formatDateInput = (date: Date | undefined) => {

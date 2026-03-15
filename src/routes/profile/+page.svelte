@@ -1,7 +1,12 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { page } from '$app/stores'
-import { Alert, ImageCropUpload, PasswordStrengthIndicator } from '$lib/components/shared'
+import {
+  Alert,
+  ImageCropUpload,
+  PasswordStrengthIndicator,
+  formatDate as sharedFormatDate
+} from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -12,7 +17,6 @@ import {
   getSessionLocation
 } from '$lib/features/auth/domain/user-session'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import {
   ArrowLeft,
   Bell,
@@ -74,15 +78,7 @@ $effect(() => {
 })
 
 // Format creation date based on current language
-const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr)
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return date.toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
+const formatDate = (dateStr: string): string => sharedFormatDate(dateStr, { month: 'long' })
 
 // Get initials for avatar fallback
 const getInitials = (name: string): string => {

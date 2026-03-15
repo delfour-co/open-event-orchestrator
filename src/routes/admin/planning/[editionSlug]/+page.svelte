@@ -1,12 +1,12 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import { Clock, DoorOpen, GripVertical, Layers, Loader2, Plus, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -52,14 +52,12 @@ const availableTalks = $derived(() => {
   return data.acceptedTalks.filter((t) => !scheduledTalkIds.has(t.id))
 })
 
-const formatDate = (date: Date) => {
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return new Intl.DateTimeFormat(locale, {
+const formatDate = (date: Date) =>
+  sharedFormatDate(date, {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
-  }).format(date)
-}
+  })
 
 // Get unique dates from slots
 const uniqueDates = $derived(() => {

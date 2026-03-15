@@ -1,6 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
@@ -69,11 +69,7 @@ const formatAmount = (amount: number, currency: string): string => {
 
 const formatDate = (dateStr: string): string => {
   if (!dateStr) return '-'
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(new Date(dateStr))
+  return sharedFormatDate(dateStr)
 }
 
 const currency = $derived(data.budget.currency)

@@ -1,11 +1,11 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import { Clock, DoorOpen, Loader2, Pencil, Plus, Trash2, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -21,14 +21,12 @@ let isSubmitting = $state(false)
 let editingSlot = $state<(typeof data.slots)[0] | null>(null)
 let selectedRoomId = $state('')
 
-const formatDate = (date: Date) => {
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return new Intl.DateTimeFormat(locale, {
+const formatDate = (date: Date) =>
+  sharedFormatDate(date, {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
-  }).format(date)
-}
+  })
 
 const formatDateInput = (date: Date) => {
   return date.toISOString().split('T')[0]

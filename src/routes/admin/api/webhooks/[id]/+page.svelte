@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import {
@@ -30,16 +31,15 @@ const { data, form }: Props = $props()
 let isRetrying = $state<string | null>(null)
 let expandedDelivery = $state<string | null>(null)
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+const formatDate = (date: Date) =>
+  sharedFormatDate(date, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
-  }).format(date)
-}
+  })
 
 const formatRelativeTime = (date: Date) => {
   const now = new Date()

@@ -1,6 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDate } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
@@ -40,14 +40,6 @@ let showGenerateAll = $state(false)
 let showCreateDeliverable = $state(false)
 let selectedSponsorId = $state<string | null>(null)
 let selectedDeliverable = $state<(typeof data.deliverables)[0] | null>(null)
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
 
 function cancelGenerateAll() {
   showGenerateAll = false

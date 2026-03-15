@@ -2,7 +2,7 @@
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
 import { page } from '$app/stores'
-import { StatusBadge } from '$lib/components/shared'
+import { StatusBadge, formatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -38,14 +38,6 @@ let showNewEdition = $state<string | null>(null)
 let selectedOrgId = $state<string>($page.url.searchParams.get('org') || '')
 let showArchived = $state(false)
 let hideEmptyEvents = $state(false)
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
 
 // Filter events by selected organization
 const filteredEvents = $derived(

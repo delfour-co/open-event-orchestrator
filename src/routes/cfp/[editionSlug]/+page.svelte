@@ -1,4 +1,5 @@
 <script lang="ts">
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card'
 import { AlertCircle, Calendar, CalendarClock, Clock, MapPin } from 'lucide-svelte'
@@ -10,14 +11,13 @@ interface Props {
 
 let { data }: Props = $props()
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
+const formatDate = (date: Date) =>
+  sharedFormatDate(date, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
-  }).format(date)
-}
+  })
 
 const formatShortDate = (date: Date | null) => {
   if (!date) return null

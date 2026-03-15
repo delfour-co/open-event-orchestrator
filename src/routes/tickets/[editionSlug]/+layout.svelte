@@ -1,4 +1,5 @@
 <script lang="ts">
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import * as m from '$lib/paraglide/messages'
 import type { Snippet } from 'svelte'
 import type { LayoutData } from './$types'
@@ -10,13 +11,7 @@ interface Props {
 
 let { data, children }: Props = $props()
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
+const formatDate = (date: Date) => sharedFormatDate(date, { month: 'long' })
 
 const branding = data.eventBranding
 const primaryColor = branding?.primaryColor

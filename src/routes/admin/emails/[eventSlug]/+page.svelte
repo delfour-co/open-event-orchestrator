@@ -1,13 +1,12 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav, StatusBadge } from '$lib/components/shared'
+import { AdminSubNav, StatusBadge, formatDateTime } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { getEmailsNavItems } from '$lib/config'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import { ArrowLeft, Ban, Calendar, Edit, Mail, MailCheck, Plus, Send, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -32,16 +31,7 @@ function cancelForm() {
   editingCampaign = null
 }
 
-const formatDate = (date: Date) => {
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-}
+const formatDate = formatDateTime
 
 // Close form on success
 $effect(() => {

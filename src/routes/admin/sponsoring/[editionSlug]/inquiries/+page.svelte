@@ -1,7 +1,7 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { goto } from '$app/navigation'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDateTime } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
@@ -24,15 +24,7 @@ const { data, form }: Props = $props()
 
 let isSubmitting = $state<Record<string, boolean>>({})
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-}
+const formatDate = formatDateTime
 
 const formatShortDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {

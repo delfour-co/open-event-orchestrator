@@ -1,12 +1,12 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import { DoorOpen, Loader2, Pencil, Plus, Trash2, Users, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -27,14 +27,12 @@ let assignmentStartTime = $state<string>('')
 let assignmentEndTime = $state<string>('')
 let assignmentNotes = $state<string>('')
 
-const formatDate = (date: Date) => {
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return new Intl.DateTimeFormat(locale, {
+const formatDate = (date: Date) =>
+  sharedFormatDate(date, {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
-  }).format(date)
-}
+  })
 
 // Close forms on successful submission
 $effect(() => {

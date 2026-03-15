@@ -1,9 +1,9 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
+import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import { Calendar, Check, Mic, Pencil, Trash2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -32,14 +32,12 @@ const availableTalks = $derived(() => {
   return data.acceptedTalks.filter((t) => !scheduledTalkIds.has(t.id))
 })
 
-const formatDate = (date: Date) => {
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return new Intl.DateTimeFormat(locale, {
+const formatDate = (date: Date) =>
+  sharedFormatDate(date, {
     weekday: 'short',
     month: 'short',
     day: 'numeric'
-  }).format(date)
-}
+  })
 
 function getSessionTypeLabel(type: string): string {
   return getSessionTypeOptions().find((o) => o.value === type)?.label || type

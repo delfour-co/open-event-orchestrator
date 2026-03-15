@@ -1,6 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDate } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
@@ -65,14 +65,6 @@ function copyPackagesUrl() {
   setTimeout(() => {
     copiedPackages = false
   }, 2000)
-}
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
 }
 
 const currency = $derived(data.packages[0]?.currency || 'EUR')

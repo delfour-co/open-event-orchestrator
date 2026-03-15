@@ -1,6 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav, StatusBadge } from '$lib/components/shared'
+import { AdminSubNav, StatusBadge, formatDateTime } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -39,15 +39,7 @@ const formatPrice = (priceInCents: number, currency: string) => {
   }).format(amount)
 }
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-}
+const formatDate = formatDateTime
 
 const filteredOrders = $derived(() => {
   if (!searchQuery) return data.orders

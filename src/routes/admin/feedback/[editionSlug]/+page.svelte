@@ -1,11 +1,10 @@
 <script lang="ts">
 import { page } from '$app/stores'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDateTime } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { getFeedbackNavItems } from '$lib/config'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -41,16 +40,7 @@ async function copySpeakerUrl(): Promise<void> {
   }, 2000)
 }
 
-const formatDate = (dateStr: string) => {
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(dateStr))
-}
+const formatDate = (dateStr: string) => formatDateTime(dateStr)
 
 const sessionsWithFeedback = $derived(data.sessionSummaries.filter((s) => s.totalFeedback > 0))
 

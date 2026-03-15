@@ -1,7 +1,7 @@
 <script lang="ts">
 import { goto } from '$app/navigation'
 import { page } from '$app/stores'
-import { AdminSubNav } from '$lib/components/shared'
+import { AdminSubNav, formatDateTime } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
@@ -71,15 +71,7 @@ let filterStartDate = $state(data.filters.startDate)
 let filterEndDate = $state(data.filters.endDate)
 let filterSearch = $state(data.filters.search)
 
-const formatDate = (dateStr: string): string => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(dateStr))
-}
+const formatDate = (dateStr: string): string => formatDateTime(dateStr)
 
 const formatAmount = (amount: number | null): string => {
   if (amount === null) return '-'

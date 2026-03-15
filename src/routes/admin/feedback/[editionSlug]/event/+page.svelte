@@ -1,11 +1,10 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav, StatusBadge } from '$lib/components/shared'
+import { AdminSubNav, StatusBadge, formatDateTime } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { getFeedbackNavItems } from '$lib/config'
 import * as m from '$lib/paraglide/messages'
-import { getLocale } from '$lib/paraglide/runtime'
 import { AlertCircle, AlertTriangle, ArrowLeft, MessageSquare, Star, ThumbsUp } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -15,16 +14,7 @@ interface Props {
 
 const { data }: Props = $props()
 
-const formatDate = (dateStr: string) => {
-  const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
-  return new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(dateStr))
-}
+const formatDate = (dateStr: string) => formatDateTime(dateStr)
 
 function renderStars(rating: number | null, max = 5): string {
   if (rating === null) return '-'

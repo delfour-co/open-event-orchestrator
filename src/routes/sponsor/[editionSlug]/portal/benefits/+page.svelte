@@ -1,4 +1,5 @@
 <script lang="ts">
+import { formatDate } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import * as Card from '$lib/components/ui/card'
 import {
@@ -13,14 +14,6 @@ interface Props {
 }
 
 const { data }: Props = $props()
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
 </script>
 
 <svelte:head>
