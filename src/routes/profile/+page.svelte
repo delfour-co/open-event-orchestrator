@@ -62,6 +62,16 @@ let newPassword = $state('')
 let isRevokingSession = $state<string | null>(null)
 let isRevokingAll = $state(false)
 let isDeletingAccount = $state(false)
+let qrCanvas: HTMLCanvasElement
+
+// Generate QR code client-side when TOTP URI is available
+$effect(() => {
+  if (form?.totpUri && qrCanvas) {
+    import('qrcode').then((QRCode) => {
+      QRCode.toCanvas(qrCanvas, form.totpUri, { width: 192, margin: 2 })
+    })
+  }
+})
 
 // Format creation date based on current language
 const formatDate = (dateStr: string): string => {
@@ -453,8 +463,8 @@ const otherSessions = $derived(data.sessions.filter((s) => s.id !== data.current
               {#if form?.action === 'setup2fa' && form?.totpUri}
                 <div class="space-y-4">
                   <p class="text-sm">{m.profile_2fa_setup_description()}</p>
-                  <div class="flex justify-center rounded-lg border bg-white p-4">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(form.totpUri)}`} alt="QR Code" class="h-48 w-48" />
+                  <div class="flex justify-center rounded-lg border bg-background p-4">
+                    <canvas bind:this={qrCanvas} class="h-48 w-48"></canvas>
                   </div>
                   <div class="space-y-2">
                     <Label>{m.profile_2fa_manual_entry()}</Label>

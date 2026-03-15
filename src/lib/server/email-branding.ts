@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public'
 import type PocketBase from 'pocketbase'
 
 export interface EmailBranding {
@@ -23,7 +24,7 @@ export async function getOrgBranding(
 ): Promise<EmailBranding> {
   try {
     const org = await pb.collection('organizations').getOne(organizationId)
-    const pbUrl = 'http://localhost:8090' // Will be resolved by email client
+    const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090' // Will be resolved by email client
     let logoUrl: string | undefined
     if (org.logo) {
       logoUrl = `${pbUrl}/api/files/organizations/${org.id}/${org.logo}`
@@ -60,7 +61,7 @@ export async function getEventBranding(pb: PocketBase, editionId: string): Promi
     // Get event record for branding overrides
     const eventRecord = await pb.collection('events').getOne(eventId)
 
-    const pbUrl = 'http://localhost:8090'
+    const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
     let logoUrl = orgBranding.logoUrl
     if (eventRecord.logo) {
       logoUrl = `${pbUrl}/api/files/events/${eventId}/${eventRecord.logo}`
