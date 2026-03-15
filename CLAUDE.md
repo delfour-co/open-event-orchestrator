@@ -16,6 +16,7 @@ Open Event Orchestrator is an all-in-one open-source platform for event manageme
 - **Payments**: Stripe + HelloAsso (via provider abstraction layer — see `docs/payments.md`)
 - **Email**: Nodemailer (SMTP) + Mailpit (local dev)
 - **QR Codes**: qrcode (generation) + html5-qrcode (scanning)
+- **2FA**: otpauth (TOTP generation/verification)
 
 ## Architecture
 
@@ -58,7 +59,7 @@ src/
 │   ├── admin/              # Admin pages (billing, planning, cfp, budget, organizations)
 │   ├── tickets/            # Public ticket purchase pages
 │   ├── api/                # API routes (payment webhooks, etc.)
-│   └── auth/               # Authentication (login, register)
+│   └── auth/               # Authentication (login, register, 2FA, OAuth, password reset, invitations)
 └── tests/
     └── e2e/                # Playwright E2E tests
 ```
@@ -196,6 +197,14 @@ pnpm format
 | Mailpit SMTP | 1025 | SMTP server for local email capture |
 | Stripe CLI | - | Webhook forwarding from Stripe test mode (profile: `stripe`) |
 
+### PocketBase Superuser
+
+Required for OAuth2 provider configuration. Create via:
+```bash
+docker exec oeo-pocketbase /usr/local/bin/pocketbase superuser create EMAIL PASSWORD
+```
+Or use the install link from `docker logs oeo-pocketbase`.
+
 ### Payment Testing
 
 The app supports two payment providers: **Stripe** and **HelloAsso** (configured via Admin UI).
@@ -286,6 +295,85 @@ The reporting module provides comprehensive dashboards and analytics for event e
 - Threshold evaluation service
 - Report scheduler service
 - Report generator service
+
+## Authentication & Security
+
+### Password Reset
+- Users request reset via `/auth/forgot-password`
+- PocketBase sends reset email via its configured SMTP (migration 0028)
+- Reset link points to `/auth/reset-password/{TOKEN}`
+- Uses PB's built-in `confirmPasswordReset()`
+
+### Two-Factor Authentication (2FA)
+- TOTP-based via `otpauth` package
+- Setup: QR code + manual key + 10 backup codes (hashed with SHA-256)
+- Login flow: password -> 2FA check -> `oeo_2fa_required` cookie -> `/auth/verify-2fa`
+- Trusted devices: 30-day cookie based on user-agent + IP hash
+- Collections: `user_totp_secrets`, `trusted_devices`
+
+### Social Login (OAuth2)
+- Google and GitHub providers
+- Configured via `/admin/settings/oauth` (stored in `app_settings` + synced to PB `users` collection)
+- PB superuser credentials required for sync (entered per-request, not stored)
+- Client-side `authWithOAuth2()` + cookie export for server session sync
+
+### Invitation Flow
+- Token-based invitations with branded landing page (`/auth/invite/{token}`)
+- Smart form: detects if email exists -> login form or register form
+- Bulk CSV import (email,role per line)
+- Resend functionality
+- `processPendingInvitations()` auto-accepts on login/register
+
+## Roles (Unified)
+
+User roles (`users.role`) and organization member roles (`organization_members.role`) use the same values:
+
+| Role | App Access | Org Access |
+|------|-----------|------------|
+| `super_admin` | Full access | N/A (global) |
+| `admin` | Full access | Owner-level in org |
+| `organizer` | Admin area | Can manage events, editions, settings |
+| `reviewer` | Admin area (limited) | Can review submissions only |
+| `speaker` | Speaker portal | N/A |
+| `attendee` | Attendee app | N/A |
+
+## Email System
+
+### Architecture
+- **App emails** (invitations, notifications, campaigns): nodemailer via `getEmailService(pb)` reading from `app_settings`
+- **Auth emails** (password reset, verification): PocketBase internal SMTP (configured via migration 0028)
+- **Branding**: Shared helper `src/lib/server/email-branding.ts` with `wrapEmail()`, `emailHeader()`, `emailFooter()`
+- **Event branding**: `getEventBranding(pb, editionId)` with fallback chain: event -> org -> default
+
+### Configuration
+- SMTP settings in `/admin/settings` (Email SMTP tab)
+- PB SMTP configured via migration 0028 to use Mailpit in dev
+
+### Audit Log
+
+Organization-scoped activity log with 90-day retention.
+
+**Actions logged**: org CRUD, member add/remove/role change, event/edition CRUD, settings changes, invitation send, password change, 2FA enable/disable
+
+**Files**:
+- Domain: `src/lib/features/core/domain/audit-log.ts`
+- Repository: `src/lib/features/core/infra/audit-log-repository.ts`
+- Service: `src/lib/server/audit-log-service.ts` (fire-and-forget `writeAuditLog()`)
+- UI: `/admin/organizations/[orgSlug]/audit-log/`
+- CSV export: `/admin/organizations/[orgSlug]/audit-log/export/`
+
+## Admin Settings
+
+Settings pages use `AdminSubNav` for tab navigation.
+
+### Organization Settings (`/admin/organizations/[orgSlug]/settings/`)
+Tabs: General, Branding, Social & Localization, Legal & Billing, Team, Audit Log
+
+### Event Settings (`/admin/events/[eventSlug]/settings/`)
+Tabs: General, Branding, Social & Localization, Policies
+
+### App Settings (`/admin/settings/`)
+Tabs: Email (SMTP), OAuth2, Stripe, HelloAsso, Slack, Discord
 
 ## Milestones & Issues Standard
 
