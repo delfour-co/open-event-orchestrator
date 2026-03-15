@@ -3352,5 +3352,15 @@
   "admin_settings_log_retention_api": "Rétention des logs de requêtes API (jours)",
   "admin_settings_log_retention_api_hint": "Nombre de jours de conservation des entrées du journal de requêtes API avant suppression automatique.",
   "admin_settings_log_retention_save": "Enregistrer les paramètres de rétention",
-  "admin_settings_log_retention_saved": "Paramètres de rétention des logs enregistrés avec succès."
+  "admin_settings_log_retention_saved": "Paramètres de rétention des logs enregistrés avec succès.",
+  "admin_settings_payments_title": "Paiements",
+  "admin_settings_payments_description": "Configurez les fournisseurs de paiement pour la vente de billets.",
+  "admin_settings_notifications_title": "Notifications",
+  "admin_settings_notifications_description": "Configurez les canaux de notification.",
+  "image_crop_title": "Recadrer l'image",
+  "image_crop_apply": "Appliquer et envoyer",
+  "image_crop_cancel": "Annuler",
+  "image_crop_zoom": "Zoom",
+  "image_crop_uploading": "Envoi en cours...",
+  "image_crop_too_large": "Fichier trop volumineux. Taille maximale : {max} Mo."
 }

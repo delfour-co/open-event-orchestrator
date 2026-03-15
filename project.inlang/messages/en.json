@@ -3352,5 +3352,15 @@
   "admin_settings_log_retention_api": "API Request Log Retention (days)",
   "admin_settings_log_retention_api_hint": "Number of days to keep API request log entries before automatic deletion.",
   "admin_settings_log_retention_save": "Save Log Retention Settings",
-  "admin_settings_log_retention_saved": "Log retention settings saved successfully."
+  "admin_settings_log_retention_saved": "Log retention settings saved successfully.",
+  "admin_settings_payments_title": "Payments",
+  "admin_settings_payments_description": "Configure payment providers for ticket sales.",
+  "admin_settings_notifications_title": "Notifications",
+  "admin_settings_notifications_description": "Configure notification channels.",
+  "image_crop_title": "Crop Image",
+  "image_crop_apply": "Apply & Upload",
+  "image_crop_cancel": "Cancel",
+  "image_crop_zoom": "Zoom",
+  "image_crop_uploading": "Uploading...",
+  "image_crop_too_large": "File too large. Maximum size: {max}MB."
 }
