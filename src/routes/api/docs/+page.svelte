@@ -2,6 +2,7 @@
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import {
   Check,
   ChevronDown,
@@ -62,26 +63,26 @@ const getStatusColor = (status: string) => {
 </script>
 
 <svelte:head>
-  <title>API Documentation - Open Event Orchestrator</title>
+  <title>{m.api_docs_title()}</title>
 </svelte:head>
 
 <div class="container mx-auto max-w-5xl py-8 px-4">
   <!-- Header -->
   <div class="mb-8">
     <h1 class="text-4xl font-bold mb-2">{data.info.title}</h1>
-    <p class="text-muted-foreground text-lg mb-4">Public REST API for Open Event Orchestrator</p>
+    <p class="text-muted-foreground text-lg mb-4">{m.api_docs_subtitle()}</p>
     <div class="flex items-center gap-4 flex-wrap">
       <Badge variant="secondary">Version {data.info.version}</Badge>
       <a href="/api/v1/openapi.json" target="_blank" rel="noopener noreferrer">
         <Button variant="outline" size="sm">
           <ExternalLink class="mr-2 h-4 w-4" />
-          OpenAPI Spec
+          {m.api_docs_openapi_spec()}
         </Button>
       </a>
       <a href="/api/v1/postman.json" download="oeo-api-collection.json">
         <Button variant="outline" size="sm">
           <Download class="mr-2 h-4 w-4" />
-          Postman Collection
+          {m.api_docs_postman_collection()}
         </Button>
       </a>
     </div>
@@ -94,18 +95,18 @@ const getStatusColor = (status: string) => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Key class="h-5 w-5" />
-          Authentication
+          {m.api_docs_authentication()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
         <p class="text-muted-foreground mb-4">
-          Include your API key in the Authorization header:
+          {m.api_docs_auth_description()}
         </p>
         <div class="bg-muted rounded-lg p-4 font-mono text-sm">
           <span class="text-muted-foreground">Authorization:</span> Bearer <span class="text-primary">oeo_live_xxx</span>
         </div>
         <p class="text-sm text-muted-foreground mt-4">
-          <a href="/admin/api/keys" class="text-primary hover:underline">Create API keys →</a>
+          <a href="/admin/api/keys" class="text-primary hover:underline">{m.api_docs_create_keys()} →</a>
         </p>
       </Card.Content>
     </Card.Root>
@@ -115,7 +116,7 @@ const getStatusColor = (status: string) => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Server class="h-5 w-5" />
-          Base URL
+          {m.api_docs_base_url()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
@@ -139,25 +140,25 @@ const getStatusColor = (status: string) => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Gauge class="h-5 w-5" />
-          Rate Limiting
+          {m.api_docs_rate_limiting()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
         <p class="text-muted-foreground mb-3">
-          Default: <span class="font-semibold">60 requests/minute</span> per API key.
+          {m.api_docs_rate_default({ limit: "60" })}
         </p>
         <div class="space-y-1 text-sm">
           <div class="flex justify-between">
             <code class="text-muted-foreground">X-RateLimit-Limit</code>
-            <span>Max requests</span>
+            <span>{m.api_docs_rate_max()}</span>
           </div>
           <div class="flex justify-between">
             <code class="text-muted-foreground">X-RateLimit-Remaining</code>
-            <span>Remaining</span>
+            <span>{m.api_docs_rate_remaining()}</span>
           </div>
           <div class="flex justify-between">
             <code class="text-muted-foreground">X-RateLimit-Reset</code>
-            <span>Reset time</span>
+            <span>{m.api_docs_rate_reset()}</span>
           </div>
         </div>
       </Card.Content>
@@ -168,25 +169,25 @@ const getStatusColor = (status: string) => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <List class="h-5 w-5" />
-          Pagination
+          {m.api_docs_pagination()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
         <p class="text-muted-foreground mb-3">
-          List endpoints support pagination:
+          {m.api_docs_pagination_description()}
         </p>
         <div class="space-y-1 text-sm">
           <div class="flex justify-between">
             <code class="text-muted-foreground">?page=1</code>
-            <span>Page number</span>
+            <span>{m.api_docs_page_number()}</span>
           </div>
           <div class="flex justify-between">
             <code class="text-muted-foreground">?per_page=20</code>
-            <span>Items per page (max 100)</span>
+            <span>{m.api_docs_items_per_page()}</span>
           </div>
         </div>
         <p class="text-sm text-muted-foreground mt-3">
-          Response includes <code class="bg-muted px-1 rounded">meta</code> object with total count.
+          {m.api_docs_pagination_meta({ meta: "meta" })}
         </p>
       </Card.Content>
     </Card.Root>
@@ -199,12 +200,12 @@ const getStatusColor = (status: string) => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Shield class="h-5 w-5" />
-          Permissions
+          {m.api_docs_permissions()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
         <p class="text-muted-foreground mb-3">
-          API keys have specific permissions:
+          {m.api_docs_permissions_description()}
         </p>
         <div class="flex flex-wrap gap-2">
           <Badge variant="outline">read:organizations</Badge>
@@ -225,12 +226,12 @@ const getStatusColor = (status: string) => {
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Webhook class="h-5 w-5" />
-          Webhooks
+          {m.api_docs_webhooks()}
         </Card.Title>
       </Card.Header>
       <Card.Content>
         <p class="text-muted-foreground mb-3">
-          Subscribe to event notifications:
+          {m.api_docs_webhooks_description()}
         </p>
         <div class="flex flex-wrap gap-2">
           <Badge variant="outline">talk.submitted</Badge>
@@ -243,7 +244,7 @@ const getStatusColor = (status: string) => {
           <Badge variant="outline">sponsor.confirmed</Badge>
         </div>
         <p class="text-sm text-muted-foreground mt-3">
-          <a href="/admin/api/webhooks" class="text-primary hover:underline">Configure webhooks →</a>
+          <a href="/admin/api/webhooks" class="text-primary hover:underline">{m.api_docs_configure_webhooks()} →</a>
         </p>
       </Card.Content>
     </Card.Root>
@@ -251,8 +252,8 @@ const getStatusColor = (status: string) => {
 
   <!-- Endpoints Section Header -->
   <div class="mb-6">
-    <h2 class="text-3xl font-bold mb-2">Endpoints</h2>
-    <p class="text-muted-foreground">Available API endpoints grouped by resource.</p>
+    <h2 class="text-3xl font-bold mb-2">{m.api_docs_endpoints_title()}</h2>
+    <p class="text-muted-foreground">{m.api_docs_endpoints_description()}</p>
   </div>
 
   <!-- Endpoints by Tag -->
@@ -297,16 +298,16 @@ const getStatusColor = (status: string) => {
                   <!-- Parameters -->
                   {#if endpoint.parameters && endpoint.parameters.length > 0}
                     <div>
-                      <h4 class="font-medium mb-2">Parameters</h4>
+                      <h4 class="font-medium mb-2">{m.api_docs_parameters()}</h4>
                       <div class="bg-muted rounded-lg overflow-hidden">
                         <table class="w-full text-sm">
                           <thead class="bg-muted-foreground/10">
                             <tr>
-                              <th class="text-left p-2 font-medium">Name</th>
-                              <th class="text-left p-2 font-medium">In</th>
-                              <th class="text-left p-2 font-medium">Type</th>
-                              <th class="text-left p-2 font-medium">Required</th>
-                              <th class="text-left p-2 font-medium">Description</th>
+                              <th class="text-left p-2 font-medium">{m.api_docs_col_name()}</th>
+                              <th class="text-left p-2 font-medium">{m.api_docs_col_in()}</th>
+                              <th class="text-left p-2 font-medium">{m.api_docs_col_type()}</th>
+                              <th class="text-left p-2 font-medium">{m.api_docs_col_required()}</th>
+                              <th class="text-left p-2 font-medium">{m.api_docs_col_description()}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -316,7 +317,7 @@ const getStatusColor = (status: string) => {
                                 <td class="p-2 font-mono text-primary">{p.name}</td>
                                 <td class="p-2">{p.in}</td>
                                 <td class="p-2 font-mono">{p.schema?.type || 'string'}</td>
-                                <td class="p-2">{p.required ? 'Yes' : 'No'}</td>
+                                <td class="p-2">{p.required ? m.api_docs_yes() : m.api_docs_no()}</td>
                                 <td class="p-2 text-muted-foreground">{p.description || '-'}</td>
                               </tr>
                             {/each}
@@ -329,7 +330,7 @@ const getStatusColor = (status: string) => {
                   <!-- Responses -->
                   {#if endpoint.responses}
                     <div>
-                      <h4 class="font-medium mb-2">Responses</h4>
+                      <h4 class="font-medium mb-2">{m.api_docs_responses()}</h4>
                       <div class="space-y-2">
                         {#each Object.entries(endpoint.responses) as [status, response]}
                           {@const res = response as { description?: string }}
@@ -347,7 +348,7 @@ const getStatusColor = (status: string) => {
                   <!-- Try it -->
                   <div class="pt-2">
                     <div class="bg-muted rounded-lg p-3">
-                      <p class="text-xs text-muted-foreground mb-2">Example request:</p>
+                      <p class="text-xs text-muted-foreground mb-2">{m.api_docs_example_request()}</p>
                       <code class="text-sm font-mono">
                         curl -H "Authorization: Bearer $API_KEY" {data.servers?.[0]?.url || ''}{endpoint.path}
                       </code>

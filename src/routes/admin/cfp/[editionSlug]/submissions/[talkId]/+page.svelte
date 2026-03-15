@@ -6,6 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Textarea } from '$lib/components/ui/textarea'
 import { talkStatusSchema } from '$lib/features/cfp/domain'
 import { RatingDisplay, RatingInput } from '$lib/features/cfp/ui'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
@@ -64,20 +65,20 @@ function formatShortDate(date: Date): string {
 
 function getLevelLabel(level: string | undefined): string {
   if (!level) return '-'
-  const labels: Record<string, string> = {
-    beginner: 'Beginner',
-    intermediate: 'Intermediate',
-    advanced: 'Advanced'
+  const labels: Record<string, () => string> = {
+    beginner: m.cfp_level_beginner,
+    intermediate: m.cfp_level_intermediate,
+    advanced: m.cfp_level_advanced
   }
-  return labels[level] || level
+  return labels[level]?.() || level
 }
 
 function getLanguageLabel(lang: string): string {
-  const labels: Record<string, string> = {
-    fr: 'French',
-    en: 'English'
+  const labels: Record<string, () => string> = {
+    fr: m.cfp_language_french,
+    en: m.cfp_language_english
   }
-  return labels[lang] || lang
+  return labels[lang]?.() || lang
 }
 
 $effect(() => {
@@ -115,7 +116,7 @@ $effect(() => {
     {#if data.permissions.canDelete}
       <Button variant="destructive" size="sm" onclick={() => (showDeleteConfirm = true)}>
         <Trash2 class="mr-2 h-4 w-4" />
-        Delete
+        {m.action_delete()}
       </Button>
     {/if}
   </div>
@@ -137,13 +138,13 @@ $effect(() => {
     <Card.Root class="border-destructive">
       <Card.Content class="flex items-center justify-between py-4">
         <div>
-          <p class="font-medium">Are you sure you want to delete this talk?</p>
-          <p class="text-sm text-muted-foreground">This action cannot be undone.</p>
+          <p class="font-medium">{m.cfp_detail_delete_confirm()}</p>
+          <p class="text-sm text-muted-foreground">{m.cfp_detail_cannot_undo()}</p>
         </div>
         <div class="flex gap-2">
-          <Button variant="outline" onclick={() => (showDeleteConfirm = false)}>Cancel</Button>
+          <Button variant="outline" onclick={() => (showDeleteConfirm = false)}>{m.action_cancel()}</Button>
           <form method="POST" action="?/delete" use:enhance>
-            <Button type="submit" variant="destructive">Delete</Button>
+            <Button type="submit" variant="destructive">{m.action_delete()}</Button>
           </form>
         </div>
       </Card.Content>
@@ -156,24 +157,24 @@ $effect(() => {
       <!-- Talk Details -->
       <Card.Root>
         <Card.Header>
-          <Card.Title>Talk Details</Card.Title>
+          <Card.Title>{m.cfp_detail_talk_details()}</Card.Title>
         </Card.Header>
         <Card.Content class="space-y-6">
           <div>
-            <h4 class="mb-2 text-sm font-medium text-muted-foreground">Abstract</h4>
+            <h4 class="mb-2 text-sm font-medium text-muted-foreground">{m.cfp_detail_abstract()}</h4>
             <p class="whitespace-pre-wrap">{data.talk.abstract}</p>
           </div>
 
           {#if data.talk.description}
             <div>
-              <h4 class="mb-2 text-sm font-medium text-muted-foreground">Description</h4>
+              <h4 class="mb-2 text-sm font-medium text-muted-foreground">{m.cfp_detail_description()}</h4>
               <p class="whitespace-pre-wrap">{data.talk.description}</p>
             </div>
           {/if}
 
           {#if data.talk.notes}
             <div>
-              <h4 class="mb-2 text-sm font-medium text-muted-foreground">Notes for Organizers</h4>
+              <h4 class="mb-2 text-sm font-medium text-muted-foreground">{m.cfp_detail_notes_for_organizers()}</h4>
               <p class="whitespace-pre-wrap rounded-lg bg-muted p-4 text-sm">
                 {data.talk.notes}
               </p>
@@ -186,12 +187,12 @@ $effect(() => {
       <Card.Root>
         <Card.Header>
           <div class="flex items-center justify-between">
-            <Card.Title>Speaker{data.speakers.length > 1 ? 's' : ''}</Card.Title>
+            <Card.Title>{data.speakers.length > 1 ? m.cfp_detail_speakers() : m.cfp_detail_speaker()}</Card.Title>
             {#if data.cfpSettings?.anonymousReview && !data.canSeeSpeakerInfo}
               <span
                 class="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
               >
-                Anonymous Review Mode
+                {m.cfp_detail_anonymous_review_mode()}
               </span>
             {/if}
           </div>
@@ -200,13 +201,13 @@ $effect(() => {
           {#if data.cfpSettings?.anonymousReview && !data.canSeeSpeakerInfo}
             <div class="rounded-lg bg-muted p-6 text-center">
               <p class="text-sm text-muted-foreground">
-                Speaker information is hidden during anonymous review.
+                {m.cfp_detail_speaker_hidden()}
               </p>
               <p class="mt-1 text-xs text-muted-foreground">
                 {#if data.cfpSettings.revealSpeakersAfterDecision}
-                  Speaker details will be revealed after a decision is made on this talk.
+                  {m.cfp_detail_speaker_reveal_after_decision()}
                 {:else}
-                  Only admins and owners can see speaker details.
+                  {m.cfp_detail_only_admins_see()}
                 {/if}
               </p>
             </div>
@@ -225,7 +226,7 @@ $effect(() => {
                       {#if speaker.jobTitle || speaker.company}
                         <p class="text-sm text-muted-foreground">
                           {#if speaker.jobTitle}{speaker.jobTitle}{/if}
-                          {#if speaker.jobTitle && speaker.company} at {/if}
+                          {#if speaker.jobTitle && speaker.company} {m.cfp_detail_at()} {/if}
                           {#if speaker.company}{speaker.company}{/if}
                         </p>
                       {/if}
@@ -268,7 +269,7 @@ $effect(() => {
                             class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                           >
                             <ExternalLink class="h-3 w-3" />
-                            GitHub
+                            {m.cfp_detail_github()}
                           </a>
                         {/if}
                         {#if speaker.linkedin}
@@ -279,7 +280,7 @@ $effect(() => {
                             class="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                           >
                             <ExternalLink class="h-3 w-3" />
-                            LinkedIn
+                            {m.cfp_detail_linkedin()}
                           </a>
                         {/if}
                       </div>
@@ -301,10 +302,10 @@ $effect(() => {
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <MessageSquare class="h-5 w-5" />
-            Internal Comments ({data.comments.length})
+            {m.cfp_comments_title()} ({data.comments.length})
           </Card.Title>
           <Card.Description>
-            Comments are only visible to organizers and reviewers
+            {m.cfp_comments_description()}
           </Card.Description>
         </Card.Header>
         <Card.Content class="space-y-4">
@@ -324,7 +325,7 @@ $effect(() => {
             >
               <Textarea
                 name="content"
-                placeholder="Add a comment..."
+                placeholder={m.cfp_comments_add_placeholder()}
                 bind:value={newComment}
                 rows={3}
               />
@@ -338,7 +339,7 @@ $effect(() => {
                   disabled={isSubmittingComment || !newComment.trim()}
                 >
                   <Send class="mr-2 h-4 w-4" />
-                  Post Comment
+                  {m.cfp_comments_post()}
                 </Button>
               </div>
             </form>
@@ -347,7 +348,7 @@ $effect(() => {
           <!-- Comments List -->
           {#if data.comments.length === 0}
             <p class="py-8 text-center text-sm text-muted-foreground">
-              No comments yet. Be the first to comment!
+              {m.cfp_comments_no_comments()}
             </p>
           {:else}
             <div class="space-y-4 pt-4">
@@ -399,7 +400,7 @@ $effect(() => {
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <Star class="h-5 w-5" />
-            Reviews
+            {m.cfp_reviews_title()}
           </Card.Title>
         </Card.Header>
         <Card.Content class="space-y-4">
@@ -412,7 +413,7 @@ $effect(() => {
           <!-- Your Review -->
           {#if data.currentUserId}
             <div class="border-t pt-4">
-              <h4 class="mb-3 text-sm font-medium">Your Review</h4>
+              <h4 class="mb-3 text-sm font-medium">{m.cfp_reviews_your_review()}</h4>
               <form
                 method="POST"
                 action="?/submitReview"
@@ -431,7 +432,7 @@ $effect(() => {
                 </div>
                 <Textarea
                   name="comment"
-                  placeholder="Add a note about your rating (optional)..."
+                  placeholder={m.cfp_reviews_note_placeholder()}
                   bind:value={reviewComment}
                   rows={2}
                 />
@@ -439,7 +440,7 @@ $effect(() => {
                   <p class="text-sm text-destructive">{form.reviewError}</p>
                 {/if}
                 {#if form?.reviewSuccess}
-                  <p class="text-sm text-green-600">Review submitted!</p>
+                  <p class="text-sm text-green-600">{m.cfp_reviews_submitted()}</p>
                 {/if}
                 <Button
                   type="submit"
@@ -447,7 +448,7 @@ $effect(() => {
                   class="w-full"
                   disabled={isSubmittingReview || reviewRating === 0}
                 >
-                  {data.userReview ? 'Update Review' : 'Submit Review'}
+                  {data.userReview ? m.cfp_reviews_update() : m.cfp_reviews_submit()}
                 </Button>
               </form>
             </div>
@@ -456,7 +457,7 @@ $effect(() => {
           <!-- Other Reviews -->
           {#if data.reviews.length > 0}
             <div class="border-t pt-4">
-              <h4 class="mb-3 text-sm font-medium">All Reviews ({data.reviews.length})</h4>
+              <h4 class="mb-3 text-sm font-medium">{m.cfp_reviews_all()} ({data.reviews.length})</h4>
               <div class="space-y-3">
                 {#each data.reviews as review}
                   <div class="flex items-start gap-2">
@@ -492,21 +493,21 @@ $effect(() => {
       <!-- Status Actions -->
       <Card.Root>
         <Card.Header>
-          <Card.Title>Status</Card.Title>
+          <Card.Title>{m.cfp_status_review()}</Card.Title>
         </Card.Header>
         <Card.Content class="space-y-4">
           <div class="flex items-center gap-2">
-            <span class="text-sm text-muted-foreground">Current:</span>
+            <span class="text-sm text-muted-foreground">{m.cfp_status_current()}</span>
             <StatusBadge status={data.talk.status} />
           </div>
 
           {#if data.permissions.canChangeStatus}
             <form method="POST" action="?/updateStatus" use:enhance class="space-y-2">
-              <p class="text-sm font-medium">Quick Actions</p>
+              <p class="text-sm font-medium">{m.cfp_status_quick_actions()}</p>
               <div class="flex flex-wrap gap-2">
                 {#if data.talk.status === 'submitted'}
                   <Button type="submit" name="status" value="under_review" variant="outline" size="sm">
-                    Start Review
+                    {m.cfp_start_review()}
                   </Button>
                 {/if}
                 {#if ['submitted', 'under_review'].includes(data.talk.status)}
@@ -519,7 +520,7 @@ $effect(() => {
                     class="text-green-600"
                   >
                     <Check class="mr-1 h-3 w-3" />
-                    Accept
+                    {m.cfp_accept()}
                   </Button>
                   <Button
                     type="submit"
@@ -530,13 +531,13 @@ $effect(() => {
                     class="text-red-600"
                   >
                     <X class="mr-1 h-3 w-3" />
-                    Reject
+                    {m.cfp_reject()}
                   </Button>
                 {/if}
               </div>
 
               <div class="pt-2">
-                <p class="mb-2 text-sm font-medium">Change Status</p>
+                <p class="mb-2 text-sm font-medium">{m.cfp_status_change()}</p>
                 <div class="flex flex-wrap gap-1">
                   {#each allStatuses as status}
                     <Button
@@ -561,32 +562,32 @@ $effect(() => {
       <!-- Metadata -->
       <Card.Root>
         <Card.Header>
-          <Card.Title>Information</Card.Title>
+          <Card.Title>{m.cfp_info_title()}</Card.Title>
         </Card.Header>
         <Card.Content>
           <dl class="space-y-3 text-sm">
             <div class="flex justify-between">
-              <dt class="text-muted-foreground">Category</dt>
+              <dt class="text-muted-foreground">{m.cfp_info_category()}</dt>
               <dd class="font-medium">{data.talk.category?.name || '-'}</dd>
             </div>
             <div class="flex justify-between">
-              <dt class="text-muted-foreground">Format</dt>
+              <dt class="text-muted-foreground">{m.cfp_info_format()}</dt>
               <dd class="font-medium">{data.talk.format?.name || '-'}</dd>
             </div>
             <div class="flex justify-between">
-              <dt class="text-muted-foreground">Language</dt>
+              <dt class="text-muted-foreground">{m.cfp_info_language()}</dt>
               <dd class="font-medium">{getLanguageLabel(data.talk.language)}</dd>
             </div>
             <div class="flex justify-between">
-              <dt class="text-muted-foreground">Level</dt>
+              <dt class="text-muted-foreground">{m.cfp_info_level()}</dt>
               <dd class="font-medium">{getLevelLabel(data.talk.level)}</dd>
             </div>
             <div class="border-t pt-3">
-              <dt class="mb-1 text-muted-foreground">Submitted</dt>
+              <dt class="mb-1 text-muted-foreground">{m.cfp_info_submitted_on()}</dt>
               <dd class="font-medium">{formatDate(data.talk.submittedAt)}</dd>
             </div>
             <div>
-              <dt class="mb-1 text-muted-foreground">Created</dt>
+              <dt class="mb-1 text-muted-foreground">{m.cfp_info_created_on()}</dt>
               <dd class="font-medium">{formatDate(data.talk.createdAt)}</dd>
             </div>
           </dl>

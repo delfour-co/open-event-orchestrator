@@ -3,6 +3,7 @@ import { enhance } from '$app/forms'
 import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -62,17 +63,19 @@ const getStatusColor = (delivery: (typeof data.deliveries.items)[0]) => {
 }
 
 const getStatusText = (delivery: (typeof data.deliveries.items)[0]) => {
-  if (delivery.deliveredAt) return 'Delivered'
-  if (delivery.nextRetryAt) return 'Retry Scheduled'
-  if (delivery.error) return 'Failed'
-  return 'Pending'
+  if (delivery.deliveredAt) return m.webhook_detail_delivered()
+  if (delivery.nextRetryAt) return m.webhook_detail_retry_scheduled()
+  if (delivery.error) return m.webhook_detail_failed()
+  return m.webhook_detail_pending()
 }
 
 const getScopeBadge = () => {
-  if (data.webhook.edition) return `Edition: ${data.webhook.edition.name}`
-  if (data.webhook.event) return `Event: ${data.webhook.event.name}`
-  if (data.webhook.organization) return `Org: ${data.webhook.organization.name}`
-  return 'Global'
+  if (data.webhook.edition)
+    return m.webhook_detail_scope_edition({ name: data.webhook.edition.name })
+  if (data.webhook.event) return m.webhook_detail_scope_event({ name: data.webhook.event.name })
+  if (data.webhook.organization)
+    return m.webhook_detail_scope_org({ name: data.webhook.organization.name })
+  return m.webhook_detail_scope_global()
 }
 
 const getSuccessRate = () => {
@@ -105,11 +108,11 @@ const isExpanded = (id: string) => expandedDelivery === id
           <h2 class="text-3xl font-bold tracking-tight">{data.webhook.name}</h2>
           {#if data.webhook.isActive}
             <span class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
-              Active
+              {m.webhook_detail_active()}
             </span>
           {:else}
             <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-              Paused
+              {m.webhook_detail_paused()}
             </span>
           {/if}
         </div>
@@ -125,10 +128,10 @@ const isExpanded = (id: string) => expandedDelivery === id
       <Button variant="outline" type="submit">
         {#if data.webhook.isActive}
           <Pause class="mr-2 h-4 w-4" />
-          Pause Webhook
+          {m.webhook_detail_pause()}
         {:else}
           <Play class="mr-2 h-4 w-4" />
-          Enable Webhook
+          {m.webhook_detail_enable()}
         {/if}
       </Button>
     </form>
@@ -139,25 +142,25 @@ const isExpanded = (id: string) => expandedDelivery === id
     <Card.Root>
       <Card.Content class="pt-6">
         <div class="text-2xl font-bold">{data.stats.total}</div>
-        <p class="text-xs text-muted-foreground">Total Deliveries</p>
+        <p class="text-xs text-muted-foreground">{m.webhook_detail_total_deliveries()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="pt-6">
         <div class="text-2xl font-bold text-green-600">{data.stats.success}</div>
-        <p class="text-xs text-muted-foreground">Successful</p>
+        <p class="text-xs text-muted-foreground">{m.webhook_detail_successful()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="pt-6">
         <div class="text-2xl font-bold text-red-600">{data.stats.failed}</div>
-        <p class="text-xs text-muted-foreground">Failed</p>
+        <p class="text-xs text-muted-foreground">{m.webhook_detail_failed()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="pt-6">
         <div class="text-2xl font-bold">{getSuccessRate()}%</div>
-        <p class="text-xs text-muted-foreground">Success Rate</p>
+        <p class="text-xs text-muted-foreground">{m.webhook_detail_success_rate()}</p>
       </Card.Content>
     </Card.Root>
   </div>
@@ -168,25 +171,25 @@ const isExpanded = (id: string) => expandedDelivery === id
       <Card.Header>
         <Card.Title class="flex items-center gap-2">
           <Webhook class="h-5 w-5" />
-          Configuration
+          {m.webhook_detail_configuration()}
         </Card.Title>
       </Card.Header>
       <Card.Content class="space-y-3 text-sm">
         <div class="flex justify-between">
-          <span class="text-muted-foreground">Scope</span>
+          <span class="text-muted-foreground">{m.webhook_detail_scope()}</span>
           <span class="font-medium">{getScopeBadge()}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-muted-foreground">Retry Attempts</span>
+          <span class="text-muted-foreground">{m.webhook_detail_retry_attempts()}</span>
           <span class="font-medium">{data.webhook.retryCount}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-muted-foreground">Created</span>
+          <span class="text-muted-foreground">{m.webhook_detail_created()}</span>
           <span class="font-medium">{formatDate(data.webhook.createdAt)}</span>
         </div>
         {#if data.webhook.createdBy}
           <div class="flex justify-between">
-            <span class="text-muted-foreground">Created By</span>
+            <span class="text-muted-foreground">{m.webhook_detail_created_by()}</span>
             <span class="font-medium">{data.webhook.createdBy.name}</span>
           </div>
         {/if}
@@ -195,7 +198,7 @@ const isExpanded = (id: string) => expandedDelivery === id
 
     <Card.Root>
       <Card.Header>
-        <Card.Title>Subscribed Events</Card.Title>
+        <Card.Title>{m.webhook_detail_subscribed_events()}</Card.Title>
       </Card.Header>
       <Card.Content>
         <div class="flex flex-wrap gap-2">
@@ -213,9 +216,9 @@ const isExpanded = (id: string) => expandedDelivery === id
   <!-- Delivery History -->
   <Card.Root>
     <Card.Header>
-      <Card.Title>Delivery History</Card.Title>
+      <Card.Title>{m.webhook_detail_delivery_history()}</Card.Title>
       <Card.Description>
-        Recent webhook delivery attempts ({data.deliveries.totalItems} total)
+        {m.webhook_detail_delivery_description({ count: data.deliveries.totalItems.toString() })}
       </Card.Description>
     </Card.Header>
     <Card.Content>
@@ -236,9 +239,9 @@ const isExpanded = (id: string) => expandedDelivery === id
       {#if data.deliveries.items.length === 0}
         <div class="flex flex-col items-center justify-center py-8 text-center">
           <Clock class="mb-3 h-10 w-10 text-muted-foreground" />
-          <p class="text-sm text-muted-foreground">No deliveries yet</p>
+          <p class="text-sm text-muted-foreground">{m.webhook_detail_no_deliveries()}</p>
           <p class="text-xs text-muted-foreground mt-1">
-            Deliveries will appear here when events are triggered
+            {m.webhook_detail_no_deliveries_hint()}
           </p>
         </div>
       {:else}
@@ -275,7 +278,7 @@ const isExpanded = (id: string) => expandedDelivery === id
                       {/if}
                       {#if delivery.attempt > 1}
                         <span class="mx-1">-</span>
-                        <span>Attempt {delivery.attempt}</span>
+                        <span>{m.webhook_detail_attempt({ attempt: delivery.attempt.toString() })}</span>
                       {/if}
                     </div>
                   </div>
@@ -292,18 +295,18 @@ const isExpanded = (id: string) => expandedDelivery === id
                 <div class="border-t bg-muted/30 p-3 space-y-3">
                   <div class="grid gap-3 text-sm md:grid-cols-2">
                     <div>
-                      <span class="text-muted-foreground">Created:</span>
+                      <span class="text-muted-foreground">{m.webhook_detail_created()}:</span>
                       <span class="ml-2">{formatDate(delivery.createdAt)}</span>
                     </div>
                     {#if delivery.deliveredAt}
                       <div>
-                        <span class="text-muted-foreground">Delivered:</span>
+                        <span class="text-muted-foreground">{m.webhook_detail_delivered()}:</span>
                         <span class="ml-2">{formatDate(delivery.deliveredAt)}</span>
                       </div>
                     {/if}
                     {#if delivery.nextRetryAt}
                       <div>
-                        <span class="text-muted-foreground">Next Retry:</span>
+                        <span class="text-muted-foreground">{m.webhook_detail_next_retry()}</span>
                         <span class="ml-2">{formatDate(delivery.nextRetryAt)}</span>
                       </div>
                     {/if}
@@ -311,14 +314,14 @@ const isExpanded = (id: string) => expandedDelivery === id
 
                   {#if delivery.error}
                     <div class="rounded-md border border-red-200 bg-red-50 p-2 dark:border-red-800 dark:bg-red-900/20">
-                      <p class="text-xs font-medium text-red-800 dark:text-red-200">Error</p>
+                      <p class="text-xs font-medium text-red-800 dark:text-red-200">{m.webhook_detail_error()}</p>
                       <p class="text-xs text-red-700 dark:text-red-300">{delivery.error}</p>
                     </div>
                   {/if}
 
                   {#if delivery.responseBody}
                     <div>
-                      <p class="text-xs font-medium text-muted-foreground mb-1">Response Body</p>
+                      <p class="text-xs font-medium text-muted-foreground mb-1">{m.webhook_detail_response_body()}</p>
                       <pre class="rounded-md bg-muted p-2 text-xs overflow-x-auto max-h-32">{delivery.responseBody}</pre>
                     </div>
                   {/if}
@@ -344,7 +347,7 @@ const isExpanded = (id: string) => expandedDelivery === id
                         {:else}
                           <RefreshCw class="mr-2 h-3 w-3" />
                         {/if}
-                        Retry Now
+                        {m.webhook_detail_retry_now()}
                       </Button>
                     </form>
                   {/if}
@@ -358,21 +361,21 @@ const isExpanded = (id: string) => expandedDelivery === id
         {#if data.deliveries.totalPages > 1}
           <div class="mt-4 flex items-center justify-between">
             <p class="text-sm text-muted-foreground">
-              Page {data.deliveries.page} of {data.deliveries.totalPages}
+              {m.webhook_detail_page_of({ page: data.deliveries.page.toString(), total: data.deliveries.totalPages.toString() })}
             </p>
             <div class="flex gap-2">
               {#if data.deliveries.page > 1}
                 <a href="?page={data.deliveries.page - 1}">
                   <Button variant="outline" size="sm">
                     <ChevronLeft class="mr-1 h-4 w-4" />
-                    Previous
+                    {m.action_previous()}
                   </Button>
                 </a>
               {/if}
               {#if data.deliveries.page < data.deliveries.totalPages}
                 <a href="?page={data.deliveries.page + 1}">
                   <Button variant="outline" size="sm">
-                    Next
+                    {m.action_next()}
                     <ChevronRight class="ml-1 h-4 w-4" />
                   </Button>
                 </a>

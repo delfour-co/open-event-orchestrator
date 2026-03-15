@@ -6,6 +6,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
 import { Clock, Mail, Plus, RefreshCw, Trash2, Upload, UserPlus, Users, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -53,18 +54,18 @@ const getRoleBadgeColor = (role: string) => {
       <div>
         <Card.Title class="flex items-center gap-2">
           <Users class="h-5 w-5" />
-          Team Members
+          {m.team_title()}
         </Card.Title>
-        <Card.Description>Manage who has access to this organization</Card.Description>
+        <Card.Description>{m.team_description()}</Card.Description>
       </div>
       <div class="flex gap-2">
         <Button size="sm" variant="outline" onclick={() => (showAddMember = !showAddMember)}>
           <UserPlus class="mr-2 h-4 w-4" />
-          Add Member
+          {m.team_add_member()}
         </Button>
         <Button size="sm" variant="outline" onclick={() => (showBulkImport = !showBulkImport)}>
           <Upload class="mr-2 h-4 w-4" />
-          Bulk Import
+          {m.team_bulk_import()}
         </Button>
       </div>
     </div>
@@ -84,7 +85,7 @@ const getRoleBadgeColor = (role: string) => {
         class="mb-4 rounded-md border bg-muted/50 p-4"
       >
         <div class="space-y-2">
-          <Label for="csv-input">CSV Content (email,role per line)</Label>
+          <Label for="csv-input">{m.team_csv_label()}</Label>
           <Textarea
             id="csv-input"
             name="csv"
@@ -92,13 +93,13 @@ const getRoleBadgeColor = (role: string) => {
             placeholder={"john@example.com,organizer\njane@example.com,reviewer"}
           />
           <p class="text-xs text-muted-foreground">
-            One entry per line. Roles: admin, organizer, reviewer
+            {m.team_csv_hint()}
           </p>
         </div>
         <div class="mt-4 flex gap-2">
           <Button type="submit" size="sm">
             <Upload class="mr-2 h-4 w-4" />
-            Import
+            {m.action_import()}
           </Button>
           <Button
             type="button"
@@ -106,7 +107,7 @@ const getRoleBadgeColor = (role: string) => {
             size="sm"
             onclick={() => (showBulkImport = false)}
           >
-            Cancel
+            {m.action_cancel()}
           </Button>
         </div>
       </form>
@@ -127,7 +128,7 @@ const getRoleBadgeColor = (role: string) => {
       >
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="space-y-2">
-            <Label for="member-email">Email Address</Label>
+            <Label for="member-email">{m.team_email_label()}</Label>
             <Input
               id="member-email"
               name="email"
@@ -135,29 +136,29 @@ const getRoleBadgeColor = (role: string) => {
               placeholder="user@example.com"
               required
             />
-            <p class="text-xs text-muted-foreground">An invitation will be sent if the user doesn't have an account</p>
+            <p class="text-xs text-muted-foreground">{m.team_email_hint()}</p>
           </div>
           <div class="space-y-2">
-            <Label for="member-role">Role</Label>
+            <Label for="member-role">{m.team_role_label()}</Label>
             <select
               id="member-role"
               name="role"
               required
               class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="reviewer">Reviewer - Can review CFP submissions</option>
-              <option value="organizer">Organizer - Can manage events and CFP</option>
-              <option value="admin">Admin - Full access except delete organization</option>
+              <option value="reviewer">{m.team_role_reviewer()}</option>
+              <option value="organizer">{m.team_role_organizer()}</option>
+              <option value="admin">{m.team_role_admin()}</option>
             </select>
           </div>
         </div>
         <div class="mt-4 flex gap-2">
           <Button type="submit" size="sm">
             <Plus class="mr-2 h-4 w-4" />
-            Add Member
+            {m.team_add_member()}
           </Button>
           <Button type="button" variant="ghost" size="sm" onclick={() => (showAddMember = false)}>
-            Cancel
+            {m.action_cancel()}
           </Button>
         </div>
       </form>
@@ -171,7 +172,7 @@ const getRoleBadgeColor = (role: string) => {
           </div>
           <div>
             <p class="font-medium">{data.organization.ownerName}</p>
-            <p class="text-sm text-muted-foreground">Owner</p>
+            <p class="text-sm text-muted-foreground">{m.team_owner()}</p>
           </div>
         </div>
         <span class="rounded-full px-2 py-0.5 text-xs font-medium {getRoleBadgeColor('owner')}">
@@ -182,7 +183,7 @@ const getRoleBadgeColor = (role: string) => {
 
     {#if data.members.length === 0 && data.invitations.length === 0}
       <p class="text-sm text-muted-foreground">
-        No team members yet. Add members to collaborate on events.
+        {m.team_no_members()}
       </p>
     {:else}
       <div class="space-y-2">
@@ -218,7 +219,7 @@ const getRoleBadgeColor = (role: string) => {
                   size="icon"
                   class="h-8 w-8 text-destructive hover:text-destructive"
                   onclick={(e) => {
-                    if (!confirm(`Remove ${member.name} from this organization?`)) {
+                    if (!confirm(m.team_remove_confirm({ name: member.name }))) {
                       e.preventDefault()
                     }
                   }}
@@ -237,7 +238,7 @@ const getRoleBadgeColor = (role: string) => {
       <div class="mt-6">
         <h4 class="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Clock class="h-4 w-4" />
-          Pending Invitations
+          {m.team_pending_invitations()}
         </h4>
         <div class="space-y-2">
           {#each data.invitations as invitation}
@@ -249,13 +250,13 @@ const getRoleBadgeColor = (role: string) => {
                 <div>
                   <p class="font-medium">{invitation.email}</p>
                   <p class="text-sm text-muted-foreground">
-                    Invited as {invitation.role}
+                    {m.team_invited_as({ role: invitation.role })}
                   </p>
                 </div>
               </div>
               <div class="flex items-center gap-2">
                 <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                  pending
+                  {m.team_pending()}
                 </span>
                 <form method="POST" action="?/resendInvitation" use:enhance={() => {
                   return async ({ update }) => {
@@ -269,7 +270,7 @@ const getRoleBadgeColor = (role: string) => {
                     variant="ghost"
                     size="icon"
                     class="h-8 w-8"
-                    title="Resend invitation"
+                    title={m.team_resend()}
                   >
                     <RefreshCw class="h-4 w-4" />
                   </Button>
@@ -286,7 +287,7 @@ const getRoleBadgeColor = (role: string) => {
                     variant="ghost"
                     size="icon"
                     class="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    title="Cancel invitation"
+                    title={m.team_cancel_invitation()}
                   >
                     <X class="h-4 w-4" />
                   </Button>

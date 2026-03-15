@@ -14,6 +14,7 @@ import {
   type TicketTypeEstimate,
   calculateSimulation
 } from '$lib/features/budget/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Calculator,
@@ -212,7 +213,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-  <title>Budget Simulator - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.budget_simulator_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -226,17 +227,17 @@ $effect(() => {
       </a>
       <div>
         <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-        <p class="text-muted-foreground">Budget Simulator</p>
+        <p class="text-muted-foreground">{m.budget_simulator_subtitle()}</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
       <Button variant="outline" onclick={openSaveDialog} disabled={!results}>
         <Save class="mr-2 h-4 w-4" />
-        Save Scenario
+        {m.budget_simulator_save_scenario()}
       </Button>
       <Button onclick={runSimulation}>
         <Calculator class="mr-2 h-4 w-4" />
-        Simulate
+        {m.budget_simulator_simulate()}
       </Button>
     </div>
   </div>
@@ -251,7 +252,7 @@ $effect(() => {
       {#if data.presets.length > 0}
         <Card.Root>
           <Card.Header>
-            <Card.Title class="text-lg">Quick Presets</Card.Title>
+            <Card.Title class="text-lg">{m.budget_simulator_presets()}</Card.Title>
           </Card.Header>
           <Card.Content>
             <div class="flex flex-wrap gap-2">
@@ -270,11 +271,11 @@ $effect(() => {
         <Card.Header>
           <Card.Title class="text-lg flex items-center gap-2">
             <Ticket class="h-5 w-5" />
-            Ticket Sales Estimates
+            {m.budget_simulator_ticket_estimates()}
           </Card.Title>
           {#if hasTicketTypes}
             <p class="text-sm text-muted-foreground">
-              Enter expected sales for each ticket type
+              {m.budget_simulator_ticket_estimates_hint()}
             </p>
           {/if}
         </Card.Header>
@@ -286,10 +287,10 @@ $effect(() => {
                 <div class="flex items-center gap-3 rounded-lg border p-3">
                   <div class="flex-1">
                     <div class="font-medium">{estimate.name}</div>
-                    <div class="text-sm text-muted-foreground">{formatAmount(estimate.price)} per ticket</div>
+                    <div class="text-sm text-muted-foreground">{m.budget_simulator_per_ticket({ amount: formatAmount(estimate.price) })}</div>
                   </div>
                   <div class="flex items-center gap-2">
-                    <Label for="qty-{index}" class="sr-only">Expected quantity</Label>
+                    <Label for="qty-{index}" class="sr-only">{m.budget_simulator_expected_attendees()}</Label>
                     <Input
                       id="qty-{index}"
                       type="number"
@@ -301,7 +302,7 @@ $effect(() => {
                         runSimulation()
                       }}
                     />
-                    <span class="text-sm text-muted-foreground">tickets</span>
+                    <span class="text-sm text-muted-foreground">{m.budget_simulator_tickets()}</span>
                   </div>
                 </div>
               {/each}
@@ -309,30 +310,30 @@ $effect(() => {
             <!-- Summary -->
             <div class="rounded-lg bg-muted p-3 space-y-1 text-sm">
               <div class="flex justify-between">
-                <span>Total attendees:</span>
+                <span>{m.budget_simulator_total_attendees()}</span>
                 <span class="font-medium">{totalExpectedAttendees}</span>
               </div>
               <div class="flex justify-between">
-                <span>Total ticket revenue:</span>
+                <span>{m.budget_simulator_total_revenue()}</span>
                 <span class="font-medium">{formatAmount(totalTicketRevenue)}</span>
               </div>
               <div class="flex justify-between text-muted-foreground">
-                <span>Average ticket price:</span>
+                <span>{m.budget_simulator_avg_price()}</span>
                 <span>{formatAmount(averageTicketPrice)}</span>
               </div>
             </div>
           {:else}
             <!-- Legacy mode - no ticket types defined -->
             <div class="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground mb-4">
-              <p>No ticket types defined for this edition.</p>
-              <p>Using manual input mode.</p>
+              <p>{m.budget_simulator_no_ticket_types()}</p>
+              <p>{m.budget_simulator_manual_mode()}</p>
               <a href="/admin/billing/{data.edition.slug}/ticket-types" class="text-primary hover:underline">
-                Configure ticket types
+                {m.budget_simulator_configure_tickets()}
               </a>
             </div>
             <div class="grid gap-4 md:grid-cols-2">
               <div class="space-y-2">
-                <Label for="attendees">Expected Attendees</Label>
+                <Label for="attendees">{m.budget_simulator_expected_attendees()}</Label>
                 <Input
                   id="attendees"
                   type="number"
@@ -342,7 +343,7 @@ $effect(() => {
                 />
               </div>
               <div class="space-y-2">
-                <Label for="ticket-price">Ticket Price ({currency})</Label>
+                <Label for="ticket-price">{m.budget_simulator_ticket_price({ currency })}</Label>
                 <Input
                   id="ticket-price"
                   type="number"
@@ -358,7 +359,7 @@ $effect(() => {
           <!-- Sponsorship (always shown) -->
           <div class="pt-4 border-t">
             <div class="space-y-2">
-              <Label for="sponsorship">Sponsorship Target ({currency})</Label>
+              <Label for="sponsorship">{m.budget_simulator_sponsorship_target({ currency })}</Label>
               <Input
                 id="sponsorship"
                 type="number"
@@ -375,24 +376,24 @@ $effect(() => {
       <!-- Fixed Costs -->
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between">
-          <Card.Title class="text-lg">Fixed Costs</Card.Title>
+          <Card.Title class="text-lg">{m.budget_simulator_fixed_costs()}</Card.Title>
           <Button variant="outline" size="sm" onclick={addFixedCost}>
             <Plus class="mr-1 h-3 w-3" />
-            Add
+            {m.budget_simulator_add()}
           </Button>
         </Card.Header>
         <Card.Content class="space-y-3">
           {#each fixedCosts as cost, index}
             <div class="flex items-center gap-2">
               <Input
-                placeholder="Cost name"
+                placeholder={m.budget_simulator_cost_name()}
                 bind:value={cost.name}
                 class="flex-1"
               />
               <Input
                 type="number"
                 min="0"
-                placeholder="Amount"
+                placeholder={m.budget_simulator_amount_placeholder()}
                 value={cost.amount.toString()}
                 oninput={(e) => { cost.amount = parseInt((e.target as HTMLInputElement).value, 10) || 0 }}
                 class="w-32"
@@ -404,7 +405,7 @@ $effect(() => {
             </div>
           {/each}
           {#if fixedCosts.length === 0}
-            <p class="text-sm text-muted-foreground">No fixed costs added</p>
+            <p class="text-sm text-muted-foreground">{m.budget_simulator_no_fixed_costs()}</p>
           {/if}
         </Card.Content>
       </Card.Root>
@@ -412,24 +413,24 @@ $effect(() => {
       <!-- Variable Costs -->
       <Card.Root>
         <Card.Header class="flex flex-row items-center justify-between">
-          <Card.Title class="text-lg">Variable Costs (per attendee)</Card.Title>
+          <Card.Title class="text-lg">{m.budget_simulator_variable_costs()}</Card.Title>
           <Button variant="outline" size="sm" onclick={addVariableCost}>
             <Plus class="mr-1 h-3 w-3" />
-            Add
+            {m.budget_simulator_add()}
           </Button>
         </Card.Header>
         <Card.Content class="space-y-3">
           {#each variableCostsPerAttendee as cost, index}
             <div class="flex items-center gap-2">
               <Input
-                placeholder="Cost name"
+                placeholder={m.budget_simulator_cost_name()}
                 bind:value={cost.name}
                 class="flex-1"
               />
               <Input
                 type="number"
                 min="0"
-                placeholder="Amount"
+                placeholder={m.budget_simulator_amount_placeholder()}
                 value={cost.amount.toString()}
                 oninput={(e) => { cost.amount = parseInt((e.target as HTMLInputElement).value, 10) || 0 }}
                 class="w-32"
@@ -441,7 +442,7 @@ $effect(() => {
             </div>
           {/each}
           {#if variableCostsPerAttendee.length === 0}
-            <p class="text-sm text-muted-foreground">No variable costs added</p>
+            <p class="text-sm text-muted-foreground">{m.budget_simulator_no_variable_costs()}</p>
           {/if}
         </Card.Content>
       </Card.Root>
@@ -454,7 +455,7 @@ $effect(() => {
         <div class="grid gap-4 md:grid-cols-2">
           <Card.Root class={results.netProfit >= 0 ? 'border-green-200 dark:border-green-800' : 'border-red-200 dark:border-red-800'}>
             <Card.Header class="flex flex-row items-center justify-between pb-2">
-              <Card.Title class="text-sm font-medium">Net Profit</Card.Title>
+              <Card.Title class="text-sm font-medium">{m.budget_simulator_net_profit()}</Card.Title>
               {#if results.netProfit >= 0}
                 <TrendingUp class="h-4 w-4 text-green-600" />
               {:else}
@@ -466,20 +467,20 @@ $effect(() => {
                 {formatAmount(results.netProfit)}
               </div>
               <p class="text-xs text-muted-foreground">
-                {results.profitMargin.toFixed(1)}% margin
+                {m.budget_simulator_margin({ percent: results.profitMargin.toFixed(1) })}
               </p>
             </Card.Content>
           </Card.Root>
 
           <Card.Root>
             <Card.Header class="flex flex-row items-center justify-between pb-2">
-              <Card.Title class="text-sm font-medium">Break-even</Card.Title>
+              <Card.Title class="text-sm font-medium">{m.budget_simulator_breakeven()}</Card.Title>
               <Calculator class="h-4 w-4 text-muted-foreground" />
             </Card.Header>
             <Card.Content>
               <div class="text-2xl font-bold">{results.breakEvenAttendees}</div>
               <p class="text-xs text-muted-foreground">
-                attendees to break even
+                {m.budget_simulator_breakeven_attendees()}
               </p>
             </Card.Content>
           </Card.Root>
@@ -488,20 +489,20 @@ $effect(() => {
         <!-- Revenue Breakdown -->
         <Card.Root>
           <Card.Header>
-            <Card.Title class="text-lg">Revenue Breakdown</Card.Title>
+            <Card.Title class="text-lg">{m.budget_simulator_revenue_breakdown()}</Card.Title>
           </Card.Header>
           <Card.Content class="space-y-4">
             <div class="flex justify-between">
-              <span class="text-muted-foreground">Ticket Revenue</span>
+              <span class="text-muted-foreground">{m.budget_simulator_ticket_revenue()}</span>
               <span class="font-medium">{formatAmount(results.ticketRevenue)}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-muted-foreground">Sponsorship Revenue</span>
+              <span class="text-muted-foreground">{m.budget_simulator_sponsorship_revenue()}</span>
               <span class="font-medium">{formatAmount(results.sponsorshipRevenue)}</span>
             </div>
             <div class="border-t pt-2">
               <div class="flex justify-between">
-                <span class="font-semibold">Total Revenue</span>
+                <span class="font-semibold">{m.budget_simulator_total_revenue_label()}</span>
                 <span class="font-bold text-green-600">{formatAmount(results.totalRevenue)}</span>
               </div>
             </div>
@@ -511,20 +512,20 @@ $effect(() => {
         <!-- Cost Breakdown -->
         <Card.Root>
           <Card.Header>
-            <Card.Title class="text-lg">Cost Breakdown</Card.Title>
+            <Card.Title class="text-lg">{m.budget_simulator_cost_breakdown()}</Card.Title>
           </Card.Header>
           <Card.Content class="space-y-4">
             <div class="flex justify-between">
-              <span class="text-muted-foreground">Fixed Costs</span>
+              <span class="text-muted-foreground">{m.budget_simulator_fixed_costs_label()}</span>
               <span class="font-medium">{formatAmount(results.fixedCostsTotal)}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-muted-foreground">Variable Costs ({totalExpectedAttendees} × {formatAmount(variableCostsPerAttendee.reduce((sum, c) => sum + c.amount, 0))})</span>
+              <span class="text-muted-foreground">{m.budget_simulator_variable_costs_label({ count: totalExpectedAttendees.toString(), amount: formatAmount(variableCostsPerAttendee.reduce((sum, c) => sum + c.amount, 0)) })}</span>
               <span class="font-medium">{formatAmount(results.variableCostsTotal)}</span>
             </div>
             <div class="border-t pt-2">
               <div class="flex justify-between">
-                <span class="font-semibold">Total Costs</span>
+                <span class="font-semibold">{m.budget_simulator_total_costs()}</span>
                 <span class="font-bold text-orange-600">{formatAmount(results.totalCosts)}</span>
               </div>
             </div>
@@ -534,32 +535,29 @@ $effect(() => {
         <!-- Summary -->
         <Card.Root>
           <Card.Header>
-            <Card.Title class="text-lg">Summary</Card.Title>
+            <Card.Title class="text-lg">{m.budget_simulator_summary()}</Card.Title>
           </Card.Header>
           <Card.Content class="space-y-2 text-sm">
             {#if hasTicketTypes}
               <p>
-                With <strong>{totalExpectedAttendees}</strong> attendees across {ticketEstimates.filter(t => t.expectedQuantity > 0).length} ticket types
-                (avg. <strong>{formatAmount(averageTicketPrice)}</strong>/ticket)
-                and <strong>{formatAmount(sponsorshipTarget)}</strong> in sponsorships:
+                {m.budget_simulator_summary_with_types({ attendees: totalExpectedAttendees.toString(), types: ticketEstimates.filter(t => t.expectedQuantity > 0).length.toString(), price: formatAmount(averageTicketPrice), sponsorship: formatAmount(sponsorshipTarget) })}
               </p>
             {:else}
               <p>
-                With <strong>{totalExpectedAttendees}</strong> attendees at <strong>{formatAmount(averageTicketPrice)}</strong> per ticket
-                and <strong>{formatAmount(sponsorshipTarget)}</strong> in sponsorships:
+                {m.budget_simulator_summary_legacy({ attendees: totalExpectedAttendees.toString(), price: formatAmount(averageTicketPrice), sponsorship: formatAmount(sponsorshipTarget) })}
               </p>
             {/if}
             <ul class="list-disc pl-5 space-y-1">
-              <li>Total revenue: <strong>{formatAmount(results.totalRevenue)}</strong></li>
-              <li>Total costs: <strong>{formatAmount(results.totalCosts)}</strong></li>
+              <li>{m.budget_simulator_total_revenue_summary({ amount: formatAmount(results.totalRevenue) })}</li>
+              <li>{m.budget_simulator_total_costs_summary({ amount: formatAmount(results.totalCosts) })}</li>
               <li>
-                {results.netProfit >= 0 ? 'Profit' : 'Loss'}:
+                {results.netProfit >= 0 ? m.budget_simulator_profit_summary() : m.budget_simulator_loss_summary()}:
                 <strong class={results.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
                   {formatAmount(Math.abs(results.netProfit))}
                 </strong>
               </li>
-              <li>Break-even at <strong>{results.breakEvenAttendees}</strong> attendees (at avg. price)</li>
-              <li>Or at <strong>{formatAmount(results.breakEvenTicketPrice)}</strong> avg. ticket price</li>
+              <li>{m.budget_simulator_breakeven_at_attendees({ count: results.breakEvenAttendees.toString() })}</li>
+              <li>{m.budget_simulator_breakeven_at_price({ amount: formatAmount(results.breakEvenTicketPrice) })}</li>
             </ul>
           </Card.Content>
         </Card.Root>
@@ -569,7 +567,7 @@ $effect(() => {
       {#if data.scenarios.length > 0}
         <Card.Root>
           <Card.Header>
-            <Card.Title class="text-lg">Saved Scenarios</Card.Title>
+            <Card.Title class="text-lg">{m.budget_simulator_saved_scenarios()}</Card.Title>
           </Card.Header>
           <Card.Content>
             <div class="space-y-2">
@@ -583,14 +581,14 @@ $effect(() => {
                       <div class="font-medium">{scenario.name}</div>
                       {#if scenario.results}
                         <div class="text-xs text-muted-foreground">
-                          {formatAmount(scenario.results.netProfit)} profit
+                          {formatAmount(scenario.results.netProfit)} {m.budget_simulator_profit()}
                         </div>
                       {/if}
                     </div>
                   </div>
                   <div class="flex items-center gap-1">
                     <Button variant="ghost" size="sm" onclick={() => loadScenario(scenario)}>
-                      Load
+                      {m.budget_simulator_load()}
                     </Button>
                     {#if !scenario.isBaseline}
                       <form method="POST" action="?/setBaseline" use:enhance>
@@ -621,9 +619,9 @@ $effect(() => {
 {#if showSaveDialog}
   <Dialog.Content class="max-w-md" onClose={() => showSaveDialog = false}>
       <Dialog.Header>
-        <Dialog.Title>Save Scenario</Dialog.Title>
+        <Dialog.Title>{m.budget_simulator_save_title()}</Dialog.Title>
         <Dialog.Description>
-          Save this simulation as a scenario for future reference.
+          {m.budget_simulator_save_description()}
         </Dialog.Description>
       </Dialog.Header>
 
@@ -657,22 +655,22 @@ $effect(() => {
         )} />
 
         <div class="space-y-2">
-          <Label for="scenario-name">Name *</Label>
+          <Label for="scenario-name">{m.budget_simulator_scenario_name()} *</Label>
           <Input
             id="scenario-name"
             name="name"
-            placeholder="e.g., Optimistic forecast"
+            placeholder={m.budget_simulator_scenario_name_placeholder()}
             required
             bind:value={scenarioName}
           />
         </div>
 
         <div class="space-y-2">
-          <Label for="scenario-description">Description</Label>
+          <Label for="scenario-description">{m.budget_simulator_scenario_description()}</Label>
           <Textarea
             id="scenario-description"
             name="description"
-            placeholder="Optional description..."
+            placeholder={m.budget_simulator_scenario_description_placeholder()}
             bind:value={scenarioDescription}
           />
         </div>
@@ -686,23 +684,23 @@ $effect(() => {
             value="true"
             class="h-4 w-4 rounded border-gray-300"
           />
-          <Label for="is-baseline" class="text-sm">Set as baseline scenario</Label>
+          <Label for="is-baseline" class="text-sm">{m.budget_simulator_set_baseline()}</Label>
         </div>
 
         {#if results}
           <div class="rounded-lg bg-muted p-3 text-sm">
-            <p><strong>Summary:</strong></p>
-            <p>{totalExpectedAttendees} attendees, {formatAmount(results.netProfit)} profit</p>
+            <p><strong>{m.budget_simulator_scenario_summary()}</strong></p>
+            <p>{m.budget_simulator_scenario_attendees_profit({ attendees: totalExpectedAttendees.toString(), profit: formatAmount(results.netProfit) })}</p>
           </div>
         {/if}
 
         <Dialog.Footer>
-          <Button type="button" variant="outline" onclick={() => showSaveDialog = false}>Cancel</Button>
+          <Button type="button" variant="outline" onclick={() => showSaveDialog = false}>{m.action_cancel()}</Button>
           <Button type="submit" disabled={isSubmitting}>
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
             {/if}
-            Save
+            {m.action_save()}
           </Button>
         </Dialog.Footer>
       </form>

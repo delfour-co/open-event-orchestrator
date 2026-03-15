@@ -7,6 +7,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { eventTypes, getEventTypeLabel } from '$lib/features/budget/domain'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, FileText, Globe, Loader2, Plus, Trash2, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -60,7 +61,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-  <title>Budget Templates - Open Event Orchestrator</title>
+  <title>{m.budget_templates_title()}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -73,8 +74,8 @@ $effect(() => {
         </Button>
       </a>
       <div>
-        <h2 class="text-3xl font-bold tracking-tight">Budget Templates</h2>
-        <p class="text-muted-foreground">Manage reusable budget templates</p>
+        <h2 class="text-3xl font-bold tracking-tight">{m.budget_templates_title()}</h2>
+        <p class="text-muted-foreground">{m.budget_templates_subtitle()}</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -82,13 +83,13 @@ $effect(() => {
         <form method="POST" action="?/seedDefaults" use:enhance>
           <Button type="submit" variant="outline">
             <FileText class="mr-2 h-4 w-4" />
-            Seed Defaults
+            {m.budget_templates_seed_defaults()}
           </Button>
         </form>
       {/if}
       <Button onclick={() => showCreateDialog = true}>
         <Plus class="mr-2 h-4 w-4" />
-        Create Template
+        {m.budget_templates_create()}
       </Button>
     </div>
   </div>
@@ -110,19 +111,19 @@ $effect(() => {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No templates yet</h3>
+        <h3 class="text-lg font-semibold">{m.budget_templates_no_templates()}</h3>
         <p class="mb-4 text-sm text-muted-foreground">
-          Create templates to quickly set up budget checklists for new editions.
+          {m.budget_templates_no_templates_hint()}
         </p>
         <div class="flex gap-2">
           <form method="POST" action="?/seedDefaults" use:enhance>
             <Button type="submit" variant="outline">
-              Seed Default Templates
+              {m.budget_templates_seed_default()}
             </Button>
           </form>
           <Button onclick={() => showCreateDialog = true}>
             <Plus class="mr-2 h-4 w-4" />
-            Create Template
+            {m.budget_templates_create()}
           </Button>
         </div>
       </Card.Content>
@@ -155,8 +156,8 @@ $effect(() => {
               <p class="mb-3 text-sm text-muted-foreground">{template.description}</p>
             {/if}
             <div class="flex items-center justify-between text-sm">
-              <span class="text-muted-foreground">{template.itemCount} items</span>
-              <span class="text-muted-foreground">Used {template.usageCount} times</span>
+              <span class="text-muted-foreground">{m.budget_templates_items({ count: template.itemCount.toString() })}</span>
+              <span class="text-muted-foreground">{m.budget_templates_used({ count: template.usageCount.toString() })}</span>
             </div>
           </Card.Content>
         </Card.Root>
@@ -167,9 +168,9 @@ $effect(() => {
   <!-- Default Templates Reference -->
   {#if data.defaultTemplates.length > 0 && data.templates.length > 0}
     <div class="space-y-4">
-      <h3 class="text-lg font-semibold">Default Template Reference</h3>
+      <h3 class="text-lg font-semibold">{m.budget_templates_default_reference()}</h3>
       <p class="text-sm text-muted-foreground">
-        These are the built-in templates. Use "Seed Defaults" to create them in your database.
+        {m.budget_templates_default_hint()}
       </p>
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {#each data.defaultTemplates as template}
@@ -179,7 +180,7 @@ $effect(() => {
               <Card.Description class="text-xs">{template.eventTypeLabel}</Card.Description>
             </Card.Header>
             <Card.Content>
-              <p class="text-xs text-muted-foreground">{template.itemCount} items</p>
+              <p class="text-xs text-muted-foreground">{m.budget_templates_items({ count: template.itemCount.toString() })}</p>
             </Card.Content>
           </Card.Root>
         {/each}
@@ -192,9 +193,9 @@ $effect(() => {
 {#if showCreateDialog}
   <Dialog.Content class="max-w-2xl max-h-[80vh] overflow-y-auto" onClose={cancelDialog}>
       <Dialog.Header>
-        <Dialog.Title>Create Budget Template</Dialog.Title>
+        <Dialog.Title>{m.budget_templates_create_title()}</Dialog.Title>
         <Dialog.Description>
-          Create a reusable template for budget checklists.
+          {m.budget_templates_create_description()}
         </Dialog.Description>
       </Dialog.Header>
 
@@ -214,17 +215,17 @@ $effect(() => {
 
         <div class="grid gap-4 md:grid-cols-2">
           <div class="space-y-2">
-            <Label for="template-name">Name *</Label>
+            <Label for="template-name">{m.budget_templates_name()} *</Label>
             <Input
               id="template-name"
               name="name"
-              placeholder="e.g., Large Conference"
+              placeholder={m.budget_templates_name_placeholder()}
               required
               bind:value={templateName}
             />
           </div>
           <div class="space-y-2">
-            <Label for="template-type">Event Type *</Label>
+            <Label for="template-type">{m.budget_templates_event_type()} *</Label>
             <select
               id="template-type"
               name="eventType"
@@ -240,11 +241,11 @@ $effect(() => {
         </div>
 
         <div class="space-y-2">
-          <Label for="template-description">Description</Label>
+          <Label for="template-description">{m.budget_templates_description()}</Label>
           <Textarea
             id="template-description"
             name="description"
-            placeholder="Optional description..."
+            placeholder={m.budget_templates_description_placeholder()}
             bind:value={templateDescription}
           />
         </div>
@@ -258,35 +259,35 @@ $effect(() => {
             value="true"
             class="h-4 w-4 rounded border-gray-300"
           />
-          <Label for="is-global" class="text-sm">Available globally (not tied to organization)</Label>
+          <Label for="is-global" class="text-sm">{m.budget_templates_global()}</Label>
         </div>
 
         <!-- Template Items -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <Label>Template Items</Label>
+            <Label>{m.budget_templates_template_items()}</Label>
             <Button type="button" variant="outline" size="sm" onclick={addTemplateItem}>
               <Plus class="mr-1 h-3 w-3" />
-              Add Item
+              {m.budget_templates_add_item()}
             </Button>
           </div>
 
           {#each templateItems as item, index}
             <div class="flex items-center gap-2 rounded-lg border p-2">
               <Input
-                placeholder="Item name"
+                placeholder={m.budget_templates_item_name()}
                 bind:value={item.name}
                 class="flex-1"
               />
               <Input
-                placeholder="Category"
+                placeholder={m.budget_templates_item_category()}
                 bind:value={item.category}
                 class="w-24"
               />
               <Input
                 type="number"
                 min="0"
-                placeholder="Amount"
+                placeholder={m.budget_templates_item_amount()}
                 value={item.estimatedAmount.toString()}
                 oninput={(e) => { item.estimatedAmount = parseInt((e.target as HTMLInputElement).value, 10) || 0 }}
                 class="w-28"
@@ -295,9 +296,9 @@ $effect(() => {
                 bind:value={item.priority}
                 class="h-10 w-24 rounded-md border border-input bg-background px-2 text-sm"
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                <option value="low">{m.budget_templates_priority_low()}</option>
+                <option value="medium">{m.budget_templates_priority_medium()}</option>
+                <option value="high">{m.budget_templates_priority_high()}</option>
               </select>
               <Button type="button" variant="ghost" size="icon" onclick={() => removeTemplateItem(index)}>
                 <X class="h-4 w-4" />
@@ -306,17 +307,17 @@ $effect(() => {
           {/each}
 
           {#if templateItems.length === 0}
-            <p class="text-sm text-muted-foreground">No items added yet. Click "Add Item" to start.</p>
+            <p class="text-sm text-muted-foreground">{m.budget_templates_no_items()}</p>
           {/if}
         </div>
 
         <Dialog.Footer>
-          <Button type="button" variant="outline" onclick={cancelDialog}>Cancel</Button>
+          <Button type="button" variant="outline" onclick={cancelDialog}>{m.action_cancel()}</Button>
           <Button type="submit" disabled={isSubmitting}>
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
             {/if}
-            Create Template
+            {m.budget_templates_create()}
           </Button>
         </Dialog.Footer>
       </form>
