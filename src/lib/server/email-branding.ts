@@ -21,6 +21,16 @@ export interface EmailBranding {
   website?: string
 }
 
+/**
+ * Default branding used when no organization or event context is available
+ * (e.g., auth emails like password reset, verification).
+ *
+ * The app name is hardcoded here because reading from app_settings would
+ * require a PocketBase instance, which is not always available in email
+ * utility functions. In the future, a dedicated "app branding" system
+ * could replace this default. For org/event-scoped emails, branding is
+ * loaded dynamically via getOrgBranding() or getEventBranding().
+ */
 export const DEFAULT_BRANDING: EmailBranding = {
   orgName: 'Open Event Orchestrator',
   primaryColor: '#2563eb',

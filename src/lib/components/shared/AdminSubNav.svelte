@@ -3,7 +3,7 @@ import { page } from '$app/stores'
 
 export interface NavItem {
   href: string
-  label: string
+  label: string | (() => string)
   badge?: number
 }
 
@@ -33,7 +33,7 @@ const isActive = (href: string): boolean => {
         ? 'bg-background shadow-sm'
         : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
     >
-      {item.label}
+      {typeof item.label === 'function' ? item.label() : item.label}
       {#if item.badge !== undefined && item.badge > 0}
         <span class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground">
           {item.badge}

@@ -9,15 +9,17 @@ import {
   getSponsoringNavItems
 } from './admin-navigation'
 
+/** Resolve a NavItem label, whether it's a string or a function */
+const resolveLabel = (label: string | (() => string)): string =>
+  typeof label === 'function' ? label() : label
+
 describe('admin-navigation', () => {
   describe('getSponsoringNavItems', () => {
     it('should return navigation items with correct paths', () => {
       const items = getSponsoringNavItems('devfest-2025')
       expect(items).toHaveLength(7)
-      expect(items[0]).toEqual({
-        href: '/admin/sponsoring/devfest-2025',
-        label: 'Dashboard'
-      })
+      expect(items[0].href).toBe('/admin/sponsoring/devfest-2025')
+      expect(resolveLabel(items[0].label)).toBe('Dashboard')
       expect(items[1].href).toBe('/admin/sponsoring/devfest-2025/packages')
       expect(items[2].href).toBe('/admin/sponsoring/devfest-2025/sponsors')
       expect(items[3].href).toBe('/admin/sponsoring/devfest-2025/inquiries')
@@ -36,10 +38,8 @@ describe('admin-navigation', () => {
     it('should return navigation items with correct paths', () => {
       const items = getBudgetNavItems('devfest-2025')
       expect(items).toHaveLength(8)
-      expect(items[0]).toEqual({
-        href: '/admin/budget/devfest-2025',
-        label: 'Dashboard'
-      })
+      expect(items[0].href).toBe('/admin/budget/devfest-2025')
+      expect(resolveLabel(items[0].label)).toBe('Dashboard')
       expect(items[1].href).toBe('/admin/budget/devfest-2025/checklist')
       expect(items[2].href).toBe('/admin/budget/devfest-2025/profitability')
       expect(items[3].href).toBe('/admin/budget/devfest-2025/quotes')
@@ -54,10 +54,8 @@ describe('admin-navigation', () => {
     it('should return navigation items with correct paths', () => {
       const items = getBillingNavItems('devfest-2025')
       expect(items).toHaveLength(5)
-      expect(items[0]).toEqual({
-        href: '/admin/billing/devfest-2025',
-        label: 'Dashboard'
-      })
+      expect(items[0].href).toBe('/admin/billing/devfest-2025')
+      expect(resolveLabel(items[0].label)).toBe('Dashboard')
       expect(items[1].href).toBe('/admin/billing/devfest-2025/participants')
       expect(items[2].href).toBe('/admin/billing/devfest-2025/checkin')
       expect(items[3].href).toBe('/admin/billing/devfest-2025/design')
@@ -69,10 +67,8 @@ describe('admin-navigation', () => {
     it('should return navigation items with correct paths', () => {
       const items = getCrmNavItems('devfest')
       expect(items).toHaveLength(3)
-      expect(items[0]).toEqual({
-        href: '/admin/crm/devfest',
-        label: 'Contacts'
-      })
+      expect(items[0].href).toBe('/admin/crm/devfest')
+      expect(resolveLabel(items[0].label)).toBe('Contacts')
       expect(items[1].href).toBe('/admin/crm/devfest/segments')
       expect(items[2].href).toBe('/admin/crm/devfest/import')
     })
@@ -82,10 +78,8 @@ describe('admin-navigation', () => {
     it('should return navigation items with correct paths', () => {
       const items = getEmailsNavItems('devfest')
       expect(items).toHaveLength(2)
-      expect(items[0]).toEqual({
-        href: '/admin/emails/devfest',
-        label: 'Campaigns'
-      })
+      expect(items[0].href).toBe('/admin/emails/devfest')
+      expect(resolveLabel(items[0].label)).toBe('Campaigns')
       expect(items[1].href).toBe('/admin/emails/devfest/templates')
     })
   })
@@ -94,10 +88,8 @@ describe('admin-navigation', () => {
     it('should return navigation items with correct paths', () => {
       const items = getReportingNavItems('devfest-2025')
       expect(items).toHaveLength(3)
-      expect(items[0]).toEqual({
-        href: '/admin/reporting/devfest-2025',
-        label: 'Dashboard'
-      })
+      expect(items[0].href).toBe('/admin/reporting/devfest-2025')
+      expect(resolveLabel(items[0].label)).toBe('Dashboard')
       expect(items[1].href).toBe('/admin/reporting/devfest-2025/alerts')
       expect(items[2].href).toBe('/admin/reporting/devfest-2025/reports')
     })
@@ -107,10 +99,8 @@ describe('admin-navigation', () => {
     it('should return navigation items with correct paths', () => {
       const items = getPlanningNavItems('devfest-2025')
       expect(items).toHaveLength(7)
-      expect(items[0]).toEqual({
-        href: '/admin/planning/devfest-2025',
-        label: 'Schedule'
-      })
+      expect(items[0].href).toBe('/admin/planning/devfest-2025')
+      expect(resolveLabel(items[0].label)).toBe('Schedule')
       expect(items[1].href).toBe('/admin/planning/devfest-2025/sessions')
       expect(items[2].href).toBe('/admin/planning/devfest-2025/rooms')
       expect(items[3].href).toBe('/admin/planning/devfest-2025/tracks')
