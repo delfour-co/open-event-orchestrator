@@ -1,6 +1,6 @@
+import type { PBEditionRecord } from '$lib/server/pb-types'
 import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
-import type { RecordModel } from 'pocketbase'
 import type { CreateEditionInput, Edition, UpdateEditionInput } from '../domain'
 
 export type EditionRepository = {
@@ -12,7 +12,7 @@ export type EditionRepository = {
   delete: (id: string) => Promise<void>
 }
 
-const mapToEdition = (record: RecordModel): Edition => ({
+const mapToEdition = (record: PBEditionRecord): Edition => ({
   id: record.id,
   eventId: record.eventId,
   name: record.name,
@@ -23,7 +23,7 @@ const mapToEdition = (record: RecordModel): Edition => ({
   venue: record.venue || undefined,
   city: record.city || undefined,
   country: record.country || undefined,
-  status: record.status,
+  status: record.status as Edition['status'],
   termsOfSale: record.termsOfSale || undefined,
   codeOfConduct: record.codeOfConduct || undefined,
   privacyPolicy: record.privacyPolicy || undefined,
@@ -39,13 +39,13 @@ export const createEditionRepository = (pb: PocketBase): EditionRepository => ({
       startDate: input.startDate.toISOString(),
       endDate: input.endDate.toISOString()
     }
-    const record = await pb.collection('editions').create(data)
+    const record = await pb.collection('editions').create<PBEditionRecord>(data)
     return mapToEdition(record)
   },
 
   async findById(id) {
     try {
-      const record = await pb.collection('editions').getOne(id)
+      const record = await pb.collection('editions').getOne<PBEditionRecord>(id)
       return mapToEdition(record)
     } catch {
       return null
@@ -54,7 +54,9 @@ export const createEditionRepository = (pb: PocketBase): EditionRepository => ({
 
   async findBySlug(slug) {
     try {
-      const record = await pb.collection('editions').getFirstListItem(safeFilter`slug = ${slug}`)
+      const record = await pb
+        .collection('editions')
+        .getFirstListItem<PBEditionRecord>(safeFilter`slug = ${slug}`)
       return mapToEdition(record)
     } catch {
       return null
@@ -64,7 +66,7 @@ export const createEditionRepository = (pb: PocketBase): EditionRepository => ({
   async findByEvent(eventId) {
     const records = await pb
       .collection('editions')
-      .getFullList({ filter: safeFilter`eventId = ${eventId}`, sort: '-year' })
+      .getFullList<PBEditionRecord>({ filter: safeFilter`eventId = ${eventId}`, sort: '-year' })
     return records.map(mapToEdition)
   },
 
@@ -74,7 +76,7 @@ export const createEditionRepository = (pb: PocketBase): EditionRepository => ({
       ...(input.startDate && { startDate: input.startDate.toISOString() }),
       ...(input.endDate && { endDate: input.endDate.toISOString() })
     }
-    const record = await pb.collection('editions').update(id, data)
+    const record = await pb.collection('editions').update<PBEditionRecord>(id, data)
     return mapToEdition(record)
   },
 

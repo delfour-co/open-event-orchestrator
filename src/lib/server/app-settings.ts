@@ -3,6 +3,7 @@ import { env as publicEnv } from '$env/dynamic/public'
 import { createConsoleEmailService, createSmtpEmailService } from '$lib/features/cfp/services'
 import type { EmailService } from '$lib/features/cfp/services'
 import type PocketBase from 'pocketbase'
+import type { PBAppSettingsRecord } from './pb-types'
 
 // =============================================================================
 // SMTP Settings (reads/writes PocketBase's own SMTP config)
@@ -28,17 +29,17 @@ const DEFAULT_SMTP: SmtpSettings = {
 
 export async function getSmtpSettings(pb: PocketBase): Promise<SmtpSettings> {
   try {
-    const records = await pb.collection('app_settings').getList(1, 1)
+    const records = await pb.collection('app_settings').getList<PBAppSettingsRecord>(1, 1)
     if (records.items.length === 0) {
       return DEFAULT_SMTP
     }
     const record = records.items[0]
     return {
-      smtpHost: (record.smtpHost as string) || DEFAULT_SMTP.smtpHost,
-      smtpPort: (record.smtpPort as number) || DEFAULT_SMTP.smtpPort,
-      smtpUser: (record.smtpUser as string) || '',
-      smtpPass: (record.smtpPass as string) || '',
-      smtpFrom: (record.smtpFrom as string) || DEFAULT_SMTP.smtpFrom,
+      smtpHost: record.smtpHost || DEFAULT_SMTP.smtpHost,
+      smtpPort: record.smtpPort || DEFAULT_SMTP.smtpPort,
+      smtpUser: record.smtpUser || '',
+      smtpPass: record.smtpPass || '',
+      smtpFrom: record.smtpFrom || DEFAULT_SMTP.smtpFrom,
       smtpEnabled: record.smtpEnabled !== false
     }
   } catch {
@@ -153,20 +154,20 @@ export function maskStripeKey(key: string): string {
  */
 export async function getStripeSettings(pb: PocketBase): Promise<StripeSettingsInfo> {
   try {
-    const records = await pb.collection('app_settings').getList(1, 1)
+    const records = await pb.collection('app_settings').getList<PBAppSettingsRecord>(1, 1)
 
     if (records.items.length > 0) {
       const record = records.items[0]
-      const secretKey = (record.stripeSecretKey as string) || ''
+      const secretKey = record.stripeSecretKey || ''
 
       // If DB has settings, use them
       if (secretKey) {
         const settings: StripeSettings = {
           stripeSecretKey: secretKey,
-          stripePublishableKey: (record.stripePublishableKey as string) || '',
-          stripeWebhookSecret: (record.stripeWebhookSecret as string) || '',
+          stripePublishableKey: record.stripePublishableKey || '',
+          stripeWebhookSecret: record.stripeWebhookSecret || '',
           stripeEnabled: record.stripeEnabled === true,
-          stripeApiBase: (record.stripeApiBase as string) || env.STRIPE_API_BASE || ''
+          stripeApiBase: record.stripeApiBase || env.STRIPE_API_BASE || ''
         }
 
         return {
@@ -373,16 +374,15 @@ export function isSlackConfigured(settings: SlackSettings): boolean {
  */
 export async function getSlackSettings(pb: PocketBase): Promise<SlackSettings> {
   try {
-    const records = await pb.collection('app_settings').getList(1, 1)
+    const records = await pb.collection('app_settings').getList<PBAppSettingsRecord>(1, 1)
     if (records.items.length === 0) {
       return DEFAULT_SLACK
     }
     const record = records.items[0]
     return {
-      slackWebhookUrl: (record.slackWebhookUrl as string) || '',
+      slackWebhookUrl: record.slackWebhookUrl || '',
       slackEnabled: record.slackEnabled === true,
-      slackDefaultChannel:
-        (record.slackDefaultChannel as string) || DEFAULT_SLACK.slackDefaultChannel
+      slackDefaultChannel: record.slackDefaultChannel || DEFAULT_SLACK.slackDefaultChannel
     }
   } catch {
     return DEFAULT_SLACK
@@ -444,15 +444,15 @@ export function isDiscordConfigured(settings: DiscordSettings): boolean {
  */
 export async function getDiscordSettings(pb: PocketBase): Promise<DiscordSettings> {
   try {
-    const records = await pb.collection('app_settings').getList(1, 1)
+    const records = await pb.collection('app_settings').getList<PBAppSettingsRecord>(1, 1)
     if (records.items.length === 0) {
       return DEFAULT_DISCORD
     }
     const record = records.items[0]
     return {
-      discordWebhookUrl: (record.discordWebhookUrl as string) || '',
+      discordWebhookUrl: record.discordWebhookUrl || '',
       discordEnabled: record.discordEnabled === true,
-      discordUsername: (record.discordUsername as string) || DEFAULT_DISCORD.discordUsername
+      discordUsername: record.discordUsername || DEFAULT_DISCORD.discordUsername
     }
   } catch {
     return DEFAULT_DISCORD
@@ -522,16 +522,16 @@ export function isHelloAssoConfigured(settings: HelloAssoSettings): boolean {
 
 export async function getHelloAssoSettings(pb: PocketBase): Promise<HelloAssoSettings> {
   try {
-    const records = await pb.collection('app_settings').getList(1, 1)
+    const records = await pb.collection('app_settings').getList<PBAppSettingsRecord>(1, 1)
     if (records.items.length === 0) {
       return DEFAULT_HELLOASSO
     }
     const record = records.items[0]
     const sandbox = record.helloassoSandbox !== false
     return {
-      helloassoClientId: (record.helloassoClientId as string) || '',
-      helloassoClientSecret: (record.helloassoClientSecret as string) || '',
-      helloassoOrgSlug: (record.helloassoOrgSlug as string) || '',
+      helloassoClientId: record.helloassoClientId || '',
+      helloassoClientSecret: record.helloassoClientSecret || '',
+      helloassoOrgSlug: record.helloassoOrgSlug || '',
       helloassoEnabled: record.helloassoEnabled === true,
       helloassoSandbox: sandbox,
       helloassoApiBase: sandbox ? HELLOASSO_SANDBOX_API_BASE : HELLOASSO_API_BASE

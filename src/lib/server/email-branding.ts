@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/public'
 import type PocketBase from 'pocketbase'
+import type { PBEditionRecord, PBEventRecord, PBOrganizationRecord } from './pb-types'
 
 /**
  * Escape HTML special characters to prevent XSS in email templates
@@ -45,18 +46,18 @@ export async function getOrgBranding(
   organizationId: string
 ): Promise<EmailBranding> {
   try {
-    const org = await pb.collection('organizations').getOne(organizationId)
+    const org = await pb.collection('organizations').getOne<PBOrganizationRecord>(organizationId)
     const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090' // Will be resolved by email client
     let logoUrl: string | undefined
     if (org.logo) {
       logoUrl = `${pbUrl}/api/files/organizations/${org.id}/${org.logo}`
     }
     return {
-      orgName: (org.name as string) || DEFAULT_BRANDING.orgName,
+      orgName: org.name || DEFAULT_BRANDING.orgName,
       logoUrl,
-      primaryColor: (org.primaryColor as string) || DEFAULT_BRANDING.primaryColor,
-      secondaryColor: (org.secondaryColor as string) || DEFAULT_BRANDING.secondaryColor,
-      website: (org.website as string) || undefined
+      primaryColor: org.primaryColor || DEFAULT_BRANDING.primaryColor,
+      secondaryColor: org.secondaryColor || DEFAULT_BRANDING.secondaryColor,
+      website: org.website || undefined
     }
   } catch {
     return DEFAULT_BRANDING
@@ -69,19 +70,21 @@ export async function getOrgBranding(
  */
 export async function getEventBranding(pb: PocketBase, editionId: string): Promise<EmailBranding> {
   try {
-    const edition = await pb.collection('editions').getOne(editionId, { expand: 'eventId' })
-    const event = edition.expand?.eventId as Record<string, unknown> | undefined
+    const edition = await pb
+      .collection('editions')
+      .getOne<PBEditionRecord>(editionId, { expand: 'eventId' })
+    const event = edition.expand?.eventId
 
     if (!event) return DEFAULT_BRANDING
 
-    const eventId = event.id as string
-    const organizationId = event.organizationId as string
+    const eventId = event.id
+    const organizationId = event.organizationId
 
     // Get org branding as base
     const orgBranding = await getOrgBranding(pb, organizationId)
 
     // Get event record for branding overrides
-    const eventRecord = await pb.collection('events').getOne(eventId)
+    const eventRecord = await pb.collection('events').getOne<PBEventRecord>(eventId)
 
     const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
     let logoUrl = orgBranding.logoUrl
@@ -90,11 +93,11 @@ export async function getEventBranding(pb: PocketBase, editionId: string): Promi
     }
 
     return {
-      orgName: (eventRecord.name as string) || orgBranding.orgName,
+      orgName: eventRecord.name || orgBranding.orgName,
       logoUrl,
-      primaryColor: (eventRecord.primaryColor as string) || orgBranding.primaryColor,
-      secondaryColor: (eventRecord.secondaryColor as string) || orgBranding.secondaryColor,
-      website: (eventRecord.website as string) || orgBranding.website
+      primaryColor: eventRecord.primaryColor || orgBranding.primaryColor,
+      secondaryColor: eventRecord.secondaryColor || orgBranding.secondaryColor,
+      website: eventRecord.website || orgBranding.website
     }
   } catch {
     return DEFAULT_BRANDING

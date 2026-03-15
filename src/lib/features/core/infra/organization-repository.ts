@@ -1,5 +1,5 @@
+import type { PBOrganizationRecord } from '$lib/server/pb-types'
 import type PocketBase from 'pocketbase'
-import type { RecordModel } from 'pocketbase'
 import type { CreateOrganizationInput, Organization, UpdateOrganizationInput } from '../domain'
 
 export type OrganizationRepository = {
@@ -11,7 +11,7 @@ export type OrganizationRepository = {
   delete: (id: string) => Promise<void>
 }
 
-const mapToOrganization = (record: RecordModel): Organization => ({
+const mapToOrganization = (record: PBOrganizationRecord): Organization => ({
   id: record.id,
   name: record.name,
   slug: record.slug,
@@ -32,13 +32,13 @@ const mapToOrganization = (record: RecordModel): Organization => ({
 
 export const createOrganizationRepository = (pb: PocketBase): OrganizationRepository => ({
   async create(input) {
-    const record = await pb.collection('organizations').create(input)
+    const record = await pb.collection('organizations').create<PBOrganizationRecord>(input)
     return mapToOrganization(record)
   },
 
   async findById(id) {
     try {
-      const record = await pb.collection('organizations').getOne(id)
+      const record = await pb.collection('organizations').getOne<PBOrganizationRecord>(id)
       return mapToOrganization(record)
     } catch {
       return null
@@ -47,7 +47,9 @@ export const createOrganizationRepository = (pb: PocketBase): OrganizationReposi
 
   async findBySlug(slug) {
     try {
-      const record = await pb.collection('organizations').getFirstListItem(`slug="${slug}"`)
+      const record = await pb
+        .collection('organizations')
+        .getFirstListItem<PBOrganizationRecord>(`slug="${slug}"`)
       return mapToOrganization(record)
     } catch {
       return null
@@ -55,12 +57,12 @@ export const createOrganizationRepository = (pb: PocketBase): OrganizationReposi
   },
 
   async findAll() {
-    const records = await pb.collection('organizations').getFullList()
+    const records = await pb.collection('organizations').getFullList<PBOrganizationRecord>()
     return records.map(mapToOrganization)
   },
 
   async update(id, input) {
-    const record = await pb.collection('organizations').update(id, input)
+    const record = await pb.collection('organizations').update<PBOrganizationRecord>(id, input)
     return mapToOrganization(record)
   },
 

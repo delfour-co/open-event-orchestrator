@@ -1,5 +1,6 @@
 import type { AuditAction } from '$lib/features/core/domain/audit-log'
 import { createAuditLogRepository } from '$lib/features/core/infra/audit-log-repository'
+import type { PBOrganizationMemberRecord, PBOrganizationRecord } from '$lib/server/pb-types'
 import { canAccessSettings } from '$lib/server/permissions'
 import { error, redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
@@ -13,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
   try {
     const organization = await locals.pb
       .collection('organizations')
-      .getFirstListItem(`slug="${params.orgSlug}"`)
+      .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
 
     const page = Number(url.searchParams.get('page')) || 1
     const action = url.searchParams.get('action') || undefined
@@ -29,16 +30,16 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 
     let members: Array<{ id: string; name: string }> = []
     try {
-      const memberRecords = await locals.pb.collection('organization_members').getFullList({
-        filter: `organizationId="${organization.id}"`,
-        expand: 'userId'
-      })
+      const memberRecords = await locals.pb
+        .collection('organization_members')
+        .getFullList<PBOrganizationMemberRecord>({
+          filter: `organizationId="${organization.id}"`,
+          expand: 'userId'
+        })
       members = memberRecords
         .map((m) => ({
-          id: m.userId as string,
-          name: m.expand?.userId
-            ? ((m.expand.userId as Record<string, unknown>).name as string)
-            : 'Unknown'
+          id: m.userId,
+          name: m.expand?.userId ? m.expand.userId.name : 'Unknown'
         }))
         .filter((m, i, arr) => arr.findIndex((a) => a.id === m.id) === i)
     } catch {
@@ -47,9 +48,9 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 
     return {
       organization: {
-        id: organization.id as string,
-        name: organization.name as string,
-        slug: organization.slug as string
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug
       },
       auditLogs,
       members,

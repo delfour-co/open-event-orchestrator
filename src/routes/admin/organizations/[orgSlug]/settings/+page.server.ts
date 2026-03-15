@@ -1,4 +1,5 @@
 import { writeAuditLog } from '$lib/server/audit-log-service'
+import type { PBOrganizationRecord } from '$lib/server/pb-types'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
@@ -32,7 +33,7 @@ export const actions: Actions = {
     try {
       const organization = await locals.pb
         .collection('organizations')
-        .getFirstListItem(`slug="${params.orgSlug}"`)
+        .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
 
       // Check if slug is being changed and if new slug already exists
       if (slug !== params.orgSlug) {
@@ -56,7 +57,7 @@ export const actions: Actions = {
       writeAuditLog(locals.pb, {
         organizationId: organization.id,
         userId: locals.user?.id,
-        userName: locals.user?.name as string,
+        userName: locals.user?.name ?? '',
         action: 'org_update',
         entityType: 'organization',
         entityId: organization.id,
@@ -88,7 +89,7 @@ export const actions: Actions = {
     try {
       const organization = await locals.pb
         .collection('organizations')
-        .getFirstListItem(`slug="${params.orgSlug}"`)
+        .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
 
       const events = await locals.pb.collection('events').getFullList({
         filter: `organizationId="${organization.id}"`
@@ -113,11 +114,11 @@ export const actions: Actions = {
       writeAuditLog(locals.pb, {
         organizationId: organization.id,
         userId: locals.user?.id,
-        userName: locals.user?.name as string,
+        userName: locals.user?.name ?? '',
         action: 'org_delete',
         entityType: 'organization',
         entityId: organization.id,
-        entityName: organization.name as string,
+        entityName: organization.name,
         ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
         userAgent: request.headers.get('user-agent') || ''
       })

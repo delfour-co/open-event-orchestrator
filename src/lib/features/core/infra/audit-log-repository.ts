@@ -1,3 +1,4 @@
+import type { PBAuditLogRecord } from '$lib/server/pb-types'
 import type PocketBase from 'pocketbase'
 import type { AuditLog, AuditLogFilters, PaginatedAuditLogs } from '../domain/audit-log'
 import { AUDIT_RETENTION_DAYS } from '../domain/audit-log'
@@ -13,20 +14,20 @@ export interface AuditLogRepository {
   exportCsv(organizationId: string, filters?: AuditLogFilters): Promise<string>
 }
 
-function mapRecordToAuditLog(record: Record<string, unknown>): AuditLog {
+function mapRecordToAuditLog(record: PBAuditLogRecord): AuditLog {
   return {
-    id: record.id as string,
-    organizationId: record.organizationId as string,
-    userId: (record.userId as string) || undefined,
-    userName: (record.userName as string) || undefined,
+    id: record.id,
+    organizationId: record.organizationId,
+    userId: record.userId || undefined,
+    userName: record.userName || undefined,
     action: record.action as AuditLog['action'],
     entityType: (record.entityType as AuditLog['entityType']) || undefined,
-    entityId: (record.entityId as string) || undefined,
-    entityName: (record.entityName as string) || undefined,
-    details: (record.details as Record<string, unknown>) || undefined,
-    ipAddress: (record.ipAddress as string) || undefined,
-    userAgent: (record.userAgent as string) || undefined,
-    created: new Date(record.created as string)
+    entityId: record.entityId || undefined,
+    entityName: record.entityName || undefined,
+    details: record.details || undefined,
+    ipAddress: record.ipAddress || undefined,
+    userAgent: record.userAgent || undefined,
+    created: new Date(record.created)
   }
 }
 
@@ -60,14 +61,14 @@ function buildFilterParts(organizationId: string, filters?: AuditLogFilters): st
 export function createAuditLogRepository(pb: PocketBase): AuditLogRepository {
   return {
     async create(data) {
-      const record = await pb.collection('audit_logs').create(data)
+      const record = await pb.collection('audit_logs').create<PBAuditLogRecord>(data)
       return mapRecordToAuditLog(record)
     },
 
     async findByOrganization(organizationId, filters, page = 1, perPage = 25) {
       const filterParts = buildFilterParts(organizationId, filters)
 
-      const result = await pb.collection('audit_logs').getList(page, perPage, {
+      const result = await pb.collection('audit_logs').getList<PBAuditLogRecord>(page, perPage, {
         filter: filterParts.join(' && '),
         sort: '-created'
       })
@@ -84,19 +85,19 @@ export function createAuditLogRepository(pb: PocketBase): AuditLogRepository {
     async exportCsv(organizationId, filters) {
       const filterParts = buildFilterParts(organizationId, filters)
 
-      const records = await pb.collection('audit_logs').getFullList({
+      const records = await pb.collection('audit_logs').getFullList<PBAuditLogRecord>({
         filter: filterParts.join(' && '),
         sort: '-created'
       })
 
       const headers = ['Date', 'User', 'Action', 'Entity Type', 'Entity Name', 'IP Address']
       const rows = records.map((r) => [
-        new Date(r.created as string).toISOString(),
-        (r.userName as string) || '',
-        r.action as string,
-        (r.entityType as string) || '',
-        (r.entityName as string) || '',
-        (r.ipAddress as string) || ''
+        new Date(r.created).toISOString(),
+        r.userName || '',
+        r.action,
+        r.entityType || '',
+        r.entityName || '',
+        r.ipAddress || ''
       ])
 
       return [headers.join(','), ...rows.map((r) => r.map((v) => `"${v}"`).join(','))].join('\n')

@@ -1,4 +1,5 @@
 import { buildFileUrl } from '$lib/server/file-url'
+import type { PBEventRecord } from '$lib/server/pb-types'
 import { canAccessSettings } from '$lib/server/permissions'
 import { error, redirect } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
@@ -12,7 +13,7 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
   try {
     const event = await locals.pb
       .collection('events')
-      .getFirstListItem(`slug="${params.eventSlug}"`, {
+      .getFirstListItem<PBEventRecord>(`slug="${params.eventSlug}"`, {
         expand: 'organizationId'
       })
 
@@ -24,37 +25,37 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
     let logoUrl: string | null = null
     let bannerUrl: string | null = null
     if (event.logo) {
-      logoUrl = buildFileUrl('events', event.id as string, event.logo as string)
+      logoUrl = buildFileUrl('events', event.id, event.logo)
     }
     if (event.banner) {
-      bannerUrl = buildFileUrl('events', event.id as string, event.banner as string)
+      bannerUrl = buildFileUrl('events', event.id, event.banner)
     }
 
     return {
       event: {
-        id: event.id as string,
-        name: event.name as string,
-        slug: event.slug as string,
-        description: (event.description as string) || '',
-        website: (event.website as string) || '',
-        defaultVenue: (event.defaultVenue as string) || '',
-        defaultCity: (event.defaultCity as string) || '',
-        defaultCountry: (event.defaultCountry as string) || '',
-        organizationId: event.organizationId as string,
+        id: event.id,
+        name: event.name,
+        slug: event.slug,
+        description: event.description || '',
+        website: event.website || '',
+        defaultVenue: event.defaultVenue || '',
+        defaultCity: event.defaultCity || '',
+        defaultCountry: event.defaultCountry || '',
+        organizationId: event.organizationId,
         organizationName: event.expand?.organizationId
-          ? ((event.expand.organizationId as Record<string, unknown>).name as string)
+          ? event.expand.organizationId.name
           : 'Unknown Organization',
-        primaryColor: (event.primaryColor as string) || '',
-        secondaryColor: (event.secondaryColor as string) || '',
-        twitter: (event.twitter as string) || '',
-        linkedin: (event.linkedin as string) || '',
-        hashtag: (event.hashtag as string) || '',
-        contactEmail: (event.contactEmail as string) || '',
-        codeOfConductUrl: (event.codeOfConductUrl as string) || '',
-        privacyPolicyUrl: (event.privacyPolicyUrl as string) || '',
-        timezone: (event.timezone as string) || '',
-        logo: (event.logo as string) || '',
-        banner: (event.banner as string) || '',
+        primaryColor: event.primaryColor || '',
+        secondaryColor: event.secondaryColor || '',
+        twitter: event.twitter || '',
+        linkedin: event.linkedin || '',
+        hashtag: event.hashtag || '',
+        contactEmail: event.contactEmail || '',
+        codeOfConductUrl: event.codeOfConductUrl || '',
+        privacyPolicyUrl: event.privacyPolicyUrl || '',
+        timezone: event.timezone || '',
+        logo: event.logo || '',
+        banner: event.banner || '',
         logoUrl,
         bannerUrl
       },

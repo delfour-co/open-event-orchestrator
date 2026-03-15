@@ -1,4 +1,9 @@
 import { buildFileUrl } from '$lib/server/file-url'
+import type {
+  PBOrganizationInvitationRecord,
+  PBOrganizationMemberRecord,
+  PBOrganizationRecord
+} from '$lib/server/pb-types'
 import { canAccessSettings } from '$lib/server/permissions'
 import { error, redirect } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
@@ -12,7 +17,7 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
   try {
     const organization = await locals.pb
       .collection('organizations')
-      .getFirstListItem(`slug="${params.orgSlug}"`, {
+      .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`, {
         expand: 'ownerId'
       })
 
@@ -26,21 +31,19 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
     }> = []
 
     try {
-      const memberRecords = await locals.pb.collection('organization_members').getFullList({
-        filter: `organizationId="${organization.id}"`,
-        expand: 'userId'
-      })
+      const memberRecords = await locals.pb
+        .collection('organization_members')
+        .getFullList<PBOrganizationMemberRecord>({
+          filter: `organizationId="${organization.id}"`,
+          expand: 'userId'
+        })
 
       members = memberRecords.map((m) => ({
-        id: m.id as string,
-        userId: m.userId as string,
-        name: m.expand?.userId
-          ? ((m.expand.userId as Record<string, unknown>).name as string)
-          : 'Unknown',
-        email: m.expand?.userId
-          ? ((m.expand.userId as Record<string, unknown>).email as string)
-          : '',
-        role: m.role as string
+        id: m.id,
+        userId: m.userId,
+        name: m.expand?.userId ? m.expand.userId.name : 'Unknown',
+        email: m.expand?.userId ? m.expand.userId.email : '',
+        role: m.role
       }))
     } catch {
       // Collection might not exist yet or no members
@@ -55,15 +58,17 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
     }> = []
 
     try {
-      const invitationRecords = await locals.pb.collection('organization_invitations').getFullList({
-        filter: `organizationId="${organization.id}" && status="pending"`
-      })
+      const invitationRecords = await locals.pb
+        .collection('organization_invitations')
+        .getFullList<PBOrganizationInvitationRecord>({
+          filter: `organizationId="${organization.id}" && status="pending"`
+        })
 
       invitations = invitationRecords.map((inv) => ({
-        id: inv.id as string,
-        email: inv.email as string,
-        role: inv.role as string,
-        createdAt: inv.created as string
+        id: inv.id,
+        email: inv.email,
+        role: inv.role,
+        createdAt: inv.created
       }))
     } catch {
       // Collection might not exist yet
@@ -76,45 +81,39 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
 
     let logoUrl: string | null = null
     if (organization.logo) {
-      logoUrl = buildFileUrl(
-        'organizations',
-        organization.id as string,
-        organization.logo as string
-      )
+      logoUrl = buildFileUrl('organizations', organization.id, organization.logo)
     }
 
     return {
       organization: {
-        id: organization.id as string,
-        name: organization.name as string,
-        slug: organization.slug as string,
-        description: (organization.description as string) || '',
-        website: (organization.website as string) || '',
-        contactEmail: (organization.contactEmail as string) || '',
-        vatRate: (organization.vatRate as number) ?? 20,
-        legalName: (organization.legalName as string) || '',
-        legalForm: (organization.legalForm as string) || '',
-        rcsNumber: (organization.rcsNumber as string) || '',
-        shareCapital: (organization.shareCapital as string) || '',
-        siret: (organization.siret as string) || '',
-        vatNumber: (organization.vatNumber as string) || '',
-        address: (organization.address as string) || '',
-        city: (organization.city as string) || '',
-        postalCode: (organization.postalCode as string) || '',
-        country: (organization.country as string) || '',
-        primaryColor: (organization.primaryColor as string) || '',
-        secondaryColor: (organization.secondaryColor as string) || '',
-        twitter: (organization.twitter as string) || '',
-        linkedin: (organization.linkedin as string) || '',
-        github: (organization.github as string) || '',
-        youtube: (organization.youtube as string) || '',
-        timezone: (organization.timezone as string) || '',
-        defaultLocale: (organization.defaultLocale as string) || '',
-        logo: (organization.logo as string) || '',
-        ownerId: (organization.ownerId as string) || null,
-        ownerName: organization.expand?.ownerId
-          ? ((organization.expand.ownerId as Record<string, unknown>).name as string)
-          : null
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+        description: organization.description || '',
+        website: organization.website || '',
+        contactEmail: organization.contactEmail || '',
+        vatRate: organization.vatRate ?? 20,
+        legalName: organization.legalName || '',
+        legalForm: organization.legalForm || '',
+        rcsNumber: organization.rcsNumber || '',
+        shareCapital: organization.shareCapital || '',
+        siret: organization.siret || '',
+        vatNumber: organization.vatNumber || '',
+        address: organization.address || '',
+        city: organization.city || '',
+        postalCode: organization.postalCode || '',
+        country: organization.country || '',
+        primaryColor: organization.primaryColor || '',
+        secondaryColor: organization.secondaryColor || '',
+        twitter: organization.twitter || '',
+        linkedin: organization.linkedin || '',
+        github: organization.github || '',
+        youtube: organization.youtube || '',
+        timezone: organization.timezone || '',
+        defaultLocale: organization.defaultLocale || '',
+        logo: organization.logo || '',
+        ownerId: organization.ownerId || null,
+        ownerName: organization.expand?.ownerId ? organization.expand.ownerId.name : null
       },
       logoUrl,
       members,

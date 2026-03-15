@@ -1,6 +1,11 @@
 import { writeAuditLog } from '$lib/server/audit-log-service'
 import { getEventBus } from '$lib/server/event-bus'
 import { sendInvitationEmail } from '$lib/server/invitation-notifications'
+import type {
+  PBOrganizationInvitationRecord,
+  PBOrganizationMemberRecord,
+  PBOrganizationRecord
+} from '$lib/server/pb-types'
 import { canAccessSettings } from '$lib/server/permissions'
 import { fail } from '@sveltejs/kit'
 import type { Actions } from './$types'
@@ -28,7 +33,7 @@ export const actions: Actions = {
     try {
       const organization = await locals.pb
         .collection('organizations')
-        .getFirstListItem(`slug="${params.orgSlug}"`)
+        .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
 
       // Check if there's already a pending invitation for this email
       try {
@@ -72,18 +77,18 @@ export const actions: Actions = {
         await sendInvitationEmail({
           pb: locals.pb,
           email,
-          organizationName: organization.name as string,
+          organizationName: organization.name,
           role,
           invitedByName,
           acceptUrl,
           logoUrl,
-          primaryColor: (organization.primaryColor as string) || undefined
+          primaryColor: organization.primaryColor || undefined
         })
 
         writeAuditLog(locals.pb, {
           organizationId: organization.id,
           userId: locals.user?.id,
-          userName: locals.user?.name as string,
+          userName: locals.user?.name ?? '',
           action: 'invitation_send',
           entityType: 'invitation',
           entityId: email,
@@ -117,7 +122,7 @@ export const actions: Actions = {
       getEventBus().emit('member.joined', {
         userId: user.id,
         organizationId: organization.id,
-        organizationName: organization.name as string,
+        organizationName: organization.name,
         userName: user.name,
         userEmail: email,
         role,
@@ -127,7 +132,7 @@ export const actions: Actions = {
       writeAuditLog(locals.pb, {
         organizationId: organization.id,
         userId: locals.user?.id,
-        userName: locals.user?.name as string,
+        userName: locals.user?.name ?? '',
         action: 'member_add',
         entityType: 'member',
         entityId: user.id,
@@ -189,21 +194,23 @@ export const actions: Actions = {
     }
 
     try {
-      const member = await locals.pb.collection('organization_members').getOne(memberId)
+      const member = await locals.pb
+        .collection('organization_members')
+        .getOne<PBOrganizationMemberRecord>(memberId)
       await locals.pb.collection('organization_members').update(memberId, { role })
 
       const organization = await locals.pb
         .collection('organizations')
-        .getFirstListItem(`slug="${params.orgSlug}"`)
+        .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
 
       writeAuditLog(locals.pb, {
         organizationId: organization.id,
         userId: locals.user?.id,
-        userName: locals.user?.name as string,
+        userName: locals.user?.name ?? '',
         action: 'member_role_change',
         entityType: 'member',
         entityId: memberId,
-        entityName: member.userId as string,
+        entityName: member.userId,
         details: { newRole: role },
         ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
         userAgent: request.headers.get('user-agent') || ''
@@ -231,21 +238,23 @@ export const actions: Actions = {
     }
 
     try {
-      const member = await locals.pb.collection('organization_members').getOne(memberId)
+      const member = await locals.pb
+        .collection('organization_members')
+        .getOne<PBOrganizationMemberRecord>(memberId)
       await locals.pb.collection('organization_members').delete(memberId)
 
       const organization = await locals.pb
         .collection('organizations')
-        .getFirstListItem(`slug="${params.orgSlug}"`)
+        .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
 
       writeAuditLog(locals.pb, {
         organizationId: organization.id,
         userId: locals.user?.id,
-        userName: locals.user?.name as string,
+        userName: locals.user?.name ?? '',
         action: 'member_remove',
         entityType: 'member',
         entityId: memberId,
-        entityName: member.userId as string,
+        entityName: member.userId,
         ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
         userAgent: request.headers.get('user-agent') || ''
       })
@@ -271,14 +280,16 @@ export const actions: Actions = {
     }
 
     try {
-      const invitation = await locals.pb.collection('organization_invitations').getOne(invitationId)
+      const invitation = await locals.pb
+        .collection('organization_invitations')
+        .getOne<PBOrganizationInvitationRecord>(invitationId)
       const organization = await locals.pb
         .collection('organizations')
-        .getFirstListItem(`slug="${params.orgSlug}"`)
+        .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
 
       // Generate new token if not present
       const { generateInvitationToken } = await import('$lib/features/core/domain/invitation')
-      let token = invitation.token as string
+      let token = invitation.token
       if (!token) {
         token = generateInvitationToken()
       }
@@ -297,23 +308,23 @@ export const actions: Actions = {
 
       await sendInvitationEmail({
         pb: locals.pb,
-        email: invitation.email as string,
-        organizationName: organization.name as string,
-        role: invitation.role as string,
+        email: invitation.email,
+        organizationName: organization.name,
+        role: invitation.role,
         invitedByName,
         acceptUrl,
         logoUrl,
-        primaryColor: (organization.primaryColor as string) || undefined
+        primaryColor: organization.primaryColor || undefined
       })
 
       writeAuditLog(locals.pb, {
         organizationId: organization.id,
         userId: locals.user?.id,
-        userName: locals.user?.name as string,
+        userName: locals.user?.name ?? '',
         action: 'invitation_send',
         entityType: 'invitation',
         entityId: invitationId,
-        entityName: invitation.email as string,
+        entityName: invitation.email,
         details: { resend: true },
         ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
         userAgent: request.headers.get('user-agent') || ''
@@ -353,7 +364,7 @@ export const actions: Actions = {
     try {
       const organization = await locals.pb
         .collection('organizations')
-        .getFirstListItem(`slug="${params.orgSlug}"`)
+        .getFirstListItem<PBOrganizationRecord>(`slug="${params.orgSlug}"`)
       const invitedByName = locals.user?.name || 'A team member'
       let sentCount = 0
       let skipCount = 0
@@ -394,12 +405,12 @@ export const actions: Actions = {
         await sendInvitationEmail({
           pb: locals.pb,
           email: row.email,
-          organizationName: organization.name as string,
+          organizationName: organization.name,
           role: row.role,
           invitedByName,
           acceptUrl,
           logoUrl,
-          primaryColor: (organization.primaryColor as string) || undefined
+          primaryColor: organization.primaryColor || undefined
         })
         sentCount++
       }
@@ -412,7 +423,7 @@ export const actions: Actions = {
         writeAuditLog(locals.pb, {
           organizationId: organization.id,
           userId: locals.user?.id,
-          userName: locals.user?.name as string,
+          userName: locals.user?.name ?? '',
           action: 'invitation_send',
           entityType: 'invitation',
           entityName: 'bulk invite',

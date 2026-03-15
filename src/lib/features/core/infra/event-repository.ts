@@ -1,6 +1,6 @@
+import type { PBEventRecord } from '$lib/server/pb-types'
 import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
-import type { RecordModel } from 'pocketbase'
 import type { CreateEventInput, Event, UpdateEventInput } from '../domain'
 
 export type EventRepository = {
@@ -12,7 +12,7 @@ export type EventRepository = {
   delete: (id: string) => Promise<void>
 }
 
-const mapToEvent = (record: RecordModel): Event => ({
+const mapToEvent = (record: PBEventRecord): Event => ({
   id: record.id,
   organizationId: record.organizationId,
   name: record.name,
@@ -20,7 +20,7 @@ const mapToEvent = (record: RecordModel): Event => ({
   description: record.description || undefined,
   logo: record.logo || undefined,
   website: record.website || undefined,
-  currency: record.currency || 'USD',
+  currency: (record.currency as Event['currency']) || 'USD',
   banner: record.banner || undefined,
   primaryColor: record.primaryColor || undefined,
   secondaryColor: record.secondaryColor || undefined,
@@ -37,13 +37,13 @@ const mapToEvent = (record: RecordModel): Event => ({
 
 export const createEventRepository = (pb: PocketBase): EventRepository => ({
   async create(input) {
-    const record = await pb.collection('events').create(input)
+    const record = await pb.collection('events').create<PBEventRecord>(input)
     return mapToEvent(record)
   },
 
   async findById(id) {
     try {
-      const record = await pb.collection('events').getOne(id)
+      const record = await pb.collection('events').getOne<PBEventRecord>(id)
       return mapToEvent(record)
     } catch {
       return null
@@ -52,7 +52,9 @@ export const createEventRepository = (pb: PocketBase): EventRepository => ({
 
   async findBySlug(slug) {
     try {
-      const record = await pb.collection('events').getFirstListItem(safeFilter`slug = ${slug}`)
+      const record = await pb
+        .collection('events')
+        .getFirstListItem<PBEventRecord>(safeFilter`slug = ${slug}`)
       return mapToEvent(record)
     } catch {
       return null
@@ -62,12 +64,12 @@ export const createEventRepository = (pb: PocketBase): EventRepository => ({
   async findByOrganization(organizationId) {
     const records = await pb
       .collection('events')
-      .getFullList({ filter: safeFilter`organizationId = ${organizationId}` })
+      .getFullList<PBEventRecord>({ filter: safeFilter`organizationId = ${organizationId}` })
     return records.map(mapToEvent)
   },
 
   async update(id, input) {
-    const record = await pb.collection('events').update(id, input)
+    const record = await pb.collection('events').update<PBEventRecord>(id, input)
     return mapToEvent(record)
   },
 

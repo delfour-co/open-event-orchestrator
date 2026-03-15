@@ -5,27 +5,9 @@ import * as Card from '$lib/components/ui/card'
 import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
-import { Textarea } from '$lib/components/ui/textarea'
 import * as m from '$lib/paraglide/messages'
 import { getLocale } from '$lib/paraglide/runtime'
-import {
-  ArrowLeft,
-  Calendar,
-  Check,
-  Clock,
-  Copy,
-  DoorOpen,
-  ExternalLink,
-  GripVertical,
-  Layers,
-  Loader2,
-  Mic,
-  Pencil,
-  Plus,
-  Trash2,
-  Users,
-  X
-} from 'lucide-svelte'
+import { Clock, DoorOpen, GripVertical, Layers, Loader2, Plus, X } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -35,31 +17,8 @@ interface Props {
 
 const { data, form }: Props = $props()
 
-let activeTab = $state<
-  'schedule' | 'sessions' | 'rooms' | 'tracks' | 'slots' | 'staff' | 'settings'
->('schedule')
 let scheduleView = $state<'by-room' | 'by-track'>('by-room')
-let copiedUrl = $state(false)
-let showRoomForm = $state(false)
-let showTrackForm = $state(false)
-let showSlotForm = $state(false)
 let isSubmitting = $state(false)
-let selectedRoomId = $state('')
-
-// Edit states
-let editingRoom = $state<(typeof data.rooms)[0] | null>(null)
-let editingTrack = $state<(typeof data.tracks)[0] | null>(null)
-let editingSlot = $state<(typeof data.slots)[0] | null>(null)
-
-// Room assignment form states
-let showAssignmentForm = $state(false)
-let editingAssignment = $state<(typeof data.roomAssignments)[0] | null>(null)
-let assignmentRoomId = $state<string>('')
-let assignmentMemberId = $state<string>('')
-let assignmentDate = $state<string>('')
-let assignmentStartTime = $state<string>('')
-let assignmentEndTime = $state<string>('')
-let assignmentNotes = $state<string>('')
 
 // Session form states
 let showSessionForm = $state(false)
@@ -70,7 +29,7 @@ let sessionTitle = $state<string>('')
 let selectedTalkId = $state<string>('')
 let selectedTrackId = $state<string>('')
 
-// Session type options - using function to get translated labels
+// Session type options
 const getSessionTypeOptions = () => [
   { value: 'talk', label: m.planning_session_type_talk() },
   { value: 'workshop', label: m.planning_session_type_workshop() },
@@ -83,34 +42,15 @@ const getSessionTypeOptions = () => [
   { value: 'other', label: m.planning_session_type_other() }
 ]
 
-// Types that require a talk
 const talkRequiredTypes = ['talk', 'workshop', 'keynote', 'panel']
 
-// Computed: available talks (accepted/confirmed but not yet scheduled)
 const availableTalks = $derived(() => {
   const scheduledTalkIds = new Set(data.sessions.filter((s) => s.talkId).map((s) => s.talkId))
-  // When editing, include the currently assigned talk as available
   if (editingSession?.talkId) {
     scheduledTalkIds.delete(editingSession.talkId)
   }
   return data.acceptedTalks.filter((t) => !scheduledTalkIds.has(t.id))
 })
-
-// Equipment options - using function to get translated labels
-const getEquipmentOptions = () => [
-  { value: 'projector', label: m.planning_equipment_projector() },
-  { value: 'screen', label: m.planning_equipment_screen() },
-  { value: 'microphone', label: m.planning_equipment_microphone() },
-  { value: 'whiteboard', label: m.planning_equipment_whiteboard() },
-  { value: 'video_recording', label: m.planning_equipment_video_recording() },
-  { value: 'live_streaming', label: m.planning_equipment_live_streaming() },
-  { value: 'power_outlets', label: m.planning_equipment_power_outlets() },
-  { value: 'wifi', label: m.planning_equipment_wifi() },
-  { value: 'air_conditioning', label: m.planning_equipment_air_conditioning() },
-  { value: 'wheelchair_accessible', label: m.planning_equipment_wheelchair_accessible() }
-]
-
-let selectedEquipment = $state<string[]>([])
 
 const formatDate = (date: Date) => {
   const locale = getLocale() === 'fr' ? 'fr-FR' : 'en-US'
@@ -119,10 +59,6 @@ const formatDate = (date: Date) => {
     month: 'short',
     day: 'numeric'
   }).format(date)
-}
-
-const formatDateInput = (date: Date) => {
-  return date.toISOString().split('T')[0]
 }
 
 // Get unique dates from slots
@@ -162,13 +98,11 @@ const sessionsByTrackAndDate = $derived(() => {
     >
   > = {}
 
-  // Initialize with "No Track" group
   grouped['no-track'] = {}
   for (const dateStr of uniqueDates()) {
     grouped['no-track'][dateStr] = []
   }
 
-  // Initialize track groups
   for (const track of data.tracks) {
     grouped[track.id] = {}
     for (const dateStr of uniqueDates()) {
@@ -176,7 +110,6 @@ const sessionsByTrackAndDate = $derived(() => {
     }
   }
 
-  // Populate with sessions
   for (const session of data.sessions) {
     const slot = data.slots.find((s) => s.id === session.slotId)
     if (!slot) continue
@@ -190,7 +123,6 @@ const sessionsByTrackAndDate = $derived(() => {
     }
   }
 
-  // Sort each day's sessions by start time
   for (const trackId of Object.keys(grouped)) {
     for (const dateStr of Object.keys(grouped[trackId])) {
       grouped[trackId][dateStr].sort((a, b) => a.slot.startTime.localeCompare(b.slot.startTime))
@@ -210,97 +142,17 @@ const getTrackColor = (trackId: string | undefined) => {
   return track?.color || '#6b7280'
 }
 
-// Close forms on successful submission
-$effect(() => {
-  if (form?.success) {
-    if (form.action === 'createRoom' || form.action === 'updateRoom') {
-      showRoomForm = false
-      editingRoom = null
-      selectedEquipment = []
-    }
-    if (form.action === 'createTrack' || form.action === 'updateTrack') {
-      showTrackForm = false
-      editingTrack = null
-    }
-    if (form.action === 'createSlot' || form.action === 'updateSlot') {
-      showSlotForm = false
-      editingSlot = null
-    }
-    if (
-      form.action === 'deleteRoom' ||
-      form.action === 'deleteTrack' ||
-      form.action === 'deleteSlot'
-    ) {
-      // Just close any open forms
-    }
-  }
-})
-
-// Get public schedule URL
-const publicScheduleUrl = $derived(
-  `${typeof window !== 'undefined' ? window.location.origin : ''}/schedule/${data.edition.slug}`
-)
-
-async function copyScheduleUrl() {
-  try {
-    await navigator.clipboard.writeText(publicScheduleUrl)
-    copiedUrl = true
-    setTimeout(() => {
-      copiedUrl = false
-    }, 2000)
-  } catch {
-    // Fallback for older browsers
-    const input = document.createElement('input')
-    input.value = publicScheduleUrl
-    document.body.appendChild(input)
-    input.select()
-    document.execCommand('copy')
-    document.body.removeChild(input)
-    copiedUrl = true
-    setTimeout(() => {
-      copiedUrl = false
-    }, 2000)
-  }
+function getSessionTypeLabel(type: string): string {
+  return getSessionTypeOptions().find((o) => o.value === type)?.label || type
 }
 
-function startEditRoom(room: (typeof data.rooms)[0]) {
-  editingRoom = room
-  selectedEquipment = [...room.equipment]
-  showRoomForm = true
-}
-
-function startEditTrack(track: (typeof data.tracks)[0]) {
-  editingTrack = track
-  showTrackForm = true
-}
-
-function startEditSlot(slot: (typeof data.slots)[0]) {
-  editingSlot = slot
-  selectedRoomId = slot.roomId
-  showSlotForm = true
-}
-
-function cancelRoomForm() {
-  showRoomForm = false
-  editingRoom = null
-  selectedEquipment = []
-}
-
-function cancelTrackForm() {
-  showTrackForm = false
-  editingTrack = null
-}
-
-function cancelSlotForm() {
-  showSlotForm = false
-  editingSlot = null
-}
-
-function toggleEquipment(value: string) {
-  if (selectedEquipment.includes(value)) {
-    selectedEquipment = selectedEquipment.filter((e) => e !== value)
-  } else {
-    selectedEquipment = [...selectedEquipment, value]
+function getSlotInfo(slotId: string) {
+  const slot = data.slots.find((s) => s.id === slotId)
+  if (!slot) return null
+  const room = data.rooms.find((r) => r.id === slot.roomId)
+  return {
+    ...slot,
+    roomName: room?.name || 'Unknown room'
   }
 }
 
@@ -340,7 +192,6 @@ function cancelSessionForm() {
   selectedTrackId = ''
 }
 
-// Auto-fill title when selecting a talk
 function handleTalkSelection(talkId: string) {
   selectedTalkId = talkId
   if (talkId) {
@@ -349,22 +200,6 @@ function handleTalkSelection(talkId: string) {
       sessionTitle = talk.title
     }
   }
-}
-
-// Get slot info for display
-function getSlotInfo(slotId: string) {
-  const slot = data.slots.find((s) => s.id === slotId)
-  if (!slot) return null
-  const room = data.rooms.find((r) => r.id === slot.roomId)
-  return {
-    ...slot,
-    roomName: room?.name || 'Unknown room'
-  }
-}
-
-// Get session type label
-function getSessionTypeLabel(type: string): string {
-  return getSessionTypeOptions().find((o) => o.value === type)?.label || type
 }
 
 // Close session form on successful submission
@@ -377,54 +212,7 @@ $effect(() => {
     ) {
       cancelSessionForm()
     }
-    if (
-      form.action === 'createRoomAssignment' ||
-      form.action === 'updateRoomAssignment' ||
-      form.action === 'deleteRoomAssignment'
-    ) {
-      cancelAssignmentForm()
-    }
   }
-})
-
-// Room assignment functions
-function startEditAssignment(assignment: (typeof data.roomAssignments)[0]) {
-  editingAssignment = assignment
-  assignmentRoomId = assignment.roomId
-  assignmentMemberId = assignment.memberId
-  assignmentDate = assignment.date ? assignment.date.toISOString().split('T')[0] : ''
-  assignmentStartTime = assignment.startTime || ''
-  assignmentEndTime = assignment.endTime || ''
-  assignmentNotes = assignment.notes || ''
-  showAssignmentForm = true
-}
-
-function cancelAssignmentForm() {
-  showAssignmentForm = false
-  editingAssignment = null
-  assignmentRoomId = ''
-  assignmentMemberId = ''
-  assignmentDate = ''
-  assignmentStartTime = ''
-  assignmentEndTime = ''
-  assignmentNotes = ''
-}
-
-function openAssignmentFormForRoom(roomId: string) {
-  cancelAssignmentForm()
-  assignmentRoomId = roomId
-  showAssignmentForm = true
-}
-
-// Get assignments for a room
-function getAssignmentsForRoom(roomId: string) {
-  return data.roomAssignments.filter((a) => a.roomId === roomId)
-}
-
-// Computed: rooms without assignments
-const roomsWithoutAssignments = $derived(() => {
-  const roomsWithAssignments = new Set(data.roomAssignments.map((a) => a.roomId))
-  return data.rooms.filter((r) => !roomsWithAssignments.has(r.id))
 })
 
 // Drag and drop states
@@ -433,7 +221,6 @@ let draggedFromSlotId = $state<string | null>(null)
 let dragOverSlotId = $state<string | null>(null)
 let isDragging = $state(false)
 
-// Drag and drop handlers
 function handleDragStart(event: DragEvent, sessionId: string, slotId: string) {
   if (!event.dataTransfer) return
   draggedSessionId = sessionId
@@ -453,7 +240,6 @@ function handleDragEnd() {
 function handleDragOver(event: DragEvent, slotId: string) {
   event.preventDefault()
   if (!event.dataTransfer) return
-  // Don't allow dropping on the same slot
   if (slotId === draggedFromSlotId) {
     event.dataTransfer.dropEffect = 'none'
     return
@@ -493,1144 +279,230 @@ let moveFormRef = $state<HTMLFormElement | null>(null)
 let swapFormRef = $state<HTMLFormElement | null>(null)
 </script>
 
-<svelte:head>
-  <title>{m.planning_edition_page_title({ name: data.edition.name })}</title>
-</svelte:head>
-
-<div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-4">
-      <a href="/admin/planning">
-        <Button variant="ghost" size="icon">
-          <ArrowLeft class="h-5 w-5" />
-        </Button>
-      </a>
-      <div>
-        <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-      </div>
-    </div>
-    <!-- URLs -->
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- Public Schedule URL -->
-      <div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-        <span class="text-xs text-muted-foreground">Schedule:</span>
-        <code class="text-xs">/schedule/{data.edition.slug}</code>
-        <Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyScheduleUrl}>
-          {#if copiedUrl}
-            <Check class="h-3 w-3 text-green-500" />
-          {:else}
-            <Copy class="h-3 w-3" />
-          {/if}
-        </Button>
-        <a href="/schedule/{data.edition.slug}" target="_blank">
-          <Button variant="ghost" size="icon" class="h-6 w-6">
-            <ExternalLink class="h-3 w-3" />
-          </Button>
-        </a>
-      </div>
+<!-- Schedule Tab -->
+{#if data.rooms.length === 0}
+  <Card.Root>
+    <Card.Content class="flex flex-col items-center justify-center py-12">
+      <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
+      <h3 class="text-lg font-semibold">{m.planning_schedule_no_rooms()}</h3>
+      <p class="text-sm text-muted-foreground">
+        {m.planning_schedule_no_rooms_hint()}
+      </p>
+    </Card.Content>
+  </Card.Root>
+{:else if data.slots.length === 0}
+  <Card.Root>
+    <Card.Content class="flex flex-col items-center justify-center py-12">
+      <Clock class="mb-4 h-12 w-12 text-muted-foreground" />
+      <h3 class="text-lg font-semibold">{m.planning_schedule_no_slots()}</h3>
+      <p class="text-sm text-muted-foreground">
+        {m.planning_schedule_no_slots_hint()}
+      </p>
+    </Card.Content>
+  </Card.Root>
+{:else}
+  <!-- View Switcher -->
+  <div class="mb-4 flex items-center gap-2">
+    <span class="text-sm text-muted-foreground">{m.planning_schedule_view()}</span>
+    <div class="flex rounded-md border">
+      <button
+        type="button"
+        class="px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-room' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
+        onclick={() => (scheduleView = 'by-room')}
+      >
+        <DoorOpen class="mr-1 inline h-4 w-4" />
+        {m.planning_schedule_by_room()}
+      </button>
+      <button
+        type="button"
+        class="px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-track' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
+        onclick={() => (scheduleView = 'by-track')}
+      >
+        <Layers class="mr-1 inline h-4 w-4" />
+        {m.planning_schedule_by_track()}
+      </button>
     </div>
   </div>
 
-  <!-- Tab Navigation -->
-  <nav class="flex gap-1 rounded-lg border bg-muted/40 p-1">
-    <button
-      onclick={() => (activeTab = 'schedule')}
-      class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'schedule'
-        ? 'bg-background shadow-sm'
-        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
-    >
-      {m.planning_tab_schedule()}
-    </button>
-    <button
-      onclick={() => (activeTab = 'sessions')}
-      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'sessions'
-        ? 'bg-background shadow-sm'
-        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
-    >
-      {m.planning_tab_sessions()} ({data.sessions.length})
-    </button>
-    <button
-      onclick={() => (activeTab = 'rooms')}
-      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'rooms'
-        ? 'bg-background shadow-sm'
-        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
-    >
-      {m.planning_tab_rooms()} ({data.rooms.length})
-    </button>
-    <button
-      onclick={() => (activeTab = 'tracks')}
-      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'tracks'
-        ? 'bg-background shadow-sm'
-        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
-    >
-      {m.planning_tab_tracks()} ({data.tracks.length})
-    </button>
-    <button
-      onclick={() => (activeTab = 'slots')}
-      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'slots'
-        ? 'bg-background shadow-sm'
-        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
-    >
-      {m.planning_tab_slots()} ({data.slots.length})
-    </button>
-    <button
-      onclick={() => (activeTab = 'staff')}
-      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {activeTab === 'staff'
-        ? 'bg-background shadow-sm'
-        : 'text-muted-foreground hover:bg-background hover:shadow-sm'}"
-    >
-      {m.planning_tab_staff()} ({data.roomAssignments.length})
-    </button>
-    <a
-      href="/admin/planning/{data.edition.slug}/settings"
-      class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-background hover:shadow-sm"
-    >
-      {m.planning_tab_settings()}
-    </a>
-  </nav>
+  <!-- By Room View -->
+  {#if scheduleView === 'by-room'}
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse">
+        <thead>
+          <tr>
+            <th class="border bg-muted p-2 text-left font-medium">{m.planning_schedule_room_column()}</th>
+            {#each uniqueDates() as dateStr}
+              <th class="border bg-muted p-2 text-center font-medium">
+                {formatDate(new Date(dateStr))}
+              </th>
+            {/each}
+          </tr>
+      </thead>
+      <tbody>
+        {#each data.rooms as room}
+          <tr>
+            <td class="border p-2 font-medium">
+              {room.name}
+              {#if room.capacity}
+                <span class="text-xs text-muted-foreground">({room.capacity})</span>
+              {/if}
+            </td>
+            {#each uniqueDates() as dateStr}
+              <td class="border p-2">
+                <div class="flex flex-col gap-1">
+                  {#each slotsByRoomAndDate()[room.id][dateStr] || [] as slot}
+                    {@const session = getSessionForSlot(slot.id)}
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <div
+                      class="relative w-full cursor-pointer rounded p-1 text-left text-xs transition-all {dragOverSlotId === slot.id && draggedFromSlotId !== slot.id ? 'ring-2 ring-primary ring-offset-1' : ''} {isDragging && draggedFromSlotId !== slot.id ? 'hover:ring-2 hover:ring-dashed hover:ring-primary/50' : 'hover:ring-2 hover:ring-primary hover:ring-offset-1'}"
+                      style="background-color: {session
+                        ? getTrackColor(session.trackId)
+                        : '#f3f4f6'}20; border-left: 3px solid {session
+                        ? getTrackColor(session.trackId)
+                        : '#d1d5db'}; {isDragging && draggedSessionId === session?.id ? 'opacity: 0.5;' : ''}"
+                      role="button"
+                      tabindex="0"
+                      draggable={session ? 'true' : 'false'}
+                      ondragstart={(e) => session && handleDragStart(e, session.id, slot.id)}
+                      ondragend={handleDragEnd}
+                      ondragover={(e) => handleDragOver(e, slot.id)}
+                      ondragleave={handleDragLeave}
+                      ondrop={(e) => handleDrop(e, slot.id)}
+                      onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
+                      onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
+                    >
+                      <div class="flex items-center justify-between font-medium">
+                        <span>{slot.startTime} - {slot.endTime}</span>
+                        {#if session}
+                          <GripVertical class="h-3 w-3 cursor-grab text-muted-foreground" />
+                        {/if}
+                      </div>
+                      {#if session}
+                        <div class="truncate">{session.title}</div>
+                        <div class="text-muted-foreground">{getSessionTypeLabel(session.type)}</div>
+                        {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
+                          <div class="absolute inset-0 flex items-center justify-center rounded bg-primary/10">
+                            <span class="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
+                              {m.planning_schedule_swap()}
+                            </span>
+                          </div>
+                        {/if}
+                      {:else}
+                        {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
+                          <div class="flex items-center gap-1 text-primary">
+                            <Plus class="h-3 w-3" />
+                            {m.planning_schedule_drop_here()}
+                          </div>
+                        {:else}
+                          <div class="flex items-center gap-1 italic text-muted-foreground">
+                            <Plus class="h-3 w-3" />
+                            {isDragging ? m.planning_schedule_drop_here() : m.planning_schedule_click_to_add()}
+                          </div>
+                        {/if}
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              </td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+      </table>
+    </div>
+  {/if}
 
-  <!-- Schedule Tab -->
-  {#if activeTab === 'schedule'}
-    {#if data.rooms.length === 0}
-      <Card.Root>
-        <Card.Content class="flex flex-col items-center justify-center py-12">
-          <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 class="text-lg font-semibold">{m.planning_schedule_no_rooms()}</h3>
-          <p class="text-sm text-muted-foreground">
-            {m.planning_schedule_no_rooms_hint()}
-          </p>
-        </Card.Content>
-      </Card.Root>
-    {:else if data.slots.length === 0}
-      <Card.Root>
-        <Card.Content class="flex flex-col items-center justify-center py-12">
-          <Clock class="mb-4 h-12 w-12 text-muted-foreground" />
-          <h3 class="text-lg font-semibold">{m.planning_schedule_no_slots()}</h3>
-          <p class="text-sm text-muted-foreground">
-            {m.planning_schedule_no_slots_hint()}
-          </p>
-        </Card.Content>
-      </Card.Root>
-    {:else}
-      <!-- View Switcher -->
-      <div class="mb-4 flex items-center gap-2">
-        <span class="text-sm text-muted-foreground">{m.planning_schedule_view()}</span>
-        <div class="flex rounded-md border">
-          <button
-            type="button"
-            class="px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-room' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
-            onclick={() => (scheduleView = 'by-room')}
-          >
-            <DoorOpen class="mr-1 inline h-4 w-4" />
-            {m.planning_schedule_by_room()}
-          </button>
-          <button
-            type="button"
-            class="px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-track' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
-            onclick={() => (scheduleView = 'by-track')}
-          >
-            <Layers class="mr-1 inline h-4 w-4" />
-            {m.planning_schedule_by_track()}
-          </button>
-        </div>
-      </div>
-
-      <!-- By Room View -->
-      {#if scheduleView === 'by-room'}
-        <div class="overflow-x-auto">
-          <table class="w-full border-collapse">
-            <thead>
-              <tr>
-                <th class="border bg-muted p-2 text-left font-medium">{m.planning_schedule_room_column()}</th>
-                {#each uniqueDates() as dateStr}
-                  <th class="border bg-muted p-2 text-center font-medium">
-                    {formatDate(new Date(dateStr))}
-                  </th>
-                {/each}
-              </tr>
-          </thead>
-          <tbody>
-            {#each data.rooms as room}
-              <tr>
-                <td class="border p-2 font-medium">
-                  {room.name}
-                  {#if room.capacity}
-                    <span class="text-xs text-muted-foreground">({room.capacity})</span>
-                  {/if}
-                </td>
-                {#each uniqueDates() as dateStr}
-                  <td class="border p-2">
-                    <div class="flex flex-col gap-1">
-                      {#each slotsByRoomAndDate()[room.id][dateStr] || [] as slot}
-                        {@const session = getSessionForSlot(slot.id)}
+  <!-- By Track View -->
+  {#if scheduleView === 'by-track'}
+    <div class="space-y-6">
+      {#each uniqueDates() as dateStr}
+        <div>
+          <h3 class="mb-3 text-lg font-semibold">{formatDate(new Date(dateStr))}</h3>
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {#each data.tracks as track}
+              {@const trackSessions = sessionsByTrackAndDate()[track.id]?.[dateStr] || []}
+              <Card.Root>
+                <Card.Header class="pb-2">
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="h-3 w-3 rounded-full"
+                      style="background-color: {track.color}"
+                    ></div>
+                    <Card.Title class="text-base">{track.name}</Card.Title>
+                  </div>
+                </Card.Header>
+                <Card.Content>
+                  {#if trackSessions.length === 0}
+                    <p class="text-sm text-muted-foreground italic">{m.planning_schedule_no_sessions()}</p>
+                  {:else}
+                    <div class="space-y-2">
+                      {#each trackSessions as { session, slot, room }}
                         <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
-                          class="relative w-full cursor-pointer rounded p-1 text-left text-xs transition-all {dragOverSlotId === slot.id && draggedFromSlotId !== slot.id ? 'ring-2 ring-primary ring-offset-1' : ''} {isDragging && draggedFromSlotId !== slot.id ? 'hover:ring-2 hover:ring-dashed hover:ring-primary/50' : 'hover:ring-2 hover:ring-primary hover:ring-offset-1'}"
-                          style="background-color: {session
-                            ? getTrackColor(session.trackId)
-                            : '#f3f4f6'}20; border-left: 3px solid {session
-                            ? getTrackColor(session.trackId)
-                            : '#d1d5db'}; {isDragging && draggedSessionId === session?.id ? 'opacity: 0.5;' : ''}"
+                          class="w-full cursor-grab rounded-md border p-2 text-left transition-colors hover:bg-muted {isDragging && draggedSessionId === session.id ? 'opacity-50' : ''}"
                           role="button"
                           tabindex="0"
-                          draggable={session ? 'true' : 'false'}
-                          ondragstart={(e) => session && handleDragStart(e, session.id, slot.id)}
+                          draggable="true"
+                          ondragstart={(e) => handleDragStart(e, session.id, slot.id)}
                           ondragend={handleDragEnd}
-                          ondragover={(e) => handleDragOver(e, slot.id)}
-                          ondragleave={handleDragLeave}
-                          ondrop={(e) => handleDrop(e, slot.id)}
                           onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
                           onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
                         >
-                          <div class="flex items-center justify-between font-medium">
-                            <span>{slot.startTime} - {slot.endTime}</span>
-                            {#if session}
-                              <GripVertical class="h-3 w-3 cursor-grab text-muted-foreground" />
-                            {/if}
+                          <div class="flex items-center justify-between">
+                            <span class="font-mono text-xs text-muted-foreground">
+                              {slot.startTime} - {slot.endTime}
+                            </span>
+                            <span class="text-xs text-muted-foreground">
+                              {room?.name || m.planning_schedule_unknown_room()}
+                            </span>
                           </div>
-                          {#if session}
-                            <div class="truncate">{session.title}</div>
-                            <div class="text-muted-foreground">{getSessionTypeLabel(session.type)}</div>
-                            {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
-                              <div class="absolute inset-0 flex items-center justify-center rounded bg-primary/10">
-                                <span class="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">
-                                  {m.planning_schedule_swap()}
-                                </span>
-                              </div>
-                            {/if}
-                          {:else}
-                            {#if isDragging && dragOverSlotId === slot.id && draggedFromSlotId !== slot.id}
-                              <div class="flex items-center gap-1 text-primary">
-                                <Plus class="h-3 w-3" />
-                                {m.planning_schedule_drop_here()}
-                              </div>
-                            {:else}
-                              <div class="flex items-center gap-1 italic text-muted-foreground">
-                                <Plus class="h-3 w-3" />
-                                {isDragging ? m.planning_schedule_drop_here() : m.planning_schedule_click_to_add()}
-                              </div>
-                            {/if}
-                          {/if}
+                          <div class="mt-1 font-medium">{session.title}</div>
+                          <div class="text-xs text-muted-foreground">
+                            {getSessionTypeLabel(session.type)}
+                          </div>
                         </div>
                       {/each}
                     </div>
-                  </td>
-                {/each}
-              </tr>
+                  {/if}
+                </Card.Content>
+              </Card.Root>
             {/each}
-          </tbody>
-          </table>
-        </div>
-      {/if}
 
-      <!-- By Track View -->
-      {#if scheduleView === 'by-track'}
-        <div class="space-y-6">
-          {#each uniqueDates() as dateStr}
-            <div>
-              <h3 class="mb-3 text-lg font-semibold">{formatDate(new Date(dateStr))}</h3>
-              <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {#each data.tracks as track}
-                  {@const trackSessions = sessionsByTrackAndDate()[track.id]?.[dateStr] || []}
-                  <Card.Root>
-                    <Card.Header class="pb-2">
-                      <div class="flex items-center gap-2">
-                        <div
-                          class="h-3 w-3 rounded-full"
-                          style="background-color: {track.color}"
-                        ></div>
-                        <Card.Title class="text-base">{track.name}</Card.Title>
-                      </div>
-                    </Card.Header>
-                    <Card.Content>
-                      {#if trackSessions.length === 0}
-                        <p class="text-sm text-muted-foreground italic">{m.planning_schedule_no_sessions()}</p>
-                      {:else}
-                        <div class="space-y-2">
-                          {#each trackSessions as { session, slot, room }}
-                            <!-- svelte-ignore a11y_no_static_element_interactions -->
-                            <div
-                              class="w-full cursor-grab rounded-md border p-2 text-left transition-colors hover:bg-muted {isDragging && draggedSessionId === session.id ? 'opacity-50' : ''}"
-                              role="button"
-                              tabindex="0"
-                              draggable="true"
-                              ondragstart={(e) => handleDragStart(e, session.id, slot.id)}
-                              ondragend={handleDragEnd}
-                              onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
-                              onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
-                            >
-                              <div class="flex items-center justify-between">
-                                <span class="font-mono text-xs text-muted-foreground">
-                                  {slot.startTime} - {slot.endTime}
-                                </span>
-                                <span class="text-xs text-muted-foreground">
-                                  {room?.name || m.planning_schedule_unknown_room()}
-                                </span>
-                              </div>
-                              <div class="mt-1 font-medium">{session.title}</div>
-                              <div class="text-xs text-muted-foreground">
-                                {getSessionTypeLabel(session.type)}
-                              </div>
-                            </div>
-                          {/each}
-                        </div>
-                      {/if}
-                    </Card.Content>
-                  </Card.Root>
-                {/each}
-
-                <!-- No Track sessions -->
-                {#if (sessionsByTrackAndDate()['no-track']?.[dateStr] || []).length > 0}
-                  {@const noTrackSessions = sessionsByTrackAndDate()['no-track'][dateStr]}
-                  <Card.Root>
-                    <Card.Header class="pb-2">
-                      <div class="flex items-center gap-2">
-                        <div class="h-3 w-3 rounded-full bg-gray-400"></div>
-                        <Card.Title class="text-base">{m.planning_schedule_no_track()}</Card.Title>
-                      </div>
-                    </Card.Header>
-                    <Card.Content>
-                      <div class="space-y-2">
-                        {#each noTrackSessions as { session, slot, room }}
-                          <!-- svelte-ignore a11y_no_static_element_interactions -->
-                          <div
-                            class="w-full cursor-grab rounded-md border p-2 text-left transition-colors hover:bg-muted {isDragging && draggedSessionId === session.id ? 'opacity-50' : ''}"
-                            role="button"
-                            tabindex="0"
-                            draggable="true"
-                            ondragstart={(e) => handleDragStart(e, session.id, slot.id)}
-                            ondragend={handleDragEnd}
-                            onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
-                            onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
-                          >
-                            <div class="flex items-center justify-between">
-                              <span class="font-mono text-xs text-muted-foreground">
-                                {slot.startTime} - {slot.endTime}
-                              </span>
-                              <span class="text-xs text-muted-foreground">
-                                {room?.name || m.planning_schedule_unknown_room()}
-                              </span>
-                            </div>
-                            <div class="mt-1 font-medium">{session.title}</div>
-                            <div class="text-xs text-muted-foreground">
-                              {getSessionTypeLabel(session.type)}
-                            </div>
-                          </div>
-                        {/each}
-                      </div>
-                    </Card.Content>
-                  </Card.Root>
-                {/if}
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    {/if}
-  {/if}
-
-  <!-- Sessions Tab -->
-  {#if activeTab === 'sessions'}
-    <div class="space-y-6">
-      <!-- Available Talks Section -->
-      <Card.Root>
-        <Card.Header>
-          <Card.Title class="flex items-center gap-2">
-            <Mic class="h-5 w-5" />
-            {m.planning_sessions_available_talks()} ({availableTalks().length})
-          </Card.Title>
-          <Card.Description>
-            {m.planning_sessions_available_talks_desc()}
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
-          {#if availableTalks().length === 0}
-            <div class="py-8 text-center text-muted-foreground">
-              {#if data.acceptedTalks.length === 0}
-                <p>{m.planning_sessions_no_accepted_talks()}</p>
-              {:else}
-                <div class="flex items-center justify-center gap-2">
-                  <Check class="h-5 w-5 text-green-500" />
-                  <p>{m.planning_sessions_all_scheduled()}</p>
-                </div>
-              {/if}
-            </div>
-          {:else}
-            <div class="space-y-2">
-              {#each availableTalks() as talk}
-                <div class="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <div class="font-medium">{talk.title}</div>
-                    {#if talk.speakers && talk.speakers.length > 0}
-                      <div class="text-sm text-muted-foreground">
-                        {talk.speakers.map((s) => `${s.firstName} ${s.lastName}`).join(', ')}
-                      </div>
-                    {/if}
-                    {#if talk.duration}
-                      <div class="text-xs text-muted-foreground">{talk.duration} {m.planning_sessions_minutes()}</div>
-                    {/if}
-                  </div>
-                  <span class="rounded bg-green-100 px-2 py-1 text-xs text-green-800">
-                    {talk.status}
-                  </span>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </Card.Content>
-      </Card.Root>
-
-      <!-- Scheduled Sessions Section -->
-      <Card.Root>
-        <Card.Header>
-          <Card.Title class="flex items-center gap-2">
-            <Calendar class="h-5 w-5" />
-            {m.planning_sessions_scheduled()} ({data.sessions.length})
-          </Card.Title>
-          <Card.Description>
-            {m.planning_sessions_scheduled_desc()}
-          </Card.Description>
-        </Card.Header>
-        <Card.Content>
-          {#if data.sessions.length === 0}
-            <div class="py-8 text-center text-muted-foreground">
-              <p>{m.planning_sessions_no_scheduled()}</p>
-            </div>
-          {:else}
-            <div class="space-y-2">
-              {#each data.sessions as session}
-                {@const slotInfo = getSlotInfo(session.slotId)}
-                {@const track = session.trackId ? data.tracks.find((t) => t.id === session.trackId) : null}
-                <div class="flex items-center justify-between rounded-lg border p-3">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <div class="font-medium">{session.title}</div>
-                      <span class="rounded bg-muted px-2 py-0.5 text-xs">
-                        {getSessionTypeLabel(session.type)}
-                      </span>
-                    </div>
-                    {#if slotInfo}
-                      <div class="text-sm text-muted-foreground">
-                        {slotInfo.roomName} - {formatDate(slotInfo.date)} - {slotInfo.startTime} {m.planning_sessions_to()} {slotInfo.endTime}
-                      </div>
-                    {/if}
-                    {#if track}
-                      <div class="mt-1 flex items-center gap-1">
-                        <div class="h-3 w-3 rounded-full" style="background-color: {track.color}"></div>
-                        <span class="text-xs text-muted-foreground">{track.name}</span>
-                      </div>
-                    {/if}
-                  </div>
-                  <div class="flex gap-1">
-                    <Button variant="ghost" size="icon" onclick={() => { startEditSession(session); activeTab = 'schedule' }}>
-                      <Pencil class="h-4 w-4" />
-                    </Button>
-                    <form method="POST" action="?/deleteSession" use:enhance>
-                      <input type="hidden" name="id" value={session.id} />
-                      <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
-                        <Trash2 class="h-4 w-4" />
-                      </Button>
-                    </form>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </Card.Content>
-      </Card.Root>
-    </div>
-  {/if}
-
-  <!-- Rooms Tab -->
-  {#if activeTab === 'rooms'}
-    <div class="space-y-4">
-      <div class="flex justify-end">
-        {#if !showRoomForm}
-          <Button onclick={() => { showRoomForm = true; editingRoom = null; selectedEquipment = [] }}>
-            <Plus class="mr-2 h-4 w-4" />
-            {m.planning_rooms_add()}
-          </Button>
-        {/if}
-      </div>
-
-      <!-- Room Form -->
-      {#if showRoomForm}
-        <Card.Root>
-          <Card.Header>
-            <div class="flex items-center justify-between">
-              <Card.Title>{editingRoom ? m.planning_rooms_edit() : m.planning_rooms_add()}</Card.Title>
-              <Button variant="ghost" size="icon" onclick={cancelRoomForm}>
-                <X class="h-4 w-4" />
-              </Button>
-            </div>
-          </Card.Header>
-          <Card.Content>
-            {#if form?.error && (form?.action === 'createRoom' || form?.action === 'updateRoom')}
-              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
-                {form.error}
-              </div>
-            {/if}
-            <form
-              method="POST"
-              action={editingRoom ? '?/updateRoom' : '?/createRoom'}
-              use:enhance={() => {
-                isSubmitting = true
-                return async ({ update }) => {
-                  isSubmitting = false
-                  await update()
-                }
-              }}
-              class="space-y-4"
-            >
-              <input type="hidden" name="editionId" value={data.edition.id} />
-              {#if editingRoom}
-                <input type="hidden" name="id" value={editingRoom.id} />
-              {/if}
-
-              <div class="grid gap-4 md:grid-cols-3">
-                <div class="space-y-2">
-                  <Label for="room-name">{m.planning_rooms_name()} *</Label>
-                  <Input
-                    id="room-name"
-                    name="name"
-                    placeholder={m.planning_rooms_name_placeholder()}
-                    required
-                    value={editingRoom?.name || ''}
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="room-capacity">{m.planning_rooms_capacity()}</Label>
-                  <Input
-                    id="room-capacity"
-                    name="capacity"
-                    type="number"
-                    min="1"
-                    placeholder={m.planning_rooms_capacity_placeholder()}
-                    value={editingRoom?.capacity?.toString() || ''}
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="room-floor">{m.planning_rooms_floor()}</Label>
-                  <Input
-                    id="room-floor"
-                    name="floor"
-                    placeholder={m.planning_rooms_floor_placeholder()}
-                    value={editingRoom?.floor || ''}
-                  />
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <Label>{m.planning_rooms_equipment()}</Label>
-                <div class="grid grid-cols-2 gap-2 md:grid-cols-5">
-                  {#each getEquipmentOptions() as option}
-                    <label class="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        name="equipment"
-                        value={option.value}
-                        checked={selectedEquipment.includes(option.value)}
-                        onchange={() => toggleEquipment(option.value)}
-                        class="h-4 w-4 rounded border-gray-300"
-                      />
-                      {option.label}
-                    </label>
-                  {/each}
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <Label for="room-notes">{m.planning_rooms_equipment_notes()}</Label>
-                <Textarea
-                  id="room-notes"
-                  name="equipmentNotes"
-                  placeholder={m.planning_rooms_equipment_notes_placeholder()}
-                  value={editingRoom?.equipmentNotes || ''}
-                />
-              </div>
-
-              <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={cancelRoomForm}>
-                  {m.action_cancel()}
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {#if isSubmitting}
-                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                  {/if}
-                  {editingRoom ? m.planning_rooms_update() : m.planning_rooms_create()}
-                </Button>
-              </div>
-            </form>
-          </Card.Content>
-        </Card.Root>
-      {/if}
-
-      {#if data.rooms.length === 0 && !showRoomForm}
-        <Card.Root>
-          <Card.Content class="flex flex-col items-center justify-center py-12">
-            <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">{m.planning_rooms_no_rooms()}</h3>
-            <p class="text-sm text-muted-foreground">{m.planning_rooms_no_rooms_hint()}</p>
-          </Card.Content>
-        </Card.Root>
-      {:else if data.rooms.length > 0}
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {#each data.rooms as room}
-            <Card.Root>
-              <Card.Header>
-                <div class="flex items-start justify-between">
-                  <div>
-                    <Card.Title>{room.name}</Card.Title>
-                    {#if room.floor}
-                      <Card.Description>{m.planning_rooms_floor_label()} {room.floor}</Card.Description>
-                    {/if}
-                  </div>
-                  <div class="flex gap-1">
-                    <Button variant="ghost" size="icon" onclick={() => startEditRoom(room)}>
-                      <Pencil class="h-4 w-4" />
-                    </Button>
-                    <form method="POST" action="?/deleteRoom" use:enhance>
-                      <input type="hidden" name="id" value={room.id} />
-                      <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
-                        <Trash2 class="h-4 w-4" />
-                      </Button>
-                    </form>
-                  </div>
-                </div>
-              </Card.Header>
-              <Card.Content>
-                {#if room.capacity}
-                  <p class="text-sm text-muted-foreground">Capacity: {room.capacity}</p>
-                {/if}
-                {#if room.equipment.length > 0}
-                  <div class="mt-2 flex flex-wrap gap-1">
-                    {#each room.equipment as eq}
-                      <span class="rounded bg-muted px-2 py-0.5 text-xs">
-                        {getEquipmentOptions().find((o) => o.value === eq)?.label || eq}
-                      </span>
-                    {/each}
-                  </div>
-                {/if}
-              </Card.Content>
-            </Card.Root>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
-
-  <!-- Tracks Tab -->
-  {#if activeTab === 'tracks'}
-    <div class="space-y-4">
-      <div class="flex justify-end">
-        {#if !showTrackForm}
-          <Button onclick={() => { showTrackForm = true; editingTrack = null }}>
-            <Plus class="mr-2 h-4 w-4" />
-            {m.planning_tracks_add()}
-          </Button>
-        {/if}
-      </div>
-
-      <!-- Track Form -->
-      {#if showTrackForm}
-        <Card.Root>
-          <Card.Header>
-            <div class="flex items-center justify-between">
-              <Card.Title>{editingTrack ? m.planning_tracks_edit() : m.planning_tracks_add()}</Card.Title>
-              <Button variant="ghost" size="icon" onclick={cancelTrackForm}>
-                <X class="h-4 w-4" />
-              </Button>
-            </div>
-          </Card.Header>
-          <Card.Content>
-            {#if form?.error && (form?.action === 'createTrack' || form?.action === 'updateTrack')}
-              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
-                {form.error}
-              </div>
-            {/if}
-            <form
-              method="POST"
-              action={editingTrack ? '?/updateTrack' : '?/createTrack'}
-              use:enhance={() => {
-                isSubmitting = true
-                return async ({ update }) => {
-                  isSubmitting = false
-                  await update()
-                }
-              }}
-              class="space-y-4"
-            >
-              <input type="hidden" name="editionId" value={data.edition.id} />
-              {#if editingTrack}
-                <input type="hidden" name="id" value={editingTrack.id} />
-              {/if}
-
-              <div class="grid gap-4 md:grid-cols-2">
-                <div class="space-y-2">
-                  <Label for="track-name">{m.planning_tracks_name()} *</Label>
-                  <Input
-                    id="track-name"
-                    name="name"
-                    placeholder={m.planning_tracks_name_placeholder()}
-                    required
-                    value={editingTrack?.name || ''}
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="track-color">{m.planning_tracks_color()}</Label>
-                  <div class="flex gap-2">
-                    <Input
-                      id="track-color"
-                      name="color"
-                      type="color"
-                      value={editingTrack?.color || '#6b7280'}
-                      class="h-10 w-16 p-1"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={cancelTrackForm}>
-                  {m.action_cancel()}
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {#if isSubmitting}
-                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                  {/if}
-                  {editingTrack ? m.planning_tracks_update() : m.planning_tracks_create()}
-                </Button>
-              </div>
-            </form>
-          </Card.Content>
-        </Card.Root>
-      {/if}
-
-      {#if data.tracks.length === 0 && !showTrackForm}
-        <Card.Root>
-          <Card.Content class="flex flex-col items-center justify-center py-12">
-            <Layers class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">{m.planning_tracks_no_tracks()}</h3>
-            <p class="text-sm text-muted-foreground">
-              {m.planning_tracks_no_tracks_hint()}
-            </p>
-          </Card.Content>
-        </Card.Root>
-      {:else if data.tracks.length > 0}
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {#each data.tracks as track}
-            <Card.Root>
-              <Card.Header>
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="h-4 w-4 rounded-full" style="background-color: {track.color}"></div>
-                    <Card.Title>{track.name}</Card.Title>
-                  </div>
-                  <div class="flex gap-1">
-                    <Button variant="ghost" size="icon" onclick={() => startEditTrack(track)}>
-                      <Pencil class="h-4 w-4" />
-                    </Button>
-                    <form method="POST" action="?/deleteTrack" use:enhance>
-                      <input type="hidden" name="id" value={track.id} />
-                      <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
-                        <Trash2 class="h-4 w-4" />
-                      </Button>
-                    </form>
-                  </div>
-                </div>
-              </Card.Header>
-            </Card.Root>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
-
-  <!-- Slots Tab -->
-  {#if activeTab === 'slots'}
-    <div class="space-y-4">
-      <div class="flex justify-end">
-        {#if !showSlotForm}
-          <Button onclick={() => { showSlotForm = true; editingSlot = null; selectedRoomId = '' }} disabled={data.rooms.length === 0}>
-            <Plus class="mr-2 h-4 w-4" />
-            {m.planning_slots_add()}
-          </Button>
-        {/if}
-      </div>
-
-      <!-- Slot Form -->
-      {#if showSlotForm}
-        <Card.Root>
-          <Card.Header>
-            <div class="flex items-center justify-between">
-              <Card.Title>{editingSlot ? m.planning_slots_edit() : m.planning_slots_add()}</Card.Title>
-              <Button variant="ghost" size="icon" onclick={cancelSlotForm}>
-                <X class="h-4 w-4" />
-              </Button>
-            </div>
-          </Card.Header>
-          <Card.Content>
-            {#if form?.error && (form?.action === 'createSlot' || form?.action === 'updateSlot')}
-              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
-                {form.error}
-              </div>
-            {/if}
-            <form
-              method="POST"
-              action={editingSlot ? '?/updateSlot' : '?/createSlot'}
-              use:enhance={() => {
-                isSubmitting = true
-                return async ({ update }) => {
-                  isSubmitting = false
-                  await update()
-                }
-              }}
-              class="space-y-4"
-            >
-              <input type="hidden" name="editionId" value={data.edition.id} />
-              {#if editingSlot}
-                <input type="hidden" name="id" value={editingSlot.id} />
-              {/if}
-
-              <div class="grid gap-4 md:grid-cols-4">
-                <div class="space-y-2">
-                  <Label for="slot-room">{m.planning_slots_room()} *</Label>
-                  <select
-                    id="slot-room"
-                    name="roomId"
-                    required
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    bind:value={selectedRoomId}
-                  >
-                    <option value="">{m.planning_slots_room_placeholder()}</option>
-                    {#each data.rooms as room}
-                      <option value={room.id}>{room.name}</option>
-                    {/each}
-                  </select>
-                </div>
-                <div class="space-y-2">
-                  <Label for="slot-date">{m.planning_slots_date()} *</Label>
-                  <Input
-                    id="slot-date"
-                    name="date"
-                    type="date"
-                    required
-                    value={editingSlot ? formatDateInput(editingSlot.date) : formatDateInput(data.edition.startDate)}
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="slot-start">{m.planning_slots_start_time()} *</Label>
-                  <Input
-                    id="slot-start"
-                    name="startTime"
-                    type="time"
-                    required
-                    value={editingSlot?.startTime || ''}
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="slot-end">{m.planning_slots_end_time()} *</Label>
-                  <Input
-                    id="slot-end"
-                    name="endTime"
-                    type="time"
-                    required
-                    value={editingSlot?.endTime || ''}
-                  />
-                </div>
-              </div>
-              <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={cancelSlotForm}>
-                  {m.action_cancel()}
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {#if isSubmitting}
-                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                  {/if}
-                  {editingSlot ? m.planning_slots_update() : m.planning_slots_create()}
-                </Button>
-              </div>
-            </form>
-          </Card.Content>
-        </Card.Root>
-      {/if}
-
-      {#if data.rooms.length === 0}
-        <Card.Root>
-          <Card.Content class="flex flex-col items-center justify-center py-12">
-            <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">{m.planning_slots_add_rooms_first()}</h3>
-            <p class="text-sm text-muted-foreground">
-              {m.planning_slots_add_rooms_first_hint()}
-            </p>
-          </Card.Content>
-        </Card.Root>
-      {:else if data.slots.length === 0 && !showSlotForm}
-        <Card.Root>
-          <Card.Content class="flex flex-col items-center justify-center py-12">
-            <Clock class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">{m.planning_slots_no_slots()}</h3>
-            <p class="text-sm text-muted-foreground">
-              {m.planning_slots_no_slots_hint()}
-            </p>
-          </Card.Content>
-        </Card.Root>
-      {:else if data.slots.length > 0}
-        <div class="space-y-2">
-          {#each data.slots as slot}
-            {@const room = data.rooms.find((r) => r.id === slot.roomId)}
-            <Card.Root>
-              <Card.Content class="flex items-center justify-between py-3">
-                <div class="flex items-center gap-4">
-                  <div class="font-mono text-sm">
-                    {slot.startTime} - {slot.endTime}
-                  </div>
-                  <div class="text-sm text-muted-foreground">
-                    {formatDate(slot.date)}
-                  </div>
-                  <div class="text-sm">
-                    {room?.name || m.planning_slots_unknown_room()}
-                  </div>
-                </div>
-                <div class="flex gap-1">
-                  <Button variant="ghost" size="icon" onclick={() => startEditSlot(slot)}>
-                    <Pencil class="h-4 w-4" />
-                  </Button>
-                  <form method="POST" action="?/deleteSlot" use:enhance>
-                    <input type="hidden" name="id" value={slot.id} />
-                    <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
-                      <Trash2 class="h-4 w-4" />
-                    </Button>
-                  </form>
-                </div>
-              </Card.Content>
-            </Card.Root>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
-
-  <!-- Staff Tab -->
-  {#if activeTab === 'staff'}
-    <div class="space-y-4">
-      <div class="flex justify-end">
-        {#if !showAssignmentForm}
-          <Button onclick={() => (showAssignmentForm = true)}>
-            <Plus class="mr-2 h-4 w-4" />
-            {m.planning_staff_add()}
-          </Button>
-        {/if}
-      </div>
-
-      <!-- Assignment Form -->
-      {#if showAssignmentForm}
-        <Card.Root>
-          <Card.Header>
-            <div class="flex items-center justify-between">
-              <Card.Title>{editingAssignment ? m.planning_staff_edit() : m.planning_staff_add_assignment()}</Card.Title>
-              <Button variant="ghost" size="icon" onclick={cancelAssignmentForm}>
-                <X class="h-4 w-4" />
-              </Button>
-            </div>
-            <Card.Description>
-              {m.planning_staff_description()}
-            </Card.Description>
-          </Card.Header>
-          <Card.Content>
-            {#if form?.error && (form?.action === 'createRoomAssignment' || form?.action === 'updateRoomAssignment')}
-              <div class="mb-4 rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
-                {form.error}
-              </div>
-            {/if}
-            <form
-              method="POST"
-              action={editingAssignment ? '?/updateRoomAssignment' : '?/createRoomAssignment'}
-              use:enhance={() => {
-                isSubmitting = true
-                return async ({ update }) => {
-                  isSubmitting = false
-                  await update()
-                }
-              }}
-              class="space-y-4"
-            >
-              <input type="hidden" name="editionId" value={data.edition.id} />
-              {#if editingAssignment}
-                <input type="hidden" name="id" value={editingAssignment.id} />
-              {/if}
-
-              <div class="grid gap-4 md:grid-cols-2">
-                <div class="space-y-2">
-                  <Label for="assignment-room">{m.planning_staff_room()} *</Label>
-                  <select
-                    id="assignment-room"
-                    name="roomId"
-                    required
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    bind:value={assignmentRoomId}
-                  >
-                    <option value="">{m.planning_staff_room_placeholder()}</option>
-                    {#each data.rooms as room}
-                      <option value={room.id}>{room.name}</option>
-                    {/each}
-                  </select>
-                </div>
-
-                <div class="space-y-2">
-                  <Label for="assignment-member">{m.planning_staff_member()} *</Label>
-                  <select
-                    id="assignment-member"
-                    name="memberId"
-                    required
-                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    bind:value={assignmentMemberId}
-                  >
-                    <option value="">{m.planning_staff_member_placeholder()}</option>
-                    {#each data.organizationMembers as member}
-                      <option value={member.id}>{member.userName} ({member.role})</option>
-                    {/each}
-                  </select>
-                </div>
-              </div>
-
-              <div class="grid gap-4 md:grid-cols-3">
-                <div class="space-y-2">
-                  <Label for="assignment-date">{m.planning_staff_date()}</Label>
-                  <Input
-                    id="assignment-date"
-                    name="date"
-                    type="date"
-                    bind:value={assignmentDate}
-                  />
-                  <p class="text-xs text-muted-foreground">{m.planning_staff_date_hint()}</p>
-                </div>
-                <div class="space-y-2">
-                  <Label for="assignment-start">{m.planning_staff_start_time()}</Label>
-                  <Input
-                    id="assignment-start"
-                    name="startTime"
-                    type="time"
-                    bind:value={assignmentStartTime}
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="assignment-end">{m.planning_staff_end_time()}</Label>
-                  <Input
-                    id="assignment-end"
-                    name="endTime"
-                    type="time"
-                    bind:value={assignmentEndTime}
-                  />
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <Label for="assignment-notes">{m.planning_staff_notes()}</Label>
-                <Textarea
-                  id="assignment-notes"
-                  name="notes"
-                  placeholder={m.planning_staff_notes_placeholder()}
-                  bind:value={assignmentNotes}
-                />
-              </div>
-
-              <div class="flex justify-end gap-2">
-                <Button type="button" variant="outline" onclick={cancelAssignmentForm}>
-                  {m.action_cancel()}
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {#if isSubmitting}
-                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                  {/if}
-                  {editingAssignment ? m.planning_staff_update() : m.planning_staff_create()}
-                </Button>
-              </div>
-            </form>
-          </Card.Content>
-        </Card.Root>
-      {/if}
-
-      {#if data.organizationMembers.length === 0}
-        <Card.Root>
-          <Card.Content class="flex flex-col items-center justify-center py-12">
-            <Users class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">{m.planning_staff_no_members()}</h3>
-            <p class="text-sm text-muted-foreground">
-              {m.planning_staff_no_members_hint()}
-            </p>
-          </Card.Content>
-        </Card.Root>
-      {:else if data.rooms.length === 0}
-        <Card.Root>
-          <Card.Content class="flex flex-col items-center justify-center py-12">
-            <DoorOpen class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">{m.planning_staff_add_rooms_first()}</h3>
-            <p class="text-sm text-muted-foreground">
-              {m.planning_staff_add_rooms_first_hint()}
-            </p>
-          </Card.Content>
-        </Card.Root>
-      {:else if data.roomAssignments.length === 0 && !showAssignmentForm}
-        <Card.Root>
-          <Card.Content class="flex flex-col items-center justify-center py-12">
-            <Users class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">{m.planning_staff_no_assignments()}</h3>
-            <p class="text-sm text-muted-foreground">
-              {m.planning_staff_no_assignments_hint()}
-            </p>
-          </Card.Content>
-        </Card.Root>
-      {:else}
-        <!-- Group assignments by room -->
-        <div class="space-y-4">
-          {#each data.rooms as room}
-            {@const assignments = getAssignmentsForRoom(room.id)}
-            {#if assignments.length > 0}
+            <!-- No Track sessions -->
+            {#if (sessionsByTrackAndDate()['no-track']?.[dateStr] || []).length > 0}
+              {@const noTrackSessions = sessionsByTrackAndDate()['no-track'][dateStr]}
               <Card.Root>
-                <Card.Header class="pb-3">
-                  <div class="flex items-center justify-between">
-                    <Card.Title class="text-lg">{room.name}</Card.Title>
-                    <Button variant="outline" size="sm" onclick={() => openAssignmentFormForRoom(room.id)}>
-                      <Plus class="mr-1 h-3 w-3" />
-                      Add
-                    </Button>
+                <Card.Header class="pb-2">
+                  <div class="flex items-center gap-2">
+                    <div class="h-3 w-3 rounded-full bg-gray-400"></div>
+                    <Card.Title class="text-base">{m.planning_schedule_no_track()}</Card.Title>
                   </div>
-                  {#if room.floor}
-                    <Card.Description>{room.floor}</Card.Description>
-                  {/if}
                 </Card.Header>
-                <Card.Content class="pt-0">
+                <Card.Content>
                   <div class="space-y-2">
-                    {#each assignments as assignment}
-                      <div class="flex items-center justify-between rounded-md border p-3">
-                        <div>
-                          <div class="font-medium">{assignment.memberName}</div>
-                          <div class="text-sm text-muted-foreground">
-                            {#if assignment.date}
-                              {formatDate(assignment.date)}
-                              {#if assignment.startTime && assignment.endTime}
-                                • {assignment.startTime} - {assignment.endTime}
-                              {/if}
-                            {:else}
-                              {m.planning_staff_all_days()}
-                            {/if}
-                          </div>
-                          {#if assignment.notes}
-                            <div class="mt-1 text-sm text-muted-foreground italic">
-                              {assignment.notes}
-                            </div>
-                          {/if}
+                    {#each noTrackSessions as { session, slot, room }}
+                      <!-- svelte-ignore a11y_no_static_element_interactions -->
+                      <div
+                        class="w-full cursor-grab rounded-md border p-2 text-left transition-colors hover:bg-muted {isDragging && draggedSessionId === session.id ? 'opacity-50' : ''}"
+                        role="button"
+                        tabindex="0"
+                        draggable="true"
+                        ondragstart={(e) => handleDragStart(e, session.id, slot.id)}
+                        ondragend={handleDragEnd}
+                        onclick={() => !isDragging && openSessionFormForSlot(slot.id)}
+                        onkeydown={(e) => e.key === 'Enter' && !isDragging && openSessionFormForSlot(slot.id)}
+                      >
+                        <div class="flex items-center justify-between">
+                          <span class="font-mono text-xs text-muted-foreground">
+                            {slot.startTime} - {slot.endTime}
+                          </span>
+                          <span class="text-xs text-muted-foreground">
+                            {room?.name || m.planning_schedule_unknown_room()}
+                          </span>
                         </div>
-                        <div class="flex gap-1">
-                          <Button variant="ghost" size="icon" onclick={() => startEditAssignment(assignment)}>
-                            <Pencil class="h-4 w-4" />
-                          </Button>
-                          <form method="POST" action="?/deleteRoomAssignment" use:enhance>
-                            <input type="hidden" name="id" value={assignment.id} />
-                            <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
-                              <Trash2 class="h-4 w-4" />
-                            </Button>
-                          </form>
+                        <div class="mt-1 font-medium">{session.title}</div>
+                        <div class="text-xs text-muted-foreground">
+                          {getSessionTypeLabel(session.type)}
                         </div>
                       </div>
                     {/each}
@@ -1638,32 +510,12 @@ let swapFormRef = $state<HTMLFormElement | null>(null)
                 </Card.Content>
               </Card.Root>
             {/if}
-          {/each}
-
-          <!-- Rooms without assignments -->
-          {#if roomsWithoutAssignments().length > 0}
-            <Card.Root>
-              <Card.Header>
-                <Card.Title class="text-lg">{m.planning_staff_unassigned_rooms()}</Card.Title>
-                <Card.Description>{m.planning_staff_unassigned_rooms_hint()}</Card.Description>
-              </Card.Header>
-              <Card.Content>
-                <div class="flex flex-wrap gap-2">
-                  {#each roomsWithoutAssignments() as room}
-                    <Button variant="outline" size="sm" onclick={() => openAssignmentFormForRoom(room.id)}>
-                      <Plus class="mr-1 h-3 w-3" />
-                      {room.name}
-                    </Button>
-                  {/each}
-                </div>
-              </Card.Content>
-            </Card.Root>
-          {/if}
+          </div>
         </div>
-      {/if}
+      {/each}
     </div>
   {/if}
-</div>
+{/if}
 
 <!-- Session Form Dialog -->
 {#if showSessionForm}
