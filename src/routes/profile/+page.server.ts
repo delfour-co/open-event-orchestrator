@@ -1,9 +1,9 @@
-import { env } from '$env/dynamic/public'
 import { changePasswordSchema, updateProfileSchema } from '$lib/features/auth/domain'
 import type { UserSession } from '$lib/features/auth/domain/user-session'
 import { createUserSessionRepository } from '$lib/features/auth/infra'
 import { createTotpRepository } from '$lib/features/auth/infra/totp-repository'
 import { writeAuditLog } from '$lib/server/audit-log-service'
+import { buildFileUrl } from '$lib/server/file-url'
 import { validateImageFile } from '$lib/server/file-validation'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -16,12 +16,11 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   }
 
   const user = locals.user
-  const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
 
   // Build avatar URL if user has an avatar
   let avatarUrl: string | null = null
   if (user.avatar) {
-    avatarUrl = `${pbUrl}/api/files/users/${user.id}/${user.avatar}`
+    avatarUrl = buildFileUrl('users', user.id, user.avatar as string)
   }
 
   // Get user sessions

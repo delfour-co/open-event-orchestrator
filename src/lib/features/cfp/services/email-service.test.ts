@@ -201,7 +201,7 @@ describe('EmailService', () => {
     it('should generate cospeaker_invitation email', () => {
       const html = generateEmailHtml('cospeaker_invitation', baseData)
 
-      expect(html).toContain("You've Been Invited as a Co-Speaker!")
+      expect(html).toContain('You&#039;ve Been Invited as a Co-Speaker!')
       expect(html).toContain('John Doe')
       expect(html).toContain('Introduction to TypeScript')
       expect(html).toContain('https://example.com/confirm')

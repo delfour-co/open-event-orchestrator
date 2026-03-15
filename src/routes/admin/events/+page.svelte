@@ -9,6 +9,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import * as m from '$lib/paraglide/messages'
+import { generateSlug } from '$lib/utils'
 import {
   ArrowRight,
   Building2,
@@ -44,13 +45,6 @@ const formatDate = (date: Date) => {
     day: 'numeric',
     year: 'numeric'
   }).format(date)
-}
-
-const generateSlug = (name: string) => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
 }
 
 // Filter events by selected organization

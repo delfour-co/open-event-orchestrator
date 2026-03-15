@@ -7,6 +7,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import * as m from '$lib/paraglide/messages'
+import { generateSlug } from '$lib/utils'
 import { AlertTriangle, Loader2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -19,13 +20,6 @@ const { data, form }: Props = $props()
 
 let isSubmitting = $state(false)
 let showDeleteConfirm = $state(false)
-
-const generateSlug = (name: string) => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
 </script>
 
 {#if form?.error}

@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/public'
+import { buildFileUrl } from '$lib/server/file-url'
 import { canAccessSettings } from '$lib/server/permissions'
 import { error, redirect } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
@@ -74,10 +74,13 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
       filter: `organizationId="${organization.id}"`
     })
 
-    const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
     let logoUrl: string | null = null
     if (organization.logo) {
-      logoUrl = `${pbUrl}/api/files/organizations/${organization.id}/${organization.logo}`
+      logoUrl = buildFileUrl(
+        'organizations',
+        organization.id as string,
+        organization.logo as string
+      )
     }
 
     return {

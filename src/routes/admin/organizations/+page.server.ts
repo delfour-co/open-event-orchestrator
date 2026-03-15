@@ -1,5 +1,5 @@
-import { env } from '$env/dynamic/public'
 import { writeAuditLog } from '$lib/server/audit-log-service'
+import { buildFileUrl } from '$lib/server/file-url'
 import { canManageOrganizations } from '$lib/server/permissions'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -10,8 +10,6 @@ export const load: PageServerLoad = async ({ locals }) => {
   if (!canManageOrganizations(userRole)) {
     throw error(403, 'You do not have permission to manage organizations')
   }
-
-  const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
 
   const organizations = await locals.pb.collection('organizations').getFullList({
     sort: 'name'
@@ -29,7 +27,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         slug: o.slug as string,
         description: (o.description as string) || '',
         logo,
-        logoUrl: logo ? `${pbUrl}/api/files/organizations/${o.id}/${logo}` : '',
+        logoUrl: logo ? buildFileUrl('organizations', o.id as string, logo) : '',
         eventsCount: events.filter((e) => e.organizationId === o.id).length,
         createdAt: new Date(o.created as string)
       }

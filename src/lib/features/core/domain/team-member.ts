@@ -1,4 +1,7 @@
+import { generateSlug } from '$lib/utils'
 import { z } from 'zod'
+
+export { generateSlug }
 
 export const socialLinkSchema = z.object({
   name: z.string().min(1).max(50),
@@ -43,18 +46,6 @@ export const updateTeamMemberSchema = createTeamMemberSchema.partial().omit({
 })
 
 export type UpdateTeamMemberInput = z.infer<typeof updateTeamMemberSchema>
-
-/**
- * Generate a slug from a name
- */
-export function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '') // Remove accents
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
 
 /**
  * Default social network icons mapping

@@ -108,7 +108,6 @@ export const getAdminSettingsNavItems = (): NavItem[] => [
   { href: '/admin/settings/notifications', label: 'Notifications' },
   { href: '/admin/settings/s3', label: 'S3 Storage' },
   { href: '/admin/settings/backups', label: 'Backups' },
-  { href: '/admin/settings/rate-limiting', label: 'Rate Limiting' },
   { href: '/admin/settings/log-retention', label: 'Log Retention' }
 ]
 

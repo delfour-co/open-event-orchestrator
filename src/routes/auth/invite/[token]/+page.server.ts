@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/public'
+import { buildFileUrl } from '$lib/server/file-url'
 import { processPendingInvitations } from '$lib/server/invitations'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -26,8 +26,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     let logoUrl: string | undefined
     if (org?.logo) {
-      const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
-      logoUrl = `${pbUrl}/api/files/organizations/${org.id}/${org.logo}`
+      logoUrl = buildFileUrl('organizations', org.id as string, org.logo as string)
     }
 
     // If user is already logged in, auto-accept and redirect
@@ -43,30 +42,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       throw redirect(303, '/admin')
     }
 
-    // Check if the invited email already has an account
-    let userExists = false
-    try {
-      // Use a fresh PB instance since we're not authenticated
-      const PocketBase = (await import('pocketbase')).default
-      const adminPb = new PocketBase(env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090')
-      const adminEmail = (await import('$env/dynamic/private')).env.PB_ADMIN_EMAIL
-      const adminPass = (await import('$env/dynamic/private')).env.PB_ADMIN_PASSWORD
-      if (adminEmail && adminPass) {
-        await adminPb.collection('_superusers').authWithPassword(adminEmail, adminPass)
-        await adminPb.collection('users').getFirstListItem(`email="${invitation.email}"`)
-        userExists = true
-      }
-    } catch {
-      // User doesn't exist or admin auth failed
-    }
-
     return {
       organizationName,
       role: invitation.role as string,
       email: invitation.email as string,
       token,
       logoUrl,
-      userExists
+      userExists: false
     }
   } catch (e) {
     if (e && typeof e === 'object' && 'status' in e) throw e

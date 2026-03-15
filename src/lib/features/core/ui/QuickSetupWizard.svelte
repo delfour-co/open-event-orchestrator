@@ -5,6 +5,7 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import { generateSlug } from '$lib/utils'
 import {
   Building2,
   Calendar,
@@ -62,13 +63,6 @@ let editionEndDate = $state('')
 let editionVenue = $state('')
 let editionCity = $state('')
 let editionCountry = $state('')
-
-const generateSlug = (name: string): string => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
 
 const handleOrgNameChange = (e: Event) => {
   const value = (e.target as HTMLInputElement).value

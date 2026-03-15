@@ -1,6 +1,18 @@
 import { env } from '$env/dynamic/public'
 import type PocketBase from 'pocketbase'
 
+/**
+ * Escape HTML special characters to prevent XSS in email templates
+ */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 export interface EmailBranding {
   orgName: string
   logoUrl?: string
@@ -83,13 +95,15 @@ export async function getEventBranding(pb: PocketBase, editionId: string): Promi
  * Generate branded email header HTML
  */
 export function emailHeader(branding: EmailBranding, title: string): string {
+  const safeOrgName = escapeHtml(branding.orgName)
+  const safeTitle = escapeHtml(title)
   const logoHtml = branding.logoUrl
-    ? `<img src="${branding.logoUrl}" alt="${branding.orgName}" style="max-height: 40px; max-width: 180px; margin-bottom: 10px;" /><br/>`
+    ? `<img src="${branding.logoUrl}" alt="${safeOrgName}" style="max-height: 40px; max-width: 180px; margin-bottom: 10px;" /><br/>`
     : ''
 
   return `<div style="background: ${branding.primaryColor}; padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
     ${logoHtml}
-    <h1 style="color: white; margin: 0; font-size: 24px;">${title}</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">${safeTitle}</h1>
   </div>`
 }
 
@@ -97,12 +111,14 @@ export function emailHeader(branding: EmailBranding, title: string): string {
  * Generate branded email footer HTML
  */
 export function emailFooter(branding: EmailBranding): string {
+  const safeOrgName = escapeHtml(branding.orgName)
+  const safeWebsite = branding.website ? escapeHtml(branding.website) : ''
   const websiteLink = branding.website
-    ? `<p style="margin: 5px 0;"><a href="${branding.website}" style="color: #64748b; text-decoration: underline;">${branding.website}</a></p>`
+    ? `<p style="margin: 5px 0;"><a href="${branding.website}" style="color: #64748b; text-decoration: underline;">${safeWebsite}</a></p>`
     : ''
 
   return `<div style="text-align: center; padding: 20px; color: #64748b; font-size: 12px;">
-    <p style="margin: 0;">${branding.orgName}</p>
+    <p style="margin: 0;">${safeOrgName}</p>
     ${websiteLink}
   </div>`
 }
@@ -111,8 +127,9 @@ export function emailFooter(branding: EmailBranding): string {
  * Generate a branded action button
  */
 export function emailButton(branding: EmailBranding, text: string, href: string): string {
+  const safeText = escapeHtml(text)
   return `<div style="text-align: center; margin: 30px 0;">
-    <a href="${href}" style="display: inline-block; background: ${branding.primaryColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">${text}</a>
+    <a href="${href}" style="display: inline-block; background: ${branding.primaryColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">${safeText}</a>
   </div>`
 }
 

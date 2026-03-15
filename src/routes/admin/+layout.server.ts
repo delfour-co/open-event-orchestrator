@@ -1,6 +1,6 @@
-import { env } from '$env/dynamic/public'
 import type { Notification } from '$lib/features/notifications'
 import { createNotificationRepository } from '$lib/features/notifications/infra'
+import { buildFileUrl } from '$lib/server/file-url'
 import { ADMIN_ROLES, type OrgRole, isReviewerOnly } from '$lib/server/permissions'
 import { error, redirect } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
@@ -18,12 +18,10 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     })
   }
 
-  const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://localhost:8090'
-
   // Build avatar URL if user has an avatar
   let avatarUrl: string | null = null
   if (locals.user.avatar) {
-    avatarUrl = `${pbUrl}/api/files/users/${locals.user.id}/${locals.user.avatar}`
+    avatarUrl = buildFileUrl('users', locals.user.id, locals.user.avatar as string)
   }
 
   // Fetch notification data for header
