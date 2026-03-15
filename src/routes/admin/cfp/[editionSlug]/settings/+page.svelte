@@ -96,7 +96,7 @@ const statuses = ['draft', 'published', 'archived'] as const
   <!-- Header -->
   <div class="flex items-center gap-4">
     <a href="/admin/cfp/{data.edition.slug}/submissions">
-      <Button variant="ghost" size="icon">
+      <Button variant="ghost" size="icon" title={m.action_back()}>
         <ArrowLeft class="h-4 w-4" />
       </Button>
     </a>
@@ -429,6 +429,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                   variant="ghost"
                   size="icon"
                   class="h-8 w-8 text-destructive hover:text-destructive"
+                  title={m.action_delete()}
                   onclick={(e) => {
                     if (!confirm(m.cfp_categories_delete_confirm())) {
                       e.preventDefault()
@@ -531,6 +532,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                   variant="ghost"
                   size="icon"
                   class="h-8 w-8 text-destructive hover:text-destructive"
+                  title={m.action_delete()}
                   onclick={(e) => {
                     if (!confirm(m.cfp_formats_delete_confirm())) {
                       e.preventDefault()
@@ -670,6 +672,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                   variant="ghost"
                   size="icon"
                   class="h-8 w-8"
+                  title={m.action_edit()}
                   onclick={() => startEditRule(rule)}
                 >
                   <Edit2 class="h-4 w-4" />
@@ -682,6 +685,7 @@ const statuses = ['draft', 'published', 'archived'] as const
                     variant="ghost"
                     size="icon"
                     class="h-8 w-8 text-destructive hover:text-destructive"
+                    title={m.action_delete()}
                     onclick={(e) => {
                       if (!confirm(m.cfp_conditional_delete_confirm())) {
                         e.preventDefault()

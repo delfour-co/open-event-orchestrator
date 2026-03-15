@@ -2618,6 +2618,7 @@
 	"planning_schedule_no_slots": "Aucun creneau horaire configure",
 	"planning_schedule_no_slots_hint": "Allez dans l'onglet Creneaux pour ajouter des creneaux et commencer a construire votre programme.",
 	"planning_schedule_no_track": "Sans piste",
+	"planning_schedule_open_public": "Ouvrir le programme public",
 	"planning_schedule_room_column": "Salle",
 	"planning_schedule_swap": "Echanger",
 	"planning_schedule_unknown_room": "Inconnu",

@@ -153,7 +153,7 @@ $effect(() => {
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-4">
       <a href="/admin/cfp">
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" title={m.action_back()}>
           <ArrowLeft class="h-4 w-4" />
         </Button>
       </a>
@@ -199,8 +199,8 @@ $effect(() => {
         </Button>
       </form>
     {/if}
-      <a href="/admin/cfp/{data.edition.slug}/settings" title={m.cfp_settings()}>
-        <Button variant="ghost" size="icon">
+      <a href="/admin/cfp/{data.edition.slug}/settings">
+        <Button variant="ghost" size="icon" title={m.cfp_settings()}>
           <Settings class="h-4 w-4" />
         </Button>
       </a>

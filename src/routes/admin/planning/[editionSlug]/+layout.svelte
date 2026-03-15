@@ -49,7 +49,7 @@ async function copyScheduleUrl() {
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-4">
       <a href="/admin/planning">
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" title={m.action_back()}>
           <ArrowLeft class="h-5 w-5" />
         </Button>
       </a>
@@ -63,7 +63,7 @@ async function copyScheduleUrl() {
       <div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
         <span class="text-xs text-muted-foreground">Schedule:</span>
         <code class="text-xs">/schedule/{data.edition.slug}</code>
-        <Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyScheduleUrl}>
+        <Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyScheduleUrl} title={m.action_copy()}>
           {#if copiedUrl}
             <Check class="h-3 w-3 text-green-500" />
           {:else}
@@ -71,7 +71,7 @@ async function copyScheduleUrl() {
           {/if}
         </Button>
         <a href="/schedule/{data.edition.slug}" target="_blank">
-          <Button variant="ghost" size="icon" class="h-6 w-6">
+          <Button variant="ghost" size="icon" class="h-6 w-6" title={m.planning_schedule_open_public()}>
             <ExternalLink class="h-3 w-3" />
           </Button>
         </a>

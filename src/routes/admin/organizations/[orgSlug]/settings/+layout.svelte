@@ -21,7 +21,7 @@ const { data, children }: Props = $props()
 <div class="space-y-6">
   <div class="flex items-center gap-4">
     <a href="/admin/organizations">
-      <Button variant="ghost" size="icon">
+      <Button variant="ghost" size="icon" title={m.action_back()}>
         <ArrowLeft class="h-5 w-5" />
       </Button>
     </a>

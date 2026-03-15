@@ -2,6 +2,7 @@
 import { AdminSubNav } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import { getEventSettingsNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft } from 'lucide-svelte'
 import type { LayoutData } from './$types'
 
@@ -20,7 +21,7 @@ const { data, children }: Props = $props()
 <div class="space-y-6">
   <div class="flex items-center gap-4">
     <a href="/admin/events">
-      <Button variant="ghost" size="icon">
+      <Button variant="ghost" size="icon" title={m.action_back()}>
         <ArrowLeft class="h-5 w-5" />
       </Button>
     </a>

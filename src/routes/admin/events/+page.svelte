@@ -159,7 +159,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                 {m.admin_events_new_edition_description()}
               </Card.Description>
             </div>
-            <Button variant="ghost" size="icon" onclick={() => (showNewEdition = null)}>
+            <Button variant="ghost" size="icon" onclick={() => (showNewEdition = null)} title={m.action_close()}>
               <X class="h-4 w-4" />
             </Button>
           </div>
@@ -348,13 +348,13 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                         <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
                           <StatusBadge status={edition.status} size="sm" />
                         </a>
-                        <a href="/admin/app/{edition.slug}" title={m.admin_events_attendee_app()}>
-                          <Button variant="ghost" size="icon" class="h-8 w-8">
+                        <a href="/admin/app/{edition.slug}">
+                          <Button variant="ghost" size="icon" class="h-8 w-8" title={m.admin_events_attendee_app()}>
                             <Smartphone class="h-4 w-4" />
                           </Button>
                         </a>
-                        <a href="/admin/editions/{edition.slug}/team" title={m.admin_events_team_members()}>
-                          <Button variant="ghost" size="icon" class="h-8 w-8">
+                        <a href="/admin/editions/{edition.slug}/team">
+                          <Button variant="ghost" size="icon" class="h-8 w-8" title={m.admin_events_team_members()}>
                             <Users class="h-4 w-4" />
                           </Button>
                         </a>
@@ -429,7 +429,7 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                   {m.admin_events_create_description()}
                 </Card.Description>
               </div>
-              <Button variant="ghost" size="icon" onclick={() => (showNewEvent = false)}>
+              <Button variant="ghost" size="icon" onclick={() => (showNewEvent = false)} title={m.action_close()}>
                 <X class="h-4 w-4" />
               </Button>
             </div>

@@ -99,7 +99,7 @@ $effect(() => {
   <div class="flex items-start justify-between">
     <div class="flex items-start gap-4">
       <a href="/admin/cfp/{data.edition.slug}/submissions">
-        <Button variant="ghost" size="icon" class="mt-1">
+        <Button variant="ghost" size="icon" class="mt-1" title={m.action_back()}>
           <ArrowLeft class="h-4 w-4" />
         </Button>
       </a>

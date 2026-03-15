@@ -20,9 +20,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     sort: '-year'
   })
 
-  // Get talks count per edition
-  const talks = await locals.pb.collection('talks').getFullList()
-
   // Get recent submissions (last 5), filtered by edition if selected
   const recentTalksFilter = selectedEditionId ? `editionId = "${selectedEditionId}"` : ''
   const recentTalks = await locals.pb.collection('talks').getList(1, 5, {
@@ -31,53 +28,121 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     filter: recentTalksFilter || undefined
   })
 
-  // Calculate stats
+  // Calculate stats using count queries instead of loading all talks
   const selectedEdition = selectedEditionId
     ? editions.find((e) => e.id === selectedEditionId)
     : null
 
-  const filteredTalks = selectedEditionId
-    ? talks.filter((t) => t.editionId === selectedEditionId)
-    : talks
+  const talksBaseFilter = selectedEditionId ? `editionId = "${selectedEditionId}"` : ''
+  const talksFilterPrefix = talksBaseFilter ? `${talksBaseFilter} && ` : ''
+
+  const [totalTalksResult, submittedResult, acceptedResult, rejectedResult, underReviewResult] =
+    await Promise.all([
+      locals.pb.collection('talks').getList(1, 1, {
+        filter: talksBaseFilter || undefined
+      }),
+      locals.pb.collection('talks').getList(1, 1, {
+        filter: `${talksFilterPrefix}status = "submitted"`
+      }),
+      locals.pb.collection('talks').getList(1, 1, {
+        filter: `${talksFilterPrefix}status = "accepted"`
+      }),
+      locals.pb.collection('talks').getList(1, 1, {
+        filter: `${talksFilterPrefix}status = "rejected"`
+      }),
+      locals.pb.collection('talks').getList(1, 1, {
+        filter: `${talksFilterPrefix}status = "under_review"`
+      })
+    ])
 
   const stats = {
-    totalTalks: filteredTalks.length,
-    submittedTalks: filteredTalks.filter((t) => t.status === 'submitted').length,
-    acceptedTalks: filteredTalks.filter((t) => t.status === 'accepted').length,
-    rejectedTalks: filteredTalks.filter((t) => t.status === 'rejected').length,
-    underReviewTalks: filteredTalks.filter((t) => t.status === 'under_review').length
+    totalTalks: totalTalksResult.totalItems,
+    submittedTalks: submittedResult.totalItems,
+    acceptedTalks: acceptedResult.totalItems,
+    rejectedTalks: rejectedResult.totalItems,
+    underReviewTalks: underReviewResult.totalItems
   }
 
-  // Billing data
+  // Billing data - use count queries instead of loading all records
   const editionFilter = selectedEditionId ? `editionId = "${selectedEditionId}"` : ''
+  const editionFilterPrefix = editionFilter ? `${editionFilter} && ` : ''
 
-  let orders: Array<Record<string, unknown>> = []
-  let tickets: Array<Record<string, unknown>> = []
+  let recentOrdersList: Array<Record<string, unknown>> = []
+  let billingStats = {
+    totalRevenue: 0,
+    totalOrders: 0,
+    paidOrders: 0,
+    pendingOrders: 0,
+    cancelledOrders: 0,
+    ticketsSold: 0,
+    ticketsCheckedIn: 0,
+    checkInRate: 0
+  }
   try {
-    orders = await locals.pb.collection('orders').getFullList({
-      filter: editionFilter || undefined,
-      sort: '-created'
+    const [
+      allOrdersResult,
+      paidOrdersResult,
+      pendingOrdersResult,
+      cancelledOrdersResult,
+      allTicketsResult,
+      usedTicketsResult,
+      nonCancelledTicketsResult,
+      recentOrdersResult
+    ] = await Promise.all([
+      locals.pb.collection('orders').getList(1, 1, {
+        filter: editionFilter || undefined
+      }),
+      locals.pb.collection('orders').getList(1, 1, {
+        filter: `${editionFilterPrefix}status = "paid"`
+      }),
+      locals.pb.collection('orders').getList(1, 1, {
+        filter: `${editionFilterPrefix}status = "pending"`
+      }),
+      locals.pb.collection('orders').getList(1, 1, {
+        filter: `${editionFilterPrefix}status = "cancelled"`
+      }),
+      locals.pb.collection('billing_tickets').getList(1, 1, {
+        filter: editionFilter || undefined
+      }),
+      locals.pb.collection('billing_tickets').getList(1, 1, {
+        filter: `${editionFilterPrefix}status = "used"`
+      }),
+      locals.pb.collection('billing_tickets').getList(1, 1, {
+        filter: `${editionFilterPrefix}status != "cancelled"`
+      }),
+      locals.pb.collection('orders').getList(1, 5, {
+        filter: editionFilter || undefined,
+        sort: '-created'
+      })
+    ])
+
+    // For total revenue, we still need paid orders with amounts
+    const paidOrdersForRevenue = await locals.pb.collection('orders').getFullList({
+      filter: `${editionFilterPrefix}status = "paid"`,
+      fields: 'totalAmount'
     })
-    tickets = await locals.pb.collection('billing_tickets').getFullList({
-      filter: editionFilter || undefined
-    })
+    const totalRevenue = paidOrdersForRevenue.reduce(
+      (sum, o) => sum + ((o.totalAmount as number) || 0),
+      0
+    )
+
+    const ticketsCheckedIn = usedTicketsResult.totalItems
+    const totalTickets = allTicketsResult.totalItems
+
+    billingStats = {
+      totalRevenue,
+      totalOrders: allOrdersResult.totalItems,
+      paidOrders: paidOrdersResult.totalItems,
+      pendingOrders: pendingOrdersResult.totalItems,
+      cancelledOrders: cancelledOrdersResult.totalItems,
+      ticketsSold: nonCancelledTicketsResult.totalItems,
+      ticketsCheckedIn,
+      checkInRate: totalTickets > 0 ? Math.round((ticketsCheckedIn / totalTickets) * 100) : 0
+    }
+
+    recentOrdersList = recentOrdersResult.items
   } catch {
     // Collections may not exist yet
-  }
-
-  const paidOrders = orders.filter((o) => o.status === 'paid')
-  const totalRevenue = paidOrders.reduce((sum, o) => sum + ((o.totalAmount as number) || 0), 0)
-  const ticketsCheckedIn = tickets.filter((t) => t.status === 'used').length
-
-  const billingStats = {
-    totalRevenue,
-    totalOrders: orders.length,
-    paidOrders: paidOrders.length,
-    pendingOrders: orders.filter((o) => o.status === 'pending').length,
-    cancelledOrders: orders.filter((o) => o.status === 'cancelled').length,
-    ticketsSold: tickets.filter((t) => t.status !== 'cancelled').length,
-    ticketsCheckedIn,
-    checkInRate: tickets.length > 0 ? Math.round((ticketsCheckedIn / tickets.length) * 100) : 0
   }
 
   // Budget data
@@ -178,7 +243,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     currency: ((sponsorPackages[0]?.currency as string) || 'EUR') as string
   }
 
-  const recentOrders = orders.slice(0, 5).map((o) => ({
+  const recentOrders = recentOrdersList.map((o) => ({
     id: o.id as string,
     orderNumber: o.orderNumber as string,
     email: o.email as string,
