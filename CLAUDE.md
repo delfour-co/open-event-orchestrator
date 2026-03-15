@@ -12,11 +12,13 @@ Open Event Orchestrator is an all-in-one open-source platform for event manageme
 - **Forms**: Superforms + Zod
 - **Testing**: Vitest (unit) + Playwright (E2E)
 - **Linting**: Biome
+- **Task Runner**: just
 - **Containerization**: Docker Compose
 - **Payments**: Stripe + HelloAsso (via provider abstraction layer — see `docs/payments.md`)
 - **Email**: Nodemailer (SMTP) + Mailpit (local dev)
 - **QR Codes**: qrcode (generation) + html5-qrcode (scanning)
 - **2FA**: otpauth (TOTP generation/verification)
+- **Image Cropping**: cropperjs
 
 ## Architecture
 
@@ -26,6 +28,11 @@ Structure par feature/module avec Clean Architecture principles:
 src/
 ├── lib/
 │   ├── features/           # Feature modules
+│   │   ├── auth/
+│   │   │   ├── domain/     # user, setup-token, totp
+│   │   │   ├── infra/      # user-session-repository, totp-repository
+│   │   │   ├── services/   # email-verification, password-reset, totp, social-auth
+│   │   │   └── ui/         # SocialLoginButtons
 │   │   ├── cfp/
 │   │   │   ├── domain/     # Entities, types, business rules
 │   │   │   ├── usecases/   # Application logic
@@ -51,18 +58,45 @@ src/
 │   │   │   ├── infra/      # PocketBase repositories for reporting entities
 │   │   │   ├── services/   # Stats aggregation, threshold evaluation, report scheduler
 │   │   │   └── ui/         # Dashboard components, charts, alert management
-│   │   └── core/           # Shared (Organization, Event, Edition)
-│   ├── components/         # Shared UI components
-│   ├── server/             # Server-only code (notifications, permissions, invitations)
-│   └── utils/              # Utilities
+│   │   └── core/
+│   │       ├── domain/     # organization, event, edition, team-member, invitation, audit-log
+│   │       └── infra/      # repositories + audit-log-repository
+│   ├── components/
+│   │   └── shared/         # AdminSubNav, Alert, EditionSelectorPage, ImageCropUpload, Pagination, PasswordStrengthIndicator, StatusBadge
+│   ├── server/             # audit-log-service, email-branding, file-url, invitations, permissions, pb-types, safe-filter
+│   └── utils/              # cn(), generateSlug()
 ├── routes/
-│   ├── admin/              # Admin pages (billing, planning, cfp, budget, organizations)
+│   ├── admin/
+│   │   ├── settings/       # Email, OAuth2, Payments, Notifications, S3, Backups, Log Retention, General
+│   │   ├── organizations/[orgSlug]/settings/  # General, Branding, Social, Legal, Team, Audit Log
+│   │   ├── events/[eventSlug]/settings/       # General, Branding, Social, Policies
+│   │   └── planning/[editionSlug]/            # Schedule, Sessions, Rooms, Tracks, Slots, Staff, Settings
 │   ├── tickets/            # Public ticket purchase pages
 │   ├── api/                # API routes (payment webhooks, etc.)
-│   └── auth/               # Authentication (login, register, 2FA, OAuth, password reset, invitations)
+│   ├── auth/               # login, register, forgot-password, reset-password, verify-2fa, invite
+│   └── app/[editionSlug]/  # PWA with extracted components
 └── tests/
     └── e2e/                # Playwright E2E tests
 ```
+
+### Shared Components (`src/lib/components/shared/`)
+
+- `AdminSubNav` — Tab navigation for settings pages
+- `EditionSelectorPage` — Reusable edition selector grid (used by 7 modules)
+- `ImageCropUpload` — Image upload with cropperjs crop dialog
+- `Alert` — Success/error alert messages
+- `StatusBadge` — Edition status badges
+- `Pagination` — Page navigation
+- `PasswordStrengthIndicator` — Password strength meter
+
+### Shared Utilities
+
+- `src/lib/utils.ts` — `cn()` (class merging), `generateSlug()` (name to URL slug)
+- `src/lib/components/shared/utils.ts` — `formatDate()`, `formatDateTime()`, `formatCurrency()`, `truncate()`
+- `src/lib/server/file-url.ts` — `buildFileUrl()` (PocketBase file URL builder)
+- `src/lib/server/safe-filter.ts` — `safeFilter` tagged template for PB query safety
+- `src/lib/server/email-branding.ts` — `wrapEmail()`, `emailHeader()`, `emailFooter()`, `escapeHtml()`, `getOrgBranding()`, `getEventBranding()`
+- `src/lib/server/pb-types.ts` — Typed PocketBase record interfaces
 
 ## Code Conventions
 
@@ -143,7 +177,8 @@ Example: `[#42] feat(cfp): add speaker profile form`
 
 - Co-located with source: `*.test.ts`
 - Test business logic in `domain/` and `usecases/`
-- Mock infrastructure (PocketBase)
+- Mock PocketBase with `vi.fn()`, use typed record interfaces from `pb-types.ts`
+- **Test files**: 295 files, 5719 tests
 
 ### E2E Tests (Playwright)
 
@@ -168,24 +203,33 @@ Before merge:
 ## Local Development
 
 ```bash
-# Start services (PocketBase + Mailpit)
-docker-compose up -d
+# First-time setup (install deps, start Docker, seed DB, launch dev)
+just setup
 
-# Install dependencies
-pnpm install
+# Daily development
+just start        # Start Docker + dev server
+just stop         # Stop everything
 
-# Run dev server
-pnpm dev
+# Testing
+just test         # Run unit tests
+just qa           # Lint + test + type check
 
-# Run tests
-pnpm test
+# Useful commands
+just status       # Show service status
+just mailpit      # Open Mailpit email viewer
+just pb-admin     # Open PocketBase admin
+just reset-pb     # Reset PocketBase completely
+just seed         # Seed database with sample data
+```
 
-# Run E2E tests
-pnpm test:e2e
+### Raw pnpm commands (alternative to just)
 
-# Lint & format
-pnpm lint
-pnpm format
+```bash
+pnpm dev          # Dev server
+pnpm test         # Unit tests
+pnpm lint         # Biome lint
+pnpm format       # Biome format
+pnpm test:e2e     # Playwright E2E tests
 ```
 
 ### Docker Services
@@ -228,14 +272,21 @@ SMTP configuration defaults to `localhost:1025` (Mailpit). In production, SMTP s
 ## Environment Variables
 
 ```env
-# PocketBase
+# PocketBase (required)
 PUBLIC_POCKETBASE_URL=http://localhost:8090
 
 # Stripe (optional, for paid tickets)
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 PUBLIC_STRIPE_PUBLISHABLE_KEY=
+
+# SMTP (optional, defaults to Mailpit localhost:1025)
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_FROM=noreply@open-event-orchestrator.local
 ```
+
+See `.env.example` for the full list with documentation.
 
 ## Domain Labels
 
@@ -300,7 +351,7 @@ The reporting module provides comprehensive dashboards and analytics for event e
 
 ### Password Reset
 - Users request reset via `/auth/forgot-password`
-- PocketBase sends reset email via its configured SMTP (migration 0028)
+- PocketBase sends reset email via its configured SMTP (migration `0002_v1_2_0_schema_updates.js`)
 - Reset link points to `/auth/reset-password/{TOKEN}`
 - Uses PB's built-in `confirmPasswordReset()`
 
@@ -310,6 +361,12 @@ The reporting module provides comprehensive dashboards and analytics for event e
 - Login flow: password -> 2FA check -> `oeo_2fa_required` cookie -> `/auth/verify-2fa`
 - Trusted devices: 30-day cookie based on user-agent + IP hash
 - Collections: `user_totp_secrets`, `trusted_devices`
+
+### Security Practices
+- `safeFilter` tagged template for all PB queries (prevents raw string interpolation)
+- `escapeHtml()` in email templates to prevent XSS
+- TOTP QR codes generated client-side (no external service dependency)
+- OAuth2 credentials stored in `app_settings`, PB sync via superuser modal (credentials entered per-request, not stored)
 
 ### Social Login (OAuth2)
 - Google and GitHub providers
@@ -347,7 +404,7 @@ User roles (`users.role`) and organization member roles (`organization_members.r
 
 ### Configuration
 - SMTP settings in `/admin/settings` (Email SMTP tab)
-- PB SMTP configured via migration 0028 to use Mailpit in dev
+- PB SMTP configured via migration `0002_v1_2_0_schema_updates.js` to use Mailpit in dev
 
 ### Audit Log
 
@@ -373,7 +430,15 @@ Tabs: General, Branding, Social & Localization, Legal & Billing, Team, Audit Log
 Tabs: General, Branding, Social & Localization, Policies
 
 ### App Settings (`/admin/settings/`)
-Tabs: Email (SMTP), OAuth2, Stripe, HelloAsso, Slack, Discord
+Tabs: Email (SMTP), OAuth2, Payments, Notifications, S3, Backups, Log Retention, General
+
+## PocketBase Migrations
+
+Only 2 migration files:
+- `0001_initial_schema.js` — Base schema (all collections)
+- `0002_v1_2_0_schema_updates.js` — All v1.2.0 additions (branding, 2FA, audit log, OAuth, settings)
+
+**Important**: Use `addMarshaledJSON(JSON.stringify([...]))` for adding fields, NOT `new Field()`.
 
 ## Milestones & Issues Standard
 
