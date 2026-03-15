@@ -9,6 +9,7 @@ import {
   NotificationList,
   type NotificationType
 } from '$lib/features/notifications'
+import * as m from '$lib/paraglide/messages'
 import { Check } from 'lucide-svelte'
 import type { PageData } from './$types.js'
 
@@ -100,19 +101,19 @@ function handlePageChange(newPage: number): void {
 </script>
 
 <svelte:head>
-  <title>Notifications | Open Event Orchestrator</title>
+  <title>{m.notifications_title()}</title>
 </svelte:head>
 
 <div class="container mx-auto max-w-4xl px-4 py-8">
   <!-- Header -->
   <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <h1 class="text-2xl font-bold">Notifications</h1>
+      <h1 class="text-2xl font-bold">{m.notifications_heading()}</h1>
       <p class="text-muted-foreground">
         {#if data.stats.unread > 0}
-          You have {data.stats.unread} unread notification{data.stats.unread !== 1 ? 's' : ''}
+          {m.notifications_unread({ count: String(data.stats.unread) })}
         {:else}
-          All caught up!
+          {m.notifications_caught_up()}
         {/if}
       </p>
     </div>
@@ -125,7 +126,7 @@ function handlePageChange(newPage: number): void {
         disabled={loading}
       >
         <Check class="h-4 w-4" />
-        Mark all as read
+        {m.notifications_mark_all_read()}
       </Button>
     {/if}
   </div>
@@ -135,25 +136,25 @@ function handlePageChange(newPage: number): void {
     <Card.Root>
       <Card.Content class="pt-4">
         <div class="text-2xl font-bold">{data.stats.total}</div>
-        <p class="text-xs text-muted-foreground">Total</p>
+        <p class="text-xs text-muted-foreground">{m.notifications_total()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="pt-4">
         <div class="text-2xl font-bold text-blue-500">{data.stats.unread}</div>
-        <p class="text-xs text-muted-foreground">Unread</p>
+        <p class="text-xs text-muted-foreground">{m.notifications_unread_label()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="pt-4">
         <div class="text-2xl font-bold text-red-500">{data.stats.byType.alert}</div>
-        <p class="text-xs text-muted-foreground">Alerts</p>
+        <p class="text-xs text-muted-foreground">{m.notifications_alerts()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="pt-4">
         <div class="text-2xl font-bold text-purple-500">{data.stats.byType.action}</div>
-        <p class="text-xs text-muted-foreground">Actions Required</p>
+        <p class="text-xs text-muted-foreground">{m.notifications_actions_required()}</p>
       </Card.Content>
     </Card.Root>
   </div>
@@ -175,8 +176,8 @@ function handlePageChange(newPage: number): void {
     onDelete={handleDelete}
     {loading}
     emptyMessage={data.filters.type !== 'all' || data.filters.status !== 'all'
-      ? 'No notifications match your filters'
-      : 'No notifications yet'}
+      ? m.notifications_no_match()
+      : m.notifications_empty()}
   />
 
   <!-- Pagination -->

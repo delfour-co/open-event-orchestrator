@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowRight,
   BarChart3,
@@ -17,60 +18,59 @@ import {
 const features = [
   {
     icon: Calendar,
-    title: 'Call for Papers',
-    description: 'Manage speaker submissions, reviews, and notifications with multi-step workflows'
+    title: () => m.landing_feature_cfp_title(),
+    description: () => m.landing_feature_cfp_description()
   },
   {
     icon: Users,
-    title: 'Planning',
-    description: 'Build your schedule with drag-and-drop, rooms, tracks, and speaker assignments'
+    title: () => m.landing_feature_planning_title(),
+    description: () => m.landing_feature_planning_description()
   },
   {
     icon: Ticket,
-    title: 'Ticketing',
-    description:
-      'Sell tickets via Stripe, manage registrations, and check-in attendees with QR codes'
+    title: () => m.landing_feature_ticketing_title(),
+    description: () => m.landing_feature_ticketing_description()
   },
   {
     icon: BarChart3,
-    title: 'CRM',
-    description: 'Keep track of contacts, consent management, segments, and email campaigns'
+    title: () => m.landing_feature_crm_title(),
+    description: () => m.landing_feature_crm_description()
   },
   {
     icon: Wallet,
-    title: 'Budget',
-    description: 'Track expenses, quotes, invoices, speaker reimbursements, and audit trails'
+    title: () => m.landing_feature_budget_title(),
+    description: () => m.landing_feature_budget_description()
   },
   {
     icon: Handshake,
-    title: 'Sponsoring',
-    description: 'Manage sponsors, packages, pipeline status, and self-service sponsor portal'
+    title: () => m.landing_feature_sponsoring_title(),
+    description: () => m.landing_feature_sponsoring_description()
   },
   {
     icon: ChartPie,
-    title: 'Reporting',
-    description: 'Real-time dashboards, KPIs, distribution charts, and configurable alerts'
+    title: () => m.landing_feature_reporting_title(),
+    description: () => m.landing_feature_reporting_description()
   },
   {
     icon: Smartphone,
-    title: 'Attendee App',
-    description: 'Mobile-friendly schedule with personal favorites and session details'
+    title: () => m.landing_feature_app_title(),
+    description: () => m.landing_feature_app_description()
   },
   {
     icon: Users2,
-    title: 'Team Management',
-    description: 'Manage staff, volunteers, and room assignments for your event'
+    title: () => m.landing_feature_team_title(),
+    description: () => m.landing_feature_team_description()
   },
   {
     icon: Code2,
-    title: 'API',
-    description: 'Headless REST API for custom integrations, widgets, and websites'
+    title: () => m.landing_feature_api_title(),
+    description: () => m.landing_feature_api_description()
   }
 ]
 </script>
 
 <svelte:head>
-  <title>Open Event Orchestrator - All-in-one Event Management</title>
+  <title>{m.landing_title()}</title>
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
@@ -82,10 +82,10 @@ const features = [
       </div>
       <nav class="flex items-center gap-4">
         <a href="/auth/login">
-          <Button variant="ghost">Sign in</Button>
+          <Button variant="ghost">{m.common_sign_in()}</Button>
         </a>
         <a href="/auth/register">
-          <Button>Get started</Button>
+          <Button>{m.common_get_started()}</Button>
         </a>
       </nav>
     </div>
@@ -99,23 +99,21 @@ const features = [
       class="mb-8 max-h-64 w-auto object-contain sm:max-h-80"
     />
     <h1 class="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-      The open-source control plane for
-      <span class="text-primary">events</span>
+      {m.landing_hero_title_prefix()}
+      <span class="text-primary">{m.landing_hero_title_highlight()}</span>
     </h1>
     <p class="mt-6 max-w-2xl text-lg text-muted-foreground">
-      Open Event Orchestrator is an all-in-one platform for managing conferences, meetups, and
-      community events. CFP, planning, ticketing, CRM, budget, sponsoring, and API — unified in one
-      place.
+      {m.landing_hero_description()}
     </p>
     <div class="mt-10 flex flex-col gap-4 sm:flex-row">
       <a href="/auth/register">
         <Button size="lg" class="gap-2">
-          Get started for free
+          {m.landing_get_started_free()}
           <ArrowRight class="h-4 w-4" />
         </Button>
       </a>
       <a href="https://github.com/delfour-co/open-event-orchestrator" target="_blank">
-        <Button variant="outline" size="lg">View on GitHub</Button>
+        <Button variant="outline" size="lg">{m.landing_view_github()}</Button>
       </a>
     </div>
   </section>
@@ -123,13 +121,13 @@ const features = [
   <!-- Features -->
   <section class="border-t bg-muted/50 px-4 py-24">
     <div class="container mx-auto">
-      <h2 class="mb-12 text-center text-3xl font-bold">Everything you need to run great events</h2>
+      <h2 class="mb-12 text-center text-3xl font-bold">{m.landing_features_title()}</h2>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {#each features as feature}
           <div class="rounded-lg border bg-background p-6">
             <feature.icon class="mb-4 h-10 w-10 text-primary" />
-            <h3 class="mb-2 text-lg font-semibold">{feature.title}</h3>
-            <p class="text-sm text-muted-foreground">{feature.description}</p>
+            <h3 class="mb-2 text-lg font-semibold">{feature.title()}</h3>
+            <p class="text-sm text-muted-foreground">{feature.description()}</p>
           </div>
         {/each}
       </div>
@@ -139,7 +137,7 @@ const features = [
   <!-- Footer -->
   <footer class="border-t px-4 py-8">
     <div class="container mx-auto text-center text-sm text-muted-foreground">
-      <p>Open Event Orchestrator is open-source software.</p>
+      <p>{m.common_open_source()}</p>
     </div>
   </footer>
 </div>

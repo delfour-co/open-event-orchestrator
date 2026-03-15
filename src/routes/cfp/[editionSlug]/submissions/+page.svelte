@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { type TalkStatus, getStatusColor, getStatusLabel } from '$lib/features/cfp/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   AlertTriangle,
   CheckCircle,
@@ -69,14 +70,14 @@ const statusColors: Record<string, string> = {
 
 <div class="mx-auto max-w-3xl">
   <div class="mb-8 text-center">
-    <h1 class="text-3xl font-bold">My Submissions</h1>
+    <h1 class="text-3xl font-bold">{m.cfp_submissions_heading()}</h1>
     <p class="mt-2 text-muted-foreground">{data.edition.name}</p>
   </div>
 
   {#if data.success}
     <div class="mb-6 flex items-center gap-3 rounded-lg border border-green-500 bg-green-50 p-4 dark:border-green-700 dark:bg-green-950">
       <CheckCircle class="h-5 w-5 text-green-600 dark:text-green-400" />
-      <p class="text-sm text-green-800 dark:text-green-200">Your talk has been submitted successfully! Check your email for the access link.</p>
+      <p class="text-sm text-green-800 dark:text-green-200">{m.cfp_submissions_success_submitted()}</p>
     </div>
   {/if}
 
@@ -133,9 +134,9 @@ const statusColors: Record<string, string> = {
     <!-- Request access form -->
     <Card>
       <CardHeader>
-        <CardTitle>Access Your Submissions</CardTitle>
+        <CardTitle>{m.cfp_submissions_access_title()}</CardTitle>
         <CardDescription>
-          Enter your email address and we'll send you a secure link to view and manage your submissions.
+          {m.cfp_submissions_access_hint()}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -152,13 +153,13 @@ const statusColors: Record<string, string> = {
           class="space-y-4"
         >
           <div class="space-y-2">
-            <Label for="email">Email Address</Label>
+            <Label for="email">{m.cfp_submissions_email_address()}</Label>
             <Input
               id="email"
               name="email"
               type="email"
               bind:value={email}
-              placeholder="speaker@example.com"
+              placeholder={m.cfp_submissions_email_placeholder()}
               required
             />
           </div>
@@ -168,10 +169,10 @@ const statusColors: Record<string, string> = {
           <Button type="submit" disabled={isRequestingAccess} class="gap-2">
             {#if isRequestingAccess}
               <Loader2 class="h-4 w-4 animate-spin" />
-              Sending...
+              {m.cfp_submissions_sending()}
             {:else}
               <Mail class="h-4 w-4" />
-              Send Access Link
+              {m.cfp_submissions_send_access()}
             {/if}
           </Button>
         </form>
@@ -180,12 +181,12 @@ const statusColors: Record<string, string> = {
 
     <div class="mt-8 text-center">
       <p class="text-sm text-muted-foreground">
-        Don't have any submissions yet?
+        {m.cfp_submissions_no_submissions_hint()}
       </p>
       <a href="/cfp/{data.edition.slug}/submit" class="mt-2 inline-block">
         <Button variant="outline" class="gap-2">
           <Plus class="h-4 w-4" />
-          Submit a Talk
+          {m.cfp_public_submit_talk()}
         </Button>
       </a>
     </div>
@@ -208,14 +209,14 @@ const statusColors: Record<string, string> = {
         <Card>
           <CardContent class="py-12 text-center">
             <FileText class="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 class="mt-4 text-lg font-medium">No submissions yet</h3>
+            <h3 class="mt-4 text-lg font-medium">{m.cfp_submissions_no_talks()}</h3>
             <p class="mt-2 text-sm text-muted-foreground">
-              You haven't submitted any talks for this edition.
+              {m.cfp_submissions_no_talks_hint()}
             </p>
             <a href="/cfp/{data.edition.slug}/submit" class="mt-4 inline-block">
               <Button class="gap-2">
                 <Plus class="h-4 w-4" />
-                Submit a Talk
+                {m.cfp_public_submit_talk()}
               </Button>
             </a>
           </CardContent>
@@ -229,9 +230,7 @@ const statusColors: Record<string, string> = {
                   <div>
                     <CardTitle class="text-lg">{talk.title}</CardTitle>
                     <CardDescription class="mt-1">
-                      Submitted on {new Intl.DateTimeFormat('en-US', {
-                        dateStyle: 'medium'
-                      }).format(talk.submittedAt ?? talk.createdAt)}
+                      {m.cfp_submissions_submitted_on({ date: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(talk.submittedAt ?? talk.createdAt) })}
                     </CardDescription>
                   </div>
                   <span
@@ -250,7 +249,7 @@ const statusColors: Record<string, string> = {
                     <div class="mb-3 flex items-center justify-between">
                       <h4 class="flex items-center gap-2 text-sm font-medium">
                         <Users class="h-4 w-4" />
-                        Co-Speakers
+                        {m.cfp_submissions_cospeakers()}
                       </h4>
                       {#if ['draft', 'submitted'].includes(talk.status) && data.cfpStatus === 'open'}
                         <Button
@@ -263,7 +262,7 @@ const statusColors: Record<string, string> = {
                           }}
                         >
                           <UserPlus class="h-3 w-3" />
-                          Invite
+                          {m.cfp_submissions_cospeakers_invite()}
                         </Button>
                       {/if}
                     </div>
@@ -292,7 +291,7 @@ const statusColors: Record<string, string> = {
                               <Clock class="h-4 w-4 text-yellow-500" />
                               <span class="text-muted-foreground">{invitation.email}</span>
                               <span class="rounded bg-yellow-100 px-1.5 py-0.5 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                Pending
+                                {m.cfp_submissions_cospeakers_pending()}
                               </span>
                             </div>
                             <form method="POST" action="?/cancelCospeakerInvitation&token={data.token}" use:enhance>
@@ -302,7 +301,7 @@ const statusColors: Record<string, string> = {
                                 variant="ghost"
                                 size="icon"
                                 class="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                title="Cancel invitation"
+                                title={m.cfp_submissions_cospeakers_cancel_invite()}
                               >
                                 <X class="h-3 w-3" />
                               </Button>
@@ -333,12 +332,12 @@ const statusColors: Record<string, string> = {
                           <Input
                             type="email"
                             name="cospeakerEmail"
-                            placeholder="Co-speaker email"
+                            placeholder={m.cfp_submissions_cospeakers_email_placeholder()}
                             bind:value={cospeakerEmail}
                             class="flex-1 text-sm"
                             required
                           />
-                          <Button type="submit" size="sm">Send Invite</Button>
+                          <Button type="submit" size="sm">{m.cfp_submissions_cospeakers_send_invite()}</Button>
                           <Button
                             type="button"
                             variant="ghost"
@@ -348,7 +347,7 @@ const statusColors: Record<string, string> = {
                               cospeakerEmail = ''
                             }}
                           >
-                            Cancel
+                            {m.action_cancel()}
                           </Button>
                         </div>
                         {#if form?.inviteError}
@@ -358,7 +357,7 @@ const statusColors: Record<string, string> = {
                     {/if}
 
                     {#if talk.coSpeakers.length === 0 && talk.coSpeakerInvitations.length === 0 && showInviteForm !== talk.id}
-                      <p class="text-sm text-muted-foreground">No co-speakers yet. Invite someone to collaborate!</p>
+                      <p class="text-sm text-muted-foreground">{m.cfp_submissions_cospeakers_empty()}</p>
                     {/if}
                   </div>
                 {/if}
@@ -367,29 +366,29 @@ const statusColors: Record<string, string> = {
                 {#if talk.status === 'accepted'}
                   <div class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
                     <p class="mb-3 text-sm font-medium text-green-800 dark:text-green-200">
-                      Congratulations! Your talk has been accepted. Please confirm your participation.
+                      {m.cfp_submissions_accepted_message()}
                     </p>
                     <div class="flex flex-wrap gap-2">
                       <form method="POST" action="?/confirm&token={data.token}" use:enhance>
                         <input type="hidden" name="talkId" value={talk.id} />
                         <Button type="submit" size="sm" class="gap-2 bg-green-600 hover:bg-green-700">
                           <ThumbsUp class="h-4 w-4" />
-                          Confirm Participation
+                          {m.cfp_submissions_confirm_participation()}
                         </Button>
                       </form>
                       {#if showDeclineConfirm === talk.id}
                         <div class="flex items-center gap-2">
-                          <span class="text-sm text-muted-foreground">Are you sure?</span>
+                          <span class="text-sm text-muted-foreground">{m.cfp_submissions_decline_confirm()}</span>
                           <form method="POST" action="?/decline&token={data.token}" use:enhance>
                             <input type="hidden" name="talkId" value={talk.id} />
-                            <Button type="submit" variant="destructive" size="sm">Yes, Decline</Button>
+                            <Button type="submit" variant="destructive" size="sm">{m.cfp_submissions_decline_yes()}</Button>
                           </form>
                           <Button
                             variant="outline"
                             size="sm"
                             onclick={() => (showDeclineConfirm = null)}
                           >
-                            Cancel
+                            {m.action_cancel()}
                           </Button>
                         </div>
                       {:else}
@@ -400,7 +399,7 @@ const statusColors: Record<string, string> = {
                           onclick={() => (showDeclineConfirm = talk.id)}
                         >
                           <ThumbsDown class="h-4 w-4" />
-                          Decline
+                          {m.cfp_submissions_decline()}
                         </Button>
                       {/if}
                     </div>
@@ -414,7 +413,7 @@ const statusColors: Record<string, string> = {
                       <a href="/cfp/{data.edition.slug}/submissions/{talk.id}/edit?token={data.token}">
                         <Button variant="outline" size="sm" class="gap-2">
                           <Edit class="h-4 w-4" />
-                          Edit
+                          {m.action_edit()}
                         </Button>
                       </a>
                     {/if}
@@ -422,11 +421,11 @@ const statusColors: Record<string, string> = {
                     {#if canWithdraw(talk.status)}
                       {#if showWithdrawConfirm === talk.id}
                         <div class="flex items-center gap-2">
-                          <span class="text-sm text-muted-foreground">Withdraw this talk?</span>
+                          <span class="text-sm text-muted-foreground">{m.cfp_submissions_withdraw_confirm()}</span>
                           <form method="POST" action="?/withdraw&token={data.token}" use:enhance>
                             <input type="hidden" name="talkId" value={talk.id} />
                             <Button type="submit" variant="destructive" size="sm">
-                              Yes, Withdraw
+                              {m.cfp_submissions_withdraw_yes()}
                             </Button>
                           </form>
                           <Button
@@ -434,7 +433,7 @@ const statusColors: Record<string, string> = {
                             size="sm"
                             onclick={() => (showWithdrawConfirm = null)}
                           >
-                            Cancel
+                            {m.action_cancel()}
                           </Button>
                         </div>
                       {:else}
@@ -445,7 +444,7 @@ const statusColors: Record<string, string> = {
                           onclick={() => (showWithdrawConfirm = talk.id)}
                         >
                           <X class="h-4 w-4" />
-                          Withdraw
+                          {m.cfp_submissions_withdraw()}
                         </Button>
                       {/if}
                     {/if}
@@ -460,13 +459,13 @@ const statusColors: Record<string, string> = {
                     >
                       <div class="flex items-center gap-3">
                         <Star class="h-4 w-4 text-amber-500" />
-                        <span class="text-sm font-medium">Feedback</span>
+                        <span class="text-sm font-medium">{m.cfp_submissions_feedback()}</span>
                         <span class="text-lg font-bold text-amber-600 dark:text-amber-400">
                           {talk.feedback.averageRating !== null ? talk.feedback.averageRating.toFixed(1) : '-'}
                         </span>
                         <span class="text-xs text-amber-500">{renderStars(talk.feedback.averageRating)}</span>
                         <span class="text-xs text-muted-foreground">
-                          ({talk.feedback.totalFeedback} {talk.feedback.totalFeedback === 1 ? 'response' : 'responses'})
+                          ({talk.feedback.totalFeedback === 1 ? m.cfp_submissions_response({ count: '1' }) : m.cfp_submissions_responses({ count: String(talk.feedback.totalFeedback) })})
                         </span>
                       </div>
                       <div class="text-muted-foreground">
@@ -501,7 +500,7 @@ const statusColors: Record<string, string> = {
                           <div>
                             <h4 class="mb-2 flex items-center gap-1 text-sm font-medium">
                               <MessageCircle class="h-4 w-4" />
-                              {talk.feedback.comments.length} {talk.feedback.comments.length === 1 ? 'comment' : 'comments'}
+                              {talk.feedback.comments.length === 1 ? m.cfp_submissions_comment({ count: '1' }) : m.cfp_submissions_comments({ count: String(talk.feedback.comments.length) })}
                             </h4>
                             <div class="space-y-2">
                               {#each talk.feedback.comments as fb}
@@ -532,7 +531,7 @@ const statusColors: Record<string, string> = {
             <a href="/cfp/{data.edition.slug}/submit">
               <Button variant="outline" class="gap-2">
                 <Plus class="h-4 w-4" />
-                Submit Another Talk
+                {m.cfp_submissions_submit_another()}
               </Button>
             </a>
           </div>
@@ -544,14 +543,14 @@ const statusColors: Record<string, string> = {
     <Card>
       <CardContent class="py-12 text-center">
         <X class="mx-auto h-12 w-12 text-red-500" />
-        <h3 class="mt-4 text-lg font-medium">Invalid or Expired Link</h3>
+        <h3 class="mt-4 text-lg font-medium">{m.cfp_submissions_invalid_link()}</h3>
         <p class="mt-2 text-sm text-muted-foreground">
-          This access link is invalid or has expired. Please request a new one.
+          {m.cfp_submissions_invalid_link_hint()}
         </p>
         <a href="/cfp/{data.edition.slug}/submissions" class="mt-4 inline-block">
           <Button class="gap-2">
             <Mail class="h-4 w-4" />
-            Request New Access Link
+            {m.cfp_submissions_request_new_link()}
           </Button>
         </a>
       </CardContent>

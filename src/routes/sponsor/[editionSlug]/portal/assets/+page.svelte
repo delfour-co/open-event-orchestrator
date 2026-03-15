@@ -19,6 +19,7 @@ import {
   groupAssetsByCategory,
   isImageMimeType
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Download,
@@ -106,7 +107,7 @@ function closePreviewDialog(): void {
 </script>
 
 <svelte:head>
-  <title>My Documents - {data.event.name}</title>
+  <title>{m.sponsor_assets_title({ eventName: data.event.name })}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
@@ -118,18 +119,18 @@ function closePreviewDialog(): void {
         class="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
       >
         <ArrowLeft class="mr-2 h-4 w-4" />
-        Back to Portal
+        {m.sponsor_assets_back()}
       </a>
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-3xl font-bold tracking-tight">My Documents</h1>
+          <h1 class="text-3xl font-bold tracking-tight">{m.sponsor_assets_heading()}</h1>
           <p class="text-muted-foreground mt-1">
-            Upload and manage your logos, visuals, and documents
+            {m.sponsor_assets_description()}
           </p>
         </div>
         <Button onclick={() => (uploadDialogOpen = true)}>
           <Plus class="mr-2 h-4 w-4" />
-          Upload Asset
+          {m.sponsor_assets_upload()}
         </Button>
       </div>
     </div>
@@ -138,11 +139,11 @@ function closePreviewDialog(): void {
     {#if form?.success}
       <div class="rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-3 text-sm text-green-700 dark:text-green-400 mb-6">
         {#if form.action === 'upload'}
-          Asset uploaded successfully!
+          {m.sponsor_assets_upload_success()}
         {:else if form.action === 'update'}
-          Asset updated successfully!
+          {m.sponsor_assets_update_success()}
         {:else if form.action === 'delete'}
-          Asset deleted successfully!
+          {m.sponsor_assets_delete_success()}
         {/if}
       </div>
     {/if}
@@ -203,7 +204,7 @@ function closePreviewDialog(): void {
                       href={asset.fileUrl}
                       download={asset.name}
                       class="p-1.5 bg-background border rounded-md hover:bg-accent"
-                      title="Download"
+                      title={m.action_download()}
                     >
                       <Download class="h-4 w-4" />
                     </a>
@@ -211,7 +212,7 @@ function closePreviewDialog(): void {
                       type="button"
                       class="p-1.5 bg-background border rounded-md hover:bg-accent"
                       onclick={() => openEditDialog(asset)}
-                      title="Edit"
+                      title={m.action_edit()}
                     >
                       <Edit class="h-4 w-4" />
                     </button>
@@ -219,7 +220,7 @@ function closePreviewDialog(): void {
                       type="button"
                       class="p-1.5 bg-background border rounded-md hover:bg-destructive hover:text-destructive-foreground"
                       onclick={() => openDeleteDialog(asset)}
-                      title="Delete"
+                      title={m.action_delete()}
                     >
                       <Trash2 class="h-4 w-4" />
                     </button>
@@ -237,13 +238,13 @@ function closePreviewDialog(): void {
       <Card.Root>
         <Card.Content class="flex flex-col items-center justify-center py-12">
           <Upload class="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 class="text-lg font-semibold mb-2">No assets uploaded yet</h3>
+          <h3 class="text-lg font-semibold mb-2">{m.sponsor_assets_empty_title()}</h3>
           <p class="text-muted-foreground text-center mb-4 max-w-md">
-            Upload your logos, visuals, and documents to share with the event organizers.
+            {m.sponsor_assets_empty_description()}
           </p>
           <Button onclick={() => (uploadDialogOpen = true)}>
             <Plus class="mr-2 h-4 w-4" />
-            Upload Your First Asset
+            {m.sponsor_assets_upload_first()}
           </Button>
         </Card.Content>
       </Card.Root>
@@ -255,9 +256,9 @@ function closePreviewDialog(): void {
 {#if uploadDialogOpen}
   <Dialog.Content class="sm:max-w-md" onClose={closeUploadDialog}>
     <Dialog.Header>
-      <Dialog.Title>Upload Asset</Dialog.Title>
+      <Dialog.Title>{m.sponsor_assets_upload_dialog_title()}</Dialog.Title>
       <Dialog.Description>
-        Upload a logo, visual, or document. Max size: {MAX_FILE_SIZE_MB}MB.
+        {m.sponsor_assets_upload_dialog_description({ maxSize: String(MAX_FILE_SIZE_MB) })}
       </Dialog.Description>
     </Dialog.Header>
 
@@ -280,7 +281,7 @@ function closePreviewDialog(): void {
       <input type="hidden" name="token" value={data.token} />
 
       <div class="space-y-2">
-        <Label for="category">Category</Label>
+        <Label for="category">{m.sponsor_assets_category()}</Label>
         <Select id="category" name="category" bind:value={selectedCategory}>
           {#each categories as cat}
             <option value={cat}>{getCategoryLabel(cat)}</option>
@@ -289,36 +290,36 @@ function closePreviewDialog(): void {
       </div>
 
       <div class="space-y-2">
-        <Label for="name">Name</Label>
+        <Label for="name">{m.sponsor_assets_name()}</Label>
         <Input
           id="name"
           name="name"
-          placeholder="e.g., Company Logo 2024"
+          placeholder={m.sponsor_assets_name_placeholder()}
           required
         />
       </div>
 
       <div class="space-y-2">
-        <Label for="description">Description (optional)</Label>
+        <Label for="description">{m.sponsor_assets_description_label()}</Label>
         <Textarea
           id="description"
           name="description"
-          placeholder="Brief description of this asset..."
+          placeholder={m.sponsor_assets_description_placeholder()}
           rows={2}
         />
       </div>
 
       <div class="space-y-2">
-        <Label for="usage">Usage Instructions (optional)</Label>
+        <Label for="usage">{m.sponsor_assets_usage()}</Label>
         <Input
           id="usage"
           name="usage"
-          placeholder="e.g., Use on white backgrounds only"
+          placeholder={m.sponsor_assets_usage_placeholder()}
         />
       </div>
 
       <div class="space-y-2">
-        <Label for="file">File</Label>
+        <Label for="file">{m.sponsor_assets_file()}</Label>
         <input
           type="file"
           id="file"
@@ -331,7 +332,7 @@ function closePreviewDialog(): void {
         />
         {#if selectedFile}
           <p class="text-xs text-muted-foreground">
-            Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+            {m.sponsor_assets_selected({ name: selectedFile.name, size: formatFileSize(selectedFile.size) })}
           </p>
         {/if}
       </div>
@@ -342,7 +343,7 @@ function closePreviewDialog(): void {
 
       <Dialog.Footer>
         <Button type="button" variant="outline" onclick={closeUploadDialog}>
-          Cancel
+          {m.action_cancel()}
         </Button>
         <Button type="submit" disabled={isSubmitting || !selectedFile}>
           {#if isSubmitting}
@@ -350,7 +351,7 @@ function closePreviewDialog(): void {
           {:else}
             <Upload class="mr-2 h-4 w-4" />
           {/if}
-          Upload
+          {m.action_upload()}
         </Button>
       </Dialog.Footer>
     </form>
@@ -361,8 +362,8 @@ function closePreviewDialog(): void {
 {#if editDialogOpen && selectedAsset}
   <Dialog.Content class="sm:max-w-md" onClose={closeEditDialog}>
     <Dialog.Header>
-      <Dialog.Title>Edit Asset</Dialog.Title>
-      <Dialog.Description>Update asset details</Dialog.Description>
+      <Dialog.Title>{m.sponsor_assets_edit_title()}</Dialog.Title>
+      <Dialog.Description>{m.sponsor_assets_edit_description()}</Dialog.Description>
     </Dialog.Header>
 
     <form
@@ -384,7 +385,7 @@ function closePreviewDialog(): void {
       <input type="hidden" name="assetId" value={selectedAsset.id} />
 
       <div class="space-y-2">
-        <Label for="edit-category">Category</Label>
+        <Label for="edit-category">{m.sponsor_assets_category()}</Label>
         <Select id="edit-category" name="category" bind:value={editCategory}>
           {#each categories as cat}
             <option value={cat}>{getCategoryLabel(cat)}</option>
@@ -393,7 +394,7 @@ function closePreviewDialog(): void {
       </div>
 
       <div class="space-y-2">
-        <Label for="edit-name">Name</Label>
+        <Label for="edit-name">{m.sponsor_assets_name()}</Label>
         <Input
           id="edit-name"
           name="name"
@@ -403,7 +404,7 @@ function closePreviewDialog(): void {
       </div>
 
       <div class="space-y-2">
-        <Label for="edit-description">Description (optional)</Label>
+        <Label for="edit-description">{m.sponsor_assets_description_label()}</Label>
         <Textarea
           id="edit-description"
           name="description"
@@ -413,7 +414,7 @@ function closePreviewDialog(): void {
       </div>
 
       <div class="space-y-2">
-        <Label for="edit-usage">Usage Instructions (optional)</Label>
+        <Label for="edit-usage">{m.sponsor_assets_usage()}</Label>
         <Input
           id="edit-usage"
           name="usage"
@@ -427,13 +428,13 @@ function closePreviewDialog(): void {
 
       <Dialog.Footer>
         <Button type="button" variant="outline" onclick={closeEditDialog}>
-          Cancel
+          {m.action_cancel()}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
           {/if}
-          Save Changes
+          {m.sponsor_assets_save()}
         </Button>
       </Dialog.Footer>
     </form>
@@ -444,9 +445,9 @@ function closePreviewDialog(): void {
 {#if deleteDialogOpen && selectedAsset}
   <Dialog.Content class="sm:max-w-md" onClose={closeDeleteDialog}>
     <Dialog.Header>
-      <Dialog.Title>Delete Asset</Dialog.Title>
+      <Dialog.Title>{m.sponsor_assets_delete_title()}</Dialog.Title>
       <Dialog.Description>
-        Are you sure you want to delete "{selectedAsset.name}"? This action cannot be undone.
+        {m.sponsor_assets_delete_confirm({ name: selectedAsset.name })}
       </Dialog.Description>
     </Dialog.Header>
 
@@ -473,13 +474,13 @@ function closePreviewDialog(): void {
 
       <Dialog.Footer>
         <Button type="button" variant="outline" onclick={closeDeleteDialog}>
-          Cancel
+          {m.action_cancel()}
         </Button>
         <Button type="submit" variant="destructive" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
           {/if}
-          Delete
+          {m.action_delete()}
         </Button>
       </Dialog.Footer>
     </form>
@@ -504,39 +505,39 @@ function closePreviewDialog(): void {
         {:else}
           <div class="text-center">
             <FileText class="h-24 w-24 text-muted-foreground mx-auto mb-4" />
-            <p class="text-muted-foreground">Preview not available for this file type</p>
+            <p class="text-muted-foreground">{m.sponsor_assets_preview_not_available()}</p>
           </div>
         {/if}
       </div>
 
       <div class="grid grid-cols-2 gap-4 text-sm">
         <div>
-          <p class="text-muted-foreground">Category</p>
+          <p class="text-muted-foreground">{m.sponsor_assets_preview_category()}</p>
           <p class="font-medium">{getCategoryLabel(selectedAsset.category)}</p>
         </div>
         <div>
-          <p class="text-muted-foreground">File Size</p>
+          <p class="text-muted-foreground">{m.sponsor_assets_preview_file_size()}</p>
           <p class="font-medium">{formatFileSize(selectedAsset.fileSize)}</p>
         </div>
         {#if selectedAsset.width && selectedAsset.height}
           <div>
-            <p class="text-muted-foreground">Dimensions</p>
+            <p class="text-muted-foreground">{m.sponsor_assets_preview_dimensions()}</p>
             <p class="font-medium">{formatDimensions(selectedAsset.width, selectedAsset.height)}</p>
           </div>
         {/if}
         <div>
-          <p class="text-muted-foreground">Format</p>
+          <p class="text-muted-foreground">{m.sponsor_assets_preview_format()}</p>
           <p class="font-medium">{selectedAsset.mimeType}</p>
         </div>
         {#if selectedAsset.description}
           <div class="col-span-2">
-            <p class="text-muted-foreground">Description</p>
+            <p class="text-muted-foreground">{m.sponsor_assets_preview_description()}</p>
             <p class="font-medium">{selectedAsset.description}</p>
           </div>
         {/if}
         {#if selectedAsset.usage}
           <div class="col-span-2">
-            <p class="text-muted-foreground">Usage Instructions</p>
+            <p class="text-muted-foreground">{m.sponsor_assets_preview_usage()}</p>
             <p class="font-medium">{selectedAsset.usage}</p>
           </div>
         {/if}
@@ -549,7 +550,7 @@ function closePreviewDialog(): void {
           class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           <Download class="mr-2 h-4 w-4" />
-          Download
+          {m.action_download()}
         </a>
       </Dialog.Footer>
     </div>

@@ -2,6 +2,7 @@
 import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { Calendar, Clock, DoorOpen, Download, FileText, Layers, MapPin, User } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -27,52 +28,68 @@ const getInitialDay = () => {
 let selectedDay = $state<string>(getInitialDay())
 
 // Session type styling
-const sessionTypeStyles: Record<string, { bg: string; text: string; label: string }> = {
+const sessionTypeStyles: Record<string, { bg: string; text: string; labelKey: string }> = {
   talk: {
     bg: 'bg-blue-100 dark:bg-blue-900/30',
     text: 'text-blue-800 dark:text-blue-200',
-    label: 'Talk'
+    labelKey: 'talk'
   },
   workshop: {
     bg: 'bg-purple-100 dark:bg-purple-900/30',
     text: 'text-purple-800 dark:text-purple-200',
-    label: 'Workshop'
+    labelKey: 'workshop'
   },
   keynote: {
     bg: 'bg-orange-100 dark:bg-orange-900/30',
     text: 'text-orange-800 dark:text-orange-200',
-    label: 'Keynote'
+    labelKey: 'keynote'
   },
   panel: {
     bg: 'bg-green-100 dark:bg-green-900/30',
     text: 'text-green-800 dark:text-green-200',
-    label: 'Panel'
+    labelKey: 'panel'
   },
   break: {
     bg: 'bg-gray-100 dark:bg-gray-800/50',
     text: 'text-gray-700 dark:text-gray-300',
-    label: 'Break'
+    labelKey: 'break'
   },
   lunch: {
     bg: 'bg-yellow-100 dark:bg-yellow-900/30',
     text: 'text-yellow-800 dark:text-yellow-200',
-    label: 'Lunch'
+    labelKey: 'lunch'
   },
   networking: {
     bg: 'bg-pink-100 dark:bg-pink-900/30',
     text: 'text-pink-800 dark:text-pink-200',
-    label: 'Networking'
+    labelKey: 'networking'
   },
   registration: {
     bg: 'bg-slate-100 dark:bg-slate-800/50',
     text: 'text-slate-700 dark:text-slate-300',
-    label: 'Registration'
+    labelKey: 'registration'
   },
   other: {
     bg: 'bg-gray-100 dark:bg-gray-800/50',
     text: 'text-gray-700 dark:text-gray-300',
-    label: 'Other'
+    labelKey: 'other'
   }
+}
+
+const sessionTypeLabelMap: Record<string, () => string> = {
+  talk: () => m.schedule_session_type_talk(),
+  workshop: () => m.schedule_session_type_workshop(),
+  keynote: () => m.schedule_session_type_keynote(),
+  panel: () => m.schedule_session_type_panel(),
+  break: () => m.schedule_session_type_break(),
+  lunch: () => m.schedule_session_type_lunch(),
+  networking: () => m.schedule_session_type_networking(),
+  registration: () => m.schedule_session_type_registration(),
+  other: () => m.schedule_session_type_other()
+}
+
+function getSessionTypeLabel(type: string): string {
+  return sessionTypeLabelMap[type]?.() ?? sessionTypeLabelMap.other()
 }
 
 // Helper to ensure we have a Date object (handles string serialization from server)
@@ -205,8 +222,8 @@ function formatSpeakers(
 </script>
 
 <svelte:head>
-  <title>Schedule - {data.edition.name} | {data.event.name}</title>
-  <meta name="description" content="View the schedule for {data.edition.name}" />
+  <title>{m.schedule_title({ editionName: data.edition.name, eventName: data.event.name })}</title>
+  <meta name="description" content={m.schedule_heading() + ' - ' + data.edition.name} />
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
@@ -219,7 +236,7 @@ function formatSpeakers(
         <span class="font-medium">{data.edition.name}</span>
       </div>
       <nav class="flex items-center gap-4">
-        <a href="/cfp/{data.edition.slug}" class="text-sm hover:underline">CFP</a>
+        <a href="/cfp/{data.edition.slug}" class="text-sm hover:underline">{m.schedule_cfp_link()}</a>
       </nav>
     </div>
   </header>
@@ -230,7 +247,7 @@ function formatSpeakers(
       <!-- Hero Section -->
       <div class="text-center">
         <h1 class="text-4xl font-bold tracking-tight">{data.edition.name}</h1>
-        <p class="mt-2 text-xl text-muted-foreground">Schedule</p>
+        <p class="mt-2 text-xl text-muted-foreground">{m.schedule_heading()}</p>
       </div>
 
       <!-- Event Info -->
@@ -285,9 +302,9 @@ function formatSpeakers(
         <Card.Root>
           <Card.Content class="flex flex-col items-center justify-center py-12">
             <Calendar class="mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 class="text-lg font-semibold">Schedule Coming Soon</h3>
+            <h3 class="text-lg font-semibold">{m.schedule_coming_soon()}</h3>
             <p class="text-sm text-muted-foreground">
-              The schedule for this event is not yet available. Check back later!
+              {m.schedule_coming_soon_hint()}
             </p>
           </Card.Content>
         </Card.Root>
@@ -310,27 +327,27 @@ function formatSpeakers(
 
           <!-- View Toggle -->
           <div class="flex items-center gap-2">
-            <span class="text-sm text-muted-foreground">View:</span>
+            <span class="text-sm text-muted-foreground">{m.schedule_view_label()}</span>
             <div class="flex rounded-md border">
               <button
                 type="button"
                 class="flex items-center gap-1 px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-room' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
                 onclick={() => (scheduleView = 'by-room')}
-                aria-label="By Room"
+                aria-label={m.schedule_by_room()}
                 aria-pressed={scheduleView === 'by-room'}
               >
                 <DoorOpen class="h-4 w-4" aria-hidden="true" />
-                <span class="hidden sm:inline">By Room</span>
+                <span class="hidden sm:inline">{m.schedule_by_room()}</span>
               </button>
               <button
                 type="button"
                 class="flex items-center gap-1 px-3 py-1.5 text-sm transition-colors {scheduleView === 'by-track' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}"
                 onclick={() => (scheduleView = 'by-track')}
-                aria-label="By Track"
+                aria-label={m.schedule_by_track()}
                 aria-pressed={scheduleView === 'by-track'}
               >
                 <Layers class="h-4 w-4" aria-hidden="true" />
-                <span class="hidden sm:inline">By Track</span>
+                <span class="hidden sm:inline">{m.schedule_by_track()}</span>
               </button>
             </div>
           </div>
@@ -352,7 +369,7 @@ function formatSpeakers(
                   <div class="rounded-t-lg bg-primary px-4 py-3 text-center">
                     <h3 class="font-semibold text-primary-foreground">{room.name}</h3>
                     {#if room.capacity}
-                      <p class="text-xs text-primary-foreground/70">{room.capacity} seats</p>
+                      <p class="text-xs text-primary-foreground/70">{m.schedule_seats({ count: String(room.capacity) })}</p>
                     {/if}
                   </div>
                 {/each}
@@ -378,7 +395,7 @@ function formatSpeakers(
                         {#if session}
                           <!-- Session Type Badge -->
                           <span class="mb-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium {typeStyle?.bg} {typeStyle?.text}">
-                            {typeStyle?.label}
+                            {getSessionTypeLabel(session.type)}
                           </span>
 
                           <!-- Title -->
@@ -406,7 +423,7 @@ function formatSpeakers(
                             </div>
                           {/if}
                         {:else}
-                          <p class="text-sm italic text-muted-foreground">No session scheduled</p>
+                          <p class="text-sm italic text-muted-foreground">{m.schedule_no_session()}</p>
                         {/if}
                       </div>
                     {/each}
@@ -428,7 +445,7 @@ function formatSpeakers(
                       {room.name}
                     </Card.Title>
                     {#if room.capacity}
-                      <Card.Description>{room.capacity} seats</Card.Description>
+                      <Card.Description>{m.schedule_seats({ count: String(room.capacity) })}</Card.Description>
                     {/if}
                   </Card.Header>
                   <Card.Content class="space-y-3">
@@ -448,7 +465,7 @@ function formatSpeakers(
                           </span>
                           {#if session}
                             <span class="rounded-full px-2 py-0.5 text-xs font-medium {typeStyle?.bg} {typeStyle?.text}">
-                              {typeStyle?.label}
+                              {getSessionTypeLabel(session.type)}
                             </span>
                           {/if}
                         </div>
@@ -476,7 +493,7 @@ function formatSpeakers(
                             </div>
                           {/if}
                         {:else}
-                          <p class="text-sm italic text-muted-foreground">No session scheduled</p>
+                          <p class="text-sm italic text-muted-foreground">{m.schedule_no_session()}</p>
                         {/if}
                       </div>
                     {/each}
@@ -507,7 +524,7 @@ function formatSpeakers(
                 </Card.Header>
                 <Card.Content>
                   {#if trackSessions.length === 0}
-                    <p class="text-sm italic text-muted-foreground">No sessions in this track</p>
+                    <p class="text-sm italic text-muted-foreground">{m.schedule_no_sessions_track()}</p>
                   {:else}
                     <div class="space-y-3">
                       {#each trackSessions as { session, slot, room }}
@@ -529,7 +546,7 @@ function formatSpeakers(
                           </div>
 
                           <span class="mb-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium {typeStyle.bg} {typeStyle.text}">
-                            {typeStyle.label}
+                            {getSessionTypeLabel(session.type)}
                           </span>
 
                           <h4 class="font-medium leading-tight">{session.title}</h4>
@@ -555,7 +572,7 @@ function formatSpeakers(
                 <Card.Header class="pb-3">
                   <div class="flex items-center gap-2">
                     <div class="h-4 w-4 rounded-full bg-gray-400"></div>
-                    <Card.Title class="text-lg">General</Card.Title>
+                    <Card.Title class="text-lg">{m.schedule_general()}</Card.Title>
                   </div>
                   <Card.Description>
                     {noTrackSessions.length} session{noTrackSessions.length !== 1 ? 's' : ''}
@@ -582,7 +599,7 @@ function formatSpeakers(
                         </div>
 
                         <span class="mb-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium {typeStyle.bg} {typeStyle.text}">
-                          {typeStyle.label}
+                          {getSessionTypeLabel(session.type)}
                         </span>
 
                         <h4 class="font-medium leading-tight">{session.title}</h4>
@@ -605,14 +622,14 @@ function formatSpeakers(
         <!-- Legend -->
         <Card.Root class="mt-8">
           <Card.Header>
-            <Card.Title class="text-sm">Session Types</Card.Title>
+            <Card.Title class="text-sm">{m.schedule_session_types()}</Card.Title>
           </Card.Header>
           <Card.Content>
             <div class="flex flex-wrap gap-3">
-              {#each Object.entries(sessionTypeStyles) as [_type, style]}
+              {#each Object.entries(sessionTypeStyles) as [type, style]}
                 <div class="flex items-center gap-2">
                   <span class="rounded-full px-2 py-0.5 text-xs font-medium {style.bg} {style.text}">
-                    {style.label}
+                    {getSessionTypeLabel(type)}
                   </span>
                 </div>
               {/each}
@@ -624,7 +641,7 @@ function formatSpeakers(
         {#if data.tracks.length > 0}
           <Card.Root>
             <Card.Header>
-              <Card.Title class="text-sm">Tracks</Card.Title>
+              <Card.Title class="text-sm">{m.schedule_tracks()}</Card.Title>
             </Card.Header>
             <Card.Content>
               <div class="flex flex-wrap gap-4">
@@ -648,7 +665,7 @@ function formatSpeakers(
   <!-- Footer -->
   <footer class="border-t bg-background px-4 py-6">
     <div class="container mx-auto text-center text-sm text-muted-foreground">
-      <p>Powered by Open Event Orchestrator</p>
+      <p>{m.common_powered_by()}</p>
     </div>
   </footer>
 </div>

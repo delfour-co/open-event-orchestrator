@@ -12,6 +12,7 @@ import {
   getStatusBadgeVariant,
   getStatusLabel
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowRight,
   Check,
@@ -47,14 +48,14 @@ const excludedBenefits = $derived(
 </script>
 
 <svelte:head>
-	<title>Sponsor Portal - {data.event.name}</title>
+	<title>{m.sponsor_portal_title({ eventName: data.event.name })}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
 	<div class="container mx-auto px-4 py-8 max-w-4xl">
 		<!-- Header -->
 		<div class="mb-8">
-			<h1 class="text-3xl font-bold tracking-tight">Sponsor Portal</h1>
+			<h1 class="text-3xl font-bold tracking-tight">{m.sponsor_portal_heading()}</h1>
 			<p class="text-muted-foreground mt-1">
 				{data.event.name} {data.edition.year}
 			</p>
@@ -68,9 +69,9 @@ const excludedBenefits = $derived(
 						{#if data.editionSponsor.status === 'confirmed'}
 							<CheckCircle2 class="h-6 w-6 text-green-600" />
 							<div>
-								<p class="font-semibold">Your sponsorship is confirmed!</p>
+								<p class="font-semibold">{m.sponsor_portal_confirmed()}</p>
 								<p class="text-sm text-muted-foreground">
-									Thank you for supporting {data.event.name}
+									{m.sponsor_portal_confirmed_thanks({ eventName: data.event.name })}
 								</p>
 							</div>
 						{:else}
@@ -94,9 +95,9 @@ const excludedBenefits = $derived(
 				<!-- Logo Upload -->
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>Company Logo</Card.Title>
+						<Card.Title>{m.sponsor_portal_logo_title()}</Card.Title>
 						<Card.Description>
-							Upload your company logo for display on the event website
+							{m.sponsor_portal_logo_description()}
 						</Card.Description>
 					</Card.Header>
 					<Card.Content class="space-y-4">
@@ -112,13 +113,13 @@ const excludedBenefits = $derived(
 									<input type="hidden" name="sponsorId" value={data.editionSponsor.sponsorId} />
 									<Button variant="destructive" size="sm" type="submit">
 										<Trash2 class="mr-2 h-4 w-4" />
-										Remove
+										{m.action_remove()}
 									</Button>
 								</form>
 							</div>
 						{:else}
 							<div class="flex items-center justify-center h-32 border-2 border-dashed rounded-lg bg-muted/50">
-								<p class="text-sm text-muted-foreground">No logo uploaded</p>
+								<p class="text-sm text-muted-foreground">{m.sponsor_portal_no_logo()}</p>
 							</div>
 						{/if}
 
@@ -156,7 +157,7 @@ const excludedBenefits = $derived(
 								{:else}
 									<Upload class="mr-2 h-4 w-4" />
 								{/if}
-								Upload New Logo
+								{m.sponsor_portal_upload_logo()}
 							</Button>
 						</form>
 
@@ -164,7 +165,7 @@ const excludedBenefits = $derived(
 							<p class="text-sm text-destructive">{form.error}</p>
 						{/if}
 						{#if form?.success && form?.action === 'uploadLogo'}
-							<p class="text-sm text-green-600">Logo updated successfully!</p>
+							<p class="text-sm text-green-600">{m.sponsor_portal_logo_updated()}</p>
 						{/if}
 					</Card.Content>
 				</Card.Root>
@@ -172,9 +173,9 @@ const excludedBenefits = $derived(
 				<!-- Company Profile Form -->
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>Company Profile</Card.Title>
+						<Card.Title>{m.sponsor_portal_profile_title()}</Card.Title>
 						<Card.Description>
-							Update your company information
+							{m.sponsor_portal_profile_description()}
 						</Card.Description>
 					</Card.Header>
 					<Card.Content>
@@ -185,7 +186,7 @@ const excludedBenefits = $derived(
 						{/if}
 						{#if form?.success && form?.action === 'updateProfile'}
 							<div class="rounded-md border border-green-500 bg-green-50 dark:bg-green-950 p-3 text-sm text-green-700 dark:text-green-400 mb-4">
-								Profile updated successfully!
+								{m.sponsor_portal_profile_updated()}
 							</div>
 						{/if}
 
@@ -205,7 +206,7 @@ const excludedBenefits = $derived(
 							<input type="hidden" name="sponsorId" value={data.editionSponsor.sponsorId} />
 
 							<div class="space-y-2">
-								<Label for="name">Company Name</Label>
+								<Label for="name">{m.sponsor_portal_company_name()}</Label>
 								<Input
 									id="name"
 									name="name"
@@ -214,7 +215,7 @@ const excludedBenefits = $derived(
 							</div>
 
 							<div class="space-y-2">
-								<Label for="website">Website</Label>
+								<Label for="website">{m.sponsor_portal_website()}</Label>
 								<Input
 									id="website"
 									name="website"
@@ -225,24 +226,24 @@ const excludedBenefits = $derived(
 							</div>
 
 							<div class="space-y-2">
-								<Label for="description">Description</Label>
+								<Label for="description">{m.sponsor_portal_description()}</Label>
 								<Textarea
 									id="description"
 									name="description"
-									placeholder="Brief description of your company..."
+									placeholder={m.sponsor_portal_description_placeholder()}
 									rows={3}
 									value={data.editionSponsor.sponsor?.description || ''}
 								/>
 								<p class="text-xs text-muted-foreground">
-									This may be displayed on the event website
+									{m.sponsor_portal_description_hint()}
 								</p>
 							</div>
 
 							<div class="border-t pt-4 mt-4">
-								<h4 class="font-medium mb-3">Billing Information</h4>
+								<h4 class="font-medium mb-3">{m.sponsor_portal_billing_info()}</h4>
 								<div class="space-y-4">
 									<div class="space-y-2">
-										<Label for="legalName">Legal Name</Label>
+										<Label for="legalName">{m.sponsor_portal_legal_name()}</Label>
 										<Input
 											id="legalName"
 											name="legalName"
@@ -253,7 +254,7 @@ const excludedBenefits = $derived(
 
 									<div class="grid gap-4 md:grid-cols-2">
 										<div class="space-y-2">
-											<Label for="vatNumber">VAT Number</Label>
+											<Label for="vatNumber">{m.sponsor_portal_vat_number()}</Label>
 											<Input
 												id="vatNumber"
 												name="vatNumber"
@@ -262,7 +263,7 @@ const excludedBenefits = $derived(
 											/>
 										</div>
 										<div class="space-y-2">
-											<Label for="siret">SIRET</Label>
+											<Label for="siret">{m.sponsor_portal_siret()}</Label>
 											<Input
 												id="siret"
 												name="siret"
@@ -273,7 +274,7 @@ const excludedBenefits = $derived(
 									</div>
 
 									<div class="space-y-2">
-										<Label for="billingAddress">Address</Label>
+										<Label for="billingAddress">{m.sponsor_portal_address()}</Label>
 										<Input
 											id="billingAddress"
 											name="billingAddress"
@@ -284,7 +285,7 @@ const excludedBenefits = $derived(
 
 									<div class="grid gap-4 md:grid-cols-3">
 										<div class="space-y-2">
-											<Label for="billingPostalCode">Postal Code</Label>
+											<Label for="billingPostalCode">{m.sponsor_portal_postal_code()}</Label>
 											<Input
 												id="billingPostalCode"
 												name="billingPostalCode"
@@ -293,7 +294,7 @@ const excludedBenefits = $derived(
 											/>
 										</div>
 										<div class="space-y-2">
-											<Label for="billingCity">City</Label>
+											<Label for="billingCity">{m.sponsor_portal_city()}</Label>
 											<Input
 												id="billingCity"
 												name="billingCity"
@@ -302,7 +303,7 @@ const excludedBenefits = $derived(
 											/>
 										</div>
 										<div class="space-y-2">
-											<Label for="billingCountry">Country</Label>
+											<Label for="billingCountry">{m.sponsor_portal_country()}</Label>
 											<Input
 												id="billingCountry"
 												name="billingCountry"
@@ -315,10 +316,10 @@ const excludedBenefits = $derived(
 							</div>
 
 							<div class="border-t pt-4 mt-4">
-								<h4 class="font-medium mb-3">Contact Information</h4>
+								<h4 class="font-medium mb-3">{m.sponsor_portal_contact_info()}</h4>
 								<div class="space-y-4">
 									<div class="space-y-2">
-										<Label for="contactName">Contact Name</Label>
+										<Label for="contactName">{m.sponsor_portal_contact_name()}</Label>
 										<Input
 											id="contactName"
 											name="contactName"
@@ -328,7 +329,7 @@ const excludedBenefits = $derived(
 
 									<div class="grid gap-4 md:grid-cols-2">
 										<div class="space-y-2">
-											<Label for="contactEmail">Contact Email</Label>
+											<Label for="contactEmail">{m.sponsor_portal_contact_email()}</Label>
 											<Input
 												id="contactEmail"
 												name="contactEmail"
@@ -337,7 +338,7 @@ const excludedBenefits = $derived(
 											/>
 										</div>
 										<div class="space-y-2">
-											<Label for="contactPhone">Contact Phone</Label>
+											<Label for="contactPhone">{m.sponsor_portal_contact_phone()}</Label>
 											<Input
 												id="contactPhone"
 												name="contactPhone"
@@ -353,7 +354,7 @@ const excludedBenefits = $derived(
 								{#if isSubmitting}
 									<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 								{/if}
-								Save Changes
+								{m.sponsor_portal_save()}
 							</Button>
 						</form>
 					</Card.Content>
@@ -365,15 +366,15 @@ const excludedBenefits = $derived(
 				{#if data.editionSponsor.package}
 					<Card.Root>
 						<Card.Header>
-							<Card.Title>Your Package</Card.Title>
+							<Card.Title>{m.sponsor_portal_package_title()}</Card.Title>
 							<Card.Description>
-								{data.editionSponsor.package.name} Sponsorship
+								{m.sponsor_portal_package_subtitle({ name: data.editionSponsor.package.name })}
 							</Card.Description>
 						</Card.Header>
 						<Card.Content class="space-y-4">
 							{#if data.editionSponsor.amount}
 								<div>
-									<p class="text-sm text-muted-foreground">Sponsorship Amount</p>
+									<p class="text-sm text-muted-foreground">{m.sponsor_portal_amount()}</p>
 									<p class="text-2xl font-bold">
 										{formatPackagePrice(
 											data.editionSponsor.amount,
@@ -383,7 +384,7 @@ const excludedBenefits = $derived(
 									{#if data.editionSponsor.paidAt}
 										<p class="text-sm text-green-600">
 											<Check class="h-4 w-4 inline mr-1" />
-											Paid
+											{m.sponsor_portal_paid()}
 										</p>
 									{/if}
 								</div>
@@ -395,7 +396,7 @@ const excludedBenefits = $derived(
 									class="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
 								>
 									<Download class="h-4 w-4" />
-									Download Invoice
+									{m.sponsor_portal_download_invoice()}
 								</a>
 							{/if}
 
@@ -411,13 +412,13 @@ const excludedBenefits = $derived(
 						<Card.Root>
 							<Card.Header>
 								<div class="flex items-center justify-between">
-									<Card.Title>Your Benefits</Card.Title>
+									<Card.Title>{m.sponsor_portal_benefits_title()}</Card.Title>
 									<a
 										href="/sponsor/{data.edition.slug}/portal/benefits?token={data.token}"
 										class="text-sm text-primary hover:underline inline-flex items-center gap-1"
 									>
 										<Gift class="h-4 w-4" />
-										Track Delivery
+										{m.sponsor_portal_track_delivery()}
 										<ArrowRight class="h-3 w-3" />
 									</a>
 								</div>
@@ -448,19 +449,19 @@ const excludedBenefits = $derived(
 						<div class="flex items-center justify-between">
 							<Card.Title class="flex items-center gap-2">
 								<FileImage class="h-5 w-5" />
-								My Documents
+								{m.sponsor_portal_documents_title()}
 							</Card.Title>
 						</div>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-sm text-muted-foreground mb-4">
-							Upload your logos, visuals, and documents to share with the event organizers.
+							{m.sponsor_portal_documents_description()}
 						</p>
 						<a
 							href="/sponsor/{data.edition.slug}/portal/assets?token={data.token}"
 							class="inline-flex items-center gap-2 text-sm text-primary hover:underline"
 						>
-							Manage Documents
+							{m.sponsor_portal_manage_documents()}
 							<ArrowRight class="h-4 w-4" />
 						</a>
 					</Card.Content>
@@ -472,19 +473,19 @@ const excludedBenefits = $derived(
 						<div class="flex items-center justify-between">
 							<Card.Title class="flex items-center gap-2">
 								<MessageSquare class="h-5 w-5" />
-								Messages
+								{m.sponsor_portal_messages_title()}
 							</Card.Title>
 						</div>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-sm text-muted-foreground mb-4">
-							Send messages to the event team and receive updates about your sponsorship.
+							{m.sponsor_portal_messages_description()}
 						</p>
 						<a
 							href="/sponsor/{data.edition.slug}/portal/messages?token={data.token}"
 							class="inline-flex items-center gap-2 text-sm text-primary hover:underline"
 						>
-							Open Messages
+							{m.sponsor_portal_open_messages()}
 							<ArrowRight class="h-4 w-4" />
 						</a>
 					</Card.Content>
@@ -493,18 +494,17 @@ const excludedBenefits = $derived(
 				<!-- Help & Support -->
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>Need Help?</Card.Title>
+						<Card.Title>{m.sponsor_portal_help_title()}</Card.Title>
 					</Card.Header>
 					<Card.Content>
 						<p class="text-sm text-muted-foreground mb-4">
-							If you have any questions about your sponsorship or need assistance,
-							send us a message through the portal.
+							{m.sponsor_portal_help_description()}
 						</p>
 						<a
 							href="/sponsor/{data.edition.slug}/portal/messages?token={data.token}"
 							class="text-sm text-primary hover:underline"
 						>
-							Contact Event Team
+							{m.sponsor_portal_contact_team()}
 						</a>
 					</Card.Content>
 				</Card.Root>

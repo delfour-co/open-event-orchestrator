@@ -6,6 +6,7 @@ import {
   getDeliverableStatusBadgeVariant,
   getDeliverableStatusLabel
 } from '$lib/features/sponsoring/domain'
+import * as m from '$lib/paraglide/messages'
 import { AlertTriangle, ArrowLeft, Calendar, Check, CheckCircle2, Clock, Gift } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -17,7 +18,7 @@ const { data }: Props = $props()
 </script>
 
 <svelte:head>
-	<title>My Benefits - {data.event.name}</title>
+	<title>{m.sponsor_benefits_title({ eventName: data.event.name })}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
@@ -29,9 +30,9 @@ const { data }: Props = $props()
 				class="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
 			>
 				<ArrowLeft class="mr-2 h-4 w-4" />
-				Back to Portal
+				{m.sponsor_benefits_back()}
 			</a>
-			<h1 class="text-3xl font-bold tracking-tight">My Benefits</h1>
+			<h1 class="text-3xl font-bold tracking-tight">{m.sponsor_benefits_heading()}</h1>
 			<p class="text-muted-foreground mt-1">
 				{data.event.name} {data.edition.year}
 			</p>
@@ -42,13 +43,13 @@ const { data }: Props = $props()
 			<Card.Header>
 				<Card.Title class="flex items-center gap-2">
 					<Gift class="h-5 w-5" />
-					Benefit Delivery Progress
+					{m.sponsor_benefits_progress_title()}
 				</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<div class="space-y-4">
 					<div class="flex items-center justify-between text-sm">
-						<span>{data.stats.delivered} of {data.stats.total} benefits delivered</span>
+						<span>{m.sponsor_benefits_delivered_of({ delivered: String(data.stats.delivered), total: String(data.stats.total) })}</span>
 						<span class="font-semibold">{data.stats.completionPercent}%</span>
 					</div>
 					<div class="h-3 w-full bg-muted rounded-full overflow-hidden">
@@ -60,20 +61,20 @@ const { data }: Props = $props()
 					<div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
 						<div class="text-center">
 							<p class="text-2xl font-bold text-muted-foreground">{data.stats.pending}</p>
-							<p class="text-xs text-muted-foreground">Pending</p>
+							<p class="text-xs text-muted-foreground">{m.sponsor_benefits_pending()}</p>
 						</div>
 						<div class="text-center">
 							<p class="text-2xl font-bold text-blue-600">{data.stats.inProgress}</p>
-							<p class="text-xs text-muted-foreground">In Progress</p>
+							<p class="text-xs text-muted-foreground">{m.sponsor_benefits_in_progress()}</p>
 						</div>
 						<div class="text-center">
 							<p class="text-2xl font-bold text-green-600">{data.stats.delivered}</p>
-							<p class="text-xs text-muted-foreground">Delivered</p>
+							<p class="text-xs text-muted-foreground">{m.sponsor_benefits_delivered()}</p>
 						</div>
 						{#if data.stats.overdue > 0}
 							<div class="text-center">
 								<p class="text-2xl font-bold text-destructive">{data.stats.overdue}</p>
-								<p class="text-xs text-muted-foreground">Overdue</p>
+								<p class="text-xs text-muted-foreground">{m.sponsor_benefits_overdue()}</p>
 							</div>
 						{/if}
 					</div>
@@ -83,15 +84,15 @@ const { data }: Props = $props()
 
 		<!-- Deliverables List -->
 		<div class="space-y-4">
-			<h2 class="text-xl font-semibold">All Benefits</h2>
+			<h2 class="text-xl font-semibold">{m.sponsor_benefits_all()}</h2>
 
 			{#if data.deliverables.length === 0}
 				<Card.Root>
 					<Card.Content class="flex flex-col items-center justify-center py-12">
 						<Gift class="mb-4 h-12 w-12 text-muted-foreground" />
-						<h3 class="text-lg font-semibold">No benefits to track yet</h3>
+						<h3 class="text-lg font-semibold">{m.sponsor_benefits_empty_title()}</h3>
 						<p class="text-sm text-muted-foreground text-center max-w-md">
-							Your sponsorship benefits will appear here once they are set up by the event team.
+							{m.sponsor_benefits_empty_description()}
 						</p>
 					</Card.Content>
 				</Card.Root>
@@ -123,13 +124,13 @@ const { data }: Props = $props()
 											{#if deliverable.dueDate}
 												<span class="flex items-center gap-1">
 													<Calendar class="h-3.5 w-3.5" />
-													Due: {formatDate(deliverable.dueDate)}
+													{m.sponsor_benefits_due({ date: formatDate(deliverable.dueDate) })}
 												</span>
 											{/if}
 											{#if deliverable.deliveredAt}
 												<span class="flex items-center gap-1 text-green-600">
 													<Check class="h-3.5 w-3.5" />
-													Delivered: {formatDate(deliverable.deliveredAt)}
+													{m.sponsor_benefits_delivered_at({ date: formatDate(deliverable.deliveredAt) })}
 												</span>
 											{/if}
 										</div>
@@ -137,7 +138,7 @@ const { data }: Props = $props()
 									<Badge
 										variant={deliverable.isOverdue ? 'destructive' : getDeliverableStatusBadgeVariant(deliverable.status)}
 									>
-										{deliverable.isOverdue ? 'Overdue' : getDeliverableStatusLabel(deliverable.status)}
+										{deliverable.isOverdue ? m.sponsor_benefits_overdue() : getDeliverableStatusLabel(deliverable.status)}
 									</Badge>
 								</div>
 								{#if deliverable.notes}

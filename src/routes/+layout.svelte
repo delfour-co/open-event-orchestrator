@@ -1,5 +1,6 @@
 <script lang="ts">
 import '../app.css'
+import * as m from '$lib/paraglide/messages'
 import type { Snippet } from 'svelte'
 
 type Props = {
@@ -10,7 +11,7 @@ const { children }: Props = $props()
 </script>
 
 <svelte:head>
-  <title>Open Event Orchestrator</title>
+  <title>{m.common_app_title()}</title>
   <script>
     // Prevent flash of wrong theme
     (function () {

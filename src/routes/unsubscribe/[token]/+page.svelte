@@ -2,6 +2,7 @@
 import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { MailX } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -14,7 +15,7 @@ const { data, form }: Props = $props()
 </script>
 
 <svelte:head>
-	<title>Unsubscribe - Open Event Orchestrator</title>
+	<title>{m.unsubscribe_title()}</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-background p-4">
@@ -23,35 +24,34 @@ const { data, form }: Props = $props()
 			<div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
 				<MailX class="h-6 w-6 text-muted-foreground" />
 			</div>
-			<Card.Title class="text-xl">Email Unsubscribe</Card.Title>
+			<Card.Title class="text-xl">{m.unsubscribe_heading()}</Card.Title>
 		</Card.Header>
 		<Card.Content class="text-center">
 			{#if form?.success || data.alreadyUnsubscribed}
 				<div class="space-y-4">
 					<p class="text-muted-foreground">
-						You have been successfully unsubscribed.
+						{m.unsubscribe_success()}
 					</p>
 					<p class="text-sm text-muted-foreground">
-						<strong>{data.contactEmail}</strong> will no longer receive marketing emails.
+						{m.unsubscribe_success_detail({ email: data.contactEmail })}
 					</p>
 				</div>
 			{:else}
 				<div class="space-y-4">
 					<p class="text-muted-foreground">
 						{#if data.contactFirstName}
-							Hi {data.contactFirstName}, would
+							{m.unsubscribe_prompt_hi({ name: data.contactFirstName, email: data.contactEmail })}
 						{:else}
-							Would
+							{m.unsubscribe_prompt({ email: data.contactEmail })}
 						{/if}
-						you like to unsubscribe <strong>{data.contactEmail}</strong> from marketing emails?
 					</p>
 					<form method="POST" use:enhance>
 						<Button type="submit" variant="destructive" class="w-full">
-							Unsubscribe
+							{m.unsubscribe_btn()}
 						</Button>
 					</form>
 					<p class="text-xs text-muted-foreground">
-						You can re-subscribe at any time by contacting the event organizer.
+						{m.unsubscribe_resubscribe_hint()}
 					</p>
 				</div>
 			{/if}

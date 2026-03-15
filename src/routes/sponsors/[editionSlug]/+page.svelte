@@ -1,5 +1,6 @@
 <script lang="ts">
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { Handshake } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -39,17 +40,17 @@ const getLogoSize = (tier: number | undefined) => {
 </script>
 
 <svelte:head>
-	<title>Our Sponsors - {data.edition.name}</title>
-	<meta name="description" content="Thank you to all sponsors supporting {data.event.name} {data.edition.year}" />
+	<title>{m.sponsors_page_title({ editionName: data.edition.name })}</title>
+	<meta name="description" content={m.sponsors_page_subtitle({ eventName: data.event.name, year: String(data.edition.year) })} />
 </svelte:head>
 
 <div class="min-h-screen bg-background">
 	<main class="container mx-auto px-4 py-12">
 		<!-- Header -->
 		<div class="text-center mb-12">
-			<h1 class="text-4xl font-bold tracking-tight mb-4">Our Sponsors</h1>
+			<h1 class="text-4xl font-bold tracking-tight mb-4">{m.sponsors_page_heading()}</h1>
 			<p class="text-xl text-muted-foreground">
-				Thank you to all our sponsors for supporting {data.event.name} {data.edition.year}
+				{m.sponsors_page_subtitle({ eventName: data.event.name, year: String(data.edition.year) })}
 			</p>
 		</div>
 
@@ -57,10 +58,9 @@ const getLogoSize = (tier: number | undefined) => {
 			<Card.Root class="max-w-md mx-auto">
 				<Card.Content class="flex flex-col items-center justify-center py-12">
 					<Handshake class="mb-4 h-12 w-12 text-muted-foreground" aria-hidden="true" />
-					<h2 class="text-lg font-semibold">Sponsors coming soon</h2>
+					<h2 class="text-lg font-semibold">{m.sponsors_page_coming_soon()}</h2>
 					<p class="text-sm text-muted-foreground text-center">
-						We're currently working on partnerships for this edition.
-						Check back soon!
+						{m.sponsors_page_coming_soon_hint()}
 					</p>
 				</Card.Content>
 			</Card.Root>
@@ -71,9 +71,9 @@ const getLogoSize = (tier: number | undefined) => {
 						<!-- Tier Header -->
 						<h2 class="text-2xl font-semibold mb-8 inline-block">
 							{#if tierGroup.package}
-								{tierGroup.package.name} Sponsors
+								{tierGroup.package.name} {m.sponsors_page_sponsors_suffix()}
 							{:else}
-								Partners
+								{m.sponsors_page_partners()}
 							{/if}
 						</h2>
 
@@ -113,13 +113,13 @@ const getLogoSize = (tier: number | undefined) => {
 			<!-- Become a Sponsor CTA -->
 			<div class="mt-16 text-center">
 				<p class="text-muted-foreground">
-					Interested in sponsoring {data.event.name}?
+					{m.sponsors_page_interested({ eventName: data.event.name })}
 				</p>
 				<a
 					href="mailto:sponsors@example.com"
 					class="inline-block mt-4 text-primary hover:underline font-medium"
 				>
-					Contact us about sponsorship opportunities
+					{m.sponsors_page_contact()}
 				</a>
 			</div>
 		{/if}

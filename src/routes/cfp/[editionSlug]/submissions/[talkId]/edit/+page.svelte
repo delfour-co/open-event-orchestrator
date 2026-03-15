@@ -3,6 +3,7 @@ import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card'
 import { SpeakerForm, TalkForm } from '$lib/features/cfp/ui'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Loader2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -82,10 +83,10 @@ $effect(() => {
       class="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
     >
       <ArrowLeft class="h-4 w-4" />
-      Back to My Submissions
+      {m.cfp_edit_back()}
     </a>
     <div class="text-center">
-      <h1 class="text-3xl font-bold">Edit Submission</h1>
+      <h1 class="text-3xl font-bold">{m.cfp_edit_title()}</h1>
       <p class="mt-2 text-muted-foreground">{data.edition.name}</p>
     </div>
   </div>
@@ -111,8 +112,8 @@ $effect(() => {
       <!-- Speaker Section -->
       <Card>
         <CardHeader>
-          <CardTitle>About You</CardTitle>
-          <CardDescription>Update your speaker information</CardDescription>
+          <CardTitle>{m.cfp_submit_about_you()}</CardTitle>
+          <CardDescription>{m.cfp_edit_about_you_hint()}</CardDescription>
         </CardHeader>
         <CardContent>
           <SpeakerForm bind:speaker errors={form?.speakerErrors} emailReadonly />
@@ -122,8 +123,8 @@ $effect(() => {
       <!-- Talk Section -->
       <Card>
         <CardHeader>
-          <CardTitle>Your Talk</CardTitle>
-          <CardDescription>Update your talk details</CardDescription>
+          <CardTitle>{m.cfp_submit_your_talk()}</CardTitle>
+          <CardDescription>{m.cfp_edit_your_talk_hint()}</CardDescription>
         </CardHeader>
         <CardContent>
           <TalkForm
@@ -139,14 +140,14 @@ $effect(() => {
       <!-- Submit -->
       <div class="flex justify-end gap-4">
         <a href="/cfp/{data.edition.slug}/submissions?token={data.token}">
-          <Button variant="outline" type="button">Cancel</Button>
+          <Button variant="outline" type="button">{m.action_cancel()}</Button>
         </a>
         <Button type="submit" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-            Saving...
+            {m.cfp_edit_saving()}
           {:else}
-            Save Changes
+            {m.cfp_edit_save_changes()}
           {/if}
         </Button>
       </div>

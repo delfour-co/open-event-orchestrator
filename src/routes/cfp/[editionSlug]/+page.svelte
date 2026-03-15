@@ -2,6 +2,7 @@
 import { formatDate as sharedFormatDate } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { AlertCircle, Calendar, CalendarClock, Clock, MapPin } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -42,7 +43,7 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
   <!-- Hero -->
   <div class="text-center">
     <h1 class="text-4xl font-bold tracking-tight">{data.edition.name}</h1>
-    <p class="mt-2 text-xl text-muted-foreground">Call for Papers</p>
+    <p class="mt-2 text-xl text-muted-foreground">{m.cfp_public_call_for_papers()}</p>
   </div>
 
   <!-- CFP Status Banner -->
@@ -51,9 +52,9 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
       <div class="flex items-start gap-3">
         <CalendarClock class="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
         <div>
-          <p class="font-medium text-blue-800 dark:text-blue-200">CFP Opens Soon</p>
+          <p class="font-medium text-blue-800 dark:text-blue-200">{m.cfp_public_cfp_opens_soon()}</p>
           <p class="text-sm text-blue-700 dark:text-blue-300">
-            The Call for Papers will open on {formatShortDate(data.cfpOpenDate)}.
+            {m.cfp_public_cfp_will_open({ date: formatShortDate(data.cfpOpenDate) || '' })}
           </p>
         </div>
       </div>
@@ -63,9 +64,9 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
       <div class="flex items-start gap-3">
         <AlertCircle class="mt-0.5 h-5 w-5 text-red-600 dark:text-red-400" />
         <div>
-          <p class="font-medium text-red-800 dark:text-red-200">CFP Closed</p>
+          <p class="font-medium text-red-800 dark:text-red-200">{m.cfp_public_cfp_closed()}</p>
           <p class="text-sm text-red-700 dark:text-red-300">
-            The Call for Papers closed on {formatShortDate(data.cfpCloseDate)}. Thank you to all who submitted!
+            {m.cfp_public_cfp_closed_on({ date: formatShortDate(data.cfpCloseDate) || '' })}
           </p>
         </div>
       </div>
@@ -75,9 +76,9 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
       <div class="flex items-start gap-3">
         <AlertCircle class="mt-0.5 h-5 w-5 text-yellow-600 dark:text-yellow-400" />
         <div>
-          <p class="font-medium text-yellow-800 dark:text-yellow-200">CFP Closing Soon!</p>
+          <p class="font-medium text-yellow-800 dark:text-yellow-200">{m.cfp_public_cfp_closing_soon()}</p>
           <p class="text-sm text-yellow-700 dark:text-yellow-300">
-            Only {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left to submit your proposal. Deadline: {formatShortDate(data.cfpCloseDate)}
+            {m.cfp_public_days_remaining({ count: String(daysRemaining), date: formatShortDate(data.cfpCloseDate) || '' })}
           </p>
         </div>
       </div>
@@ -97,14 +98,14 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
   {#if data.cfpOpenDate || data.cfpCloseDate}
     <Card>
       <CardHeader>
-        <CardTitle>CFP Timeline</CardTitle>
+        <CardTitle>{m.cfp_public_timeline()}</CardTitle>
       </CardHeader>
       <CardContent class="space-y-3">
         {#if data.cfpOpenDate}
           <div class="flex items-center gap-3">
             <CalendarClock class="h-5 w-5 text-muted-foreground" />
             <span>
-              <strong>Opens:</strong>
+              <strong>{m.cfp_public_opens()}</strong>
               {formatShortDate(data.cfpOpenDate)}
             </span>
           </div>
@@ -113,7 +114,7 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
           <div class="flex items-center gap-3">
             <CalendarClock class="h-5 w-5 text-muted-foreground" />
             <span>
-              <strong>Closes:</strong>
+              <strong>{m.cfp_public_closes()}</strong>
               {formatShortDate(data.cfpCloseDate)}
             </span>
           </div>
@@ -125,7 +126,7 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
   <!-- Event Info -->
   <Card>
     <CardHeader>
-      <CardTitle>Event Details</CardTitle>
+      <CardTitle>{m.cfp_public_event_details()}</CardTitle>
     </CardHeader>
     <CardContent class="space-y-4">
       <div class="flex items-center gap-3">
@@ -155,8 +156,8 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
   {#if data.categories.length > 0}
     <Card>
       <CardHeader>
-        <CardTitle>Categories</CardTitle>
-        <CardDescription>We're looking for talks in the following topics</CardDescription>
+        <CardTitle>{m.cfp_public_categories()}</CardTitle>
+        <CardDescription>{m.cfp_public_categories_hint()}</CardDescription>
       </CardHeader>
       <CardContent>
         <div class="flex flex-wrap gap-2">
@@ -179,8 +180,8 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
   {#if data.formats.length > 0}
     <Card>
       <CardHeader>
-        <CardTitle>Talk Formats</CardTitle>
-        <CardDescription>Available session types</CardDescription>
+        <CardTitle>{m.cfp_public_talk_formats()}</CardTitle>
+        <CardDescription>{m.cfp_public_formats_hint()}</CardDescription>
       </CardHeader>
       <CardContent>
         <div class="grid gap-4 md:grid-cols-2">
@@ -189,7 +190,7 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
               <Clock class="mt-0.5 h-5 w-5 text-muted-foreground" />
               <div>
                 <p class="font-medium">{format.name}</p>
-                <p class="text-sm text-muted-foreground">{format.duration} minutes</p>
+                <p class="text-sm text-muted-foreground">{m.cfp_public_minutes({ duration: String(format.duration) })}</p>
                 {#if format.description}
                   <p class="mt-1 text-sm">{format.description}</p>
                 {/if}
@@ -205,15 +206,15 @@ const daysRemaining = $derived(getDaysRemaining(data.cfpCloseDate))
   <div class="flex flex-col items-center gap-4">
     {#if data.cfpStatus === 'open'}
       <a href="/cfp/{data.edition.slug}/submit">
-        <Button size="lg" class="gap-2">Submit a Talk</Button>
+        <Button size="lg" class="gap-2">{m.cfp_public_submit_talk()}</Button>
       </a>
     {:else if data.cfpStatus === 'not_open_yet'}
-      <Button size="lg" disabled class="gap-2">CFP Not Yet Open</Button>
+      <Button size="lg" disabled class="gap-2">{m.cfp_public_cfp_not_open()}</Button>
     {:else}
-      <Button size="lg" disabled class="gap-2">CFP Closed</Button>
+      <Button size="lg" disabled class="gap-2">{m.cfp_public_cfp_closed_btn()}</Button>
     {/if}
     <a href="/cfp/{data.edition.slug}/submissions">
-      <Button variant="outline" size="lg" class="gap-2">My Submissions</Button>
+      <Button variant="outline" size="lg" class="gap-2">{m.cfp_public_my_submissions()}</Button>
     </a>
   </div>
 </div>

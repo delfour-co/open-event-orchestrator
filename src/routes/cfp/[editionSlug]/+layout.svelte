@@ -1,4 +1,5 @@
 <script lang="ts">
+import * as m from '$lib/paraglide/messages'
 import type { Snippet } from 'svelte'
 import type { LayoutData } from './$types'
 
@@ -11,7 +12,7 @@ let { data, children }: Props = $props()
 </script>
 
 <svelte:head>
-  <title>CFP - {data.edition.name} | Open Event Orchestrator</title>
+  <title>CFP - {data.edition.name} | {m.common_app_title()}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
@@ -24,8 +25,8 @@ let { data, children }: Props = $props()
         <span class="font-medium">{data.edition.name}</span>
       </div>
       <nav class="flex items-center gap-4">
-        <a href="/cfp/{data.edition.slug}" class="text-sm hover:underline">CFP Info</a>
-        <a href="/cfp/{data.edition.slug}/submit" class="text-sm hover:underline">Submit</a>
+        <a href="/cfp/{data.edition.slug}" class="text-sm hover:underline">{m.cfp_layout_cfp_info()}</a>
+        <a href="/cfp/{data.edition.slug}/submit" class="text-sm hover:underline">{m.cfp_layout_submit()}</a>
       </nav>
     </div>
   </header>
@@ -38,7 +39,7 @@ let { data, children }: Props = $props()
   <!-- Footer -->
   <footer class="border-t bg-background px-4 py-6">
     <div class="container mx-auto text-center text-sm text-muted-foreground">
-      <p>Powered by Open Event Orchestrator</p>
+      <p>{m.common_powered_by()}</p>
     </div>
   </footer>
 </div>

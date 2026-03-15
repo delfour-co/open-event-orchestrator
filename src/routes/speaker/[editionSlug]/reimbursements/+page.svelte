@@ -7,6 +7,7 @@ import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
 import {
   ChevronDown,
   ChevronRight,
@@ -41,10 +42,10 @@ const formatAmount = (amount: number, currency: string) => {
 
 const getExpenseTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
-    transport: 'Transport',
-    accommodation: 'Accommodation',
-    meals: 'Meals',
-    other: 'Other'
+    transport: m.speaker_reimbursements_type_transport(),
+    accommodation: m.speaker_reimbursements_type_accommodation(),
+    meals: m.speaker_reimbursements_type_meals(),
+    other: m.speaker_reimbursements_type_other()
   }
   return labels[type] || type
 }
@@ -78,7 +79,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Reimbursements - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.speaker_reimbursements_title({ editionName: data.edition.name })}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
@@ -97,7 +98,7 @@ $effect(() => {
 	<main class="container mx-auto px-4 py-8">
 		<div class="mx-auto max-w-4xl space-y-6">
 			<div>
-				<h2 class="text-3xl font-bold tracking-tight">Expense Reimbursements</h2>
+				<h2 class="text-3xl font-bold tracking-tight">{m.speaker_reimbursements_heading()}</h2>
 				<p class="text-muted-foreground">{data.edition.name}</p>
 			</div>
 
@@ -111,9 +112,9 @@ $effect(() => {
 			{#if data.needsToken}
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>Access Your Reimbursements</Card.Title>
+						<Card.Title>{m.speaker_reimbursements_access_title()}</Card.Title>
 						<Card.Description>
-							Enter your email address and we'll send you a secure link to view and manage your expense reimbursements.
+							{m.speaker_reimbursements_access_description()}
 						</Card.Description>
 					</Card.Header>
 					<Card.Content>
@@ -130,7 +131,7 @@ $effect(() => {
 							class="space-y-4"
 						>
 							<div class="space-y-2">
-								<Label for="email">Email Address</Label>
+								<Label for="email">{m.speaker_reimbursements_email_label()}</Label>
 								<Input
 									id="email"
 									name="email"
@@ -146,10 +147,10 @@ $effect(() => {
 							<Button type="submit" disabled={isRequestingAccess} class="gap-2">
 								{#if isRequestingAccess}
 									<Loader2 class="h-4 w-4 animate-spin" />
-									Sending...
+									{m.speaker_reimbursements_sending()}
 								{:else}
 									<Mail class="h-4 w-4" />
-									Send Access Link
+									{m.speaker_reimbursements_send_link()}
 								{/if}
 							</Button>
 						</form>
@@ -168,17 +169,17 @@ $effect(() => {
 					<div
 						class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
 					>
-						{form.message || 'Action completed successfully'}
+						{form.message || m.speaker_reimbursements_action_success()}
 					</div>
 				{/if}
 
 				<div class="flex items-center justify-between">
 					<p class="text-sm text-muted-foreground">
-						Welcome, {data.speaker?.firstName} {data.speaker?.lastName}
+						{m.speaker_reimbursements_welcome({ name: `${data.speaker?.firstName} ${data.speaker?.lastName}` })}
 					</p>
 					<Button onclick={() => (showCreateForm = true)}>
 						<Plus class="mr-2 h-4 w-4" />
-						New Request
+						{m.speaker_reimbursements_new_request()}
 					</Button>
 				</div>
 
@@ -186,9 +187,9 @@ $effect(() => {
 					<Card.Root>
 						<Card.Content class="py-12 text-center">
 							<FileText class="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-							<h3 class="text-lg font-medium">No reimbursement requests</h3>
+							<h3 class="text-lg font-medium">{m.speaker_reimbursements_empty_title()}</h3>
 							<p class="mt-1 text-sm text-muted-foreground">
-								Create a new request to submit your expenses for reimbursement.
+								{m.speaker_reimbursements_empty_description()}
 							</p>
 						</Card.Content>
 					</Card.Root>
@@ -232,7 +233,7 @@ $effect(() => {
 													<input type="hidden" name="requestId" value={request.id} />
 													<Button type="submit" size="sm" disabled={isSubmitting || request.items.length === 0}>
 														<Send class="mr-1 h-3 w-3" />
-														Submit
+														{m.action_submit()}
 													</Button>
 												</form>
 												<form
@@ -261,7 +262,7 @@ $effect(() => {
 										<div
 											class="mt-2 rounded-md border bg-muted/50 p-2 text-sm"
 										>
-											<span class="font-medium">Admin note:</span>
+											<span class="font-medium">{m.speaker_reimbursements_admin_note()}</span>
 											{request.adminNotes}
 										</div>
 									{/if}
@@ -269,31 +270,31 @@ $effect(() => {
 									{#if expandedRequests.has(request.id)}
 										<div class="mt-4 space-y-2">
 											<div class="flex items-center justify-between">
-												<h4 class="text-sm font-medium">Expense Items</h4>
+												<h4 class="text-sm font-medium">{m.speaker_reimbursements_expense_items()}</h4>
 												{#if request.status === 'draft'}
 													<Button size="sm" variant="outline" onclick={() => openAddItemForm(request.id)}>
 														<Plus class="mr-1 h-3 w-3" />
-														Add Item
+														{m.speaker_reimbursements_add_item()}
 													</Button>
 												{/if}
 											</div>
 
 											{#if request.items.length === 0}
 												<p class="py-4 text-center text-sm text-muted-foreground">
-													No expense items yet. Add items to submit your request.
+													{m.speaker_reimbursements_no_items()}
 												</p>
 											{:else}
 												<div class="overflow-auto rounded-md border">
 													<table class="w-full text-sm">
 														<thead>
 															<tr class="border-b bg-muted/50">
-																<th class="px-3 py-2 text-left font-medium">Type</th>
-																<th class="px-3 py-2 text-left font-medium">Description</th>
-																<th class="px-3 py-2 text-right font-medium">Amount</th>
-																<th class="px-3 py-2 text-left font-medium">Date</th>
-																<th class="px-3 py-2 text-center font-medium">Receipt</th>
+																<th class="px-3 py-2 text-left font-medium">{m.speaker_reimbursements_col_type()}</th>
+																<th class="px-3 py-2 text-left font-medium">{m.speaker_reimbursements_col_description()}</th>
+																<th class="px-3 py-2 text-right font-medium">{m.speaker_reimbursements_col_amount()}</th>
+																<th class="px-3 py-2 text-left font-medium">{m.speaker_reimbursements_col_date()}</th>
+																<th class="px-3 py-2 text-center font-medium">{m.speaker_reimbursements_col_receipt()}</th>
 																{#if request.status === 'draft'}
-																	<th class="px-3 py-2 text-right font-medium">Actions</th>
+																	<th class="px-3 py-2 text-right font-medium">{m.speaker_reimbursements_col_actions()}</th>
 																{/if}
 															</tr>
 														</thead>
@@ -320,7 +321,7 @@ $effect(() => {
 																				class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
 																			>
 																				<Paperclip class="h-3 w-3" />
-																				<span class="text-xs underline">View</span>
+																				<span class="text-xs underline">{m.speaker_reimbursements_view()}</span>
 																			</a>
 																		{:else}
 																			<span class="text-muted-foreground">-</span>
@@ -362,7 +363,7 @@ $effect(() => {
 	<!-- Footer -->
 	<footer class="border-t bg-background px-4 py-6">
 		<div class="container mx-auto text-center text-sm text-muted-foreground">
-			<p>Powered by Open Event Orchestrator</p>
+			<p>{m.common_powered_by()}</p>
 		</div>
 	</footer>
 </div>
@@ -371,9 +372,9 @@ $effect(() => {
 {#if showCreateForm}
 	<Dialog.Content onClose={() => (showCreateForm = false)}>
 		<Dialog.Header>
-			<Dialog.Title>New Reimbursement Request</Dialog.Title>
+			<Dialog.Title>{m.speaker_reimbursements_create_title()}</Dialog.Title>
 			<Dialog.Description>
-				Create a new expense reimbursement request. You can add items after creating it.
+				{m.speaker_reimbursements_create_description()}
 			</Dialog.Description>
 		</Dialog.Header>
 		<form
@@ -389,7 +390,7 @@ $effect(() => {
 			class="space-y-4"
 		>
 			<div class="space-y-2">
-				<Label for="rb-currency">Currency</Label>
+				<Label for="rb-currency">{m.speaker_reimbursements_currency()}</Label>
 				<select
 					id="rb-currency"
 					name="currency"
@@ -402,22 +403,22 @@ $effect(() => {
 			</div>
 
 			<div class="space-y-2">
-				<Label for="rb-notes">Notes</Label>
+				<Label for="rb-notes">{m.speaker_reimbursements_notes()}</Label>
 				<Textarea
 					id="rb-notes"
 					name="notes"
 					rows={3}
-					placeholder="Description of expenses (e.g., Travel to DevFest Paris)"
+					placeholder={m.speaker_reimbursements_notes_placeholder()}
 				/>
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={() => (showCreateForm = false)}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={() => (showCreateForm = false)}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Create Request
+					{m.speaker_reimbursements_create_btn()}
 				</Button>
 			</Dialog.Footer>
 		</form>
@@ -428,8 +429,8 @@ $effect(() => {
 {#if showAddItemForm && activeRequestId}
 	<Dialog.Content onClose={closeAddItemForm}>
 		<Dialog.Header>
-			<Dialog.Title>Add Expense Item</Dialog.Title>
-			<Dialog.Description>Add an expense to your reimbursement request.</Dialog.Description>
+			<Dialog.Title>{m.speaker_reimbursements_add_item_title()}</Dialog.Title>
+			<Dialog.Description>{m.speaker_reimbursements_add_item_description()}</Dialog.Description>
 		</Dialog.Header>
 		<form
 			method="POST"
@@ -447,28 +448,28 @@ $effect(() => {
 			<input type="hidden" name="requestId" value={activeRequestId} />
 
 			<div class="space-y-2">
-				<Label for="item-type">Expense Type *</Label>
+				<Label for="item-type">{m.speaker_reimbursements_expense_type()}</Label>
 				<select
 					id="item-type"
 					name="expenseType"
 					required
 					class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 				>
-					<option value="transport">Transport</option>
-					<option value="accommodation">Accommodation</option>
-					<option value="meals">Meals</option>
-					<option value="other">Other</option>
+					<option value="transport">{m.speaker_reimbursements_type_transport()}</option>
+					<option value="accommodation">{m.speaker_reimbursements_type_accommodation()}</option>
+					<option value="meals">{m.speaker_reimbursements_type_meals()}</option>
+					<option value="other">{m.speaker_reimbursements_type_other()}</option>
 				</select>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="item-description">Description *</Label>
-				<Input id="item-description" name="description" required placeholder="e.g., Train ticket Paris-Lyon" />
+				<Label for="item-description">{m.speaker_reimbursements_item_description()}</Label>
+				<Input id="item-description" name="description" required placeholder={m.speaker_reimbursements_item_description_placeholder()} />
 			</div>
 
 			<div class="grid gap-4 sm:grid-cols-2">
 				<div class="space-y-2">
-					<Label for="item-amount">Amount *</Label>
+					<Label for="item-amount">{m.speaker_reimbursements_item_amount()}</Label>
 					<input
 						id="item-amount"
 						name="amount"
@@ -481,7 +482,7 @@ $effect(() => {
 					/>
 				</div>
 				<div class="space-y-2">
-					<Label for="item-date">Date *</Label>
+					<Label for="item-date">{m.speaker_reimbursements_item_date()}</Label>
 					<input
 						id="item-date"
 						name="date"
@@ -493,7 +494,7 @@ $effect(() => {
 			</div>
 
 			<div class="space-y-2">
-				<Label for="item-receipt">Receipt / Invoice</Label>
+				<Label for="item-receipt">{m.speaker_reimbursements_item_receipt()}</Label>
 				<input
 					id="item-receipt"
 					name="receipt"
@@ -502,27 +503,27 @@ $effect(() => {
 					class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
 				/>
 				<p class="text-xs text-muted-foreground">
-					Upload a photo or PDF of your receipt (max 10MB)
+					{m.speaker_reimbursements_receipt_hint()}
 				</p>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="item-notes">Additional Notes</Label>
+				<Label for="item-notes">{m.speaker_reimbursements_additional_notes()}</Label>
 				<Textarea
 					id="item-notes"
 					name="itemNotes"
 					rows={2}
-					placeholder="Any additional details about this expense..."
+					placeholder={m.speaker_reimbursements_additional_notes_placeholder()}
 				/>
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={closeAddItemForm}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={closeAddItemForm}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Add Item
+					{m.speaker_reimbursements_add_item_btn()}
 				</Button>
 			</Dialog.Footer>
 		</form>

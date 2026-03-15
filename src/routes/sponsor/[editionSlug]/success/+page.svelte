@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { CheckCircle, ExternalLink, Mail } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -12,7 +13,7 @@ const { data }: Props = $props()
 </script>
 
 <svelte:head>
-  <title>Sponsorship Confirmed - {data.eventName}</title>
+  <title>{m.sponsor_success_title({ eventName: data.eventName })}</title>
 </svelte:head>
 
 <div class="container mx-auto max-w-2xl px-4 py-16">
@@ -24,30 +25,30 @@ const { data }: Props = $props()
 
     <!-- Heading -->
     <h1 class="mt-6 text-3xl font-bold tracking-tight">
-      Welcome Aboard!
+      {m.sponsor_success_heading()}
     </h1>
     <p class="mt-4 text-lg text-muted-foreground">
-      Thank you for becoming a sponsor of {data.eventName}
+      {m.sponsor_success_thanks({ eventName: data.eventName })}
     </p>
   </div>
 
   {#if data.sponsorInfo}
     <Card.Root class="mt-8">
       <Card.Header>
-        <Card.Title>Sponsorship Details</Card.Title>
+        <Card.Title>{m.sponsor_success_details_title()}</Card.Title>
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="grid gap-2 text-sm">
           <div class="flex justify-between">
-            <span class="text-muted-foreground">Company</span>
+            <span class="text-muted-foreground">{m.sponsor_success_company()}</span>
             <span class="font-medium">{data.sponsorInfo.companyName}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-muted-foreground">Package</span>
+            <span class="text-muted-foreground">{m.sponsor_success_package()}</span>
             <span class="font-medium">{data.sponsorInfo.packageName}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-muted-foreground">Edition</span>
+            <span class="text-muted-foreground">{m.sponsor_success_edition()}</span>
             <span class="font-medium">{data.edition.name}</span>
           </div>
         </div>
@@ -59,7 +60,7 @@ const { data }: Props = $props()
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <Mail class="h-5 w-5" />
-        What Happens Next?
+        {m.sponsor_success_next_title()}
       </Card.Title>
     </Card.Header>
     <Card.Content>
@@ -69,12 +70,12 @@ const { data }: Props = $props()
             1
           </span>
           <div>
-            <div class="font-medium">Check Your Email</div>
+            <div class="font-medium">{m.sponsor_success_step1_title()}</div>
             <p class="text-sm text-muted-foreground">
               {#if data.sponsorInfo?.contactEmail}
-                We've sent a confirmation email to <strong>{data.sponsorInfo.contactEmail}</strong> with your portal access link.
+                {m.sponsor_success_step1_description_with_email({ email: data.sponsorInfo.contactEmail })}
               {:else}
-                We've sent a confirmation email with your portal access link.
+                {m.sponsor_success_step1_description()}
               {/if}
             </p>
           </div>
@@ -84,9 +85,9 @@ const { data }: Props = $props()
             2
           </span>
           <div>
-            <div class="font-medium">Access Your Sponsor Portal</div>
+            <div class="font-medium">{m.sponsor_success_step2_title()}</div>
             <p class="text-sm text-muted-foreground">
-              Use the link in your email to access your sponsor portal where you can update your company profile and logo.
+              {m.sponsor_success_step2_description()}
             </p>
           </div>
         </li>
@@ -95,9 +96,9 @@ const { data }: Props = $props()
             3
           </span>
           <div>
-            <div class="font-medium">Prepare Your Assets</div>
+            <div class="font-medium">{m.sponsor_success_step3_title()}</div>
             <p class="text-sm text-muted-foreground">
-              Upload your company logo and description. Our team will be in touch about your sponsorship benefits.
+              {m.sponsor_success_step3_description()}
             </p>
           </div>
         </li>
@@ -109,15 +110,14 @@ const { data }: Props = $props()
     <a href="/sponsor/{data.edition.slug}/packages">
       <Button variant="outline" class="gap-2">
         <ExternalLink class="h-4 w-4" />
-        View Packages
+        {m.sponsor_success_view_packages()}
       </Button>
     </a>
   </div>
 
   <div class="mt-8 text-center text-sm text-muted-foreground">
     <p>
-      Questions about your sponsorship?
-      Contact our team for assistance.
+      {m.sponsor_success_questions()}
     </p>
   </div>
 </div>

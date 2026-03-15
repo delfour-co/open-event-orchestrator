@@ -3,6 +3,7 @@ import { enhance } from '$app/forms'
 import { Button } from '$lib/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card'
 import { SpeakerForm, TalkForm } from '$lib/features/cfp/ui'
+import * as m from '$lib/paraglide/messages'
 import { Loader2 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -75,7 +76,7 @@ $effect(() => {
 
 <div class="mx-auto max-w-3xl">
   <div class="mb-8 text-center">
-    <h1 class="text-3xl font-bold">Submit a Talk</h1>
+    <h1 class="text-3xl font-bold">{m.cfp_submit_title()}</h1>
     <p class="mt-2 text-muted-foreground">{data.edition.name}</p>
   </div>
 
@@ -100,9 +101,9 @@ $effect(() => {
       <!-- Speaker Section -->
       <Card>
         <CardHeader>
-          <CardTitle>About You</CardTitle>
+          <CardTitle>{m.cfp_submit_about_you()}</CardTitle>
           <CardDescription>
-            Tell us about yourself so attendees can learn more about you
+            {m.cfp_submit_about_you_hint()}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -113,8 +114,8 @@ $effect(() => {
       <!-- Talk Section -->
       <Card>
         <CardHeader>
-          <CardTitle>Your Talk</CardTitle>
-          <CardDescription>Describe the talk you'd like to present</CardDescription>
+          <CardTitle>{m.cfp_submit_your_talk()}</CardTitle>
+          <CardDescription>{m.cfp_submit_your_talk_hint()}</CardDescription>
         </CardHeader>
         <CardContent>
           <TalkForm
@@ -130,14 +131,14 @@ $effect(() => {
       <!-- Submit -->
       <div class="flex justify-end gap-4">
         <a href="/cfp/{data.edition.slug}">
-          <Button variant="outline" type="button">Cancel</Button>
+          <Button variant="outline" type="button">{m.action_cancel()}</Button>
         </a>
         <Button type="submit" disabled={isSubmitting}>
           {#if isSubmitting}
             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-            Submitting...
+            {m.cfp_submit_submitting()}
           {:else}
-            Submit Talk
+            {m.cfp_submit_submit_talk()}
           {/if}
         </Button>
       </div>
