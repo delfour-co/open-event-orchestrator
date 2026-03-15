@@ -209,8 +209,8 @@ function cancelCrop(): void {
 
 <!-- Crop Modal -->
 {#if showCropper}
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-    <div class="w-full max-w-lg rounded-lg bg-background p-4 shadow-xl">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div class="w-full max-w-3xl rounded-lg bg-background p-6 shadow-xl">
       <div class="mb-4 flex items-center justify-between">
         <h3 class="text-lg font-semibold">{m.image_crop_title()}</h3>
         <Button variant="ghost" size="icon" onclick={cancelCrop}>
@@ -218,12 +218,12 @@ function cancelCrop(): void {
         </Button>
       </div>
 
-      <div class="relative w-full overflow-hidden rounded-md bg-black" style="max-height: 400px;">
+      <div class="relative w-full overflow-hidden rounded-md bg-black" style="height: 500px;">
         <img
           bind:this={cropperImageEl}
           src={imageSrc}
           alt="Crop preview"
-          style="max-width: 100%; display: block;"
+          style="max-width: 100%; max-height: 100%; display: block;"
         />
       </div>
 
