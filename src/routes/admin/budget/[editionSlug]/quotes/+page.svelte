@@ -8,6 +8,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   ArrowRightLeft,
@@ -156,7 +157,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Quotes - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.budget_quotes_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -174,7 +175,7 @@ $effect(() => {
 		</div>
 		<Button onclick={openCreateForm}>
 			<Plus class="mr-2 h-4 w-4" />
-			New Quote
+			{m.budget_quotes_new()}
 		</Button>
 	</div>
 
@@ -190,7 +191,7 @@ $effect(() => {
 				size="sm"
 				onclick={() => (activeFilter = status)}
 			>
-				{status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+				{status === 'all' ? m.budget_quotes_all() : status === 'draft' ? m.budget_quotes_draft() : status === 'sent' ? m.budget_quotes_sent() : status === 'accepted' ? m.budget_quotes_accepted() : status === 'rejected' ? m.budget_quotes_rejected() : m.budget_quotes_expired()}
 				<span class="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground {activeFilter === status ? 'bg-primary-foreground/20 text-primary-foreground' : ''}">
 					{count}
 				</span>
@@ -210,11 +211,11 @@ $effect(() => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<FileText class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No quotes found</h3>
+				<h3 class="text-lg font-semibold">{m.budget_quotes_no_quotes()}</h3>
 				<p class="text-sm text-muted-foreground">
 					{activeFilter === 'all'
-						? 'Create your first quote to start tracking vendor proposals.'
-						: `No quotes with status "${activeFilter}".`}
+						? m.budget_quotes_no_quotes_hint()
+						: m.budget_quotes_no_quotes_status_hint({ status: activeFilter })}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -224,12 +225,12 @@ $effect(() => {
 				<table class="w-full">
 					<thead>
 						<tr class="border-b text-left text-sm text-muted-foreground">
-							<th class="px-4 py-3 font-medium">Quote #</th>
-							<th class="px-4 py-3 font-medium">Vendor</th>
-							<th class="px-4 py-3 font-medium text-right">Amount</th>
-							<th class="px-4 py-3 font-medium">Status</th>
-							<th class="px-4 py-3 font-medium">Valid Until</th>
-							<th class="px-4 py-3 font-medium">Actions</th>
+							<th class="px-4 py-3 font-medium">{m.budget_quotes_number()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_quotes_vendor()}</th>
+							<th class="px-4 py-3 font-medium text-right">{m.budget_quotes_amount()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_quotes_status()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_quotes_valid_until()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_quotes_actions()}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -266,7 +267,7 @@ $effect(() => {
 												variant="ghost"
 												size="icon"
 												class="h-8 w-8"
-												title="Edit"
+												title={m.budget_quotes_edit()}
 												onclick={() => openEditForm(quote)}
 											>
 												<Pencil class="h-3 w-3" />
@@ -278,7 +279,7 @@ $effect(() => {
 													variant="ghost"
 													size="icon"
 													class="h-8 w-8"
-													title="Send"
+													title={m.budget_quotes_send()}
 												>
 													<Send class="h-3 w-3" />
 												</Button>
@@ -290,7 +291,7 @@ $effect(() => {
 													variant="ghost"
 													size="icon"
 													class="h-8 w-8 text-destructive hover:text-destructive"
-													title="Delete"
+													title={m.budget_quotes_delete()}
 												>
 													<Trash2 class="h-3 w-3" />
 												</Button>
@@ -306,7 +307,7 @@ $effect(() => {
 													variant="ghost"
 													size="icon"
 													class="h-8 w-8 text-green-600 hover:text-green-600"
-													title="Accept"
+													title={m.budget_quotes_accept()}
 												>
 													<Check class="h-3 w-3" />
 												</Button>
@@ -318,7 +319,7 @@ $effect(() => {
 													variant="ghost"
 													size="icon"
 													class="h-8 w-8 text-red-600 hover:text-red-600"
-													title="Reject"
+													title={m.budget_quotes_reject()}
 												>
 													<X class="h-3 w-3" />
 												</Button>
@@ -331,7 +332,7 @@ $effect(() => {
 												variant="ghost"
 												size="icon"
 												class="h-8 w-8"
-												title="Convert to Transaction"
+												title={m.budget_quotes_convert()}
 												onclick={() => openConvertDialog(quote)}
 											>
 												<ArrowRightLeft class="h-3 w-3" />
@@ -340,7 +341,7 @@ $effect(() => {
 
 										{#if quote.transactionId}
 											<span class="flex items-center text-xs text-muted-foreground px-2">
-												Converted
+												{m.budget_quotes_converted()}
 											</span>
 										{/if}
 									</div>
@@ -358,9 +359,9 @@ $effect(() => {
 {#if showQuoteForm}
 	<Dialog.Content class="max-w-2xl max-h-[90vh] overflow-y-auto" onClose={closeQuoteForm}>
 		<Dialog.Header>
-			<Dialog.Title>{editingQuote ? 'Edit Quote' : 'New Quote'}</Dialog.Title>
+			<Dialog.Title>{editingQuote ? m.budget_quotes_edit_quote() : m.budget_quotes_new_quote()}</Dialog.Title>
 			<Dialog.Description>
-				{editingQuote ? 'Update the quote details.' : 'Create a new vendor quote.'}
+				{editingQuote ? m.budget_quotes_update_details() : m.budget_quotes_create_vendor()}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -390,11 +391,11 @@ $effect(() => {
 
 			<!-- Vendor Info -->
 			<div class="space-y-2">
-				<Label for="q-vendor">Vendor *</Label>
+				<Label for="q-vendor">{m.budget_quotes_vendor_name()} *</Label>
 				<Input
 					id="q-vendor"
 					name="vendor"
-					placeholder="Vendor name"
+					placeholder={m.budget_quotes_vendor_placeholder()}
 					required
 					value={editingQuote?.vendor || ''}
 				/>
@@ -402,17 +403,17 @@ $effect(() => {
 
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for="q-vendorEmail">Vendor Email</Label>
+					<Label for="q-vendorEmail">{m.budget_quotes_vendor_email()}</Label>
 					<Input
 						id="q-vendorEmail"
 						name="vendorEmail"
 						type="email"
-						placeholder="vendor@example.com"
+						placeholder={m.budget_quotes_vendor_email_placeholder()}
 						value={editingQuote?.vendorEmail || ''}
 					/>
 				</div>
 				<div class="space-y-2">
-					<Label for="q-currency">Currency</Label>
+					<Label for="q-currency">{m.budget_quotes_currency()}</Label>
 					<select
 						id="q-currency"
 						name="currency"
@@ -427,22 +428,22 @@ $effect(() => {
 			</div>
 
 			<div class="space-y-2">
-				<Label for="q-vendorAddress">Vendor Address</Label>
+				<Label for="q-vendorAddress">{m.budget_quotes_vendor_address()}</Label>
 				<Textarea
 					id="q-vendorAddress"
 					name="vendorAddress"
-					placeholder="Vendor address..."
+					placeholder={m.budget_quotes_vendor_address_placeholder()}
 					rows={2}
 					value={editingQuote?.vendorAddress || ''}
 				/>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="q-description">Description</Label>
+				<Label for="q-description">{m.budget_quotes_description()}</Label>
 				<Textarea
 					id="q-description"
 					name="description"
-					placeholder="Quote description..."
+					placeholder={m.budget_quotes_description_placeholder()}
 					rows={2}
 					value={editingQuote?.description || ''}
 				/>
@@ -451,20 +452,20 @@ $effect(() => {
 			<!-- Line Items -->
 			<div class="space-y-3">
 				<div class="flex items-center justify-between">
-					<Label>Line Items *</Label>
+					<Label>{m.budget_quotes_line_items()} *</Label>
 					<Button type="button" variant="outline" size="sm" onclick={addLineItem}>
 						<Plus class="mr-1 h-3 w-3" />
-						Add Item
+						{m.budget_quotes_add_item()}
 					</Button>
 				</div>
 
 				<div class="space-y-2">
 					<!-- Column headers -->
 					<div class="grid grid-cols-[1fr_80px_100px_90px_32px] gap-2 text-xs font-medium text-muted-foreground px-1">
-						<span>Description</span>
-						<span>Qty</span>
-						<span>Unit Price</span>
-						<span class="text-right">Total</span>
+						<span>{m.budget_quotes_item_description()}</span>
+						<span>{m.budget_quotes_qty()}</span>
+						<span>{m.budget_quotes_unit_price()}</span>
+						<span class="text-right">{m.budget_quotes_item_total()}</span>
 						<span></span>
 					</div>
 
@@ -511,7 +512,7 @@ $effect(() => {
 
 				<!-- Total -->
 				<div class="flex items-center justify-end gap-4 border-t pt-3">
-					<span class="text-sm font-medium text-muted-foreground">Total:</span>
+					<span class="text-sm font-medium text-muted-foreground">{m.budget_quotes_total()}</span>
 					<span class="text-lg font-bold">
 						{formatAmount(calculatedTotal, formCurrency)}
 					</span>
@@ -521,7 +522,7 @@ $effect(() => {
 			<!-- Additional Fields -->
 			<div class="grid gap-4 md:grid-cols-2">
 				<div class="space-y-2">
-					<Label for="q-validUntil">Valid Until</Label>
+					<Label for="q-validUntil">{m.budget_quotes_valid_until()}</Label>
 					<Input
 						id="q-validUntil"
 						name="validUntil"
@@ -532,23 +533,23 @@ $effect(() => {
 			</div>
 
 			<div class="space-y-2">
-				<Label for="q-notes">Notes</Label>
+				<Label for="q-notes">{m.budget_quotes_notes()}</Label>
 				<Textarea
 					id="q-notes"
 					name="notes"
-					placeholder="Additional notes..."
+					placeholder={m.budget_quotes_notes_placeholder()}
 					rows={2}
 					value={editingQuote?.notes || ''}
 				/>
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={closeQuoteForm}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={closeQuoteForm}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					{editingQuote ? 'Update' : 'Create'}
+					{editingQuote ? m.action_update() : m.action_create()}
 				</Button>
 			</Dialog.Footer>
 		</form>
@@ -559,12 +560,9 @@ $effect(() => {
 {#if showConvertDialog}
 	<Dialog.Content class="max-w-md" onClose={closeConvertDialog}>
 		<Dialog.Header>
-			<Dialog.Title>Convert to Transaction</Dialog.Title>
+			<Dialog.Title>{m.budget_quotes_convert_title()}</Dialog.Title>
 			<Dialog.Description>
-				Create a budget transaction from quote
-				{convertingQuote?.quoteNumber || ''}.
-				This will create a pending expense of
-				{convertingQuote ? formatAmount(convertingQuote.totalAmount, convertingQuote.currency) : ''}.
+				{m.budget_quotes_convert_description({ number: convertingQuote?.quoteNumber || '', amount: convertingQuote ? formatAmount(convertingQuote.totalAmount, convertingQuote.currency) : '' })}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -589,14 +587,14 @@ $effect(() => {
 			<input type="hidden" name="id" value={convertingQuote?.id || ''} />
 
 			<div class="space-y-2">
-				<Label for="conv-category">Budget Category *</Label>
+				<Label for="conv-category">{m.budget_quotes_budget_category()} *</Label>
 				<select
 					id="conv-category"
 					name="categoryId"
 					required
 					class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 				>
-					<option value="" disabled selected>Select a category</option>
+					<option value="" disabled selected>{m.budget_quotes_select_category()}</option>
 					{#each data.categories as cat}
 						<option value={cat.id}>{cat.name}</option>
 					{/each}
@@ -604,12 +602,12 @@ $effect(() => {
 			</div>
 
 			<Dialog.Footer>
-				<Button type="button" variant="outline" onclick={closeConvertDialog}>Cancel</Button>
+				<Button type="button" variant="outline" onclick={closeConvertDialog}>{m.action_cancel()}</Button>
 				<Button type="submit" disabled={isSubmitting}>
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Convert
+					{m.budget_quotes_convert()}
 				</Button>
 			</Dialog.Footer>
 		</form>

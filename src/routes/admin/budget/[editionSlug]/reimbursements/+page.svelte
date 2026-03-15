@@ -7,6 +7,7 @@ import * as Dialog from '$lib/components/ui/dialog'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
@@ -105,17 +106,17 @@ const getStatusBadgeClass = (status: string): string => {
 const getStatusLabel = (status: string): string => {
   switch (status) {
     case 'draft':
-      return 'Draft'
+      return m.budget_reimbursements_status_draft()
     case 'submitted':
-      return 'Submitted'
+      return m.budget_reimbursements_status_submitted()
     case 'under_review':
-      return 'Under Review'
+      return m.budget_reimbursements_status_under_review()
     case 'approved':
-      return 'Approved'
+      return m.budget_reimbursements_status_approved()
     case 'rejected':
-      return 'Rejected'
+      return m.budget_reimbursements_status_rejected()
     case 'paid':
-      return 'Paid'
+      return m.budget_reimbursements_status_paid()
     default:
       return status
   }
@@ -124,13 +125,13 @@ const getStatusLabel = (status: string): string => {
 const getExpenseTypeLabel = (type: string): string => {
   switch (type) {
     case 'transport':
-      return 'Transport'
+      return m.budget_reimbursements_type_transport()
     case 'accommodation':
-      return 'Accommodation'
+      return m.budget_reimbursements_type_accommodation()
     case 'meals':
-      return 'Meals'
+      return m.budget_reimbursements_type_meals()
     case 'other':
-      return 'Other'
+      return m.budget_reimbursements_type_other()
     default:
       return type
   }
@@ -175,7 +176,7 @@ $effect(() => {
 </script>
 
 <svelte:head>
-	<title>Reimbursements - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.budget_reimbursements_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -195,22 +196,22 @@ $effect(() => {
 			<!-- Public URL -->
 			<div class="flex items-center gap-2">
 				<div class="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-					<span class="text-sm text-muted-foreground">Public URL:</span>
+					<span class="text-sm text-muted-foreground">{m.budget_reimbursements_public_url()}</span>
 					<code class="text-sm">/speaker/{data.edition.slug}/reimbursements</code>
 				</div>
 				<Button variant="outline" size="sm" onclick={copyUrl} class="gap-2">
 					{#if copiedUrl}
 						<Check class="h-4 w-4 text-green-500" />
-						Copied
+						{m.budget_reimbursements_copied()}
 					{:else}
 						<Copy class="h-4 w-4" />
-						Copy
+						{m.budget_reimbursements_copy()}
 					{/if}
 				</Button>
 				<a href="/speaker/{data.edition.slug}/reimbursements" target="_blank" rel="noopener noreferrer">
 					<Button variant="outline" size="sm" class="gap-2">
 						<ExternalLink class="h-4 w-4" />
-						Open
+						{m.budget_reimbursements_open()}
 					</Button>
 				</a>
 			</div>
@@ -233,7 +234,7 @@ $effect(() => {
 			>
 				<Button type="submit" variant="outline">
 					<Download class="mr-2 h-4 w-4" />
-					Export CSV
+					{m.budget_reimbursements_export_csv()}
 				</Button>
 			</form>
 		</div>
@@ -246,49 +247,49 @@ $effect(() => {
 	<div class="grid gap-4 md:grid-cols-4">
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Total Requests</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.budget_reimbursements_total_requests()}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">{totalRequests}</div>
-				<p class="text-xs text-muted-foreground">reimbursement requests</p>
+				<p class="text-xs text-muted-foreground">{m.budget_reimbursements_requests()}</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Pending Review</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.budget_reimbursements_pending_review()}</Card.Title>
 				<Eye class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
 					{pendingReview}
 				</div>
-				<p class="text-xs text-muted-foreground">awaiting action</p>
+				<p class="text-xs text-muted-foreground">{m.budget_reimbursements_awaiting_action()}</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Approved</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.budget_reimbursements_approved()}</Card.Title>
 				<Check class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold text-green-600 dark:text-green-400">
 					{approvedCount}
 				</div>
-				<p class="text-xs text-muted-foreground">approved or paid</p>
+				<p class="text-xs text-muted-foreground">{m.budget_reimbursements_approved_or_paid()}</p>
 			</Card.Content>
 		</Card.Root>
 
 		<Card.Root>
 			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Total Amount</Card.Title>
+				<Card.Title class="text-sm font-medium">{m.budget_reimbursements_total_amount()}</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<div class="text-2xl font-bold">
 					{formatAmount(totalAmount, currency)}
 				</div>
-				<p class="text-xs text-muted-foreground">across all requests</p>
+				<p class="text-xs text-muted-foreground">{m.budget_reimbursements_across_all()}</p>
 			</Card.Content>
 		</Card.Root>
 	</div>
@@ -306,9 +307,9 @@ $effect(() => {
 		<Card.Root>
 			<Card.Content class="flex flex-col items-center justify-center py-12">
 				<Eye class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">No reimbursement requests</h3>
+				<h3 class="text-lg font-semibold">{m.budget_reimbursements_no_requests()}</h3>
 				<p class="text-sm text-muted-foreground">
-					No speakers have submitted reimbursement requests for this edition yet.
+					{m.budget_reimbursements_no_requests_hint()}
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -319,12 +320,12 @@ $effect(() => {
 					<thead>
 						<tr class="border-b text-left text-sm text-muted-foreground">
 							<th class="px-4 py-3 font-medium w-8"></th>
-							<th class="px-4 py-3 font-medium">Request #</th>
-							<th class="px-4 py-3 font-medium">Speaker</th>
-							<th class="px-4 py-3 font-medium text-right">Total Amount</th>
-							<th class="px-4 py-3 font-medium">Status</th>
-							<th class="px-4 py-3 font-medium">Submitted</th>
-							<th class="px-4 py-3 font-medium">Actions</th>
+							<th class="px-4 py-3 font-medium">{m.budget_reimbursements_request_number()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_reimbursements_speaker()}</th>
+							<th class="px-4 py-3 font-medium text-right">{m.budget_reimbursements_total()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_reimbursements_status()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_reimbursements_submitted()}</th>
+							<th class="px-4 py-3 font-medium">{m.budget_reimbursements_actions()}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -370,7 +371,7 @@ $effect(() => {
 												<input type="hidden" name="id" value={req.id} />
 												<Button type="submit" variant="outline" size="sm">
 													<Eye class="mr-1 h-3 w-3" />
-													Review
+													{m.budget_reimbursements_review()}
 												</Button>
 											</form>
 											<Button
@@ -380,7 +381,7 @@ $effect(() => {
 												onclick={() => openApproveDialog(req)}
 											>
 												<Check class="mr-1 h-3 w-3" />
-												Approve
+												{m.budget_reimbursements_approve()}
 											</Button>
 											<Button
 												variant="outline"
@@ -389,7 +390,7 @@ $effect(() => {
 												onclick={() => openRejectDialog(req)}
 											>
 												<X class="mr-1 h-3 w-3" />
-												Reject
+												{m.budget_reimbursements_reject()}
 											</Button>
 										{:else if req.status === 'under_review'}
 											<Button
@@ -399,7 +400,7 @@ $effect(() => {
 												onclick={() => openApproveDialog(req)}
 											>
 												<Check class="mr-1 h-3 w-3" />
-												Approve
+												{m.budget_reimbursements_approve()}
 											</Button>
 											<Button
 												variant="outline"
@@ -408,14 +409,14 @@ $effect(() => {
 												onclick={() => openRejectDialog(req)}
 											>
 												<X class="mr-1 h-3 w-3" />
-												Reject
+												{m.budget_reimbursements_reject()}
 											</Button>
 										{:else if req.status === 'approved'}
 											<form method="POST" action="?/markPaid" use:enhance>
 												<input type="hidden" name="id" value={req.id} />
 												<Button type="submit" variant="outline" size="sm">
 													<Check class="mr-1 h-3 w-3" />
-													Mark as Paid
+													{m.budget_reimbursements_mark_paid()}
 												</Button>
 											</form>
 										{/if}
@@ -432,19 +433,19 @@ $effect(() => {
 											<div class="grid gap-4 md:grid-cols-3">
 												{#if req.notes}
 													<div>
-														<span class="text-xs font-medium text-muted-foreground">Speaker Notes</span>
+														<span class="text-xs font-medium text-muted-foreground">{m.budget_reimbursements_speaker_notes()}</span>
 														<p class="mt-1 text-sm">{req.notes}</p>
 													</div>
 												{/if}
 												{#if req.adminNotes}
 													<div>
-														<span class="text-xs font-medium text-muted-foreground">Admin Notes</span>
+														<span class="text-xs font-medium text-muted-foreground">{m.budget_reimbursements_admin_notes()}</span>
 														<p class="mt-1 text-sm">{req.adminNotes}</p>
 													</div>
 												{/if}
 												{#if req.reviewedAt}
 													<div>
-														<span class="text-xs font-medium text-muted-foreground">Reviewed</span>
+														<span class="text-xs font-medium text-muted-foreground">{m.budget_reimbursements_reviewed()}</span>
 														<p class="mt-1 text-sm">{formatDate(req.reviewedAt)}</p>
 													</div>
 												{/if}
@@ -454,18 +455,18 @@ $effect(() => {
 											{#if req.items.length > 0}
 												<div>
 													<h4 class="mb-2 text-sm font-semibold">
-														Expense Items ({req.items.length})
+														{m.budget_reimbursements_expense_items()} ({req.items.length})
 													</h4>
 													<div class="overflow-x-auto rounded-md border">
 														<table class="w-full">
 															<thead>
 																<tr class="border-b bg-muted/50 text-left text-xs text-muted-foreground">
-																	<th class="px-3 py-2 font-medium">Type</th>
-																	<th class="px-3 py-2 font-medium">Description</th>
-																	<th class="px-3 py-2 font-medium text-right">Amount</th>
-																	<th class="px-3 py-2 font-medium">Date</th>
-																	<th class="px-3 py-2 font-medium">Receipt</th>
-																	<th class="px-3 py-2 font-medium">Notes</th>
+																	<th class="px-3 py-2 font-medium">{m.budget_reimbursements_expense_type()}</th>
+																	<th class="px-3 py-2 font-medium">{m.budget_reimbursements_expense_description()}</th>
+																	<th class="px-3 py-2 font-medium text-right">{m.budget_reimbursements_expense_amount()}</th>
+																	<th class="px-3 py-2 font-medium">{m.budget_reimbursements_expense_date()}</th>
+																	<th class="px-3 py-2 font-medium">{m.budget_reimbursements_receipt()}</th>
+																	<th class="px-3 py-2 font-medium">{m.budget_reimbursements_expense_notes()}</th>
 																</tr>
 															</thead>
 															<tbody>
@@ -489,7 +490,7 @@ $effect(() => {
 																					rel="noopener noreferrer"
 																					class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
 																				>
-																					View
+																					{m.budget_reimbursements_view()}
 																				</a>
 																			{:else}
 																				<span class="text-muted-foreground">-</span>
@@ -506,7 +507,7 @@ $effect(() => {
 												</div>
 											{:else}
 												<p class="text-sm text-muted-foreground">
-													No expense items attached to this request.
+													{m.budget_reimbursements_no_items()}
 												</p>
 											{/if}
 										</div>
@@ -525,10 +526,9 @@ $effect(() => {
 {#if approveDialogOpen && selectedRequest}
 	<Dialog.Content class="max-w-lg" onClose={closeApproveDialog}>
 		<Dialog.Header>
-			<Dialog.Title>Approve Reimbursement</Dialog.Title>
+			<Dialog.Title>{m.budget_reimbursements_approve_title()}</Dialog.Title>
 			<Dialog.Description>
-				Approve request {selectedRequest.requestNumber} from {selectedRequest.speakerName}
-				for {formatAmount(selectedRequest.totalAmount, selectedRequest.currency || currency)}.
+				{m.budget_reimbursements_approve_description({ number: selectedRequest.requestNumber, speaker: selectedRequest.speakerName, amount: formatAmount(selectedRequest.totalAmount, selectedRequest.currency || currency) })}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -557,60 +557,60 @@ $effect(() => {
 			<!-- Request summary -->
 			<div class="rounded-md border p-3 space-y-1">
 				<div class="flex justify-between text-sm">
-					<span class="text-muted-foreground">Request</span>
+					<span class="text-muted-foreground">{m.budget_reimbursements_request()}</span>
 					<span class="font-mono font-medium">{selectedRequest.requestNumber}</span>
 				</div>
 				<div class="flex justify-between text-sm">
-					<span class="text-muted-foreground">Speaker</span>
+					<span class="text-muted-foreground">{m.budget_reimbursements_speaker()}</span>
 					<span>{selectedRequest.speakerName}</span>
 				</div>
 				<div class="flex justify-between text-sm">
-					<span class="text-muted-foreground">Items</span>
+					<span class="text-muted-foreground">{m.budget_reimbursements_items()}</span>
 					<span>{selectedRequest.itemCount}</span>
 				</div>
 				<div class="flex justify-between text-sm font-medium">
-					<span class="text-muted-foreground">Total</span>
+					<span class="text-muted-foreground">{m.budget_reimbursements_total()}</span>
 					<span>{formatAmount(selectedRequest.totalAmount, selectedRequest.currency || currency)}</span>
 				</div>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="approve-category">Budget Category *</Label>
+				<Label for="approve-category">{m.budget_quotes_budget_category()} *</Label>
 				<select
 					id="approve-category"
 					name="categoryId"
 					required
 					class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 				>
-					<option value="" disabled selected>Select a category</option>
+					<option value="" disabled selected>{m.budget_quotes_select_category()}</option>
 					{#each data.categories as cat}
 						<option value={cat.id}>{cat.name}</option>
 					{/each}
 				</select>
 				<p class="text-xs text-muted-foreground">
-					The expense transaction will be created under this budget category.
+					{m.budget_reimbursements_category_hint()}
 				</p>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="approve-notes">Admin Notes</Label>
+				<Label for="approve-notes">{m.budget_reimbursements_admin_notes()}</Label>
 				<Textarea
 					id="approve-notes"
 					name="adminNotes"
-					placeholder="Optional notes about this approval..."
+					placeholder={m.budget_reimbursements_notes_placeholder()}
 					rows={3}
 				/>
 			</div>
 
 			<Dialog.Footer>
 				<Button type="button" variant="outline" onclick={closeApproveDialog}>
-					Cancel
+					{m.action_cancel()}
 				</Button>
 				<Button type="submit" disabled={isSubmitting} class="bg-green-600 hover:bg-green-700">
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Approve Reimbursement
+					{m.budget_reimbursements_approve_button()}
 				</Button>
 			</Dialog.Footer>
 		</form>
@@ -621,9 +621,9 @@ $effect(() => {
 {#if rejectDialogOpen && selectedRequest}
 	<Dialog.Content class="max-w-lg" onClose={closeRejectDialog}>
 		<Dialog.Header>
-			<Dialog.Title>Reject Reimbursement</Dialog.Title>
+			<Dialog.Title>{m.budget_reimbursements_reject_title()}</Dialog.Title>
 			<Dialog.Description>
-				Reject request {selectedRequest.requestNumber} from {selectedRequest.speakerName}.
+				{m.budget_reimbursements_reject_description({ number: selectedRequest.requestNumber, speaker: selectedRequest.speakerName })}
 			</Dialog.Description>
 		</Dialog.Header>
 
@@ -652,42 +652,42 @@ $effect(() => {
 			<!-- Request summary -->
 			<div class="rounded-md border p-3 space-y-1">
 				<div class="flex justify-between text-sm">
-					<span class="text-muted-foreground">Request</span>
+					<span class="text-muted-foreground">{m.budget_reimbursements_request()}</span>
 					<span class="font-mono font-medium">{selectedRequest.requestNumber}</span>
 				</div>
 				<div class="flex justify-between text-sm">
-					<span class="text-muted-foreground">Speaker</span>
+					<span class="text-muted-foreground">{m.budget_reimbursements_speaker()}</span>
 					<span>{selectedRequest.speakerName}</span>
 				</div>
 				<div class="flex justify-between text-sm font-medium">
-					<span class="text-muted-foreground">Total</span>
+					<span class="text-muted-foreground">{m.budget_reimbursements_total()}</span>
 					<span>{formatAmount(selectedRequest.totalAmount, selectedRequest.currency || currency)}</span>
 				</div>
 			</div>
 
 			<div class="space-y-2">
-				<Label for="reject-notes">Reason for Rejection *</Label>
+				<Label for="reject-notes">{m.budget_reimbursements_reject_reason()} *</Label>
 				<Textarea
 					id="reject-notes"
 					name="adminNotes"
-					placeholder="Please provide a reason for rejecting this request..."
+					placeholder={m.budget_reimbursements_reject_reason_placeholder()}
 					rows={4}
 					required
 				/>
 				<p class="text-xs text-muted-foreground">
-					This message will be visible to the speaker.
+					{m.budget_reimbursements_reject_reason_hint()}
 				</p>
 			</div>
 
 			<Dialog.Footer>
 				<Button type="button" variant="outline" onclick={closeRejectDialog}>
-					Cancel
+					{m.action_cancel()}
 				</Button>
 				<Button type="submit" disabled={isSubmitting} variant="destructive">
 					{#if isSubmitting}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
-					Reject Reimbursement
+					{m.budget_reimbursements_reject_button()}
 				</Button>
 			</Dialog.Footer>
 		</form>

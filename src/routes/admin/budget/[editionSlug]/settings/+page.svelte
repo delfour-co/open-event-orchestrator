@@ -8,6 +8,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
+import * as m from '$lib/paraglide/messages'
 import { ArrowLeft, Loader2, Wallet } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -31,7 +32,7 @@ const formatAmount = (amount: number, currency: string) => {
 </script>
 
 <svelte:head>
-	<title>Budget Settings - {data.edition.name} - Open Event Orchestrator</title>
+	<title>{m.budget_settings_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -54,7 +55,7 @@ const formatAmount = (amount: number, currency: string) => {
 		<div
 			class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
 		>
-			{form.message || 'Settings updated successfully'}
+			{form.message || m.budget_settings_updated()}
 		</div>
 	{/if}
 
@@ -69,18 +70,18 @@ const formatAmount = (amount: number, currency: string) => {
 	<!-- Budget Status -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Budget Status</Card.Title>
+			<Card.Title>{m.budget_settings_status()}</Card.Title>
 			<Card.Description>
-				Control whether this budget is in draft, approved or closed
+				{m.budget_settings_status_description()}
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<div class="flex items-center gap-4">
-				<span class="text-sm text-muted-foreground">Current status:</span>
+				<span class="text-sm text-muted-foreground">{m.budget_settings_current_status()}</span>
 				<StatusBadge status={data.budget.status} />
 			</div>
 			<div class="mt-4 flex items-center gap-2">
-				<span class="mr-2 text-sm text-muted-foreground">Change to:</span>
+				<span class="mr-2 text-sm text-muted-foreground">{m.budget_settings_change_to()}</span>
 				{#each statuses as status}
 					<form
 						method="POST"
@@ -107,9 +108,9 @@ const formatAmount = (amount: number, currency: string) => {
 				{/each}
 			</div>
 			<p class="mt-3 text-xs text-muted-foreground">
-				<strong>Draft:</strong> Budget is being prepared, editable.
-				<strong>Approved:</strong> Budget is finalized and active.
-				<strong>Closed:</strong> Budget is locked, no further changes.
+				{m.budget_settings_status_draft()}
+				{m.budget_settings_status_approved()}
+				{m.budget_settings_status_closed()}
 			</p>
 		</Card.Content>
 	</Card.Root>
@@ -117,8 +118,8 @@ const formatAmount = (amount: number, currency: string) => {
 	<!-- Budget Details -->
 	<Card.Root>
 		<Card.Header>
-			<Card.Title>Budget Details</Card.Title>
-			<Card.Description>Configure the total budget amount and currency</Card.Description>
+			<Card.Title>{m.budget_settings_details()}</Card.Title>
+			<Card.Description>{m.budget_settings_details_description()}</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<form
@@ -137,7 +138,7 @@ const formatAmount = (amount: number, currency: string) => {
 
 				<div class="grid gap-4 sm:grid-cols-2">
 					<div class="space-y-2">
-						<Label for="bg-totalBudget">Total Budget</Label>
+						<Label for="bg-totalBudget">{m.budget_settings_total_budget()}</Label>
 						<Input
 							id="bg-totalBudget"
 							name="totalBudget"
@@ -147,12 +148,12 @@ const formatAmount = (amount: number, currency: string) => {
 							value={data.budget.totalBudget.toString()}
 						/>
 						<p class="text-xs text-muted-foreground">
-							The overall budget envelope for this edition
+							{m.budget_settings_total_budget_hint()}
 						</p>
 					</div>
 
 					<div class="space-y-2">
-						<Label for="bg-currency">Currency</Label>
+						<Label for="bg-currency">{m.budget_settings_currency()}</Label>
 						<select
 							id="bg-currency"
 							name="currency"
@@ -162,21 +163,21 @@ const formatAmount = (amount: number, currency: string) => {
 							<option value="USD" selected={data.budget.currency === 'USD'}>USD</option>
 							<option value="GBP" selected={data.budget.currency === 'GBP'}>GBP</option>
 						</select>
-						<p class="text-xs text-muted-foreground">Currency for all budget amounts</p>
+						<p class="text-xs text-muted-foreground">{m.budget_settings_currency_hint()}</p>
 					</div>
 				</div>
 
 				<div class="space-y-2">
-					<Label for="bg-notes">Notes</Label>
+					<Label for="bg-notes">{m.budget_settings_notes()}</Label>
 					<Textarea
 						id="bg-notes"
 						name="notes"
 						rows={4}
-						placeholder="Budget notes..."
+						placeholder={m.budget_settings_notes_placeholder()}
 						value={data.budget.notes || ''}
 					/>
 					<p class="text-xs text-muted-foreground">
-						Internal notes about this budget (not visible publicly)
+						{m.budget_settings_notes_hint()}
 					</p>
 				</div>
 
