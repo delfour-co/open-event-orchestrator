@@ -42,6 +42,7 @@
     "ignore": [
       "node_modules",
       ".svelte-kit",
+      ".claude/worktrees",
       "build",
       "dist",
       "coverage",
