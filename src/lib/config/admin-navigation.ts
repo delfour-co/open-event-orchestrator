@@ -107,7 +107,11 @@ export const getAdminSettingsNavItems = (): NavItem[] => [
   { href: '/admin/settings/stripe', label: 'Stripe' },
   { href: '/admin/settings/helloasso', label: 'HelloAsso' },
   { href: '/admin/settings/slack', label: 'Slack' },
-  { href: '/admin/settings/discord', label: 'Discord' }
+  { href: '/admin/settings/discord', label: 'Discord' },
+  { href: '/admin/settings/s3', label: 'S3 Storage' },
+  { href: '/admin/settings/backups', label: 'Backups' },
+  { href: '/admin/settings/rate-limiting', label: 'Rate Limiting' },
+  { href: '/admin/settings/log-retention', label: 'Log Retention' }
 ]
 
 /**
