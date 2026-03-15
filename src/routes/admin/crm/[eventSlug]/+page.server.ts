@@ -3,6 +3,13 @@ import {
   createContactEditionLinkRepository
 } from '$lib/features/crm/infra'
 import { createSyncContactsUseCase } from '$lib/features/crm/usecases'
+import {
+  filterAnd,
+  filterContains,
+  filterEquals,
+  filterOr,
+  safeFilter
+} from '$lib/server/safe-filter'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -21,14 +28,19 @@ export const load: PageServerLoad = async ({ locals, url, params }) => {
   const page = Math.max(1, Number.parseInt(url.searchParams.get('page') || '1', 10))
 
   // Build filter
-  const filters: string[] = [`eventId = "${eventId}"`]
+  const filters: string[] = [filterEquals('eventId', eventId)]
   if (search) {
     filters.push(
-      `(firstName ~ "${search}" || lastName ~ "${search}" || email ~ "${search}" || company ~ "${search}")`
+      filterOr(
+        filterContains('firstName', search),
+        filterContains('lastName', search),
+        filterContains('email', search),
+        filterContains('company', search)
+      )
     )
   }
   if (source) {
-    filters.push(`source = "${source}"`)
+    filters.push(filterEquals('source', source))
   }
 
   const contacts = await locals.pb.collection('contacts').getList(page, PER_PAGE, {
@@ -115,7 +127,7 @@ export const actions: Actions = {
 
     // Check for duplicate email
     const existing = await locals.pb.collection('contacts').getList(1, 1, {
-      filter: `eventId = "${eventId}" && email = "${email}"`
+      filter: safeFilter`eventId = ${eventId} && email = ${email}`
     })
     if (existing.items.length > 0) {
       return fail(400, {

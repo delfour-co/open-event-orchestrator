@@ -1,3 +1,4 @@
+import { safeFilter } from '$lib/server/safe-filter'
 import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
@@ -22,13 +23,13 @@ export const load: PageServerLoad = async ({ url, locals, parent }) => {
 
     // Get order items
     const orderItems = await locals.pb.collection('order_items').getFullList({
-      filter: `orderId = "${orderId}"`,
+      filter: safeFilter`orderId = ${orderId}`,
       sort: 'created'
     })
 
     // Get tickets
     const tickets = await locals.pb.collection('billing_tickets').getFullList({
-      filter: `orderId = "${orderId}"`,
+      filter: safeFilter`orderId = ${orderId}`,
       sort: 'created'
     })
 

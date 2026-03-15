@@ -1,4 +1,5 @@
 import { hasPermission } from '$lib/features/api/domain/api-key'
+import { safeFilter } from '$lib/server/safe-filter'
 import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
@@ -25,7 +26,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const organizationId = url.searchParams.get('organization_id')
 
   try {
-    const filter = organizationId ? `organizationId = "${organizationId}"` : ''
+    const filter = organizationId ? safeFilter`organizationId = ${organizationId}` : ''
 
     const result = await locals.pb.collection('events').getList(page, perPage, {
       sort: '-created',

@@ -1,4 +1,5 @@
 import { hasPermission } from '$lib/features/api/domain'
+import { filterAnd, filterEquals } from '$lib/server/safe-filter'
 import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
@@ -26,12 +27,12 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
     throw error(403, { message: 'Access denied: edition not in scope' })
   }
 
-  const filters: string[] = [`editionId = "${id}"`]
-  if (type) filters.push(`type = "${type}"`)
-  if (trackId) filters.push(`trackId = "${trackId}"`)
+  const filters: string[] = [filterEquals('editionId', id)]
+  if (type) filters.push(filterEquals('type', type))
+  if (trackId) filters.push(filterEquals('trackId', trackId))
 
   const result = await locals.pb.collection('sessions').getList(page, perPage, {
-    filter: filters.join(' && '),
+    filter: filterAnd(...filters),
     sort: 'created',
     expand: 'slotId,talkId,trackId'
   })

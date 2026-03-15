@@ -1,4 +1,5 @@
 import { hasPermission } from '$lib/features/api/domain'
+import { filterAnd, filterEquals } from '$lib/server/safe-filter'
 import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
@@ -21,15 +22,14 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const eventId = url.searchParams.get('event_id')
   const status = url.searchParams.get('status')
 
-  let filter = ''
   const filters: string[] = []
 
-  if (eventId) filters.push(`eventId = "${eventId}"`)
-  if (status) filters.push(`status = "${status}"`)
-  if (locals.apiKeyScope?.editionId) filters.push(`id = "${locals.apiKeyScope.editionId}"`)
-  if (locals.apiKeyScope?.eventId) filters.push(`eventId = "${locals.apiKeyScope.eventId}"`)
+  if (eventId) filters.push(filterEquals('eventId', eventId))
+  if (status) filters.push(filterEquals('status', status))
+  if (locals.apiKeyScope?.editionId) filters.push(filterEquals('id', locals.apiKeyScope.editionId))
+  if (locals.apiKeyScope?.eventId) filters.push(filterEquals('eventId', locals.apiKeyScope.eventId))
 
-  filter = filters.join(' && ')
+  const filter = filterAnd(...filters)
 
   const result = await locals.pb.collection('editions').getList(page, perPage, {
     filter,

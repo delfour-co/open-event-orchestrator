@@ -8,6 +8,7 @@ import {
   verifyBackupCode,
   verifyTotpCode
 } from '$lib/features/auth/services/totp-service'
+import { checkAuthRateLimit } from '$lib/server/auth-rate-limiter'
 import { fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 
@@ -24,6 +25,12 @@ export const load: PageServerLoad = async ({ cookies, locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, locals, cookies }) => {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '0.0.0.0'
+    const rateCheck = checkAuthRateLimit(ip)
+    if (!rateCheck.allowed) {
+      return fail(429, { error: 'Too many attempts. Please try again later.' })
+    }
+
     const pending2faUserId = cookies.get('oeo_2fa_required')
     if (!pending2faUserId) {
       throw redirect(303, '/auth/login')

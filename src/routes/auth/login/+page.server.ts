@@ -4,6 +4,7 @@ import {
 } from '$lib/features/auth/infra/totp-repository'
 import { getAvailableProviders } from '$lib/features/auth/services/social-auth-service'
 import { generateDeviceHash } from '$lib/features/auth/services/totp-service'
+import { checkAuthRateLimit } from '$lib/server/auth-rate-limiter'
 import { processPendingInvitations } from '$lib/server/invitations'
 import { fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -15,6 +16,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, locals, url, cookies }) => {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '0.0.0.0'
+    const rateCheck = checkAuthRateLimit(ip)
+    if (!rateCheck.allowed) {
+      return fail(429, { error: 'Too many attempts. Please try again later.' })
+    }
+
     const formData = await request.formData()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
@@ -56,7 +63,8 @@ export const actions: Actions = {
             path: '/',
             httpOnly: true,
             sameSite: 'lax',
-            maxAge: 300
+            maxAge: 300,
+            secure: !url.hostname.includes('localhost')
           })
           throw redirect(303, '/auth/verify-2fa')
         }
