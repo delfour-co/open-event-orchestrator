@@ -6,15 +6,10 @@ import tailwindcss from '@tailwindcss/vite'
 import { svelteTesting } from '@testing-library/svelte/vite'
 import { defineConfig } from 'vitest/config'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
 export default defineConfig({
-  resolve: {
-    alias: {
-      // svelte-easy-crop only exports a 'svelte' condition, which the SSR build
-      // commonjs resolver does not recognize. Alias to the dist entry directly.
-      'svelte-easy-crop': path.resolve(__dirname, 'node_modules/svelte-easy-crop/dist/index.js')
-    }
+  ssr: {
+    // svelte-easy-crop needs to be bundled for SSR (uses svelte condition in exports)
+    noExternal: ['svelte-easy-crop']
   },
   plugins: [
     tailwindcss(),
