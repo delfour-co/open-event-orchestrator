@@ -105,9 +105,9 @@ export const actions: Actions = {
       const deliveries = await locals.pb.collection('webhook_deliveries').getFullList({
         filter: `webhookId = "${id}"`
       })
-      for (const delivery of deliveries) {
-        await locals.pb.collection('webhook_deliveries').delete(delivery.id)
-      }
+      await Promise.all(
+        deliveries.map((delivery) => locals.pb.collection('webhook_deliveries').delete(delivery.id))
+      )
 
       // Delete webhook
       await locals.pb.collection('webhooks').delete(id)

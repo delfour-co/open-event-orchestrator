@@ -74,9 +74,9 @@ export function createCustomFieldService(pb: PocketBase): CustomFieldService {
         fields: 'id'
       })
 
-      for (const value of values) {
-        await pb.collection('contact_custom_values').delete(value.id)
-      }
+      await Promise.all(
+        values.map((value) => pb.collection('contact_custom_values').delete(value.id))
+      )
 
       // Then delete the field
       await pb.collection('custom_fields').delete(id)
@@ -165,18 +165,19 @@ export function createCustomFieldService(pb: PocketBase): CustomFieldService {
 
       const recordsByFieldId = new Map(existingRecords.map((r) => [r.fieldId as string, r.id]))
 
-      for (const [fieldId, value] of Object.entries(values)) {
-        const existingId = recordsByFieldId.get(fieldId)
-        if (existingId) {
-          await pb.collection('contact_custom_values').update(existingId, { value })
-        } else {
-          await pb.collection('contact_custom_values').create({
+      await Promise.all(
+        Object.entries(values).map(([fieldId, value]) => {
+          const existingId = recordsByFieldId.get(fieldId)
+          if (existingId) {
+            return pb.collection('contact_custom_values').update(existingId, { value })
+          }
+          return pb.collection('contact_custom_values').create({
             contactId,
             fieldId,
             value
           })
-        }
-      }
+        })
+      )
     },
 
     async deleteValues(contactId: string): Promise<void> {
@@ -185,9 +186,9 @@ export function createCustomFieldService(pb: PocketBase): CustomFieldService {
         fields: 'id'
       })
 
-      for (const record of records) {
-        await pb.collection('contact_custom_values').delete(record.id)
-      }
+      await Promise.all(
+        records.map((record) => pb.collection('contact_custom_values').delete(record.id))
+      )
     },
 
     async getValuesForContacts(

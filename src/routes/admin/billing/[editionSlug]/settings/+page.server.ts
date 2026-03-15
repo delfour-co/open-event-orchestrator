@@ -67,11 +67,13 @@ export const actions: Actions = {
         filter: `editionId = "${editionId}"`
       })
 
-      for (const tt of ticketTypes) {
-        await locals.pb.collection('ticket_types').update(tt.id, {
-          isActive: enable
-        })
-      }
+      await Promise.all(
+        ticketTypes.map((tt) =>
+          locals.pb.collection('ticket_types').update(tt.id, {
+            isActive: enable
+          })
+        )
+      )
 
       return {
         success: true,

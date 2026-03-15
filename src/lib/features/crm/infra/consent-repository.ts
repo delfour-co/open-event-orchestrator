@@ -105,9 +105,9 @@ export const createConsentRepository = (pb: PocketBase) => ({
       filter: safeFilter`contactId = ${contactId}`,
       fields: 'id'
     })
-    for (const record of records) {
-      await pb.collection(COLLECTION).delete(record.id as string)
-    }
+    await Promise.all(
+      records.map((record) => pb.collection(COLLECTION).delete(record.id as string))
+    )
   }
 })
 

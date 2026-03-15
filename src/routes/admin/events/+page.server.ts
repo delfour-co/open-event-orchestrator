@@ -182,9 +182,9 @@ export const actions: Actions = {
       const editions = await locals.pb
         .collection('editions')
         .getFullList({ filter: `eventId="${eventId}"` })
-      for (const edition of editions) {
-        await locals.pb.collection('editions').delete(edition.id)
-      }
+      await Promise.all(
+        editions.map((edition) => locals.pb.collection('editions').delete(edition.id))
+      )
       // Get the event before deleting to capture org and name
       const event = await locals.pb.collection('events').getOne(eventId)
 

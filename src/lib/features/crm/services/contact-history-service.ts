@@ -148,6 +148,7 @@ export function createContactHistoryService(pb: PocketBase): ContactHistoryServi
       )
     },
 
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: cross-entity lookup with fallback logic
     async findContactByEmail(
       email: string
     ): Promise<Array<{ id: string; eventId: string; editionId: string }>> {
@@ -158,26 +159,39 @@ export function createContactHistoryService(pb: PocketBase): ContactHistoryServi
 
       const results: Array<{ id: string; eventId: string; editionId: string }> = []
 
-      for (const contact of contacts) {
-        const links = await pb.collection('contact_edition_links').getFullList({
-          filter: safeFilter`contactId = ${contact.id}`,
-          fields: 'editionId'
+      if (contacts.length > 0) {
+        // Batch fetch all edition links for these contacts
+        const contactIdFilter = contacts.map((c) => safeFilter`contactId = ${c.id}`).join(' || ')
+        const allLinks = await pb.collection('contact_edition_links').getFullList({
+          filter: contactIdFilter,
+          fields: 'contactId,editionId'
         })
 
-        for (const link of links) {
-          results.push({
-            id: contact.id,
-            eventId: contact.eventId as string,
-            editionId: link.editionId as string
-          })
+        const linksByContact = new Map<string, Array<Record<string, unknown>>>()
+        for (const link of allLinks) {
+          const cId = link.contactId as string
+          if (!linksByContact.has(cId)) linksByContact.set(cId, [])
+          linksByContact.get(cId)?.push(link)
         }
 
-        if (links.length === 0) {
-          results.push({
-            id: contact.id,
-            eventId: contact.eventId as string,
-            editionId: ''
-          })
+        for (const contact of contacts) {
+          const links = linksByContact.get(contact.id) || []
+
+          for (const link of links) {
+            results.push({
+              id: contact.id,
+              eventId: contact.eventId as string,
+              editionId: link.editionId as string
+            })
+          }
+
+          if (links.length === 0) {
+            results.push({
+              id: contact.id,
+              eventId: contact.eventId as string,
+              editionId: ''
+            })
+          }
         }
       }
 

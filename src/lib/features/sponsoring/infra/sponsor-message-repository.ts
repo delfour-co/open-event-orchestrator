@@ -170,11 +170,10 @@ export const createSponsorMessageRepository = (pb: PocketBase) => ({
       fields: 'id'
     })
 
-    for (const msg of unread) {
-      await pb.collection(COLLECTION).update(msg.id as string, {
-        readAt: new Date().toISOString()
-      })
-    }
+    const readAt = new Date().toISOString()
+    await Promise.all(
+      unread.map((msg) => pb.collection(COLLECTION).update(msg.id as string, { readAt }))
+    )
 
     return unread.length
   },

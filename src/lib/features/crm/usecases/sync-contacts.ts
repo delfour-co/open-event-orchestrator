@@ -119,6 +119,7 @@ async function ensureEditionLink(
   return true
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: speaker sync involves multiple sequential steps per speaker
 async function syncSpeakers(
   pb: PocketBase,
   eventId: string,
@@ -140,9 +141,24 @@ async function syncSpeakers(
     }
   }
 
+  // Batch fetch all speakers
+  const speakerIdArray = [...speakerIds]
+  const speakerMap = new Map<string, Record<string, unknown>>()
+  if (speakerIdArray.length > 0) {
+    const filter = speakerIdArray.map((id) => `id="${id}"`).join(' || ')
+    const speakers = (await pb.collection('speakers').getFullList({ filter })) || []
+    for (const speaker of speakers) {
+      speakerMap.set(speaker.id, speaker)
+    }
+  }
+
   for (const speakerId of speakerIds) {
     try {
-      const speaker = await pb.collection('speakers').getOne(speakerId)
+      const speaker = speakerMap.get(speakerId)
+      if (!speaker) {
+        result.errors.push(`Failed to sync speaker ${speakerId}: Speaker not found`)
+        continue
+      }
       const contactId = await findOrCreateContact(
         pb,
         eventId,

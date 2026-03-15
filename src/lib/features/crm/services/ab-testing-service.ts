@@ -205,11 +205,13 @@ export function createAbTestingService(pb: PocketBase): AbTestingService {
       }
 
       const variants = await this.getVariants(testId)
-      for (const variant of variants) {
-        await pb.collection('ab_test_variants').update(variant.id, {
-          isWinner: variant.id === variantId
-        })
-      }
+      await Promise.all(
+        variants.map((variant) =>
+          pb.collection('ab_test_variants').update(variant.id, {
+            isWinner: variant.id === variantId
+          })
+        )
+      )
 
       await pb.collection('ab_test_campaigns').update(testId, {
         status: 'winner_selected',

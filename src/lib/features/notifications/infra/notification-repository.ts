@@ -122,19 +122,18 @@ export const createNotificationRepository = (pb: PocketBase) => ({
   },
 
   async createMany(data: CreateNotification[]): Promise<Notification[]> {
-    const notifications: Notification[] = []
+    const records = await Promise.all(
+      data.map((item) =>
+        pb.collection(COLLECTION).create({
+          ...item,
+          isRead: false,
+          deletedAt: null,
+          metadata: item.metadata ? JSON.stringify(item.metadata) : null
+        })
+      )
+    )
 
-    for (const item of data) {
-      const notification = await pb.collection(COLLECTION).create({
-        ...item,
-        isRead: false,
-        deletedAt: null,
-        metadata: item.metadata ? JSON.stringify(item.metadata) : null
-      })
-      notifications.push(mapRecordToNotification(notification))
-    }
-
-    return notifications
+    return records.map(mapRecordToNotification)
   },
 
   async markAsRead(id: string): Promise<Notification> {
@@ -150,9 +149,9 @@ export const createNotificationRepository = (pb: PocketBase) => ({
       fields: 'id'
     })
 
-    for (const record of records) {
-      await pb.collection(COLLECTION).update(record.id, { isRead: true })
-    }
+    await Promise.all(
+      records.map((record) => pb.collection(COLLECTION).update(record.id, { isRead: true }))
+    )
 
     return records.length
   },
@@ -174,11 +173,10 @@ export const createNotificationRepository = (pb: PocketBase) => ({
       fields: 'id'
     })
 
-    for (const record of records) {
-      await pb.collection(COLLECTION).update(record.id, {
-        deletedAt: new Date().toISOString()
-      })
-    }
+    const deletedAt = new Date().toISOString()
+    await Promise.all(
+      records.map((record) => pb.collection(COLLECTION).update(record.id, { deletedAt }))
+    )
 
     return records.length
   },
@@ -196,9 +194,7 @@ export const createNotificationRepository = (pb: PocketBase) => ({
       fields: 'id'
     })
 
-    for (const record of records) {
-      await pb.collection(COLLECTION).delete(record.id)
-    }
+    await Promise.all(records.map((record) => pb.collection(COLLECTION).delete(record.id)))
 
     return records.length
   }

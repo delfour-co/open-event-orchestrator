@@ -146,9 +146,7 @@ export const createSponsorDeliverableRepository = (pb: PocketBase) => ({
 
   async deleteByEditionSponsor(editionSponsorId: string): Promise<void> {
     const deliverables = await this.findByEditionSponsor(editionSponsorId)
-    for (const d of deliverables) {
-      await pb.collection(COLLECTION).delete(d.id)
-    }
+    await Promise.all(deliverables.map((d) => pb.collection(COLLECTION).delete(d.id)))
   },
 
   async countByEditionSponsor(

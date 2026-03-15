@@ -147,9 +147,9 @@ export function createUserSessionRepository(pb: PocketBase): UserSessionReposito
         filter: `userId = "${userId}" && tokenHash != "${currentSessionId}"`
       })
 
-      for (const session of sessions) {
-        await pb.collection('user_sessions').delete(session.id)
-      }
+      await Promise.all(
+        sessions.map((session) => pb.collection('user_sessions').delete(session.id))
+      )
 
       return sessions.length
     },
@@ -159,9 +159,9 @@ export function createUserSessionRepository(pb: PocketBase): UserSessionReposito
         filter: `userId = "${userId}"`
       })
 
-      for (const session of sessions) {
-        await pb.collection('user_sessions').delete(session.id)
-      }
+      await Promise.all(
+        sessions.map((session) => pb.collection('user_sessions').delete(session.id))
+      )
     },
 
     async updateLastActive(sessionId) {

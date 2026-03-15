@@ -81,26 +81,26 @@ export const createChecklistItemRepository = (pb: PocketBase) => ({
   },
 
   async createMany(items: CreateChecklistItem[]): Promise<BudgetChecklistItem[]> {
-    const results: BudgetChecklistItem[] = []
-    for (const item of items) {
-      const created = await pb.collection(COLLECTION).create({
-        editionId: item.editionId,
-        categoryId: item.categoryId || null,
-        name: item.name,
-        description: item.description || null,
-        estimatedAmount: item.estimatedAmount || 0,
-        status: item.status || 'pending',
-        priority: item.priority || 'medium',
-        dueDate: item.dueDate?.toISOString() || null,
-        assignee: item.assignee || null,
-        notes: item.notes || null,
-        order: item.order || 0,
-        transactionId: item.transactionId || null,
-        createdBy: item.createdBy
-      })
-      results.push(mapRecordToChecklistItem(created))
-    }
-    return results
+    const records = await Promise.all(
+      items.map((item) =>
+        pb.collection(COLLECTION).create({
+          editionId: item.editionId,
+          categoryId: item.categoryId || null,
+          name: item.name,
+          description: item.description || null,
+          estimatedAmount: item.estimatedAmount || 0,
+          status: item.status || 'pending',
+          priority: item.priority || 'medium',
+          dueDate: item.dueDate?.toISOString() || null,
+          assignee: item.assignee || null,
+          notes: item.notes || null,
+          order: item.order || 0,
+          transactionId: item.transactionId || null,
+          createdBy: item.createdBy
+        })
+      )
+    )
+    return records.map(mapRecordToChecklistItem)
   },
 
   async update(id: string, data: UpdateChecklistItem): Promise<BudgetChecklistItem> {
@@ -113,9 +113,9 @@ export const createChecklistItemRepository = (pb: PocketBase) => ({
   },
 
   async reorder(items: Array<{ id: string; order: number }>): Promise<void> {
-    for (const item of items) {
-      await pb.collection(COLLECTION).update(item.id, { order: item.order })
-    }
+    await Promise.all(
+      items.map((item) => pb.collection(COLLECTION).update(item.id, { order: item.order }))
+    )
   },
 
   async delete(id: string): Promise<void> {

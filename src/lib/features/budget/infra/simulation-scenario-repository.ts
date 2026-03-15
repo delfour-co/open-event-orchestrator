@@ -79,9 +79,11 @@ export const createSimulationScenarioRepository = (pb: PocketBase) => ({
       filter: safeFilter`editionId = ${editionId} && isBaseline = ${true}`,
       fields: 'id'
     })
-    for (const record of existing) {
-      await pb.collection(COLLECTION).update(record.id as string, { isBaseline: false })
-    }
+    await Promise.all(
+      existing.map((record) =>
+        pb.collection(COLLECTION).update(record.id as string, { isBaseline: false })
+      )
+    )
     // Then set the new baseline
     await pb.collection(COLLECTION).update(scenarioId, { isBaseline: true })
   },

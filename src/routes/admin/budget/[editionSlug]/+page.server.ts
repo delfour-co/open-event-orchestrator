@@ -170,15 +170,19 @@ export const actions: Actions = {
       })
 
       // Create default categories
-      for (const name of DEFAULT_CATEGORIES) {
-        const category = await locals.pb.collection('budget_categories').create({
-          budgetId: budget.id,
-          name,
-          plannedAmount: 0,
-          notes: null
-        })
-        auditService.logCategoryCreate(category.id as string, name, {
-          name,
+      const categories = await Promise.all(
+        DEFAULT_CATEGORIES.map((name) =>
+          locals.pb.collection('budget_categories').create({
+            budgetId: budget.id,
+            name,
+            plannedAmount: 0,
+            notes: null
+          })
+        )
+      )
+      for (const category of categories) {
+        auditService.logCategoryCreate(category.id as string, category.name as string, {
+          name: category.name as string,
           plannedAmount: 0
         })
       }

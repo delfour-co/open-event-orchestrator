@@ -44,11 +44,21 @@ function parseFiltersFromUrl(url: URL): {
 
 async function fetchUserEmails(pb: PocketBase, userIds: string[]): Promise<Map<string, string>> {
   const userEmails = new Map<string, string>()
+  if (userIds.length === 0) return userEmails
+
+  const filter = userIds.map((id) => `id="${id}"`).join(' || ')
+  try {
+    const users = await pb.collection('users').getFullList({ filter })
+    for (const user of users) {
+      userEmails.set(user.id, (user.email as string) || 'Unknown')
+    }
+  } catch {
+    // Fallback: mark all as unknown
+  }
+
+  // Mark any missing users as Unknown
   for (const userId of userIds) {
-    try {
-      const user = await pb.collection('users').getOne(userId)
-      userEmails.set(userId, (user.email as string) || 'Unknown')
-    } catch {
+    if (!userEmails.has(userId)) {
       userEmails.set(userId, 'Unknown')
     }
   }

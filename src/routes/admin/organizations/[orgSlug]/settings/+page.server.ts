@@ -5,6 +5,7 @@ import { fail, isRedirect, redirect } from '@sveltejs/kit'
 import type { Actions } from './$types'
 
 export const actions: Actions = {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: form validation and slug change logic
   updateOrganization: async ({ request, locals, params }) => {
     // Check permission
     const userRole = locals.user?.role as string | undefined
@@ -105,9 +106,9 @@ export const actions: Actions = {
         filter: `organizationId="${organization.id}"`
       })
 
-      for (const member of members) {
-        await locals.pb.collection('organization_members').delete(member.id)
-      }
+      await Promise.all(
+        members.map((member) => locals.pb.collection('organization_members').delete(member.id))
+      )
 
       await locals.pb.collection('organizations').delete(organization.id)
 

@@ -84,9 +84,7 @@ export async function refreshSpeakerToken(
     const existing = await pb.collection('speaker_tokens').getFullList({
       filter: filterAnd(safeFilter`speakerId = ${speakerId}`, safeFilter`editionId = ${editionId}`)
     })
-    for (const record of existing) {
-      await pb.collection('speaker_tokens').delete(record.id)
-    }
+    await Promise.all(existing.map((record) => pb.collection('speaker_tokens').delete(record.id)))
   } catch {
     // No existing tokens to delete
   }

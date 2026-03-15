@@ -2,6 +2,7 @@ import { calculateFeedbackSummary } from '$lib/features/feedback/domain/session-
 import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: feedback aggregation requires nested grouping logic
 export const load: PageServerLoad = async ({ params, locals }) => {
   const { editionSlug } = params
 
@@ -41,18 +42,27 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const sessionIds = [...new Set(sessionFeedbackRecords.map((f) => f.sessionId as string))]
   const sessionMap = new Map<string, { title: string; speakerName: string }>()
 
-  for (const sessionId of sessionIds) {
+  if (sessionIds.length > 0) {
+    const filter = sessionIds.map((id) => `id="${id}"`).join(' || ')
     try {
-      const session = await locals.pb.collection('sessions').getOne(sessionId, {
+      const sessions = await locals.pb.collection('sessions').getFullList({
+        filter,
         expand: 'talkId'
       })
-      const talk = session.expand?.talkId as { title?: string; speakerName?: string } | undefined
-      sessionMap.set(sessionId, {
-        title: (talk?.title as string) || (session.title as string) || 'Untitled Session',
-        speakerName: (talk?.speakerName as string) || ''
-      })
+      for (const session of sessions) {
+        const talk = session.expand?.talkId as { title?: string; speakerName?: string } | undefined
+        sessionMap.set(session.id, {
+          title: (talk?.title as string) || (session.title as string) || 'Untitled Session',
+          speakerName: (talk?.speakerName as string) || ''
+        })
+      }
     } catch {
-      sessionMap.set(sessionId, { title: 'Unknown Session', speakerName: '' })
+      // Fallback: mark all as unknown
+    }
+    for (const sessionId of sessionIds) {
+      if (!sessionMap.has(sessionId)) {
+        sessionMap.set(sessionId, { title: 'Unknown Session', speakerName: '' })
+      }
     }
   }
 

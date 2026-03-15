@@ -74,6 +74,7 @@ export const createConflictDetectionService = (pb: PocketBase): ConflictDetectio
   /**
    * Fetch all expanded sessions for an edition
    */
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: session expansion requires mapping multiple nested relationships
   async function fetchExpandedSessions(editionId: string): Promise<ExpandedSession[]> {
     // Fetch sessions with expanded slot and talk data
     const sessions = await pb.collection('sessions').getFullList({
@@ -180,14 +181,18 @@ export const createConflictDetectionService = (pb: PocketBase): ConflictDetectio
 
       const room = slot.expand?.roomId as Record<string, unknown> | undefined
 
-      // Fetch speaker names
+      // Fetch speaker names in batch
       const speakerNames: string[] = []
-      for (const spId of speakerIds) {
+      if (speakerIds.length > 0) {
+        const filter = speakerIds.map((id) => `id="${id}"`).join(' || ')
         try {
-          const speaker = await pb.collection('speakers').getOne(spId)
-          speakerNames.push(speaker.name as string)
+          const speakers = await pb.collection('speakers').getFullList({ filter })
+          const speakerMap = new Map(speakers.map((s) => [s.id, s.name as string]))
+          for (const spId of speakerIds) {
+            speakerNames.push(speakerMap.get(spId) || 'Unknown Speaker')
+          }
         } catch {
-          speakerNames.push('Unknown Speaker')
+          speakerNames.push(...speakerIds.map(() => 'Unknown Speaker'))
         }
       }
 

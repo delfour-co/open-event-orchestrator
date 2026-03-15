@@ -107,11 +107,11 @@ describe('createSendCampaignUseCase', () => {
       }
     ])
 
-    // Only c1 and c3 have marketing consent
-    pb.collection('consents')
-      .getList.mockResolvedValueOnce({ items: [{ id: 'consent1' }] }) // c1: has consent
-      .mockResolvedValueOnce({ items: [] }) // c2: no consent
-      .mockResolvedValueOnce({ items: [{ id: 'consent3' }] }) // c3: has consent
+    // Only c1 and c3 have marketing consent (batch fetched)
+    pb.collection('consents').getFullList.mockResolvedValue([
+      { id: 'consent1', contactId: 'c1' },
+      { id: 'consent3', contactId: 'c3' }
+    ])
 
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
@@ -145,7 +145,7 @@ describe('createSendCampaignUseCase', () => {
       }
     ])
 
-    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent1' }] })
+    pb.collection('consents').getFullList.mockResolvedValue([{ id: 'consent1', contactId: 'c1' }])
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
     await sendCampaign('camp1')
@@ -184,7 +184,7 @@ describe('createSendCampaignUseCase', () => {
       }
     ])
 
-    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent1' }] })
+    pb.collection('consents').getFullList.mockResolvedValue([{ id: 'consent1', contactId: 'c1' }])
     pb.collection('contacts').update.mockResolvedValue({})
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
@@ -245,8 +245,12 @@ describe('createSendCampaignUseCase', () => {
       }
     ])
 
-    // All have consent
-    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent' }] })
+    // All have consent (batch fetched)
+    pb.collection('consents').getFullList.mockResolvedValue([
+      { id: 'consent1', contactId: 'c1' },
+      { id: 'consent2', contactId: 'c2' },
+      { id: 'consent3', contactId: 'c3' }
+    ])
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
     // Second email fails
@@ -285,7 +289,7 @@ describe('createSendCampaignUseCase', () => {
         unsubscribeToken: 'tok1'
       }
     ])
-    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent' }] })
+    pb.collection('consents').getFullList.mockResolvedValue([{ id: 'consent', contactId: 'c1' }])
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
     await sendCampaign('camp1')
@@ -356,7 +360,9 @@ describe('createSendCampaignUseCase', () => {
       }
     ])
 
-    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent' }] })
+    pb.collection('consents').getFullList.mockResolvedValue([
+      { id: 'consent', contactId: 'contact123' }
+    ])
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
     await sendCampaign('camp1')
@@ -394,7 +400,9 @@ describe('createSendCampaignUseCase', () => {
       }
     ])
 
-    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent' }] })
+    pb.collection('consents').getFullList.mockResolvedValue([
+      { id: 'consent', contactId: 'contact123' }
+    ])
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
     await sendCampaign('camp1')
@@ -447,7 +455,11 @@ describe('createSendCampaignUseCase', () => {
       }
     ])
 
-    pb.collection('consents').getList.mockResolvedValue({ items: [{ id: 'consent' }] })
+    pb.collection('consents').getFullList.mockResolvedValue([
+      { id: 'consent1', contactId: 'c1' },
+      { id: 'consent2', contactId: 'c2' },
+      { id: 'consent3', contactId: 'c3' }
+    ])
     pb.collection('email_campaigns').update.mockResolvedValue({})
 
     // Second email throws an exception (not just { success: false })

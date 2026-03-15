@@ -78,9 +78,7 @@ export const createSponsorTokenRepository = (pb: PocketBase) => ({
     const records = await pb.collection(COLLECTION).getFullList({
       filter: safeFilter`editionSponsorId = ${editionSponsorId}`
     })
-    for (const record of records) {
-      await pb.collection(COLLECTION).delete(record.id)
-    }
+    await Promise.all(records.map((record) => pb.collection(COLLECTION).delete(record.id)))
   },
 
   async refreshToken(editionSponsorId: string, expiryDays?: number): Promise<SponsorToken> {

@@ -112,9 +112,9 @@ export function createTrustedDeviceRepository(pb: PocketBase): TrustedDeviceRepo
         const expired = await pb.collection('trusted_devices').getFullList({
           filter: `expiresAt < "${new Date().toISOString()}"`
         })
-        for (const record of expired) {
-          await pb.collection('trusted_devices').delete(record.id)
-        }
+        await Promise.all(
+          expired.map((record) => pb.collection('trusted_devices').delete(record.id))
+        )
       } catch {
         /* Collection might not exist */
       }

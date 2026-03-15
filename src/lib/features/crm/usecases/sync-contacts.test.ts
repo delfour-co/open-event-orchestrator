@@ -45,22 +45,24 @@ describe('createSyncContactsUseCase', () => {
     // Talks with speakers
     pb.collection('talks').getFullList.mockResolvedValue([{ id: 'talk1', speakerIds: ['spk1'] }])
 
-    // Speaker data
-    pb.collection('speakers').getOne.mockResolvedValue({
-      id: 'spk1',
-      email: 'speaker@example.com',
-      firstName: 'Jane',
-      lastName: 'Doe',
-      company: 'TechCo',
-      jobTitle: 'Engineer',
-      bio: 'A bio',
-      photoUrl: 'https://photo.url',
-      twitter: '@jane',
-      linkedin: 'https://linkedin.com/jane',
-      github: 'janedoe',
-      city: 'Lyon',
-      country: 'France'
-    })
+    // Speaker data (batch fetched)
+    pb.collection('speakers').getFullList.mockResolvedValue([
+      {
+        id: 'spk1',
+        email: 'speaker@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        company: 'TechCo',
+        jobTitle: 'Engineer',
+        bio: 'A bio',
+        photoUrl: 'https://photo.url',
+        twitter: '@jane',
+        linkedin: 'https://linkedin.com/jane',
+        github: 'janedoe',
+        city: 'Lyon',
+        country: 'France'
+      }
+    ])
 
     // No existing contact
     pb.collection('contacts').getList.mockResolvedValue({ items: [] })
@@ -164,21 +166,23 @@ describe('createSyncContactsUseCase', () => {
 
     pb.collection('talks').getFullList.mockResolvedValue([{ id: 'talk1', speakerIds: ['spk1'] }])
 
-    pb.collection('speakers').getOne.mockResolvedValue({
-      id: 'spk1',
-      email: 'speaker@example.com',
-      firstName: 'Jane',
-      lastName: 'Doe',
-      company: 'NewCo',
-      jobTitle: 'CTO',
-      bio: '',
-      photoUrl: '',
-      twitter: '',
-      linkedin: '',
-      github: '',
-      city: 'Lyon',
-      country: 'France'
-    })
+    pb.collection('speakers').getFullList.mockResolvedValue([
+      {
+        id: 'spk1',
+        email: 'speaker@example.com',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        company: 'NewCo',
+        jobTitle: 'CTO',
+        bio: '',
+        photoUrl: '',
+        twitter: '',
+        linkedin: '',
+        github: '',
+        city: 'Lyon',
+        country: 'France'
+      }
+    ])
 
     // Existing contact with some fields filled, some empty
     pb.collection('contacts').getList.mockResolvedValue({
@@ -238,21 +242,23 @@ describe('createSyncContactsUseCase', () => {
       .getFullList.mockResolvedValueOnce([{ id: 'talk1', speakerIds: ['spk1'] }]) // ed1
       .mockResolvedValueOnce([]) // ed2
 
-    pb.collection('speakers').getOne.mockResolvedValue({
-      id: 'spk1',
-      email: 'shared@example.com',
-      firstName: 'Alice',
-      lastName: 'Wonder',
-      company: '',
-      jobTitle: '',
-      bio: '',
-      photoUrl: '',
-      twitter: '',
-      linkedin: '',
-      github: '',
-      city: '',
-      country: ''
-    })
+    pb.collection('speakers').getFullList.mockResolvedValue([
+      {
+        id: 'spk1',
+        email: 'shared@example.com',
+        firstName: 'Alice',
+        lastName: 'Wonder',
+        company: '',
+        jobTitle: '',
+        bio: '',
+        photoUrl: '',
+        twitter: '',
+        linkedin: '',
+        github: '',
+        city: '',
+        country: ''
+      }
+    ])
 
     // First call: no existing contact (ed1 speaker sync)
     // Second call: contact exists (ed1 edition link check already created it)
@@ -310,21 +316,23 @@ describe('createSyncContactsUseCase', () => {
     // Speaker
     pb.collection('talks').getFullList.mockResolvedValue([{ id: 'talk1', speakerIds: ['spk1'] }])
 
-    pb.collection('speakers').getOne.mockResolvedValue({
-      id: 'spk1',
-      email: 'both@example.com',
-      firstName: 'Both',
-      lastName: 'Roles',
-      company: '',
-      jobTitle: '',
-      bio: '',
-      photoUrl: '',
-      twitter: '',
-      linkedin: '',
-      github: '',
-      city: '',
-      country: ''
-    })
+    pb.collection('speakers').getFullList.mockResolvedValue([
+      {
+        id: 'spk1',
+        email: 'both@example.com',
+        firstName: 'Both',
+        lastName: 'Roles',
+        company: '',
+        jobTitle: '',
+        bio: '',
+        photoUrl: '',
+        twitter: '',
+        linkedin: '',
+        github: '',
+        city: '',
+        country: ''
+      }
+    ])
 
     // Contact already exists for both calls
     pb.collection('contacts').getList.mockResolvedValue({
@@ -385,10 +393,9 @@ describe('createSyncContactsUseCase', () => {
       { id: 'talk1', speakerIds: ['spk1', 'spk2'] }
     ])
 
-    // First speaker fails, second succeeds
-    pb.collection('speakers')
-      .getOne.mockRejectedValueOnce(new Error('Speaker not found'))
-      .mockResolvedValueOnce({
+    // Batch fetch returns only spk2 (spk1 not found)
+    pb.collection('speakers').getFullList.mockResolvedValue([
+      {
         id: 'spk2',
         email: 'ok@example.com',
         firstName: 'Ok',
@@ -402,7 +409,8 @@ describe('createSyncContactsUseCase', () => {
         github: '',
         city: '',
         country: ''
-      })
+      }
+    ])
 
     // For the successful speaker
     pb.collection('contacts').getList.mockResolvedValue({ items: [] })
@@ -429,37 +437,42 @@ describe('createSyncContactsUseCase', () => {
       .getFullList.mockResolvedValueOnce([{ id: 'talk1', speakerIds: ['spk1'] }])
       .mockResolvedValueOnce([{ id: 'talk2', speakerIds: ['spk2'] }])
 
+    // Each edition batch-fetches its speakers separately
     pb.collection('speakers')
-      .getOne.mockResolvedValueOnce({
-        id: 'spk1',
-        email: 'speaker1@example.com',
-        firstName: 'Speaker',
-        lastName: 'One',
-        company: '',
-        jobTitle: '',
-        bio: '',
-        photoUrl: '',
-        twitter: '',
-        linkedin: '',
-        github: '',
-        city: '',
-        country: ''
-      })
-      .mockResolvedValueOnce({
-        id: 'spk2',
-        email: 'speaker2@example.com',
-        firstName: 'Speaker',
-        lastName: 'Two',
-        company: '',
-        jobTitle: '',
-        bio: '',
-        photoUrl: '',
-        twitter: '',
-        linkedin: '',
-        github: '',
-        city: '',
-        country: ''
-      })
+      .getFullList.mockResolvedValueOnce([
+        {
+          id: 'spk1',
+          email: 'speaker1@example.com',
+          firstName: 'Speaker',
+          lastName: 'One',
+          company: '',
+          jobTitle: '',
+          bio: '',
+          photoUrl: '',
+          twitter: '',
+          linkedin: '',
+          github: '',
+          city: '',
+          country: ''
+        }
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'spk2',
+          email: 'speaker2@example.com',
+          firstName: 'Speaker',
+          lastName: 'Two',
+          company: '',
+          jobTitle: '',
+          bio: '',
+          photoUrl: '',
+          twitter: '',
+          linkedin: '',
+          github: '',
+          city: '',
+          country: ''
+        }
+      ])
 
     // No existing contacts
     pb.collection('contacts').getList.mockResolvedValue({ items: [] })

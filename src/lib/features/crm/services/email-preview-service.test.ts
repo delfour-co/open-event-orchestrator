@@ -379,20 +379,20 @@ describe('email-preview-service', () => {
         { id: 'c2', firstName: 'Bob', email: 'bob@test.com' }
       ]
 
-      let campaignFetched = false
-
       vi.mocked(mockPb.collection).mockImplementation(
         (name) =>
           ({
-            getOne: vi.fn().mockImplementation((id: string) => {
-              if (name === 'email_campaigns' && !campaignFetched) {
-                campaignFetched = true
+            getOne: vi.fn().mockImplementation(() => {
+              if (name === 'email_campaigns') {
                 return Promise.resolve(mockCampaign)
               }
-              if (name === 'contacts') {
-                return Promise.resolve(contacts.find((c) => c.id === id))
-              }
               return Promise.reject(new Error('Unknown'))
+            }),
+            getFullList: vi.fn().mockImplementation(() => {
+              if (name === 'contacts') {
+                return Promise.resolve(contacts)
+              }
+              return Promise.resolve([])
             })
           }) as never
       )

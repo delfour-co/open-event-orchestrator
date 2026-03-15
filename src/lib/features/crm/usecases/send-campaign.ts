@@ -40,14 +40,20 @@ export const createSendCampaignUseCase = (pb: PocketBase) => {
         filter: safeFilter`eventId = ${campaign.eventId as string}`
       })
 
-      // Filter contacts with marketing consent
+      // Filter contacts with marketing consent (batch fetch)
+      const contactIds = contacts.map((c) => c.id as string)
       const contactsWithConsent: Array<Record<string, unknown>> = []
-      for (const contact of contacts) {
-        const consents = await pb.collection('consents').getList(1, 1, {
-          filter: safeFilter`contactId = ${contact.id as string} && type = ${'marketing_email'} && status = ${'granted'}`
+      if (contactIds.length > 0) {
+        const consentFilter = contactIds.map((id) => safeFilter`contactId = ${id}`).join(' || ')
+        const allConsents = await pb.collection('consents').getFullList({
+          filter: `(${consentFilter}) && type = "marketing_email" && status = "granted"`,
+          fields: 'contactId'
         })
-        if (consents.items.length > 0) {
-          contactsWithConsent.push(contact)
+        const consentedContactIds = new Set(allConsents.map((c) => c.contactId as string))
+        for (const contact of contacts) {
+          if (consentedContactIds.has(contact.id as string)) {
+            contactsWithConsent.push(contact)
+          }
         }
       }
 

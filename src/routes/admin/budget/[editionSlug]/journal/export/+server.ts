@@ -41,6 +41,7 @@ const formatAmount = (amount: number | null): string => {
   }).format(amount)
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: export handler with multiple format branches and filter parsing
 export const GET: RequestHandler = async ({ params, locals, url }) => {
   const { editionSlug } = params
   const format = url.searchParams.get('format') || 'csv'
@@ -73,16 +74,24 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   const auditRepo = createAuditLogRepository(locals.pb)
   const logs = await auditRepo.findAllByEdition(editionId, filters)
 
-  // Fetch user emails
+  // Fetch user emails in batch
   const userIds = [...new Set(logs.map((l) => l.userId).filter(Boolean))] as string[]
   const userEmails = new Map<string, string>()
 
-  for (const userId of userIds) {
+  if (userIds.length > 0) {
+    const filter = userIds.map((id) => `id="${id}"`).join(' || ')
     try {
-      const user = await locals.pb.collection('users').getOne(userId)
-      userEmails.set(userId, (user.email as string) || 'Unknown')
+      const users = await locals.pb.collection('users').getFullList({ filter })
+      for (const user of users) {
+        userEmails.set(user.id, (user.email as string) || 'Unknown')
+      }
     } catch {
-      userEmails.set(userId, 'Unknown')
+      // Fallback: mark all as unknown
+    }
+    for (const userId of userIds) {
+      if (!userEmails.has(userId)) {
+        userEmails.set(userId, 'Unknown')
+      }
     }
   }
 

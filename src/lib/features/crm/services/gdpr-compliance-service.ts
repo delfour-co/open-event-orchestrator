@@ -532,48 +532,44 @@ export function createGdprComplianceService(pb: PocketBase): GdprComplianceServi
           ipAddress
         })
 
-        // Delete related records
-        const consents = await pb.collection('consents').getFullList({
-          filter: safeFilter`contactId = ${contactId}`,
-          fields: 'id'
-        })
-        for (const consent of consents) {
-          await pb.collection('consents').delete(consent.id)
-          deletedRecords.consents++
-        }
-
-        const activities = await pb.collection('contact_activities').getFullList({
-          filter: safeFilter`contactId = ${contactId}`,
-          fields: 'id'
-        })
-        for (const activity of activities) {
-          await pb.collection('contact_activities').delete(activity.id)
-          deletedRecords.activities++
-        }
-
-        const preferences = await pb.collection('communication_preferences').getFullList({
-          filter: safeFilter`contactId = ${contactId}`,
-          fields: 'id'
-        })
-        for (const pref of preferences) {
-          await pb.collection('communication_preferences').delete(pref.id)
-          deletedRecords.preferences++
-        }
-
-        // Keep audit logs for legal compliance but anonymize
-        const auditLogs = await pb.collection('consent_audit_logs').getFullList({
-          filter: safeFilter`contactId = ${contactId}`,
-          fields: 'id'
-        })
-        for (const log of auditLogs) {
-          await pb.collection('consent_audit_logs').update(log.id, {
-            contactId: `deleted_${contactId.substring(0, 8)}`,
-            ipAddress: '',
-            userAgent: '',
-            metadata: { deleted: true }
+        // Delete related records in parallel batches
+        const [consents, activities, preferences, auditLogs] = await Promise.all([
+          pb.collection('consents').getFullList({
+            filter: safeFilter`contactId = ${contactId}`,
+            fields: 'id'
+          }),
+          pb.collection('contact_activities').getFullList({
+            filter: safeFilter`contactId = ${contactId}`,
+            fields: 'id'
+          }),
+          pb.collection('communication_preferences').getFullList({
+            filter: safeFilter`contactId = ${contactId}`,
+            fields: 'id'
+          }),
+          pb.collection('consent_audit_logs').getFullList({
+            filter: safeFilter`contactId = ${contactId}`,
+            fields: 'id'
           })
-          deletedRecords.auditLogs++
-        }
+        ])
+
+        await Promise.all([
+          ...consents.map((consent) => pb.collection('consents').delete(consent.id)),
+          ...activities.map((activity) => pb.collection('contact_activities').delete(activity.id)),
+          ...preferences.map((pref) => pb.collection('communication_preferences').delete(pref.id)),
+          ...auditLogs.map((log) =>
+            pb.collection('consent_audit_logs').update(log.id, {
+              contactId: `deleted_${contactId.substring(0, 8)}`,
+              ipAddress: '',
+              userAgent: '',
+              metadata: { deleted: true }
+            })
+          )
+        ])
+
+        deletedRecords.consents += consents.length
+        deletedRecords.activities += activities.length
+        deletedRecords.preferences += preferences.length
+        deletedRecords.auditLogs += auditLogs.length
 
         // Delete contact
         await pb.collection('contacts').delete(contactId)
@@ -655,12 +651,15 @@ export function createGdprComplianceService(pb: PocketBase): GdprComplianceServi
           filter: safeFilter`contactId = ${contactId} && type = "marketing_email"`
         })
 
-        for (const consent of consents) {
-          await pb.collection('consents').update(consent.id, {
-            status: 'withdrawn',
-            withdrawnAt: new Date().toISOString()
-          })
-        }
+        const withdrawnAt = new Date().toISOString()
+        await Promise.all(
+          consents.map((consent) =>
+            pb.collection('consents').update(consent.id, {
+              status: 'withdrawn',
+              withdrawnAt
+            })
+          )
+        )
 
         return { success: true }
       } catch (error) {

@@ -231,9 +231,9 @@ export function createSuppressionListService(pb: PocketBase): SuppressionListSer
 
         const records = await pb.collection('suppression_list').getFullList({ filter })
 
-        for (const record of records) {
-          await pb.collection('suppression_list').delete(record.id)
-        }
+        await Promise.all(
+          records.map((record) => pb.collection('suppression_list').delete(record.id))
+        )
 
         return records.length > 0
       } catch {

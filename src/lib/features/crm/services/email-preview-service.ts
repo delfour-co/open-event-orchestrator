@@ -223,10 +223,17 @@ export const createEmailPreviewService = (
     const campaign = await pb.collection('email_campaigns').getOne(campaignId)
     const fallbacks = getDefaultFallbacks()
 
+    // Batch fetch all contacts
+    const filter = contactIds.map((id) => `id="${id}"`).join(' || ')
+    const contacts =
+      contactIds.length > 0 ? await pb.collection('contacts').getFullList({ filter }) : []
+    const contactMap = new Map(contacts.map((c) => [c.id as string, c]))
+
     const previews: { contactId: string; preview: EmailPreviewData }[] = []
 
     for (const contactId of contactIds) {
-      const contact = await pb.collection('contacts').getOne(contactId)
+      const contact = contactMap.get(contactId)
+      if (!contact) continue
       const contactData = buildContactData(contact)
 
       const preview = buildPreviewData(

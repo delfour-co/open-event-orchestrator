@@ -115,9 +115,7 @@ export const createWebhookDeliveryRepository = (pb: PocketBase) => ({
     const records = await pb.collection(COLLECTION).getFullList({
       filter: safeFilter`webhookId = ${webhookId}`
     })
-    for (const record of records) {
-      await pb.collection(COLLECTION).delete(record.id)
-    }
+    await Promise.all(records.map((record) => pb.collection(COLLECTION).delete(record.id)))
   },
 
   async countByWebhook(

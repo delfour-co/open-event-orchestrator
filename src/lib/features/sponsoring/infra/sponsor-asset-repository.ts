@@ -90,9 +90,7 @@ export const createSponsorAssetRepository = (pb: PocketBase) => ({
 
   async deleteByEditionSponsor(editionSponsorId: string): Promise<void> {
     const assets = await this.findByEditionSponsor(editionSponsorId)
-    for (const asset of assets) {
-      await pb.collection(COLLECTION).delete(asset.id)
-    }
+    await Promise.all(assets.map((asset) => pb.collection(COLLECTION).delete(asset.id)))
   },
 
   getFileUrl(asset: SponsorAsset): string {
