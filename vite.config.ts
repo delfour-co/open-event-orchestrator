@@ -7,9 +7,8 @@ import { svelteTesting } from '@testing-library/svelte/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  ssr: {
-    // svelte-easy-crop needs to be bundled for SSR (uses svelte condition in exports)
-    noExternal: ['svelte-easy-crop']
+  resolve: {
+    conditions: ['svelte']
   },
   plugins: [
     tailwindcss(),
