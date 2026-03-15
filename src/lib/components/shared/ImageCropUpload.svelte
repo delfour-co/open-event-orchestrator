@@ -69,18 +69,23 @@ async function initCropper(): Promise<void> {
   }
   // Dynamic import to avoid SSR issues
   const { default: Cropper } = await import('cropperjs')
+  await import('cropperjs/dist/cropper.min.css')
   cropperInstance = new Cropper(cropperImageEl, {
     aspectRatio,
-    viewMode: 1,
+    viewMode: 2,
     dragMode: 'move',
-    autoCropArea: 1,
-    background: false,
+    autoCropArea: 0.9,
+    background: true,
+    responsive: true,
+    restore: false,
     guides: true,
     center: true,
     highlight: false,
     cropBoxMovable: true,
     cropBoxResizable: true,
-    toggleDragModeOnDblclick: false
+    toggleDragModeOnDblclick: false,
+    minContainerWidth: 200,
+    minContainerHeight: 200
   })
 }
 
@@ -132,11 +137,6 @@ function cancelCrop(): void {
 }
 </script>
 
-<svelte:head>
-  {#if showCropper}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/2.0.0/cropper.min.css" />
-  {/if}
-</svelte:head>
 
 <!-- Hidden form for SvelteKit form action submission -->
 <form
@@ -218,12 +218,12 @@ function cancelCrop(): void {
         </Button>
       </div>
 
-      <div class="relative w-full overflow-hidden rounded-md bg-black" style="height: 500px;">
+      <div class="relative w-full overflow-hidden rounded-md bg-black" style="height: 60vh; max-height: 500px;">
         <img
           bind:this={cropperImageEl}
           src={imageSrc}
           alt="Crop preview"
-          style="max-width: 100%; max-height: 100%; display: block;"
+          style="display: block; width: 100%; height: 100%; object-fit: contain;"
         />
       </div>
 
