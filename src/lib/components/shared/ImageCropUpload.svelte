@@ -3,9 +3,7 @@ import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
 import { Button } from '$lib/components/ui/button'
 import * as m from '$lib/paraglide/messages'
-import { Check, Trash2, Upload, X, ZoomIn } from 'lucide-svelte'
-import Cropper from 'svelte-easy-crop'
-import type { CropArea } from 'svelte-easy-crop'
+import { Check, Trash2, Upload, X } from 'lucide-svelte'
 
 interface Props {
   action: string
@@ -33,12 +31,11 @@ const {
 
 let showCropper = $state(false)
 let imageSrc = $state('')
-let crop = $state({ x: 0, y: 0 })
-let zoom = $state(1)
-let croppedAreaPixels = $state<CropArea | null>(null)
 let fileInput: HTMLInputElement
 let hiddenFileInput: HTMLInputElement
 let uploadForm: HTMLFormElement
+let cropperImageEl: HTMLImageElement
+let cropperInstance: unknown = null
 let isUploading = $state(false)
 
 function onFileSelect(e: Event): void {
@@ -55,44 +52,50 @@ function onFileSelect(e: Event): void {
   reader.onload = () => {
     imageSrc = reader.result as string
     showCropper = true
+    // Initialize cropperjs after the image element is rendered
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => initCropper())
+    })
   }
   reader.readAsDataURL(file)
-
-  // Reset input so same file can be re-selected
   input.value = ''
 }
 
-function onCropComplete(detail: { percent: CropArea; pixels: CropArea }): void {
-  croppedAreaPixels = detail.pixels
+async function initCropper(): Promise<void> {
+  if (!cropperImageEl) return
+  // Destroy previous instance
+  if (cropperInstance) {
+    ;(cropperInstance as { destroy: () => void }).destroy()
+  }
+  // Dynamic import to avoid SSR issues
+  const { default: Cropper } = await import('cropperjs')
+  cropperInstance = new Cropper(cropperImageEl, {
+    aspectRatio,
+    viewMode: 1,
+    dragMode: 'move',
+    autoCropArea: 1,
+    background: false,
+    guides: true,
+    center: true,
+    highlight: false,
+    cropBoxMovable: true,
+    cropBoxResizable: true,
+    toggleDragModeOnDblclick: false
+  })
 }
 
 async function confirmCrop(): Promise<void> {
-  if (!croppedAreaPixels || !imageSrc) return
+  if (!cropperInstance) return
   isUploading = true
 
   try {
-    const image = new Image()
-    image.src = imageSrc
-    await new Promise((resolve) => {
-      image.onload = resolve
+    const cropper = cropperInstance as {
+      getCroppedCanvas: (options?: Record<string, unknown>) => HTMLCanvasElement
+    }
+    const canvas = cropper.getCroppedCanvas({
+      maxWidth: 2048,
+      maxHeight: 2048
     })
-
-    const canvas = document.createElement('canvas')
-    canvas.width = croppedAreaPixels.width
-    canvas.height = croppedAreaPixels.height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.drawImage(
-      image,
-      croppedAreaPixels.x,
-      croppedAreaPixels.y,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height,
-      0,
-      0,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height
-    )
 
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
@@ -120,12 +123,20 @@ async function confirmCrop(): Promise<void> {
 }
 
 function cancelCrop(): void {
+  if (cropperInstance) {
+    ;(cropperInstance as { destroy: () => void }).destroy()
+    cropperInstance = null
+  }
   showCropper = false
   imageSrc = ''
-  crop = { x: 0, y: 0 }
-  zoom = 1
 }
 </script>
+
+<svelte:head>
+  {#if showCropper}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/2.0.0/cropper.min.css" />
+  {/if}
+</svelte:head>
 
 <!-- Hidden form for SvelteKit form action submission -->
 <form
@@ -137,10 +148,12 @@ function cancelCrop(): void {
     isUploading = true
     return async ({ update }) => {
       isUploading = false
+      if (cropperInstance) {
+        (cropperInstance as { destroy: () => void }).destroy()
+        cropperInstance = null
+      }
       showCropper = false
       imageSrc = ''
-      crop = { x: 0, y: 0 }
-      zoom = 1
       await update()
       await invalidateAll()
     }
@@ -205,27 +218,13 @@ function cancelCrop(): void {
         </Button>
       </div>
 
-      <div class="relative h-80 w-full overflow-hidden rounded-md bg-black">
-        <Cropper
-          image={imageSrc}
-          bind:crop
-          bind:zoom
-          aspect={aspectRatio}
-          oncropcomplete={onCropComplete}
+      <div class="relative w-full overflow-hidden rounded-md bg-black" style="max-height: 400px;">
+        <img
+          bind:this={cropperImageEl}
+          src={imageSrc}
+          alt="Crop preview"
+          style="max-width: 100%; display: block;"
         />
-      </div>
-
-      <div class="mt-4 flex items-center gap-4">
-        <ZoomIn class="h-4 w-4 text-muted-foreground" />
-        <input
-          type="range"
-          min={1}
-          max={3}
-          step={0.1}
-          bind:value={zoom}
-          class="flex-1"
-        />
-        <span class="text-sm text-muted-foreground">{zoom.toFixed(1)}x</span>
       </div>
 
       <div class="mt-4 flex justify-end gap-2">
