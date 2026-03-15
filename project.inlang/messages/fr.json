@@ -3293,5 +3293,19 @@
   "admin_settings_oauth_save": "Enregistrer les paramètres OAuth",
   "admin_settings_oauth_saved": "Paramètres OAuth enregistrés avec succès.",
   "admin_settings_status_active": "Actif",
-  "admin_settings_status_inactive": "Inactif"
+  "admin_settings_status_inactive": "Inactif",
+  "admin_settings_oauth_pb_auth_title": "Authentification PocketBase",
+  "admin_settings_oauth_pb_auth_description": "Entrez vos identifiants superuser PocketBase pour appliquer les modifications OAuth. Vos identifiants ne sont pas stockés.",
+  "admin_settings_oauth_pb_auth_email": "Email superuser",
+  "admin_settings_oauth_pb_auth_password": "Mot de passe superuser",
+  "admin_settings_oauth_pb_auth_confirm": "Confirmer et enregistrer",
+  "admin_settings_oauth_pb_auth_cancel": "Annuler",
+  "admin_settings_general_title": "Application",
+  "admin_settings_general_description": "Paramètres généraux de l'application.",
+  "admin_settings_general_app_name": "Nom de l'application",
+  "admin_settings_general_app_name_hint": "Affiché dans les e-mails et les pages publiques.",
+  "admin_settings_general_app_url": "URL de l'application",
+  "admin_settings_general_app_url_hint": "URL de base de l'application (ex : https://monapp.com).",
+  "admin_settings_general_save": "Enregistrer",
+  "admin_settings_general_saved": "Paramètres enregistrés avec succès."
 }

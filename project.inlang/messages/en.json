@@ -3293,5 +3293,19 @@
   "admin_settings_oauth_save": "Save OAuth Settings",
   "admin_settings_oauth_saved": "OAuth settings saved successfully.",
   "admin_settings_status_active": "Active",
-  "admin_settings_status_inactive": "Inactive"
+  "admin_settings_status_inactive": "Inactive",
+  "admin_settings_oauth_pb_auth_title": "PocketBase Authentication",
+  "admin_settings_oauth_pb_auth_description": "Enter your PocketBase superuser credentials to apply OAuth changes. Your credentials are not stored.",
+  "admin_settings_oauth_pb_auth_email": "Superuser Email",
+  "admin_settings_oauth_pb_auth_password": "Superuser Password",
+  "admin_settings_oauth_pb_auth_confirm": "Confirm & Save",
+  "admin_settings_oauth_pb_auth_cancel": "Cancel",
+  "admin_settings_general_title": "Application",
+  "admin_settings_general_description": "General application settings.",
+  "admin_settings_general_app_name": "Application Name",
+  "admin_settings_general_app_name_hint": "Displayed in emails and public pages.",
+  "admin_settings_general_app_url": "Application URL",
+  "admin_settings_general_app_url_hint": "Base URL of the application (e.g., https://myapp.com).",
+  "admin_settings_general_save": "Save Settings",
+  "admin_settings_general_saved": "Settings saved successfully."
 }

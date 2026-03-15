@@ -19,8 +19,28 @@ const { data, form }: Props = $props()
 let oauth2Enabled = $state(data.oauth2Enabled)
 let showGoogleSecret = $state(false)
 let showGithubSecret = $state(false)
+let showSuperuserModal = $state(false)
+let pbAdminEmail = $state('')
+let pbAdminPassword = $state('')
+let formElement: HTMLFormElement
 
 const isActive = $derived(data.oauth2Enabled && (data.google.enabled || data.github.enabled))
+
+function handleSave(e: Event) {
+  e.preventDefault()
+  showSuperuserModal = true
+}
+
+function confirmSave() {
+  showSuperuserModal = false
+  formElement.requestSubmit()
+}
+
+function cancelModal() {
+  showSuperuserModal = false
+  pbAdminEmail = ''
+  pbAdminPassword = ''
+}
 </script>
 
 <svelte:head>
@@ -58,7 +78,11 @@ const isActive = $derived(data.oauth2Enabled && (data.google.enabled || data.git
 		</div>
 	{/if}
 
-	<form method="POST" action="?/saveOAuth" use:enhance class="space-y-6">
+	<form bind:this={formElement} method="POST" action="?/saveOAuth" use:enhance class="space-y-6">
+		<!-- Hidden fields for PB superuser credentials -->
+		<input type="hidden" name="pbAdminEmail" value={pbAdminEmail} />
+		<input type="hidden" name="pbAdminPassword" value={pbAdminPassword} />
+
 		<!-- Global OAuth2 toggle -->
 		<div class="flex items-center justify-between rounded-lg border p-4">
 			<div>
@@ -258,46 +282,37 @@ const isActive = $derived(data.oauth2Enabled && (data.google.enabled || data.git
 			</Card.Content>
 		</Card.Root>
 
-		<!-- PB Superuser Confirmation -->
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="flex items-center gap-2">
-					<Key class="h-5 w-5" />
-					PocketBase Superuser
-				</Card.Title>
-				<Card.Description>
-					Enter your PocketBase superuser password to sync OAuth providers to PocketBase. This is required for the OAuth flow to work. Your password is not stored.
-				</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-4">
-				<div class="space-y-2">
-					<Label for="pbAdminEmail">PB Superuser Email</Label>
-					<Input
-						id="pbAdminEmail"
-						name="pbAdminEmail"
-						type="email"
-						placeholder="admin@pocketbase.local"
-						required
-					/>
-				</div>
-				<div class="space-y-2">
-					<Label for="pbAdminPassword">PB Superuser Password</Label>
-					<Input
-						id="pbAdminPassword"
-						name="pbAdminPassword"
-						type="password"
-						placeholder="Required to apply changes"
-						required
-					/>
-				</div>
-			</Card.Content>
-		</Card.Root>
-
 		<div class="flex justify-end">
-			<Button type="submit">
+			<Button type="button" onclick={handleSave}>
 				<Check class="mr-2 h-4 w-4" />
 				{m.admin_settings_oauth_save()}
 			</Button>
 		</div>
 	</form>
+
+	<!-- Superuser credentials modal -->
+	{#if showSuperuserModal}
+		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+			<Card.Root class="w-full max-w-md">
+				<Card.Header>
+					<Card.Title>{m.admin_settings_oauth_pb_auth_title()}</Card.Title>
+					<Card.Description>{m.admin_settings_oauth_pb_auth_description()}</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-4">
+					<div class="space-y-2">
+						<Label>{m.admin_settings_oauth_pb_auth_email()}</Label>
+						<Input bind:value={pbAdminEmail} type="email" placeholder="admin@pocketbase.local" />
+					</div>
+					<div class="space-y-2">
+						<Label>{m.admin_settings_oauth_pb_auth_password()}</Label>
+						<Input bind:value={pbAdminPassword} type="password" />
+					</div>
+				</Card.Content>
+				<Card.Footer class="flex justify-end gap-2">
+					<Button variant="ghost" onclick={cancelModal}>{m.admin_settings_oauth_pb_auth_cancel()}</Button>
+					<Button onclick={confirmSave} disabled={!pbAdminEmail || !pbAdminPassword}>{m.admin_settings_oauth_pb_auth_confirm()}</Button>
+				</Card.Footer>
+			</Card.Root>
+		</div>
+	{/if}
 </div>
