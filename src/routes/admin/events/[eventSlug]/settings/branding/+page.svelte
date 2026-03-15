@@ -1,12 +1,13 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
+import { ImageCropUpload } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
-import { Loader2, Palette, Trash2, Upload } from 'lucide-svelte'
+import { Loader2, Palette } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -17,8 +18,6 @@ interface Props {
 const { data, form }: Props = $props()
 
 let isSubmitting = $state(false)
-let isUploadingLogo = $state(false)
-let isUploadingBanner = $state(false)
 </script>
 
 {#if form?.error}
@@ -45,134 +44,31 @@ let isUploadingBanner = $state(false)
     <!-- Logo Upload -->
     <div class="space-y-2">
       <Label>{m.admin_event_branding_logo()}</Label>
-      <div class="flex items-center gap-4">
-        {#if data.event.logoUrl}
-          <img
-            src={data.event.logoUrl}
-            alt="Event logo"
-            class="h-16 w-16 rounded-md border object-cover"
-          />
-        {:else}
-          <div class="flex h-16 w-16 items-center justify-center rounded-md border bg-muted">
-            <Palette class="h-6 w-6 text-muted-foreground" />
-          </div>
-        {/if}
-        <div class="flex gap-2">
-          <form
-            method="POST"
-            action="?/uploadLogo"
-            enctype="multipart/form-data"
-            use:enhance={() => {
-              isUploadingLogo = true
-              return async ({ update }) => {
-                isUploadingLogo = false
-                await update()
-                await invalidateAll()
-              }
-            }}
-          >
-            <label class="cursor-pointer">
-              <input type="file" name="logo" accept="image/*" class="hidden" onchange={(e) => {
-                const form = (e.target as HTMLInputElement).closest('form')
-                if (form) form.requestSubmit()
-              }} />
-              <Button type="button" variant="outline" size="sm" disabled={isUploadingLogo} onclick={(e) => {
-                const input = (e.target as HTMLElement).closest('label')?.querySelector('input[type="file"]') as HTMLInputElement
-                input?.click()
-              }}>
-                {#if isUploadingLogo}
-                  <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                {:else}
-                  <Upload class="mr-2 h-4 w-4" />
-                {/if}
-                {m.admin_event_branding_upload_logo()}
-              </Button>
-            </label>
-          </form>
-          {#if data.event.logo}
-            <form
-              method="POST"
-              action="?/removeLogo"
-              use:enhance={() => {
-                return async ({ update }) => {
-                  await update()
-                  await invalidateAll()
-                }
-              }}
-            >
-              <Button type="submit" variant="ghost" size="sm">
-                <Trash2 class="mr-2 h-4 w-4" />
-                {m.admin_event_branding_remove_logo()}
-              </Button>
-            </form>
-          {/if}
-        </div>
-      </div>
+      <ImageCropUpload
+        action="?/uploadLogo"
+        aspectRatio={1}
+        label={m.admin_event_branding_upload_logo()}
+        removeLabel={m.admin_event_branding_remove_logo()}
+        name="logo"
+        currentImageUrl={data.event.logoUrl}
+        removeAction={data.event.logo ? '?/removeLogo' : null}
+      />
     </div>
 
     <!-- Banner Upload -->
     <div class="space-y-2">
       <Label>{m.admin_event_branding_banner()}</Label>
       <p class="text-xs text-muted-foreground">{m.admin_event_branding_banner_description()}</p>
-      <div class="space-y-3">
-        {#if data.event.bannerUrl}
-          <img
-            src={data.event.bannerUrl}
-            alt="Event banner"
-            class="h-32 w-full rounded-md border object-cover"
-          />
-        {/if}
-        <div class="flex gap-2">
-          <form
-            method="POST"
-            action="?/uploadBanner"
-            enctype="multipart/form-data"
-            use:enhance={() => {
-              isUploadingBanner = true
-              return async ({ update }) => {
-                isUploadingBanner = false
-                await update()
-                await invalidateAll()
-              }
-            }}
-          >
-            <label class="cursor-pointer">
-              <input type="file" name="banner" accept="image/*" class="hidden" onchange={(e) => {
-                const form = (e.target as HTMLInputElement).closest('form')
-                if (form) form.requestSubmit()
-              }} />
-              <Button type="button" variant="outline" size="sm" disabled={isUploadingBanner} onclick={(e) => {
-                const input = (e.target as HTMLElement).closest('label')?.querySelector('input[type="file"]') as HTMLInputElement
-                input?.click()
-              }}>
-                {#if isUploadingBanner}
-                  <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                {:else}
-                  <Upload class="mr-2 h-4 w-4" />
-                {/if}
-                {m.admin_event_branding_upload_banner()}
-              </Button>
-            </label>
-          </form>
-          {#if data.event.banner}
-            <form
-              method="POST"
-              action="?/removeBanner"
-              use:enhance={() => {
-                return async ({ update }) => {
-                  await update()
-                  await invalidateAll()
-                }
-              }}
-            >
-              <Button type="submit" variant="ghost" size="sm">
-                <Trash2 class="mr-2 h-4 w-4" />
-                {m.admin_event_branding_remove_banner()}
-              </Button>
-            </form>
-          {/if}
-        </div>
-      </div>
+      <ImageCropUpload
+        action="?/uploadBanner"
+        aspectRatio={16 / 9}
+        label={m.admin_event_branding_upload_banner()}
+        removeLabel={m.admin_event_branding_remove_banner()}
+        name="banner"
+        currentImageUrl={data.event.bannerUrl}
+        removeAction={data.event.banner ? '?/removeBanner' : null}
+        maxSizeMB={5}
+      />
     </div>
 
     <!-- Colors -->

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { page } from '$app/stores'
-import { Alert, PasswordStrengthIndicator } from '$lib/components/shared'
+import { Alert, ImageCropUpload, PasswordStrengthIndicator } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
@@ -27,7 +27,6 @@ import {
   Smartphone,
   Tablet,
   Trash2,
-  Upload,
   User
 } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
@@ -60,8 +59,6 @@ let showNewPassword = $state(false)
 let showConfirmPassword = $state(false)
 let showDeletePassword = $state(false)
 let newPassword = $state('')
-let avatarInput: HTMLInputElement
-let isUploadingAvatar = $state(false)
 let isRevokingSession = $state<string | null>(null)
 let isRevokingAll = $state(false)
 let isDeletingAccount = $state(false)
@@ -206,49 +203,15 @@ const otherSessions = $derived(data.sessions.filter((s) => s.id !== data.current
 
               <!-- Upload/Remove Actions -->
               <div class="space-y-3">
-                <form
-                  method="POST"
+                <ImageCropUpload
                   action="?/uploadAvatar"
-                  enctype="multipart/form-data"
-                  use:enhance={() => {
-                    isUploadingAvatar = true
-                    return async ({ update }) => {
-                      isUploadingAvatar = false
-                      await update()
-                    }
-                  }}
-                >
-                  <input
-                    bind:this={avatarInput}
-                    type="file"
-                    name="avatar"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    class="hidden"
-                    onchange={(e) => {
-                      const form = (e.target as HTMLInputElement).form
-                      if (form) form.requestSubmit()
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={isUploadingAvatar}
-                    onclick={() => avatarInput.click()}
-                  >
-                    <Upload class="mr-2 h-4 w-4" />
-                    {isUploadingAvatar ? m.profile_uploading() : m.profile_upload_avatar()}
-                  </Button>
-                </form>
-
-                {#if data.user.avatarUrl}
-                  <form method="POST" action="?/removeAvatar" use:enhance>
-                    <Button type="submit" variant="ghost" size="sm" class="text-destructive">
-                      <Trash2 class="mr-2 h-4 w-4" />
-                      {m.profile_remove_avatar()}
-                    </Button>
-                  </form>
-                {/if}
+                  aspectRatio={1}
+                  label={m.profile_upload_avatar()}
+                  removeLabel={m.profile_remove_avatar()}
+                  name="avatar"
+                  currentImageUrl={null}
+                  removeAction={data.user.avatarUrl ? '?/removeAvatar' : null}
+                />
 
                 <p class="text-xs text-muted-foreground">
                   {m.profile_avatar_formats()}

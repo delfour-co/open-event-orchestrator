@@ -66,6 +66,9 @@ importers:
       stripe:
         specifier: ^20.3.1
         version: 20.3.1(@types/node@22.19.11)
+      svelte-easy-crop:
+        specifier: ^5.0.0
+        version: 5.0.0(svelte@5.51.3)
       svelte-persisted-store:
         specifier: ^0.12.0
         version: 0.12.0(svelte@5.51.3)
@@ -3019,6 +3022,11 @@ packages:
     peerDependencies:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
+
+  svelte-easy-crop@5.0.0:
+    resolution: {integrity: sha512-niWtner+qYVas6ypIOQ277NKNACVz9qz6wfpEW7t+x5Lhv6nOjpv3S1WhEPO+SnDaW3VZv+0bmm6jVDHK2GMAg==}
+    peerDependencies:
+      svelte: ^5.0.0
 
   svelte-persisted-store@0.12.0:
     resolution: {integrity: sha512-BdBQr2SGSJ+rDWH8/aEV5GthBJDapVP0GP3fuUCA7TjYG5ctcB+O9Mj9ZC0+Jo1oJMfZUd1y9H68NFRR5MyIJA==}
@@ -6087,6 +6095,10 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - picomatch
+
+  svelte-easy-crop@5.0.0(svelte@5.51.3):
+    dependencies:
+      svelte: 5.51.3
 
   svelte-persisted-store@0.12.0(svelte@5.51.3):
     dependencies:

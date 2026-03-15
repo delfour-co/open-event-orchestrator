@@ -1,12 +1,13 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
 import { invalidateAll } from '$app/navigation'
+import { ImageCropUpload } from '$lib/components/shared'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
-import { Loader2, Palette, Trash2, Upload } from 'lucide-svelte'
+import { Loader2, Palette } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {
@@ -44,75 +45,15 @@ let isSubmitting = $state(false)
     <div class="space-y-2">
       <Label>{m.admin_org_branding_logo()}</Label>
       <p class="text-sm text-muted-foreground">{m.admin_org_branding_logo_description()}</p>
-      <div class="flex items-center gap-4">
-        {#if data.logoUrl}
-          <img
-            src={data.logoUrl}
-            alt="Organization logo"
-            class="h-16 w-16 rounded-md border object-contain"
-          />
-        {:else}
-          <div class="flex h-16 w-16 items-center justify-center rounded-md border bg-muted text-muted-foreground">
-            <Palette class="h-8 w-8" />
-          </div>
-        {/if}
-        <div class="flex gap-2">
-          <form
-            method="POST"
-            action="?/uploadLogo"
-            enctype="multipart/form-data"
-            use:enhance={() => {
-              isSubmitting = true
-              return async ({ update }) => {
-                isSubmitting = false
-                await update()
-                await invalidateAll()
-              }
-            }}
-          >
-            <input
-              type="file"
-              name="logo"
-              id="logo-upload"
-              accept="image/jpeg,image/png,image/svg+xml,image/webp"
-              class="hidden"
-              onchange={(e) => {
-                const form = (e.target as HTMLInputElement).closest('form')
-                if (form) form.requestSubmit()
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={isSubmitting}
-              onclick={() => document.getElementById('logo-upload')?.click()}
-            >
-              <Upload class="mr-2 h-4 w-4" />
-              {m.admin_org_branding_upload_logo()}
-            </Button>
-          </form>
-          {#if data.organization.logo}
-            <form
-              method="POST"
-              action="?/removeLogo"
-              use:enhance={() => {
-                isSubmitting = true
-                return async ({ update }) => {
-                  isSubmitting = false
-                  await update()
-                  await invalidateAll()
-                }
-              }}
-            >
-              <Button type="submit" variant="ghost" size="sm" class="text-destructive hover:text-destructive" disabled={isSubmitting}>
-                <Trash2 class="mr-2 h-4 w-4" />
-                {m.admin_org_branding_remove_logo()}
-              </Button>
-            </form>
-          {/if}
-        </div>
-      </div>
+      <ImageCropUpload
+        action="?/uploadLogo"
+        aspectRatio={1}
+        label={m.admin_org_branding_upload_logo()}
+        removeLabel={m.admin_org_branding_remove_logo()}
+        name="logo"
+        currentImageUrl={data.logoUrl}
+        removeAction={data.organization.logo ? '?/removeLogo' : null}
+      />
     </div>
 
     <!-- Colors -->

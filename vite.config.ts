@@ -1,10 +1,21 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { svelteTesting } from '@testing-library/svelte/vite'
 import { defineConfig } from 'vitest/config'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 export default defineConfig({
+  resolve: {
+    alias: {
+      // svelte-easy-crop only exports a 'svelte' condition, which the SSR build
+      // commonjs resolver does not recognize. Alias to the dist entry directly.
+      'svelte-easy-crop': path.resolve(__dirname, 'node_modules/svelte-easy-crop/dist/index.js')
+    }
+  },
   plugins: [
     tailwindcss(),
     sveltekit(),
