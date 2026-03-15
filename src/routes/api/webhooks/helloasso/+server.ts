@@ -52,11 +52,11 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
 
     const event = await provider.parseWebhookEvent({ body, headers })
 
-    console.log(`[helloasso-webhook] Received event: ${event.type} (${event.eventId})`)
+    console.info(`[helloasso-webhook] Received event: ${event.type} (${event.eventId})`)
 
     // Idempotence check
     if (await isAlreadyProcessed(locals.pb, event.eventId)) {
-      console.log(`[helloasso-webhook] Event ${event.eventId} already processed, skipping`)
+      console.info(`[helloasso-webhook] Event ${event.eventId} already processed, skipping`)
       return json({ received: true, duplicate: true })
     }
 
@@ -68,7 +68,7 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
     switch (event.type) {
       case 'checkout.completed': {
         if (isSponsorCheckoutMetadata(event.metadata as Record<string, unknown>)) {
-          console.log('[helloasso-webhook] Routing to sponsor checkout handler')
+          console.info('[helloasso-webhook] Routing to sponsor checkout handler')
           await handleSponsorCheckoutCompleted(
             locals.pb,
             event.metadata as Record<string, unknown>,
@@ -141,7 +141,7 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
       }
 
       case 'payment.refunded': {
-        console.log(`[helloasso-webhook] Payment refunded: ${event.paymentReference || 'unknown'}`)
+        console.info(`[helloasso-webhook] Payment refunded: ${event.paymentReference || 'unknown'}`)
         break
       }
     }

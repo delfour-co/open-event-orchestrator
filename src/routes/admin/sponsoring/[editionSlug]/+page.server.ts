@@ -1,5 +1,5 @@
-import { env } from '$env/dynamic/public'
 import { getNextCreditNoteNumber } from '$lib/features/billing/services/invoice-number-service'
+import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { recordCreditNote } from '$lib/features/budget/services'
 import { createSmtpEmailService } from '$lib/features/cfp/services'
 import type { SponsorStatus } from '$lib/features/sponsoring/domain'
@@ -13,7 +13,6 @@ import {
   createSponsorTokenService
 } from '$lib/features/sponsoring/services'
 import { generateSponsorCreditNotePdf } from '$lib/features/sponsoring/services/sponsor-credit-note-service'
-import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { getSmtpSettings } from '$lib/server/app-settings'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
@@ -366,7 +365,7 @@ export const actions: Actions = {
           const provider = await getPaymentProvider(locals.pb)
           if (provider.type !== 'none') {
             await provider.createRefund(editionSponsor.stripePaymentIntentId)
-            console.log(
+            console.info(
               `[refund-sponsor] Refund created for: ${editionSponsor.stripePaymentIntentId}`
             )
           }
@@ -377,7 +376,7 @@ export const actions: Actions = {
 
       // Update status to refunded
       await editionSponsorRepo.update(id, { status: 'refunded' })
-      console.log(`[refund-sponsor] Status updated to refunded for: ${id}`)
+      console.info(`[refund-sponsor] Status updated to refunded for: ${id}`)
 
       // Get organization info for credit note
       const edition = await locals.pb.collection('editions').getOne(editionSponsor.editionId)
@@ -437,7 +436,7 @@ export const actions: Actions = {
         vatRate,
         seller
       })
-      console.log(`[refund-sponsor] Credit note generated: ${creditNoteNumber}`)
+      console.info(`[refund-sponsor] Credit note generated: ${creditNoteNumber}`)
 
       // Record credit note in budget
       await recordCreditNote({
@@ -467,7 +466,7 @@ export const actions: Actions = {
           eventName,
           pdfBytes
         )
-        console.log(
+        console.info(
           `[refund-sponsor] Refund email: ${refundEmailResult.success ? 'sent' : `failed - ${refundEmailResult.error}`}`
         )
       }
@@ -479,7 +478,7 @@ export const actions: Actions = {
     }
   },
 
-  generatePortalLink: async ({ request, locals, params }) => {
+  generatePortalLink: async ({ request, locals, params, url }) => {
     const formData = await request.formData()
     const editionSponsorId = formData.get('editionSponsorId') as string
 
@@ -489,12 +488,10 @@ export const actions: Actions = {
 
     try {
       const tokenService = createSponsorTokenService(locals.pb)
-      const baseUrl =
-        env.PUBLIC_POCKETBASE_URL?.replace(':8090', ':5173') || 'http://localhost:5173'
       const portalUrl = await tokenService.generatePortalLink(
         editionSponsorId,
         params.editionSlug,
-        baseUrl
+        url.origin
       )
 
       return { success: true, action: 'generatePortalLink', portalUrl }

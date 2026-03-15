@@ -82,7 +82,7 @@ function toggleEquipment(value: string) {
       <Card.Header>
         <div class="flex items-center justify-between">
           <Card.Title>{editingRoom ? m.planning_rooms_edit() : m.planning_rooms_add()}</Card.Title>
-          <Button variant="ghost" size="icon" onclick={cancelRoomForm}>
+          <Button variant="ghost" size="icon" onclick={cancelRoomForm} title={m.action_close()}>
             <X class="h-4 w-4" />
           </Button>
         </div>
@@ -209,12 +209,16 @@ function toggleEquipment(value: string) {
                 {/if}
               </div>
               <div class="flex gap-1">
-                <Button variant="ghost" size="icon" onclick={() => startEditRoom(room)}>
+                <Button variant="ghost" size="icon" onclick={() => startEditRoom(room)} title={m.action_edit()}>
                   <Pencil class="h-4 w-4" />
                 </Button>
-                <form method="POST" action="?/deleteRoom" use:enhance>
+                <form method="POST" action="?/deleteRoom" use:enhance={() => {
+                  if (!confirm('Are you sure you want to delete this room?')) {
+                    return ({ cancel }) => cancel()
+                  }
+                }}>
                   <input type="hidden" name="id" value={room.id} />
-                  <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                  <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive" title={m.action_delete()}>
                     <Trash2 class="h-4 w-4" />
                   </Button>
                 </form>
@@ -223,7 +227,7 @@ function toggleEquipment(value: string) {
           </Card.Header>
           <Card.Content>
             {#if room.capacity}
-              <p class="text-sm text-muted-foreground">Capacity: {room.capacity}</p>
+              <p class="text-sm text-muted-foreground">{m.planning_rooms_capacity()}: {room.capacity}</p>
             {/if}
             {#if room.equipment.length > 0}
               <div class="mt-2 flex flex-wrap gap-1">

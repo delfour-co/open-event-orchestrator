@@ -80,7 +80,8 @@ export interface SpeakerFeedbackService {
 
 export const createSpeakerFeedbackService = (
   pb: PocketBase,
-  emailService: EmailService
+  emailService: EmailService,
+  appBaseUrl = 'http://localhost:5173'
 ): SpeakerFeedbackService => {
   function mapRecordToTemplate(record: RecordModel): FeedbackTemplate {
     return {
@@ -167,12 +168,11 @@ export const createSpeakerFeedbackService = (
       }
     }
 
-    // Build confirmation URL
-    const baseUrl = pb.baseUrl.replace('/api', '').replace(':8090', ':5173')
+    // Build confirmation URL using the app URL passed during service creation
     const confirmationUrl = edition
-      ? `${baseUrl}/cfp/${edition.slug || edition.id}/confirm/${talkId}`
+      ? `${appBaseUrl}/cfp/${edition.slug || edition.id}/confirm/${talkId}`
       : undefined
-    const cfpUrl = edition ? `${baseUrl}/cfp/${edition.slug || edition.id}` : undefined
+    const cfpUrl = edition ? `${appBaseUrl}/cfp/${edition.slug || edition.id}` : undefined
 
     // Format edition dates
     let editionDates: string | undefined

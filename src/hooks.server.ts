@@ -157,6 +157,9 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   // Add security headers
+  // TODO: Add Content-Security-Policy header. SvelteKit uses inline scripts/styles which
+  // require nonce-based CSP. Configure CSP via `svelte.config.js` kit.csp option to
+  // auto-generate nonces, rather than setting a static header here.
   response.headers.set('X-Content-Type-Options', 'nosniff')
   // Allow /app routes to be embedded in iframes from same origin (for admin preview)
   if (event.url.pathname.startsWith('/app/')) {

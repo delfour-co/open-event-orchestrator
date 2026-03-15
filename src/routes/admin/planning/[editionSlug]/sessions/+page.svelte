@@ -146,13 +146,17 @@ function getSlotInfo(slotId: string) {
               </div>
               <div class="flex gap-1">
                 <a href="/admin/planning/{data.edition.slug}">
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" title={m.action_edit()}>
                     <Pencil class="h-4 w-4" />
                   </Button>
                 </a>
-                <form method="POST" action="?/deleteSession" use:enhance>
+                <form method="POST" action="?/deleteSession" use:enhance={() => {
+                  if (!confirm('Are you sure you want to delete this session?')) {
+                    return ({ cancel }) => cancel()
+                  }
+                }}>
                   <input type="hidden" name="id" value={session.id} />
-                  <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                  <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive" title={m.action_delete()}>
                     <Trash2 class="h-4 w-4" />
                   </Button>
                 </form>

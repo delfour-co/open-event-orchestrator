@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { env } from '$env/dynamic/public'
 import { getEmailService } from '$lib/server/app-settings'
+import { getAppUrl } from '$lib/server/app-url'
 import { safeFilter } from '$lib/server/safe-filter'
 import type PocketBase from 'pocketbase'
 import { interpolateTemplate } from '../domain'
@@ -13,7 +13,7 @@ export interface SendCampaignResult {
   errors: Array<{ email: string; error: string }>
 }
 
-export const createSendCampaignUseCase = (pb: PocketBase) => {
+export const createSendCampaignUseCase = (pb: PocketBase, appUrl?: string) => {
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: campaign sending involves multiple sequential steps
   return async (campaignId: string): Promise<SendCampaignResult> => {
     const result: SendCampaignResult = {
@@ -64,8 +64,7 @@ export const createSendCampaignUseCase = (pb: PocketBase) => {
       })
 
       const emailService = await getEmailService(pb)
-      const baseUrl =
-        env.PUBLIC_POCKETBASE_URL?.replace(':8090', ':5173') || 'http://localhost:5173'
+      const baseUrl = appUrl || (await getAppUrl(pb))
 
       for (const contact of contactsWithConsent) {
         try {

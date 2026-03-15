@@ -13,6 +13,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     throw error(401, 'Authentication required')
   }
 
+  // Verify user has sufficient permissions to scan tickets
+  const userRole = locals.pb.authStore.model?.role as string
+  if (!userRole || !['super_admin', 'admin', 'organizer'].includes(userRole)) {
+    throw error(403, 'Insufficient permissions')
+  }
+
   try {
     // Get all valid tickets for offline caching
     const records = await locals.pb.collection('billing_tickets').getFullList({

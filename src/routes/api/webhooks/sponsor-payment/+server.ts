@@ -50,7 +50,7 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
       const metadata = session.metadata as Record<string, unknown> | undefined
 
       if (isSponsorCheckoutMetadata(metadata)) {
-        console.log('Sponsor checkout session expired:', session.id)
+        console.info('Sponsor checkout session expired:', session.id)
       }
     }
 

@@ -95,10 +95,10 @@ async function sendCheckoutEmails(
   }
 ): Promise<void> {
   const smtpSettings = await getSmtpSettings(pb)
-  console.log(`[sponsor-checkout] SMTP enabled: ${smtpSettings.smtpEnabled}`)
+  console.info(`[sponsor-checkout] SMTP enabled: ${smtpSettings.smtpEnabled}`)
 
   if (!smtpSettings.smtpEnabled) {
-    console.log('[sponsor-checkout] SMTP not enabled, skipping emails')
+    console.info('[sponsor-checkout] SMTP not enabled, skipping emails')
     return
   }
 
@@ -129,7 +129,7 @@ async function sendCheckoutEmails(
     portalUrl,
     params.eventName
   )
-  console.log(
+  console.info(
     `[sponsor-checkout] Portal invitation email: ${portalResult.success ? 'sent' : `failed - ${portalResult.error}`}`
   )
 
@@ -164,7 +164,7 @@ async function sendCheckoutEmails(
   })
 
   await editionSponsorRepo.update(params.editionSponsorId, { invoiceNumber })
-  console.log(`[sponsor-checkout] Invoice number: ${invoiceNumber}`)
+  console.info(`[sponsor-checkout] Invoice number: ${invoiceNumber}`)
 
   // Archive PDF in PocketBase
   try {
@@ -185,7 +185,7 @@ async function sendCheckoutEmails(
     pdfBytes,
     portalUrl
   )
-  console.log(
+  console.info(
     `[sponsor-checkout] Invoice email: ${invoiceResult.success ? 'sent' : `failed - ${invoiceResult.error}`}`
   )
 
@@ -208,7 +208,7 @@ export async function handleSponsorCheckoutCompleted(
   paymentIntentId?: string
 ): Promise<void> {
   const metadata = rawMetadata as unknown as SponsorCheckoutMetadata
-  console.log(
+  console.info(
     `[sponsor-checkout] Processing sponsor checkout for "${metadata.companyName}" (edition: ${metadata.editionId}, package: ${metadata.packageId})`
   )
 
@@ -216,7 +216,7 @@ export async function handleSponsorCheckoutCompleted(
     pb,
     metadata.editionId
   )
-  console.log(
+  console.info(
     `[sponsor-checkout] Event: ${eventName}, Organization: ${organizationId}, VAT rate: ${vatRate}%`
   )
 
@@ -226,7 +226,7 @@ export async function handleSponsorCheckoutCompleted(
   if (!pkg) {
     throw new Error(`Package not found: ${metadata.packageId}`)
   }
-  console.log(`[sponsor-checkout] Package found: ${pkg.name} (${pkg.price} ${pkg.currency})`)
+  console.info(`[sponsor-checkout] Package found: ${pkg.name} (${pkg.price} ${pkg.currency})`)
 
   const sponsorRepo = createSponsorRepository(pb)
   const editionSponsorRepo = createEditionSponsorRepository(pb)
@@ -248,7 +248,7 @@ export async function handleSponsorCheckoutCompleted(
     billingCountry: metadata.billingCountry || undefined
   })
 
-  console.log(
+  console.info(
     `[sponsor-checkout] Sponsor created: ${sponsor.name} (${sponsor.id}), legalName="${sponsor.legalName}", vatNumber="${sponsor.vatNumber}", billingAddress="${sponsor.billingAddress}"`
   )
 
@@ -262,7 +262,7 @@ export async function handleSponsorCheckoutCompleted(
     amount: pkg.price,
     poNumber: metadata.poNumber || undefined
   })
-  console.log(
+  console.info(
     `[sponsor-checkout] Edition sponsor created: ${editionSponsor.id} (status: confirmed)`
   )
 
@@ -270,7 +270,7 @@ export async function handleSponsorCheckoutCompleted(
     await editionSponsorRepo.update(editionSponsor.id, {
       stripePaymentIntentId: paymentIntentId
     })
-    console.log(`[sponsor-checkout] Stored payment intent: ${paymentIntentId}`)
+    console.info(`[sponsor-checkout] Stored payment intent: ${paymentIntentId}`)
   }
 
   await sendCheckoutEmails(pb, {
@@ -287,7 +287,7 @@ export async function handleSponsorCheckoutCompleted(
     seller
   })
 
-  console.log(
+  console.info(
     `[sponsor-checkout] Done! Sponsor "${sponsor.name}" (${sponsor.id}) created and confirmed`
   )
 }

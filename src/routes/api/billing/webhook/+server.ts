@@ -51,11 +51,11 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
     const ticketTypeRepo = createTicketTypeRepository(locals.pb)
     const ticketRepo = createTicketRepository(locals.pb)
 
-    console.log(`[billing-webhook] Received event: ${event.type} (${event.id})`)
+    console.info(`[billing-webhook] Received event: ${event.type} (${event.id})`)
 
     // Idempotence check
     if (await isAlreadyProcessed(locals.pb, event.id)) {
-      console.log(`[billing-webhook] Event ${event.id} already processed, skipping`)
+      console.info(`[billing-webhook] Event ${event.id} already processed, skipping`)
       return json({ received: true, duplicate: true })
     }
 
@@ -66,7 +66,7 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
           payment_intent?: string
         }
 
-        console.log(
+        console.info(
           '[billing-webhook] checkout.session.completed metadata:',
           JSON.stringify(session.metadata)
         )
@@ -75,14 +75,14 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
         if (isSponsorCheckoutMetadata(session.metadata)) {
           const sponsorPaymentIntent =
             typeof session.payment_intent === 'string' ? session.payment_intent : undefined
-          console.log('[billing-webhook] Routing to sponsor checkout handler')
+          console.info('[billing-webhook] Routing to sponsor checkout handler')
           await handleSponsorCheckoutCompleted(
             locals.pb,
             session.metadata as Record<string, unknown>,
             url.origin,
             sponsorPaymentIntent
           )
-          console.log('[billing-webhook] Sponsor checkout handler completed successfully')
+          console.info('[billing-webhook] Sponsor checkout handler completed successfully')
           break
         }
 

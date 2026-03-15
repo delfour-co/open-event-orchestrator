@@ -101,7 +101,7 @@ const roomsWithoutAssignments = $derived(() => {
       <Card.Header>
         <div class="flex items-center justify-between">
           <Card.Title>{editingAssignment ? m.planning_staff_edit() : m.planning_staff_add_assignment()}</Card.Title>
-          <Button variant="ghost" size="icon" onclick={cancelAssignmentForm}>
+          <Button variant="ghost" size="icon" onclick={cancelAssignmentForm} title={m.action_close()}>
             <X class="h-4 w-4" />
           </Button>
         </div>
@@ -265,7 +265,7 @@ const roomsWithoutAssignments = $derived(() => {
                 <Card.Title class="text-lg">{room.name}</Card.Title>
                 <Button variant="outline" size="sm" onclick={() => openAssignmentFormForRoom(room.id)}>
                   <Plus class="mr-1 h-3 w-3" />
-                  Add
+                  {m.action_add()}
                 </Button>
               </div>
               {#if room.floor}
@@ -295,12 +295,16 @@ const roomsWithoutAssignments = $derived(() => {
                       {/if}
                     </div>
                     <div class="flex gap-1">
-                      <Button variant="ghost" size="icon" onclick={() => startEditAssignment(assignment)}>
+                      <Button variant="ghost" size="icon" onclick={() => startEditAssignment(assignment)} title={m.action_edit()}>
                         <Pencil class="h-4 w-4" />
                       </Button>
-                      <form method="POST" action="?/deleteRoomAssignment" use:enhance>
+                      <form method="POST" action="?/deleteRoomAssignment" use:enhance={() => {
+                        if (!confirm('Are you sure you want to delete this assignment?')) {
+                          return ({ cancel }) => cancel()
+                        }
+                      }}>
                         <input type="hidden" name="id" value={assignment.id} />
-                        <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                        <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive" title={m.action_delete()}>
                           <Trash2 class="h-4 w-4" />
                         </Button>
                       </form>

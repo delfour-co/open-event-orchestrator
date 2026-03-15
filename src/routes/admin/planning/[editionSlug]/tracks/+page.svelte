@@ -56,7 +56,7 @@ function cancelTrackForm() {
       <Card.Header>
         <div class="flex items-center justify-between">
           <Card.Title>{editingTrack ? m.planning_tracks_edit() : m.planning_tracks_add()}</Card.Title>
-          <Button variant="ghost" size="icon" onclick={cancelTrackForm}>
+          <Button variant="ghost" size="icon" onclick={cancelTrackForm} title={m.action_close()}>
             <X class="h-4 w-4" />
           </Button>
         </div>
@@ -145,12 +145,16 @@ function cancelTrackForm() {
                 <Card.Title>{track.name}</Card.Title>
               </div>
               <div class="flex gap-1">
-                <Button variant="ghost" size="icon" onclick={() => startEditTrack(track)}>
+                <Button variant="ghost" size="icon" onclick={() => startEditTrack(track)} title={m.action_edit()}>
                   <Pencil class="h-4 w-4" />
                 </Button>
-                <form method="POST" action="?/deleteTrack" use:enhance>
+                <form method="POST" action="?/deleteTrack" use:enhance={() => {
+                  if (!confirm('Are you sure you want to delete this track?')) {
+                    return ({ cancel }) => cancel()
+                  }
+                }}>
                   <input type="hidden" name="id" value={track.id} />
-                  <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                  <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive" title={m.action_delete()}>
                     <Trash2 class="h-4 w-4" />
                   </Button>
                 </form>

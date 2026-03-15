@@ -70,7 +70,7 @@ function cancelSlotForm() {
       <Card.Header>
         <div class="flex items-center justify-between">
           <Card.Title>{editingSlot ? m.planning_slots_edit() : m.planning_slots_add()}</Card.Title>
-          <Button variant="ghost" size="icon" onclick={cancelSlotForm}>
+          <Button variant="ghost" size="icon" onclick={cancelSlotForm} title={m.action_close()}>
             <X class="h-4 w-4" />
           </Button>
         </div>
@@ -199,12 +199,16 @@ function cancelSlotForm() {
               </div>
             </div>
             <div class="flex gap-1">
-              <Button variant="ghost" size="icon" onclick={() => startEditSlot(slot)}>
+              <Button variant="ghost" size="icon" onclick={() => startEditSlot(slot)} title={m.action_edit()}>
                 <Pencil class="h-4 w-4" />
               </Button>
-              <form method="POST" action="?/deleteSlot" use:enhance>
+              <form method="POST" action="?/deleteSlot" use:enhance={() => {
+                if (!confirm('Are you sure you want to delete this slot?')) {
+                  return ({ cancel }) => cancel()
+                }
+              }}>
                 <input type="hidden" name="id" value={slot.id} />
-                <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive">
+                <Button type="submit" variant="ghost" size="icon" class="text-destructive hover:text-destructive" title={m.action_delete()}>
                   <Trash2 class="h-4 w-4" />
                 </Button>
               </form>

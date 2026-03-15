@@ -180,7 +180,7 @@ export const actions: Actions = {
     }
   },
 
-  sendCampaign: async ({ request, locals }) => {
+  sendCampaign: async ({ request, locals, url }) => {
     const formData = await request.formData()
     const campaignId = formData.get('campaignId') as string
 
@@ -189,7 +189,7 @@ export const actions: Actions = {
     }
 
     try {
-      const sendCampaign = createSendCampaignUseCase(locals.pb)
+      const sendCampaign = createSendCampaignUseCase(locals.pb, url.origin)
       const result = await sendCampaign(campaignId)
 
       return {
