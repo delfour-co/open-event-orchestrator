@@ -6,6 +6,7 @@ import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import { Select } from '$lib/components/ui/select'
 import { Textarea } from '$lib/components/ui/textarea'
+import * as m from '$lib/paraglide/messages'
 import { CheckCircle2, Loader2, Send } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
@@ -21,7 +22,7 @@ let selectedPackageId = $state('')
 </script>
 
 <svelte:head>
-	<title>Become a Sponsor - {data.eventName}</title>
+	<title>{m.sponsor_contact_title({ eventName: data.eventName })}</title>
 </svelte:head>
 
 <div class="min-h-screen bg-muted/30">
@@ -40,9 +41,9 @@ let selectedPackageId = $state('')
 	<main class="container mx-auto px-4 py-8">
 		<div class="mx-auto max-w-2xl space-y-8">
 			<div class="text-center">
-				<h1 class="text-3xl font-bold tracking-tight">Become a Sponsor</h1>
+				<h1 class="text-3xl font-bold tracking-tight">{m.sponsor_contact_heading()}</h1>
 				<p class="mt-2 text-muted-foreground">
-					Interested in sponsoring {data.eventName}? Fill out the form below and our team will get back to you.
+					{m.sponsor_contact_description({ eventName: data.eventName })}
 				</p>
 			</div>
 
@@ -52,14 +53,14 @@ let selectedPackageId = $state('')
 						<div class="flex flex-col items-center gap-4 text-center">
 							<CheckCircle2 class="h-12 w-12 text-green-600" />
 							<div>
-								<h2 class="text-xl font-semibold">Thank You!</h2>
+								<h2 class="text-xl font-semibold">{m.sponsor_contact_success_title()}</h2>
 								<p class="mt-2 text-muted-foreground">
-									Your inquiry has been submitted successfully. Our sponsorship team will review your request and contact you shortly.
+									{m.sponsor_contact_success_message()}
 								</p>
 							</div>
 							<a href="/sponsor/{data.edition.slug}/contact">
 								<Button variant="outline" class="mt-4">
-									Submit Another Inquiry
+									{m.sponsor_contact_submit_another()}
 								</Button>
 							</a>
 						</div>
@@ -68,9 +69,9 @@ let selectedPackageId = $state('')
 			{:else}
 				<Card.Root>
 					<Card.Header>
-						<Card.Title>Contact Form</Card.Title>
+						<Card.Title>{m.sponsor_contact_form_title()}</Card.Title>
 						<Card.Description>
-							Tell us about your company and how you'd like to partner with us.
+							{m.sponsor_contact_form_description()}
 						</Card.Description>
 					</Card.Header>
 					<Card.Content>
@@ -107,10 +108,10 @@ let selectedPackageId = $state('')
 							</div>
 
 							<div class="space-y-4">
-								<h3 class="font-medium">Company Information</h3>
+								<h3 class="font-medium">{m.sponsor_contact_company_info()}</h3>
 
 								<div class="space-y-2">
-									<Label for="companyName">Company Name *</Label>
+									<Label for="companyName">{m.sponsor_contact_company_name()}</Label>
 									<Input
 										id="companyName"
 										name="companyName"
@@ -122,13 +123,13 @@ let selectedPackageId = $state('')
 
 								{#if data.packages.length > 0}
 									<div class="space-y-2">
-										<Label for="interestedPackageId">Interested Package</Label>
+										<Label for="interestedPackageId">{m.sponsor_contact_interested_package()}</Label>
 										<Select
 											id="interestedPackageId"
 											name="interestedPackageId"
 											bind:value={selectedPackageId}
 										>
-											<option value="">Select a package (optional)</option>
+											<option value="">{m.sponsor_contact_select_package()}</option>
 											{#each data.packages as pkg}
 												<option value={pkg.id}>{pkg.name}</option>
 											{/each}
@@ -138,10 +139,10 @@ let selectedPackageId = $state('')
 							</div>
 
 							<div class="space-y-4">
-								<h3 class="font-medium">Contact Information</h3>
+								<h3 class="font-medium">{m.sponsor_contact_info()}</h3>
 
 								<div class="space-y-2">
-									<Label for="contactName">Contact Name *</Label>
+									<Label for="contactName">{m.sponsor_contact_name()}</Label>
 									<Input
 										id="contactName"
 										name="contactName"
@@ -153,7 +154,7 @@ let selectedPackageId = $state('')
 
 								<div class="grid gap-4 md:grid-cols-2">
 									<div class="space-y-2">
-										<Label for="contactEmail">Email *</Label>
+										<Label for="contactEmail">{m.sponsor_contact_email()}</Label>
 										<Input
 											id="contactEmail"
 											name="contactEmail"
@@ -164,7 +165,7 @@ let selectedPackageId = $state('')
 										/>
 									</div>
 									<div class="space-y-2">
-										<Label for="contactPhone">Phone</Label>
+										<Label for="contactPhone">{m.sponsor_contact_phone()}</Label>
 										<Input
 											id="contactPhone"
 											name="contactPhone"
@@ -177,17 +178,17 @@ let selectedPackageId = $state('')
 							</div>
 
 							<div class="space-y-2">
-								<Label for="message">Message *</Label>
+								<Label for="message">{m.sponsor_contact_message_label()}</Label>
 								<Textarea
 									id="message"
 									name="message"
 									required
 									rows={5}
-									placeholder="Tell us about your company and what you're looking to achieve through sponsorship..."
+									placeholder={m.sponsor_contact_message_placeholder()}
 									value={form?.values?.message || ''}
 								/>
 								<p class="text-xs text-muted-foreground">
-									Share your goals, any specific requirements, or questions you have about sponsorship opportunities.
+									{m.sponsor_contact_message_hint()}
 								</p>
 							</div>
 
@@ -199,10 +200,10 @@ let selectedPackageId = $state('')
 							>
 								{#if isSubmitting}
 									<Loader2 class="h-4 w-4 animate-spin" />
-									Submitting...
+									{m.sponsor_contact_submitting()}
 								{:else}
 									<Send class="h-4 w-4" />
-									Submit Inquiry
+									{m.sponsor_contact_submit()}
 								{/if}
 							</Button>
 						</form>
@@ -215,7 +216,7 @@ let selectedPackageId = $state('')
 	<!-- Footer -->
 	<footer class="border-t bg-background px-4 py-6">
 		<div class="container mx-auto text-center text-sm text-muted-foreground">
-			<p>Powered by Open Event Orchestrator</p>
+			<p>{m.common_powered_by()}</p>
 		</div>
 	</footer>
 </div>

@@ -20,6 +20,7 @@ import type {
   AuditEntityType,
   FinancialAuditLog
 } from '$lib/features/budget/domain/audit-log'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   ChevronLeft,
@@ -192,7 +193,7 @@ const hasFilters = $derived(
 </script>
 
 <svelte:head>
-  <title>Audit Journal - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.budget_journal_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -215,7 +216,7 @@ const hasFilters = $derived(
       >
         <Button variant="outline" size="sm">
           <Download class="mr-2 h-4 w-4" />
-          Export CSV
+          {m.budget_journal_export_csv()}
         </Button>
       </a>
       <a
@@ -224,7 +225,7 @@ const hasFilters = $derived(
       >
         <Button variant="outline" size="sm">
           <FileText class="mr-2 h-4 w-4" />
-          Export PDF
+          {m.budget_journal_export_pdf()}
         </Button>
       </a>
     </div>
@@ -238,19 +239,19 @@ const hasFilters = $derived(
     <Card.Header class="pb-3">
       <Card.Title class="flex items-center gap-2 text-base">
         <Filter class="h-4 w-4" />
-        Filters
+        {m.budget_journal_filters()}
       </Card.Title>
     </Card.Header>
     <Card.Content>
       <div class="grid gap-4 md:grid-cols-5">
         <div class="space-y-2">
-          <Label for="action">Action</Label>
+          <Label for="action">{m.budget_journal_action()}</Label>
           <select
             id="action"
             bind:value={filterAction}
             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <option value="" class="bg-background text-foreground">All Actions</option>
+            <option value="" class="bg-background text-foreground">{m.budget_journal_all_actions()}</option>
             {#each ACTIONS as action}
               <option value={action} class="bg-background text-foreground">{getActionLabel(action)}</option>
             {/each}

@@ -2,6 +2,7 @@
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
+import * as m from '$lib/paraglide/messages'
 import { Award, Check, Crown, Medal, Star, X } from 'lucide-svelte'
 import type { PageData } from './$types'
 
@@ -61,15 +62,15 @@ const getTierBorderColor = (tier: number) => {
 </script>
 
 <svelte:head>
-  <title>Sponsorship Packages - {data.eventName}</title>
+  <title>{m.sponsor_packages_title({ eventName: data.eventName })}</title>
 </svelte:head>
 
 <div class="container mx-auto max-w-7xl px-4 py-12">
   <!-- Header -->
   <div class="mb-12 text-center">
-    <h1 class="text-4xl font-bold tracking-tight">Become a Sponsor</h1>
+    <h1 class="text-4xl font-bold tracking-tight">{m.sponsor_packages_heading()}</h1>
     <p class="mt-4 text-lg text-muted-foreground">
-      Support {data.eventName} and gain visibility with our community
+      {m.sponsor_packages_subtitle({ eventName: data.eventName })}
     </p>
     <p class="mt-2 text-muted-foreground">
       {data.edition.name}
@@ -79,10 +80,10 @@ const getTierBorderColor = (tier: number) => {
   {#if data.packages.length === 0}
     <div class="rounded-lg border border-dashed p-12 text-center">
       <p class="text-lg text-muted-foreground">
-        No sponsorship packages are currently available for this edition.
+        {m.sponsor_packages_empty()}
       </p>
       <p class="mt-2 text-sm text-muted-foreground">
-        Please check back later or contact the organizers for more information.
+        {m.sponsor_packages_empty_hint()}
       </p>
     </div>
   {:else}
@@ -96,7 +97,7 @@ const getTierBorderColor = (tier: number) => {
           {#if pkg.tier === 1}
             <div class="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge variant="default" class="bg-amber-500 text-white">
-                Most Popular
+                {m.sponsor_packages_most_popular()}
               </Badge>
             </div>
           {/if}
@@ -120,13 +121,13 @@ const getTierBorderColor = (tier: number) => {
             <!-- Availability -->
             <div class="mb-6 text-center text-sm">
               {#if pkg.availableSlots === null}
-                <span class="text-green-600">Unlimited spots available</span>
+                <span class="text-green-600">{m.sponsor_packages_unlimited()}</span>
               {:else if pkg.availableSlots > 0}
                 <span class="text-amber-600">
-                  {pkg.availableSlots} spot{pkg.availableSlots > 1 ? 's' : ''} remaining
+                  {m.sponsor_packages_remaining({ count: pkg.availableSlots })}
                 </span>
               {:else}
-                <span class="text-red-600">Sold out</span>
+                <span class="text-red-600">{m.sponsor_packages_sold_out()}</span>
               {/if}
             </div>
 
@@ -154,12 +155,12 @@ const getTierBorderColor = (tier: number) => {
                 class="w-full"
               >
                 <Button class="w-full" size="lg" variant={pkg.tier === 1 ? 'default' : 'outline'}>
-                  Subscribe
+                  {m.sponsor_packages_subscribe()}
                 </Button>
               </a>
             {:else}
               <Button class="w-full" size="lg" variant="outline" disabled>
-                Sold Out
+                {m.sponsor_packages_sold_out_btn()}
               </Button>
             {/if}
           </Card.Footer>
@@ -170,7 +171,7 @@ const getTierBorderColor = (tier: number) => {
     <!-- Contact Info -->
     <div class="mt-12 text-center">
       <p class="text-muted-foreground">
-        Have questions about sponsorship? Contact our team for more information.
+        {m.sponsor_packages_contact_hint()}
       </p>
     </div>
   {/if}

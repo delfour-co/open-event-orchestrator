@@ -9,6 +9,7 @@ import { Label } from '$lib/components/ui/label'
 import { Textarea } from '$lib/components/ui/textarea'
 import { getBudgetNavItems } from '$lib/config'
 import { getChecklistStatusLabel, getPriorityLabel } from '$lib/features/budget/domain'
+import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   ClipboardList,
@@ -85,7 +86,7 @@ const priorityColors: Record<string, string> = {
 </script>
 
 <svelte:head>
-  <title>Checklist - {data.edition.name} - Open Event Orchestrator</title>
+  <title>{m.budget_checklist_title({ name: data.edition.name })}</title>
 </svelte:head>
 
 <div class="space-y-6">
@@ -99,17 +100,17 @@ const priorityColors: Record<string, string> = {
       </a>
       <div>
         <h2 class="text-3xl font-bold tracking-tight">{data.edition.name}</h2>
-        <p class="text-muted-foreground">Budget Checklist</p>
+        <p class="text-muted-foreground">{m.budget_checklist_subtitle()}</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
       <Button variant="outline" onclick={() => (showTemplateDialog = true)}>
         <FileText class="mr-2 h-4 w-4" />
-        Apply Template
+        {m.budget_checklist_apply_template()}
       </Button>
       <Button onclick={() => { editingItem = null; showItemForm = true }}>
         <Plus class="mr-2 h-4 w-4" />
-        Add Item
+        {m.budget_checklist_add_item()}
       </Button>
     </div>
   </div>
@@ -122,37 +123,37 @@ const priorityColors: Record<string, string> = {
     <Card.Root>
       <Card.Content class="p-4">
         <div class="text-2xl font-bold">{data.stats.total}</div>
-        <p class="text-xs text-muted-foreground">Total Items</p>
+        <p class="text-xs text-muted-foreground">{m.budget_checklist_total_items()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="p-4">
         <div class="text-2xl font-bold text-yellow-600">{data.stats.pending}</div>
-        <p class="text-xs text-muted-foreground">Pending</p>
+        <p class="text-xs text-muted-foreground">{m.budget_checklist_pending()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="p-4">
         <div class="text-2xl font-bold text-blue-600">{data.stats.approved}</div>
-        <p class="text-xs text-muted-foreground">Approved</p>
+        <p class="text-xs text-muted-foreground">{m.budget_checklist_approved()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="p-4">
         <div class="text-2xl font-bold text-purple-600">{data.stats.ordered}</div>
-        <p class="text-xs text-muted-foreground">Ordered</p>
+        <p class="text-xs text-muted-foreground">{m.budget_checklist_ordered()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="p-4">
         <div class="text-2xl font-bold text-green-600">{data.stats.paid}</div>
-        <p class="text-xs text-muted-foreground">Paid</p>
+        <p class="text-xs text-muted-foreground">{m.budget_checklist_paid()}</p>
       </Card.Content>
     </Card.Root>
     <Card.Root>
       <Card.Content class="p-4">
         <div class="text-2xl font-bold">{formatAmount(data.stats.totalEstimated, data.budget?.currency)}</div>
-        <p class="text-xs text-muted-foreground">Total Estimated</p>
+        <p class="text-xs text-muted-foreground">{m.budget_checklist_total_estimated()}</p>
       </Card.Content>
     </Card.Root>
   </div>
@@ -162,18 +163,18 @@ const priorityColors: Record<string, string> = {
     <Card.Root>
       <Card.Content class="flex flex-col items-center justify-center py-12">
         <ClipboardList class="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 class="text-lg font-semibold">No checklist items yet</h3>
+        <h3 class="text-lg font-semibold">{m.budget_checklist_no_items()}</h3>
         <p class="mb-4 text-sm text-muted-foreground">
-          Add items to track budget requirements for this edition.
+          {m.budget_checklist_no_items_hint()}
         </p>
         <div class="flex gap-2">
           <Button variant="outline" onclick={() => (showTemplateDialog = true)}>
             <FileText class="mr-2 h-4 w-4" />
-            Apply Template
+            {m.budget_checklist_apply_template()}
           </Button>
           <Button onclick={() => { editingItem = null; showItemForm = true }}>
             <Plus class="mr-2 h-4 w-4" />
-            Add Item
+            {m.budget_checklist_add_item()}
           </Button>
         </div>
       </Card.Content>
@@ -185,14 +186,14 @@ const priorityColors: Record<string, string> = {
           <thead>
             <tr class="border-b text-left text-sm text-muted-foreground">
               <th class="w-8 px-4 py-3"></th>
-              <th class="px-4 py-3 font-medium">Item</th>
-              <th class="px-4 py-3 font-medium">Category</th>
-              <th class="px-4 py-3 font-medium text-right">Estimated</th>
-              <th class="px-4 py-3 font-medium">Priority</th>
-              <th class="px-4 py-3 font-medium">Status</th>
-              <th class="px-4 py-3 font-medium">Due Date</th>
-              <th class="px-4 py-3 font-medium">Assignee</th>
-              <th class="px-4 py-3 font-medium">Actions</th>
+              <th class="px-4 py-3 font-medium">{m.budget_checklist_item()}</th>
+              <th class="px-4 py-3 font-medium">{m.budget_checklist_category()}</th>
+              <th class="px-4 py-3 font-medium text-right">{m.budget_checklist_estimated()}</th>
+              <th class="px-4 py-3 font-medium">{m.budget_checklist_priority()}</th>
+              <th class="px-4 py-3 font-medium">{m.budget_checklist_status()}</th>
+              <th class="px-4 py-3 font-medium">{m.budget_checklist_due_date()}</th>
+              <th class="px-4 py-3 font-medium">{m.budget_checklist_assignee()}</th>
+              <th class="px-4 py-3 font-medium">{m.budget_checklist_actions()}</th>
             </tr>
           </thead>
           <tbody>
@@ -251,9 +252,9 @@ const priorityColors: Record<string, string> = {
 {#if showItemForm}
   <Dialog.Content class="max-w-lg" onClose={cancelItemForm}>
       <Dialog.Header>
-        <Dialog.Title>{editingItem ? 'Edit Item' : 'Add Item'}</Dialog.Title>
+        <Dialog.Title>{editingItem ? m.budget_checklist_edit_item() : m.budget_checklist_add_item()}</Dialog.Title>
         <Dialog.Description>
-          {editingItem ? 'Update the checklist item details.' : 'Add a new budget checklist item.'}
+          {editingItem ? m.budget_checklist_update_item() : m.budget_checklist_add_item_hint()}
         </Dialog.Description>
       </Dialog.Header>
 
@@ -280,11 +281,11 @@ const priorityColors: Record<string, string> = {
         {/if}
 
         <div class="space-y-2">
-          <Label for="item-name">Name *</Label>
+          <Label for="item-name">{m.budget_checklist_item_name()} *</Label>
           <Input
             id="item-name"
             name="name"
-            placeholder="e.g., Venue rental"
+            placeholder={m.budget_checklist_item_name_placeholder()}
             required
             value={editingItem?.name || ''}
           />
@@ -292,13 +293,13 @@ const priorityColors: Record<string, string> = {
 
         <div class="grid gap-4 md:grid-cols-2">
           <div class="space-y-2">
-            <Label for="item-category">Category</Label>
+            <Label for="item-category">{m.budget_checklist_item_category()}</Label>
             <select
               id="item-category"
               name="categoryId"
               class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="">No category</option>
+              <option value="">{m.budget_checklist_no_category()}</option>
               {#each data.categories as cat}
                 <option value={cat.id} selected={editingItem?.categoryId === cat.id}>
                   {cat.name}
@@ -307,7 +308,7 @@ const priorityColors: Record<string, string> = {
             </select>
           </div>
           <div class="space-y-2">
-            <Label for="item-amount">Estimated Amount</Label>
+            <Label for="item-amount">{m.budget_checklist_item_amount()}</Label>
             <Input
               id="item-amount"
               name="estimatedAmount"
@@ -317,36 +318,36 @@ const priorityColors: Record<string, string> = {
               placeholder="0"
               value={editingItem?.estimatedAmount?.toString() || '0'}
             />
-            <p class="text-xs text-muted-foreground">Amount in cents</p>
+            <p class="text-xs text-muted-foreground">{m.budget_checklist_amount_hint()}</p>
           </div>
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
           <div class="space-y-2">
-            <Label for="item-priority">Priority</Label>
+            <Label for="item-priority">{m.budget_checklist_item_priority()}</Label>
             <select
               id="item-priority"
               name="priority"
               class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
-              <option value="low" selected={editingItem?.priority === 'low'}>Low</option>
-              <option value="medium" selected={!editingItem || editingItem?.priority === 'medium'}>Medium</option>
-              <option value="high" selected={editingItem?.priority === 'high'}>High</option>
+              <option value="low" selected={editingItem?.priority === 'low'}>{m.budget_checklist_priority_low()}</option>
+              <option value="medium" selected={!editingItem || editingItem?.priority === 'medium'}>{m.budget_checklist_priority_medium()}</option>
+              <option value="high" selected={editingItem?.priority === 'high'}>{m.budget_checklist_priority_high()}</option>
             </select>
           </div>
           {#if editingItem}
             <div class="space-y-2">
-              <Label for="item-status">Status</Label>
+              <Label for="item-status">{m.budget_checklist_item_status()}</Label>
               <select
                 id="item-status"
                 name="status"
                 class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="pending" selected={editingItem?.status === 'pending'}>Pending</option>
-                <option value="approved" selected={editingItem?.status === 'approved'}>Approved</option>
-                <option value="ordered" selected={editingItem?.status === 'ordered'}>Ordered</option>
-                <option value="paid" selected={editingItem?.status === 'paid'}>Paid</option>
-                <option value="cancelled" selected={editingItem?.status === 'cancelled'}>Cancelled</option>
+                <option value="pending" selected={editingItem?.status === 'pending'}>{m.budget_checklist_status_pending()}</option>
+                <option value="approved" selected={editingItem?.status === 'approved'}>{m.budget_checklist_status_approved()}</option>
+                <option value="ordered" selected={editingItem?.status === 'ordered'}>{m.budget_checklist_status_ordered()}</option>
+                <option value="paid" selected={editingItem?.status === 'paid'}>{m.budget_checklist_status_paid()}</option>
+                <option value="cancelled" selected={editingItem?.status === 'cancelled'}>{m.budget_checklist_status_cancelled()}</option>
               </select>
             </div>
           {/if}
@@ -354,7 +355,7 @@ const priorityColors: Record<string, string> = {
 
         <div class="grid gap-4 md:grid-cols-2">
           <div class="space-y-2">
-            <Label for="item-due">Due Date</Label>
+            <Label for="item-due">{m.budget_checklist_item_due()}</Label>
             <Input
               id="item-due"
               name="dueDate"
@@ -363,33 +364,33 @@ const priorityColors: Record<string, string> = {
             />
           </div>
           <div class="space-y-2">
-            <Label for="item-assignee">Assignee</Label>
+            <Label for="item-assignee">{m.budget_checklist_item_assignee()}</Label>
             <Input
               id="item-assignee"
               name="assignee"
-              placeholder="Person responsible"
+              placeholder={m.budget_checklist_assignee_placeholder()}
               value={editingItem?.assignee || ''}
             />
           </div>
         </div>
 
         <div class="space-y-2">
-          <Label for="item-notes">Notes</Label>
+          <Label for="item-notes">{m.budget_checklist_item_notes()}</Label>
           <Textarea
             id="item-notes"
             name="notes"
-            placeholder="Additional notes..."
+            placeholder={m.budget_checklist_notes_placeholder()}
             value={editingItem?.notes || ''}
           />
         </div>
 
         <Dialog.Footer>
-          <Button type="button" variant="outline" onclick={cancelItemForm}>Cancel</Button>
+          <Button type="button" variant="outline" onclick={cancelItemForm}>{m.action_cancel()}</Button>
           <Button type="submit" disabled={isSubmitting}>
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
             {/if}
-            {editingItem ? 'Update' : 'Create'}
+            {editingItem ? m.action_update() : m.action_create()}
           </Button>
         </Dialog.Footer>
       </form>
@@ -400,9 +401,9 @@ const priorityColors: Record<string, string> = {
 {#if showTemplateDialog}
   <Dialog.Content class="max-w-lg" onClose={cancelTemplateDialog}>
       <Dialog.Header>
-        <Dialog.Title>Apply Budget Template</Dialog.Title>
+        <Dialog.Title>{m.budget_checklist_template_title()}</Dialog.Title>
         <Dialog.Description>
-          Select a template to add pre-defined checklist items.
+          {m.budget_checklist_template_description()}
         </Dialog.Description>
       </Dialog.Header>
 
@@ -433,7 +434,7 @@ const priorityColors: Record<string, string> = {
             bind:value={selectedTemplateId}
             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="">Select a template...</option>
+            <option value="">{m.budget_checklist_select_template()}</option>
             {#each data.templates as template}
               <option value={template.id}>
                 {template.name} ({template.itemCount} items)
@@ -452,7 +453,7 @@ const priorityColors: Record<string, string> = {
         {/if}
 
         <div class="space-y-2">
-          <Label for="multiplier">Multiplier (for variable items)</Label>
+          <Label for="multiplier">{m.budget_checklist_multiplier()}</Label>
           <Input
             id="multiplier"
             name="multiplier"
@@ -461,17 +462,17 @@ const priorityColors: Record<string, string> = {
             bind:value={multiplier}
           />
           <p class="text-xs text-muted-foreground">
-            Used for items with variable costs (e.g., cost per attendee)
+            {m.budget_checklist_multiplier_hint()}
           </p>
         </div>
 
         <Dialog.Footer>
-          <Button type="button" variant="outline" onclick={cancelTemplateDialog}>Cancel</Button>
+          <Button type="button" variant="outline" onclick={cancelTemplateDialog}>{m.action_cancel()}</Button>
           <Button type="submit" disabled={isSubmitting || !selectedTemplateId}>
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
             {/if}
-            Apply Template
+            {m.budget_checklist_apply_template()}
           </Button>
         </Dialog.Footer>
       </form>
