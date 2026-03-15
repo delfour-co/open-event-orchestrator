@@ -1,5 +1,6 @@
 // Shared UI components
 export { default as AdminSubNav, type NavItem } from './AdminSubNav.svelte'
+export { default as EditionSelectorPage } from './EditionSelectorPage.svelte'
 export { default as Alert } from './Alert.svelte'
 export { default as ImageCropUpload } from './ImageCropUpload.svelte'
 export { default as Pagination } from './Pagination.svelte'

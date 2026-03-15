@@ -1,9 +1,7 @@
 <script lang="ts">
-import { StatusBadge } from '$lib/components/shared'
-import { Button } from '$lib/components/ui/button'
-import * as Card from '$lib/components/ui/card'
+import { EditionSelectorPage } from '$lib/components/shared'
 import * as m from '$lib/paraglide/messages'
-import { ArrowRight, Calendar, Eye, EyeOff, Handshake, Settings } from 'lucide-svelte'
+import { Handshake } from 'lucide-svelte'
 import type { PageData } from './$types'
 
 interface Props {
@@ -11,103 +9,26 @@ interface Props {
 }
 
 const { data }: Props = $props()
-
-let showArchived = $state(false)
-
-// Filter editions by archived status
-const filteredEditions = $derived(
-  showArchived ? data.editions : data.editions.filter((e) => e.status !== 'archived')
-)
-
-// Count archived editions
-const archivedCount = $derived(data.editions.filter((e) => e.status === 'archived').length)
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date)
-}
 </script>
 
 <svelte:head>
 	<title>{m.sponsoring_page_title()}</title>
 </svelte:head>
 
-<div class="space-y-6">
-	<div class="flex items-center justify-between">
-		<div>
-			<h2 class="text-3xl font-bold tracking-tight">{m.sponsoring_title()}</h2>
-			<p class="text-muted-foreground">
-				{m.sponsoring_select_edition()}
-			</p>
-		</div>
-		{#if archivedCount > 0}
-			<Button variant="outline" onclick={() => (showArchived = !showArchived)}>
-				{#if showArchived}
-					<EyeOff class="mr-2 h-4 w-4" />
-					{m.sponsoring_hide_archived()} ({archivedCount})
-				{:else}
-					<Eye class="mr-2 h-4 w-4" />
-					{m.sponsoring_show_archived()} ({archivedCount})
-				{/if}
-			</Button>
-		{/if}
-	</div>
-
-	{#if filteredEditions.length === 0}
-		<Card.Root>
-			<Card.Content class="flex flex-col items-center justify-center py-12">
-				<Handshake class="mb-4 h-12 w-12 text-muted-foreground" />
-				<h3 class="text-lg font-semibold">{m.sponsoring_no_editions()}</h3>
-				<p class="text-sm text-muted-foreground">
-					{#if !showArchived && archivedCount > 0}
-						{m.sponsoring_all_archived()}
-						<button class="text-primary underline" onclick={() => (showArchived = true)}>
-							{m.sponsoring_show_archived_editions()}
-						</button>
-					{:else}
-						{m.sponsoring_create_edition()}
-					{/if}
-				</p>
-			</Card.Content>
-		</Card.Root>
-	{:else}
-		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{#each filteredEditions as edition}
-				<Card.Root class="transition-shadow hover:shadow-md {edition.status === 'archived' ? 'opacity-60' : ''}">
-					<Card.Header>
-						<div class="flex items-start justify-between">
-							<Card.Title class="flex items-center gap-2">
-								<Calendar class="h-5 w-5" />
-								{edition.name}
-							</Card.Title>
-							<div class="flex items-center gap-2">
-								<a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
-									<StatusBadge status={edition.status} size="sm" />
-								</a>
-								<a href="/admin/sponsoring/{edition.slug}/packages" title={m.sponsoring_packages()}>
-									<Button variant="ghost" size="icon" class="h-8 w-8">
-										<Settings class="h-4 w-4" />
-									</Button>
-								</a>
-							</div>
-						</div>
-						<Card.Description>
-							{formatDate(edition.startDate)} - {formatDate(edition.endDate)}
-						</Card.Description>
-					</Card.Header>
-					<Card.Content>
-						<a href="/admin/sponsoring/{edition.slug}">
-							<Button class="w-full" variant="outline">
-								{m.sponsoring_manage_sponsors()}
-								<ArrowRight class="ml-2 h-4 w-4" />
-							</Button>
-						</a>
-					</Card.Content>
-				</Card.Root>
-			{/each}
-		</div>
-	{/if}
-</div>
+<EditionSelectorPage
+	editions={data.editions}
+	basePath="/admin/sponsoring"
+	title={m.sponsoring_title()}
+	description={m.sponsoring_select_edition()}
+	manageLabel={m.sponsoring_manage_sponsors()}
+	emptyIcon={Handshake}
+	emptyTitle={m.sponsoring_no_editions()}
+	emptyDescription={m.sponsoring_create_edition()}
+	allArchivedText={m.sponsoring_all_archived()}
+	showArchivedLinkText={m.sponsoring_show_archived_editions()}
+	hideArchivedText={(count) => `${m.sponsoring_hide_archived()} (${count})`}
+	showArchivedText={(count) => `${m.sponsoring_show_archived()} (${count})`}
+	showSettingsIcon={true}
+	settingsPath="packages"
+	settingsTitle={m.sponsoring_packages()}
+/>
