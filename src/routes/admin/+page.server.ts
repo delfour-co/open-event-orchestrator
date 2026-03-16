@@ -39,19 +39,24 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   const [totalTalksResult, submittedResult, acceptedResult, rejectedResult, underReviewResult] =
     await Promise.all([
       locals.pb.collection('talks').getList(1, 1, {
-        filter: talksBaseFilter || undefined
+        filter: talksBaseFilter || undefined,
+        requestKey: 'talks-total'
       }),
       locals.pb.collection('talks').getList(1, 1, {
-        filter: `${talksFilterPrefix}status = "submitted"`
+        filter: `${talksFilterPrefix}status = "submitted"`,
+        requestKey: 'talks-submitted'
       }),
       locals.pb.collection('talks').getList(1, 1, {
-        filter: `${talksFilterPrefix}status = "accepted"`
+        filter: `${talksFilterPrefix}status = "accepted"`,
+        requestKey: 'talks-accepted'
       }),
       locals.pb.collection('talks').getList(1, 1, {
-        filter: `${talksFilterPrefix}status = "rejected"`
+        filter: `${talksFilterPrefix}status = "rejected"`,
+        requestKey: 'talks-rejected'
       }),
       locals.pb.collection('talks').getList(1, 1, {
-        filter: `${talksFilterPrefix}status = "under_review"`
+        filter: `${talksFilterPrefix}status = "under_review"`,
+        requestKey: 'talks-review'
       })
     ])
 
@@ -90,29 +95,37 @@ export const load: PageServerLoad = async ({ locals, url }) => {
       recentOrdersResult
     ] = await Promise.all([
       locals.pb.collection('orders').getList(1, 1, {
-        filter: editionFilter || undefined
+        filter: editionFilter || undefined,
+        requestKey: 'orders-total'
       }),
       locals.pb.collection('orders').getList(1, 1, {
-        filter: `${editionFilterPrefix}status = "paid"`
+        filter: `${editionFilterPrefix}status = "paid"`,
+        requestKey: 'orders-paid'
       }),
       locals.pb.collection('orders').getList(1, 1, {
-        filter: `${editionFilterPrefix}status = "pending"`
+        filter: `${editionFilterPrefix}status = "pending"`,
+        requestKey: 'orders-pending'
       }),
       locals.pb.collection('orders').getList(1, 1, {
-        filter: `${editionFilterPrefix}status = "cancelled"`
+        filter: `${editionFilterPrefix}status = "cancelled"`,
+        requestKey: 'orders-cancelled'
       }),
       locals.pb.collection('billing_tickets').getList(1, 1, {
-        filter: editionFilter || undefined
+        filter: editionFilter || undefined,
+        requestKey: 'tickets-total'
       }),
       locals.pb.collection('billing_tickets').getList(1, 1, {
-        filter: `${editionFilterPrefix}status = "used"`
+        filter: `${editionFilterPrefix}status = "used"`,
+        requestKey: 'tickets-used'
       }),
       locals.pb.collection('billing_tickets').getList(1, 1, {
-        filter: `${editionFilterPrefix}status != "cancelled"`
+        filter: `${editionFilterPrefix}status != "cancelled"`,
+        requestKey: 'tickets-active'
       }),
       locals.pb.collection('orders').getList(1, 5, {
         filter: editionFilter || undefined,
-        sort: '-created'
+        sort: '-created',
+        requestKey: 'orders-recent'
       })
     ])
 
