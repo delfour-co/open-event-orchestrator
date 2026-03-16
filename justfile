@@ -138,7 +138,7 @@ reset-data:
 # Reset PocketBase completely (⚠️ deletes all data)
 reset-pb:
     docker compose down
-    rm -rf pb_data/*.db pb_data/*.db-shm pb_data/*.db-wal pb_data/storage
+    docker run --rm -v {{justfile_directory()}}/pb_data:/pb_data alpine sh -c "rm -rf /pb_data/*.db /pb_data/*.db-shm /pb_data/*.db-wal /pb_data/storage"
     docker compose up -d
     @echo "PocketBase reset. Run 'just seed' to re-seed data."
     @echo "Open the install link below to create a superuser:"
