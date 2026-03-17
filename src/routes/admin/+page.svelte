@@ -120,6 +120,8 @@ const getSubmissionStatusLabel = (status: string) => {
       return m.cfp_status_submitted()
     case 'accepted':
       return m.cfp_status_accepted()
+    case 'backup':
+      return m.cfp_status_backup()
     case 'rejected':
       return m.cfp_status_rejected()
     case 'under_review':

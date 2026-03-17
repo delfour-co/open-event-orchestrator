@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const notificationTypeSchema = z.enum([
   'submission_confirmed',
   'talk_accepted',
+  'talk_backup',
   'talk_rejected',
   'confirmation_reminder',
   'cfp_closing_reminder',
@@ -37,6 +38,7 @@ export const getNotificationTypeLabel = (type: NotificationType): string => {
   const labels: Record<NotificationType, string> = {
     submission_confirmed: 'Submission Confirmed',
     talk_accepted: 'Talk Accepted',
+    talk_backup: 'Talk Waitlisted',
     talk_rejected: 'Talk Rejected',
     confirmation_reminder: 'Confirmation Reminder',
     cfp_closing_reminder: 'CFP Closing Reminder',
@@ -53,6 +55,7 @@ export const getNotificationSubject = (
   const subjects: Record<NotificationType, string> = {
     submission_confirmed: `[${editionName}] Your talk submission has been received`,
     talk_accepted: `[${editionName}] Congratulations! Your talk "${talkTitle}" has been accepted`,
+    talk_backup: `[${editionName}] Your talk "${talkTitle}" is on the waiting list`,
     talk_rejected: `[${editionName}] Update on your talk submission "${talkTitle}"`,
     confirmation_reminder: `[${editionName}] Please confirm your participation for "${talkTitle}"`,
     cfp_closing_reminder: `[${editionName}] CFP closing soon - Submit your talk!`,

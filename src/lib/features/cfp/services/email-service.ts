@@ -121,6 +121,16 @@ export const generateEmailHtml = (
     <p>Best regards,<br>The ${data.eventName} Team</p>`
     },
 
+    talk_backup: {
+      title: 'Waiting List',
+      body: `
+    <p>Dear ${data.speakerName},</p>
+    <p>Your talk <strong>"${data.talkTitle}"</strong> has been placed on the waiting list for <strong>${data.editionName}</strong>.</p>
+    <p>If a spot becomes available, we will notify you immediately.</p>
+    <p>Thank you for your submission. We appreciate your patience.</p>
+    <p>Best regards,<br>The ${data.eventName} Team</p>`
+    },
+
     talk_rejected: {
       title: 'Thank you for your submission',
       body: `
@@ -206,6 +216,22 @@ We are thrilled to inform you that your talk "${data.talkTitle}" has been accept
 Please confirm your participation here: ${data.confirmationUrl}
 
 We look forward to seeing you at the event!
+
+Best regards,
+The ${data.eventName} Team
+
+${footer}`,
+
+    talk_backup: `
+Waiting List
+
+Dear ${data.speakerName},
+
+Your talk "${data.talkTitle}" has been placed on the waiting list for ${data.editionName}.
+
+If a spot becomes available, we will notify you immediately.
+
+Thank you for your submission. We appreciate your patience.
 
 Best regards,
 The ${data.eventName} Team

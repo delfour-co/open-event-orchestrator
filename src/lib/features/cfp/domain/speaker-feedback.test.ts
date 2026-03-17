@@ -295,6 +295,10 @@ describe('getTemplateTypeForStatus', () => {
     expect(getTemplateTypeForStatus('confirmed')).toBe('accepted')
   })
 
+  it('should return waitlisted for backup status', () => {
+    expect(getTemplateTypeForStatus('backup')).toBe('waitlisted')
+  })
+
   it('should return rejected for rejected status', () => {
     expect(getTemplateTypeForStatus('rejected')).toBe('rejected')
   })

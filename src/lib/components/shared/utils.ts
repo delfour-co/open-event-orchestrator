@@ -71,6 +71,7 @@ export type StatusType =
   | 'submitted'
   | 'under_review'
   | 'accepted'
+  | 'backup'
   | 'rejected'
   | 'confirmed'
   | 'declined'
@@ -88,7 +89,15 @@ export type StatusType =
   | 'warning'
   | 'info'
 
-export type StatusColor = 'gray' | 'yellow' | 'blue' | 'green' | 'red' | 'purple' | 'orange'
+export type StatusColor =
+  | 'gray'
+  | 'yellow'
+  | 'blue'
+  | 'green'
+  | 'red'
+  | 'purple'
+  | 'orange'
+  | 'amber'
 
 const STATUS_COLORS: Record<StatusType, StatusColor> = {
   // CFP statuses
@@ -97,6 +106,7 @@ const STATUS_COLORS: Record<StatusType, StatusColor> = {
   submitted: 'blue',
   under_review: 'purple',
   accepted: 'green',
+  backup: 'amber',
   rejected: 'red',
   confirmed: 'green',
   declined: 'red',
@@ -170,6 +180,11 @@ export function getStatusClasses(status: string): { bg: string; text: string; bo
       bg: 'bg-transparent',
       text: 'text-orange-600 dark:text-orange-400',
       border: 'border border-orange-500 dark:border-orange-400'
+    },
+    amber: {
+      bg: 'bg-transparent',
+      text: 'text-amber-600 dark:text-amber-400',
+      border: 'border border-amber-500 dark:border-amber-400'
     }
   }
 

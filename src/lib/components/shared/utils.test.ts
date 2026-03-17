@@ -126,6 +126,10 @@ describe('getStatusColor', () => {
     expect(getStatusColor('under review')).toBe('purple')
   })
 
+  it('should return amber for backup', () => {
+    expect(getStatusColor('backup')).toBe('amber')
+  })
+
   it('should be case insensitive', () => {
     expect(getStatusColor('ACCEPTED')).toBe('green')
     expect(getStatusColor('Pending')).toBe('yellow')

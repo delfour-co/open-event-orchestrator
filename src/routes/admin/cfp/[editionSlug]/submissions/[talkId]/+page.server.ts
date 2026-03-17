@@ -1,4 +1,5 @@
 import { type TalkStatus, canViewSpeakerInfo } from '$lib/features/cfp/domain'
+import type { NotificationType } from '$lib/features/cfp/domain/notification'
 import {
   createCommentRepository,
   createReviewRepository,
@@ -9,6 +10,12 @@ import { sendCfpNotification } from '$lib/server/cfp-notifications'
 import { canChangeTalkStatus, canDeleteTalks } from '$lib/server/permissions'
 import { error, fail, redirect } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
+
+const STATUS_NOTIFICATION_MAP: Partial<Record<TalkStatus, NotificationType>> = {
+  accepted: 'talk_accepted',
+  backup: 'talk_backup',
+  rejected: 'talk_rejected'
+}
 
 export const load: PageServerLoad = async ({ parent, params, locals }) => {
   const { edition, categories, formats, cfpSettings, userRole } = await parent()
@@ -126,9 +133,9 @@ export const actions: Actions = {
       const previousStatus = talk.status
       await talkRepo.updateStatus(params.talkId, newStatus)
 
-      // Send email notification for status changes to accepted or rejected
-      const shouldNotify =
-        (newStatus === 'accepted' || newStatus === 'rejected') && previousStatus !== newStatus
+      // Send email notification for status changes to accepted, backup, or rejected
+      const notificationType = STATUS_NOTIFICATION_MAP[newStatus]
+      const shouldNotify = notificationType && previousStatus !== newStatus
 
       if (shouldNotify && talk.speakerIds.length > 0) {
         // Get edition and event info
@@ -147,7 +154,7 @@ export const actions: Actions = {
         for (const speakerId of talk.speakerIds) {
           sendCfpNotification({
             pb: locals.pb,
-            type: newStatus === 'accepted' ? 'talk_accepted' : 'talk_rejected',
+            type: notificationType,
             talkId: params.talkId,
             speakerId,
             editionId: edition.id,

@@ -14,6 +14,7 @@ import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
+  Clock,
   Copy,
   Download,
   ExternalLink,
@@ -259,6 +260,15 @@ $effect(() => {
 
     <Card.Root>
       <Card.Header class="pb-2">
+        <Card.Title class="text-sm font-medium text-amber-600">{m.cfp_status_backup()}</Card.Title>
+      </Card.Header>
+      <Card.Content>
+        <div class="text-2xl font-bold">{data.statusCounts.backup}</div>
+      </Card.Content>
+    </Card.Root>
+
+    <Card.Root>
+      <Card.Header class="pb-2">
         <Card.Title class="text-sm font-medium text-red-600">{m.cfp_status_rejected()}</Card.Title>
       </Card.Header>
       <Card.Content>
@@ -373,6 +383,10 @@ $effect(() => {
               <Button type="submit" name="status" value="accepted" variant="outline" size="sm" class="text-green-600">
                 <Check class="mr-1 h-3 w-3" />
                 {m.cfp_accept()}
+              </Button>
+              <Button type="submit" name="status" value="backup" variant="outline" size="sm" class="text-amber-600">
+                <Clock class="mr-1 h-3 w-3" />
+                {m.cfp_status_backup()}
               </Button>
               <Button type="submit" name="status" value="rejected" variant="outline" size="sm" class="text-red-600">
                 <X class="mr-1 h-3 w-3" />

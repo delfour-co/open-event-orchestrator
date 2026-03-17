@@ -10,6 +10,7 @@ import * as m from '$lib/paraglide/messages'
 import {
   ArrowLeft,
   Check,
+  Clock,
   ExternalLink,
   Mail,
   MapPin,
@@ -525,6 +526,17 @@ $effect(() => {
                   <Button
                     type="submit"
                     name="status"
+                    value="backup"
+                    variant="outline"
+                    size="sm"
+                    class="text-amber-600"
+                  >
+                    <Clock class="mr-1 h-3 w-3" />
+                    {m.cfp_status_backup()}
+                  </Button>
+                  <Button
+                    type="submit"
+                    name="status"
                     value="rejected"
                     variant="outline"
                     size="sm"
@@ -534,7 +546,34 @@ $effect(() => {
                     {m.cfp_reject()}
                   </Button>
                 {/if}
+                {#if data.talk.status === 'backup'}
+                  <Button
+                    type="submit"
+                    name="status"
+                    value="accepted"
+                    variant="outline"
+                    size="sm"
+                    class="text-green-600"
+                  >
+                    <Check class="mr-1 h-3 w-3" />
+                    {m.cfp_promote_backup()}
+                  </Button>
+                {/if}
               </div>
+
+              {#if data.talk.status === 'declined'}
+                <div class="mt-2 rounded-lg border border-amber-400 bg-amber-50 p-3 dark:bg-amber-900/20">
+                  <p class="text-sm text-amber-800 dark:text-amber-300">
+                    {m.cfp_promote_backup_suggestion()}
+                  </p>
+                  <a
+                    href="/admin/cfp/{data.edition.slug}/submissions?status=backup"
+                    class="mt-1 inline-block text-sm font-medium text-amber-700 underline hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300"
+                  >
+                    {m.cfp_view_backup_talks()}
+                  </a>
+                </div>
+              {/if}
 
               <div class="pt-2">
                 <p class="mb-2 text-sm font-medium">{m.cfp_status_change()}</p>

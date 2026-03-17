@@ -172,6 +172,15 @@ describe('EmailService', () => {
       expect(html).toContain('https://example.com/confirm')
     })
 
+    it('should generate talk_backup email', () => {
+      const html = generateEmailHtml('talk_backup', baseData)
+
+      expect(html).toContain('Waiting List')
+      expect(html).toContain('waiting list')
+      expect(html).toContain('John Doe')
+      expect(html).toContain('Introduction to TypeScript')
+    })
+
     it('should generate talk_rejected email', () => {
       const html = generateEmailHtml('talk_rejected', baseData)
 
@@ -247,6 +256,14 @@ describe('EmailService', () => {
       expect(text).not.toContain('style=')
     })
 
+    it('should generate plain text for talk_backup', () => {
+      const text = generateEmailText('talk_backup', baseData)
+
+      expect(text).toContain('Waiting List')
+      expect(text).toContain('waiting list')
+      expect(text).toContain('Jane Smith')
+    })
+
     it('should generate plain text for talk_rejected', () => {
       const text = generateEmailText('talk_rejected', baseData)
 
@@ -287,6 +304,7 @@ describe('EmailService', () => {
     const notificationTypes: NotificationType[] = [
       'submission_confirmed',
       'talk_accepted',
+      'talk_backup',
       'talk_rejected',
       'confirmation_reminder',
       'cfp_closing_reminder',

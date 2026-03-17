@@ -13,6 +13,7 @@ describe('notification domain', () => {
       const types = [
         'submission_confirmed',
         'talk_accepted',
+        'talk_backup',
         'talk_rejected',
         'confirmation_reminder',
         'cfp_closing_reminder',
@@ -127,6 +128,7 @@ describe('notification domain', () => {
     it('should return correct labels', () => {
       expect(getNotificationTypeLabel('submission_confirmed')).toBe('Submission Confirmed')
       expect(getNotificationTypeLabel('talk_accepted')).toBe('Talk Accepted')
+      expect(getNotificationTypeLabel('talk_backup')).toBe('Talk Waitlisted')
       expect(getNotificationTypeLabel('talk_rejected')).toBe('Talk Rejected')
       expect(getNotificationTypeLabel('confirmation_reminder')).toBe('Confirmation Reminder')
       expect(getNotificationTypeLabel('cfp_closing_reminder')).toBe('CFP Closing Reminder')
@@ -145,6 +147,11 @@ describe('notification domain', () => {
       expect(subject).toBe(
         '[DevFest 2024] Congratulations! Your talk "My Awesome Talk" has been accepted'
       )
+    })
+
+    it('should generate talk backup subject with title', () => {
+      const subject = getNotificationSubject('talk_backup', 'DevFest 2024', 'My Talk')
+      expect(subject).toBe('[DevFest 2024] Your talk "My Talk" is on the waiting list')
     })
 
     it('should generate talk rejected subject with title', () => {

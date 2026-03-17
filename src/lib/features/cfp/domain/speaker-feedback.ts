@@ -359,6 +359,8 @@ export function getTemplateTypeForStatus(status: TalkStatus): FeedbackTemplateTy
     case 'accepted':
     case 'confirmed':
       return 'accepted'
+    case 'backup':
+      return 'waitlisted'
     case 'rejected':
       return 'rejected'
     default:

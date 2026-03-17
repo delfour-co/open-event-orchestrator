@@ -84,6 +84,7 @@ export type CfpUserRole = 'owner' | 'admin' | 'reviewer' | 'member' | null
  */
 export const FINAL_TALK_STATUSES: TalkStatus[] = [
   'accepted',
+  'backup',
   'rejected',
   'confirmed',
   'declined',

@@ -2477,6 +2477,7 @@ migrate(
               'submitted',
               'under_review',
               'accepted',
+              'backup',
               'rejected',
               'confirmed',
               'declined',
@@ -3758,6 +3759,7 @@ migrate(
             values: [
               'submission_confirmed',
               'talk_accepted',
+              'talk_backup',
               'talk_rejected',
               'confirmation_reminder',
               'cfp_closing_reminder'

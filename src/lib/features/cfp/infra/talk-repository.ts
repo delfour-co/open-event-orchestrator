@@ -91,6 +91,7 @@ export const createTalkRepository = (pb: PocketBase) => ({
       submitted: 0,
       under_review: 0,
       accepted: 0,
+      backup: 0,
       rejected: 0,
       confirmed: 0,
       declined: 0,

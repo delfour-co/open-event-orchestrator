@@ -43,6 +43,10 @@ describe('isFinalStatus', () => {
     expect(isFinalStatus('confirmed')).toBe(true)
   })
 
+  it('should return true for backup status', () => {
+    expect(isFinalStatus('backup')).toBe(true)
+  })
+
   it('should return true for declined status', () => {
     expect(isFinalStatus('declined')).toBe(true)
   })

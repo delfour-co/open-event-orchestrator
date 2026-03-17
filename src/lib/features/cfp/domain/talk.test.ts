@@ -130,6 +130,7 @@ describe('Talk', () => {
         'submitted',
         'under_review',
         'accepted',
+        'backup',
         'rejected',
         'confirmed',
         'declined',
@@ -190,6 +191,10 @@ describe('Talk', () => {
         expect(canWithdrawTalk('accepted')).toBe(true)
       })
 
+      it('should allow withdrawing backup talks', () => {
+        expect(canWithdrawTalk('backup')).toBe(true)
+      })
+
       it('should not allow withdrawing drafts', () => {
         expect(canWithdrawTalk('draft')).toBe(false)
       })
@@ -227,6 +232,10 @@ describe('Talk', () => {
       it('should return correct label for under_review', () => {
         expect(getStatusLabel('under_review')).toBe('Under Review')
       })
+
+      it('should return correct label for backup', () => {
+        expect(getStatusLabel('backup')).toBe('Backup')
+      })
     })
 
     describe('getStatusColor', () => {
@@ -240,6 +249,10 @@ describe('Talk', () => {
 
       it('should return red for rejected', () => {
         expect(getStatusColor('rejected')).toBe('red')
+      })
+
+      it('should return amber for backup', () => {
+        expect(getStatusColor('backup')).toBe('amber')
       })
     })
   })

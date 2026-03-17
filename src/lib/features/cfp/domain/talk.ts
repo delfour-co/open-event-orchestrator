@@ -5,6 +5,7 @@ export const talkStatusSchema = z.enum([
   'submitted',
   'under_review',
   'accepted',
+  'backup',
   'rejected',
   'confirmed',
   'declined',
@@ -72,7 +73,7 @@ export const canEditTalk = (status: TalkStatus): boolean => {
 }
 
 export const canWithdrawTalk = (status: TalkStatus): boolean => {
-  return ['submitted', 'under_review', 'accepted', 'confirmed'].includes(status)
+  return ['submitted', 'under_review', 'accepted', 'backup', 'confirmed'].includes(status)
 }
 
 export const canConfirmTalk = (status: TalkStatus): boolean => {
@@ -89,6 +90,7 @@ export const getStatusLabel = (status: TalkStatus): string => {
     submitted: 'Submitted',
     under_review: 'Under Review',
     accepted: 'Accepted',
+    backup: 'Backup',
     rejected: 'Rejected',
     confirmed: 'Confirmed',
     declined: 'Declined',
@@ -103,6 +105,7 @@ export const getStatusColor = (status: TalkStatus): string => {
     submitted: 'blue',
     under_review: 'yellow',
     accepted: 'green',
+    backup: 'amber',
     rejected: 'red',
     confirmed: 'emerald',
     declined: 'orange',
