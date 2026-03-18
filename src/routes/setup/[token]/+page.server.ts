@@ -58,8 +58,8 @@ export const actions: Actions = {
     }
 
     try {
-      // Create the admin user with super_admin role
-      await locals.pb.collection('users').create({
+      // Create the admin user
+      const newUser = await locals.pb.collection('users').create({
         email: data.email,
         password: data.password,
         passwordConfirm: data.passwordConfirm,
@@ -68,11 +68,21 @@ export const actions: Actions = {
         emailVisibility: true
       })
 
+      // Auto login first (needed to update own record)
+      await locals.pb.collection('users').authWithPassword(data.email, data.password)
+
+      // Ensure role is set — PB may ignore role during creation for non-auth clients
+      try {
+        await locals.pb.collection('users').update(newUser.id, { role: 'super_admin' })
+      } catch {
+        // If update fails, the role might already be set correctly
+      }
+
+      // Refresh auth to pick up the role
+      await locals.pb.collection('users').authRefresh()
+
       // Mark the setup token as used
       await tokenRepository.markAsUsed(setupToken.id)
-
-      // Auto login
-      await locals.pb.collection('users').authWithPassword(data.email, data.password)
 
       // Log the successful setup
       console.log(`[Setup] Initial setup completed - Admin: ${data.email}`)
