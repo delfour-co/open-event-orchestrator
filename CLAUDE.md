@@ -88,6 +88,7 @@ src/
 - `StatusBadge` — Edition status badges
 - `Pagination` — Page navigation
 - `PasswordStrengthIndicator` — Password strength meter
+- `UrlCopyBar` — URL display with copy and open-in-new-tab buttons
 
 ### Shared Utilities
 
@@ -301,6 +302,25 @@ See `.env.example` for the full list with documentation.
 
 ## Feature Modules
 
+### CFP Module
+
+#### Talk Statuses
+`draft` -> `submitted` -> `under_review` -> `accepted` / `rejected` / `backup`
+- `backup` -- Talk on waiting list, promoted to accepted if a speaker declines
+- `confirmed` / `declined` -- Speaker response to acceptance
+- `withdrawn` -- Speaker withdrew submission
+
+#### Speaker-Reviewer Messaging
+- Comments have `visibility` field: `internal` (reviewer-only) or `public` (visible to speaker)
+- Admin CFP page: tabbed comments (Internal Notes / Discussion with Speaker)
+- Speaker page: expandable discussion per talk with message count badge
+
+### Edition Duplication
+- Duplicate button on each edition card in `/admin/events`
+- Copies: venue, city, country, categories, formats, rooms, tracks, ticket types, sponsor packages
+- Does NOT copy: talks, orders, sponsors, sessions, speakers, reviews, budget
+- New edition always starts as `draft`
+
 ### Reporting Module
 
 The reporting module provides comprehensive dashboards and analytics for event editions.
@@ -434,9 +454,10 @@ Tabs: Email (SMTP), OAuth2, Payments, Notifications, S3, Backups, Log Retention,
 
 ## PocketBase Migrations
 
-Only 2 migration files:
+Migration files:
 - `0001_initial_schema.js` — Base schema (all collections)
 - `0002_v1_2_0_schema_updates.js` — All v1.2.0 additions (branding, 2FA, audit log, OAuth, settings)
+- `0003_comment_visibility.js` — Adds visibility field to comments for speaker messaging
 
 **Important**: Use `addMarshaledJSON(JSON.stringify([...]))` for adding fields, NOT `new Field()`.
 

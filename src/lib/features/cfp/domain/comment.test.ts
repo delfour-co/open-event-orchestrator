@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   type Comment,
   commentSchema,
+  commentVisibilitySchema,
   createCommentSchema,
   filterInternalComments,
   filterPublicComments,
@@ -63,6 +64,75 @@ describe('comment domain', () => {
     })
   })
 
+  describe('commentVisibilitySchema', () => {
+    it('should accept internal visibility', () => {
+      expect(commentVisibilitySchema.safeParse('internal').success).toBe(true)
+    })
+
+    it('should accept public visibility', () => {
+      expect(commentVisibilitySchema.safeParse('public').success).toBe(true)
+    })
+
+    it('should reject invalid visibility', () => {
+      expect(commentVisibilitySchema.safeParse('private').success).toBe(false)
+    })
+
+    it('should reject empty string', () => {
+      expect(commentVisibilitySchema.safeParse('').success).toBe(false)
+    })
+  })
+
+  describe('commentSchema with visibility', () => {
+    it('should validate a comment with visibility field', () => {
+      const comment = {
+        id: 'comment-1',
+        talkId: 'talk-1',
+        userId: 'user-1',
+        content: 'This is a great proposal',
+        isInternal: false,
+        visibility: 'public',
+        createdAt: new Date()
+      }
+
+      const result = commentSchema.safeParse(comment)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.visibility).toBe('public')
+      }
+    })
+
+    it('should default visibility to internal when not provided', () => {
+      const comment = {
+        id: 'comment-1',
+        talkId: 'talk-1',
+        userId: 'user-1',
+        content: 'Internal note',
+        isInternal: true,
+        createdAt: new Date()
+      }
+
+      const result = commentSchema.safeParse(comment)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.visibility).toBe('internal')
+      }
+    })
+
+    it('should reject invalid visibility value', () => {
+      const comment = {
+        id: 'comment-1',
+        talkId: 'talk-1',
+        userId: 'user-1',
+        content: 'This is a great proposal',
+        isInternal: true,
+        visibility: 'secret',
+        createdAt: new Date()
+      }
+
+      expect(commentSchema.safeParse(comment).success).toBe(false)
+    })
+  })
+
   describe('createCommentSchema', () => {
     it('should validate creation data without id and createdAt', () => {
       const data = {
@@ -86,6 +156,36 @@ describe('comment domain', () => {
       expect(result.success).toBe(true)
       if (result.success) {
         expect(result.data.isInternal).toBe(true)
+      }
+    })
+
+    it('should default visibility to internal', () => {
+      const data = {
+        talkId: 'talk-1',
+        userId: 'user-1',
+        content: 'Comment content'
+      }
+
+      const result = createCommentSchema.safeParse(data)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.visibility).toBe('internal')
+      }
+    })
+
+    it('should accept explicit public visibility', () => {
+      const data = {
+        talkId: 'talk-1',
+        userId: 'user-1',
+        content: 'Public reply',
+        isInternal: false,
+        visibility: 'public'
+      }
+
+      const result = createCommentSchema.safeParse(data)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.visibility).toBe('public')
       }
     })
   })
