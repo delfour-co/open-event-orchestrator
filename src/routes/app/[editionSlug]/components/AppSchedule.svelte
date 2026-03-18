@@ -65,11 +65,11 @@ interface Props {
   getTypeColor: (type: string) => string
   formatSpeakers: (speakers: Array<{ firstName: string; lastName: string }>) => string
   toIcalSession: (
-    session: unknown,
-    slot: unknown,
-    room: unknown,
-    track: unknown,
-    talk: unknown
+    session: { id: string; title: string; description?: string },
+    slot: { date: string; startTime: string; endTime: string } | undefined,
+    room: { name: string; floor?: string } | undefined,
+    track: { name: string; color?: string } | undefined,
+    talk: { speakers: Array<{ firstName: string; lastName: string }> } | undefined
   ) => IcalSession
   buildSessionStartTime: (slot: { date: string; startTime: string } | undefined) => string
   sessionHasNote: (sessionId: string) => boolean

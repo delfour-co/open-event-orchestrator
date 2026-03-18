@@ -5,14 +5,15 @@ import * as Card from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { SocialLoginButtons } from '$lib/features/auth/ui'
 import * as m from '$lib/paraglide/messages'
-import type { ActionData, PageData } from './$types'
+import type { PageData } from './$types'
 
-interface Props {
+const {
+  data,
+  form
+}: {
   data: PageData
-  form: ActionData
-}
-
-const { data, form }: Props = $props()
+  form: { error?: string; errors?: Record<string, string>; [key: string]: unknown } | null
+} = $props()
 </script>
 
 <svelte:head>

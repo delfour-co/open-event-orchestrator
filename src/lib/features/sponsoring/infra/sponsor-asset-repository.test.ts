@@ -123,6 +123,7 @@ describe('SponsorAssetRepository', () => {
           editionSponsorId: 'es1',
           category: 'logo_color',
           name: 'Main Logo',
+          file: 'logo.png',
           fileSize: 12345,
           mimeType: 'image/png',
           description: 'Primary logo',

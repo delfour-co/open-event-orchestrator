@@ -91,6 +91,7 @@ describe('QuoteRepository', () => {
       const repo = createQuoteRepository(mockPb as unknown as PocketBase)
       const result = await repo.create({
         editionId: 'edition1',
+        quoteNumber: 'QT-001',
         vendor: 'ACME Corp',
         vendorEmail: 'acme@example.com',
         items: [{ description: 'Item', quantity: 1, unitPrice: 1500 }],
@@ -117,6 +118,7 @@ describe('QuoteRepository', () => {
       const repo = createQuoteRepository(mockPb as unknown as PocketBase)
       await repo.create({
         editionId: 'edition1',
+        quoteNumber: 'QT-002',
         vendor: 'Vendor',
         items: [{ description: 'Item', quantity: 1, unitPrice: 500 }],
         totalAmount: 500,

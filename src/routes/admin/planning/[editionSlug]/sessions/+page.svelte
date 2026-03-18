@@ -150,9 +150,10 @@ function getSlotInfo(slotId: string) {
                     <Pencil class="h-4 w-4" />
                   </Button>
                 </a>
-                <form method="POST" action="?/deleteSession" use:enhance={() => {
+                <form method="POST" action="?/deleteSession" use:enhance={({ cancel }) => {
                   if (!confirm('Are you sure you want to delete this session?')) {
-                    return ({ cancel }) => cancel()
+                    cancel()
+                    return
                   }
                 }}>
                   <input type="hidden" name="id" value={session.id} />

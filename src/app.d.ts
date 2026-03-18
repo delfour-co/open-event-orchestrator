@@ -1,11 +1,10 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 
-// Build-time constants injected by Vite
-declare const __APP_VERSION__: string
-declare const __APP_COMMIT__: string
-
 declare global {
+  // Build-time constants injected by Vite
+  const __APP_VERSION__: string
+  const __APP_COMMIT__: string
   namespace App {
     // interface Error {}
     interface Locals {

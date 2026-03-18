@@ -33,14 +33,15 @@ import {
   Trash2,
   User
 } from 'lucide-svelte'
-import type { ActionData, PageData } from './$types'
+import type { PageData } from './$types'
 
-interface Props {
+const {
+  data,
+  form
+}: {
   data: PageData
-  form: ActionData
-}
-
-const { data, form }: Props = $props()
+  form: { error?: string; action?: string; success?: boolean; [key: string]: unknown } | null
+} = $props()
 
 // Tab definitions
 const tabs = [

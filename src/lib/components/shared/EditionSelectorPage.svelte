@@ -31,7 +31,7 @@ interface Props {
   settingsPath?: string
   settingsTitle?: string
   manageSuffix?: string
-  manageIcon?: Component
+  manageIcon?: Component<Record<string, unknown>>
   showSettingsIcon?: boolean
   linkStatusBadge?: boolean
 }

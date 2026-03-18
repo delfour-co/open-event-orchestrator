@@ -298,9 +298,10 @@ const roomsWithoutAssignments = $derived(() => {
                       <Button variant="ghost" size="icon" onclick={() => startEditAssignment(assignment)} title={m.action_edit()}>
                         <Pencil class="h-4 w-4" />
                       </Button>
-                      <form method="POST" action="?/deleteRoomAssignment" use:enhance={() => {
+                      <form method="POST" action="?/deleteRoomAssignment" use:enhance={({ cancel }) => {
                         if (!confirm('Are you sure you want to delete this assignment?')) {
-                          return ({ cancel }) => cancel()
+                          cancel()
+                          return
                         }
                       }}>
                         <input type="hidden" name="id" value={assignment.id} />

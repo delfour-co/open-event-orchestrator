@@ -202,9 +202,10 @@ function cancelSlotForm() {
               <Button variant="ghost" size="icon" onclick={() => startEditSlot(slot)} title={m.action_edit()}>
                 <Pencil class="h-4 w-4" />
               </Button>
-              <form method="POST" action="?/deleteSlot" use:enhance={() => {
+              <form method="POST" action="?/deleteSlot" use:enhance={({ cancel }) => {
                 if (!confirm('Are you sure you want to delete this slot?')) {
-                  return ({ cancel }) => cancel()
+                  cancel()
+                  return
                 }
               }}>
                 <input type="hidden" name="id" value={slot.id} />
