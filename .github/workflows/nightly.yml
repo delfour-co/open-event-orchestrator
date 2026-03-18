@@ -87,6 +87,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+          build-args: |
+            APP_VERSION_SUFFIX=-nightly
 
   # ==========================================================================
   # Deploy to demo environment via infra repo

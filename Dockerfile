@@ -44,6 +44,10 @@ COPY package.json pnpm-lock.yaml ./
 # Copy source code
 COPY . .
 
+# Version suffix (e.g., "-nightly" for nightly builds)
+ARG APP_VERSION_SUFFIX=""
+ENV APP_VERSION_SUFFIX=${APP_VERSION_SUFFIX}
+
 # Build the application
 RUN pnpm build
 
