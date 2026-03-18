@@ -43,11 +43,13 @@
       "node_modules",
       ".svelte-kit",
       ".claude/worktrees",
+      "project.inlang",
       "build",
       "dist",
       "coverage",
       "*.md",
-      "src/lib/paraglide"
+      "src/lib/paraglide",
+      "src/paraglide"
     ]
   },
   "overrides": [

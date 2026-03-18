@@ -5,10 +5,10 @@ import {
   createTicketTypeRepository
 } from '$lib/features/billing/infra'
 import { generateQrCodeDataUrl } from '$lib/features/billing/services'
+import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { createCancelOrderUseCase } from '$lib/features/billing/usecases/cancel-order'
 import { createCompleteOrderUseCase } from '$lib/features/billing/usecases/complete-order'
 import { createRefundOrderUseCase } from '$lib/features/billing/usecases/refund-order'
-import { getPaymentProvider } from '$lib/features/billing/services/payment-providers/factory'
 import { sendOrderConfirmationEmail, sendOrderRefundEmail } from '$lib/server/billing-notifications'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
