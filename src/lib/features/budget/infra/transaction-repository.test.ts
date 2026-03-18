@@ -136,6 +136,7 @@ describe('TransactionRepository', () => {
       await repo.create({
         categoryId: 'cat1',
         type: 'expense',
+        status: 'pending',
         amount: 100,
         description: 'Test',
         date: new Date()

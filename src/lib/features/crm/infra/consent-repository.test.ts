@@ -13,7 +13,7 @@ vi.mock('$lib/server/safe-filter', () => ({
 const makeConsentRecord = (overrides: Record<string, unknown> = {}) => ({
   id: 'consent1',
   contactId: 'contact1',
-  type: 'marketing',
+  type: 'marketing_email',
   status: 'granted',
   grantedAt: '2024-06-15T10:00:00Z',
   withdrawnAt: null,
@@ -49,7 +49,7 @@ describe('ConsentRepository', () => {
       expect(pb.collection).toHaveBeenCalledWith('consents')
       expect(result).not.toBeNull()
       expect(result?.id).toBe('consent1')
-      expect(result?.type).toBe('marketing')
+      expect(result?.type).toBe('marketing_email')
       expect(result?.status).toBe('granted')
       expect(result?.grantedAt).toEqual(new Date('2024-06-15T10:00:00Z'))
     })
@@ -81,22 +81,22 @@ describe('ConsentRepository', () => {
     it('should return consent matching contact and type', async () => {
       mockCollection.getList.mockResolvedValue({ items: [makeConsentRecord()] })
       const repo = createConsentRepository(pb)
-      const result = await repo.findByContactAndType('contact1', 'marketing')
+      const result = await repo.findByContactAndType('contact1', 'marketing_email')
       expect(result).not.toBeNull()
-      expect(result?.type).toBe('marketing')
+      expect(result?.type).toBe('marketing_email')
     })
 
     it('should return null when no match', async () => {
       mockCollection.getList.mockResolvedValue({ items: [] })
       const repo = createConsentRepository(pb)
-      const result = await repo.findByContactAndType('contact1', 'marketing')
+      const result = await repo.findByContactAndType('contact1', 'marketing_email')
       expect(result).toBeNull()
     })
 
     it('should return null on error', async () => {
       mockCollection.getList.mockRejectedValue(new Error('error'))
       const repo = createConsentRepository(pb)
-      const result = await repo.findByContactAndType('contact1', 'marketing')
+      const result = await repo.findByContactAndType('contact1', 'marketing_email')
       expect(result).toBeNull()
     })
   })
@@ -107,7 +107,7 @@ describe('ConsentRepository', () => {
       const repo = createConsentRepository(pb)
       const result = await repo.create({
         contactId: 'contact1',
-        type: 'marketing',
+        type: 'marketing_email',
         status: 'granted',
         source: 'form',
         grantedAt: new Date('2024-06-15T10:00:00Z')
@@ -145,7 +145,7 @@ describe('ConsentRepository', () => {
       })
       mockCollection.update.mockResolvedValue(makeConsentRecord({ status: 'granted' }))
       const repo = createConsentRepository(pb)
-      const result = await repo.grantConsent('contact1', 'marketing', 'form', '1.2.3.4')
+      const result = await repo.grantConsent('contact1', 'marketing_email', 'form', '1.2.3.4')
       expect(mockCollection.update).toHaveBeenCalledWith(
         'consent1',
         expect.objectContaining({
@@ -161,11 +161,11 @@ describe('ConsentRepository', () => {
       mockCollection.getList.mockResolvedValue({ items: [] })
       mockCollection.create.mockResolvedValue(makeConsentRecord())
       const repo = createConsentRepository(pb)
-      const result = await repo.grantConsent('contact1', 'marketing', 'form')
+      const result = await repo.grantConsent('contact1', 'marketing_email', 'form')
       expect(mockCollection.create).toHaveBeenCalledWith(
         expect.objectContaining({
           contactId: 'contact1',
-          type: 'marketing',
+          type: 'marketing_email',
           status: 'granted',
           source: 'form'
         })
@@ -179,7 +179,7 @@ describe('ConsentRepository', () => {
       mockCollection.getList.mockResolvedValue({ items: [makeConsentRecord()] })
       mockCollection.update.mockResolvedValue(makeConsentRecord({ status: 'withdrawn' }))
       const repo = createConsentRepository(pb)
-      const result = await repo.withdrawConsent('contact1', 'marketing')
+      const result = await repo.withdrawConsent('contact1', 'marketing_email')
       expect(mockCollection.update).toHaveBeenCalledWith(
         'consent1',
         expect.objectContaining({
@@ -192,7 +192,7 @@ describe('ConsentRepository', () => {
     it('should return null if no existing consent', async () => {
       mockCollection.getList.mockResolvedValue({ items: [] })
       const repo = createConsentRepository(pb)
-      const result = await repo.withdrawConsent('contact1', 'marketing')
+      const result = await repo.withdrawConsent('contact1', 'marketing_email')
       expect(result).toBeNull()
     })
   })

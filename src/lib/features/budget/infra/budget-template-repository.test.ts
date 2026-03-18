@@ -203,7 +203,7 @@ describe('BudgetTemplateRepository', () => {
           estimatedAmount: 1000,
           category: 'misc',
           isVariable: false,
-          priority: 'low'
+          priority: 'low' as const
         }
       ]
       const repo = createBudgetTemplateRepository(mockPb as unknown as PocketBase)

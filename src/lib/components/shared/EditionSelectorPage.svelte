@@ -21,7 +21,7 @@ interface Props {
   title: string
   description: string
   manageLabel: string
-  emptyIcon?: Component
+  emptyIcon?: Component<Record<string, unknown>>
   emptyTitle: string
   emptyDescription: string
   allArchivedText: string

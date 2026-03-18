@@ -98,7 +98,10 @@ describe('EvaluationPlanRepository', () => {
       await getRepo().create({
         editionId: 'edition1',
         name: 'New Plan',
-        createdBy: 'admin1'
+        createdBy: 'admin1',
+        isActive: true,
+        categoryIds: [],
+        reviewerIds: []
       })
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(
@@ -119,6 +122,7 @@ describe('EvaluationPlanRepository', () => {
       await getRepo().create({
         editionId: 'edition1',
         name: 'Plan',
+        isActive: true,
         categoryIds: ['cat1'],
         reviewerIds: ['user1'],
         createdBy: 'admin1'

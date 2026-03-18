@@ -71,4 +71,8 @@ const resetSuccess = $derived($page.url.searchParams.get('resetSuccess') === 'tr
       </p>
     </Card.Footer>
   </Card.Root>
+
+  <p class="mt-4 text-center text-xs text-muted-foreground/50">
+    v{__APP_VERSION__} · {__APP_COMMIT__}
+  </p>
 </div>

@@ -3,13 +3,7 @@ import {
   createContactEditionLinkRepository
 } from '$lib/features/crm/infra'
 import { createSyncContactsUseCase } from '$lib/features/crm/usecases'
-import {
-  filterAnd,
-  filterContains,
-  filterEquals,
-  filterOr,
-  safeFilter
-} from '$lib/server/safe-filter'
+import { filterContains, filterEquals, filterOr, safeFilter } from '$lib/server/safe-filter'
 import { error, fail } from '@sveltejs/kit'
 import type { Actions, PageServerLoad } from './$types'
 

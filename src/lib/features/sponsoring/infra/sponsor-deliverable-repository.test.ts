@@ -176,8 +176,8 @@ describe('SponsorDeliverableRepository', () => {
 
       const repo = createSponsorDeliverableRepository(mockPb as unknown as PocketBase)
       const result = await repo.createMany([
-        { editionSponsorId: 'es1', benefitName: 'Logo on website' },
-        { editionSponsorId: 'es1', benefitName: 'Booth' }
+        { editionSponsorId: 'es1', benefitName: 'Logo on website', status: 'pending' },
+        { editionSponsorId: 'es1', benefitName: 'Booth', status: 'pending' }
       ])
 
       expect(result).toHaveLength(2)

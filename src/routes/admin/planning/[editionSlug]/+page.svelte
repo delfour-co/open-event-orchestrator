@@ -7,7 +7,7 @@ import * as Dialog from '$lib/components/ui/dialog'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
 import * as m from '$lib/paraglide/messages'
-import { Clock, DoorOpen, GripVertical, Layers, Loader2, Plus, X } from 'lucide-svelte'
+import { Clock, DoorOpen, GripVertical, Layers, Loader2, Plus } from 'lucide-svelte'
 import type { ActionData, PageData } from './$types'
 
 interface Props {

@@ -197,6 +197,7 @@ describe('comment domain', () => {
       userId: 'user-1',
       content: `Comment ${id}`,
       isInternal: true,
+      visibility: 'internal',
       createdAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
     })
 
@@ -239,6 +240,7 @@ describe('comment domain', () => {
         userId: 'user-1',
         content: 'Internal comment',
         isInternal: true,
+        visibility: 'internal',
         createdAt: new Date()
       },
       {
@@ -247,6 +249,7 @@ describe('comment domain', () => {
         userId: 'user-1',
         content: 'Public comment',
         isInternal: false,
+        visibility: 'public',
         createdAt: new Date()
       },
       {
@@ -255,6 +258,7 @@ describe('comment domain', () => {
         userId: 'user-2',
         content: 'Another internal',
         isInternal: true,
+        visibility: 'internal',
         createdAt: new Date()
       }
     ]
@@ -278,6 +282,7 @@ describe('comment domain', () => {
         userId: 'user-1',
         content: 'Internal comment',
         isInternal: true,
+        visibility: 'internal',
         createdAt: new Date()
       },
       {
@@ -286,6 +291,7 @@ describe('comment domain', () => {
         userId: 'user-1',
         content: 'Public comment',
         isInternal: false,
+        visibility: 'public',
         createdAt: new Date()
       }
     ]

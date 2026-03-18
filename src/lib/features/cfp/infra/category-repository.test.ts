@@ -79,7 +79,7 @@ describe('CategoryRepository', () => {
   describe('create', () => {
     it('should create a category with default order', async () => {
       mockPb.mockCollection.create.mockResolvedValue(MOCK_RECORD)
-      await getRepo().create({ editionId: 'edition1', name: 'Web' })
+      await getRepo().create({ editionId: 'edition1', name: 'Web', order: 0 })
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(
         expect.objectContaining({ order: 0 })

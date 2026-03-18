@@ -67,6 +67,7 @@ describe('CfpSettingsRepository', () => {
         editionId: 'edition1',
         cfpOpenDate: openDate,
         maxSubmissionsPerSpeaker: 5,
+        allowLimitExceptionRequest: false,
         requireAbstract: true,
         requireDescription: false,
         allowCoSpeakers: true,
@@ -90,6 +91,7 @@ describe('CfpSettingsRepository', () => {
       await getRepo().create({
         editionId: 'edition1',
         maxSubmissionsPerSpeaker: 3,
+        allowLimitExceptionRequest: false,
         requireAbstract: true,
         requireDescription: false,
         allowCoSpeakers: true,

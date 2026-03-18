@@ -102,6 +102,7 @@ describe('TicketTypeRepository', () => {
         price: 99,
         currency: 'EUR',
         quantity: 100,
+        order: 0,
         isActive: true,
         salesStartDate: startDate,
         salesEndDate: endDate
@@ -125,6 +126,7 @@ describe('TicketTypeRepository', () => {
         price: 0,
         currency: 'EUR',
         quantity: 50,
+        order: 0,
         isActive: true
       })
 

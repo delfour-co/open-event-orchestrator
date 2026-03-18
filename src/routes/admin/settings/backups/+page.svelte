@@ -132,7 +132,7 @@ function cancelModal() {
 						id="backupsMaxKeep"
 						name="backupsMaxKeep"
 						type="number"
-						value={data.backupsMaxKeep}
+						value={String(data.backupsMaxKeep)}
 						min="1"
 						placeholder="7"
 					/>

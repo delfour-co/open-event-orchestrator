@@ -162,6 +162,7 @@ describe('PackageRepository', () => {
         tier: 2,
         price: 5000,
         currency: 'EUR',
+        isActive: true,
         benefits: []
       })
 

@@ -92,9 +92,9 @@ describe('FeedbackSettingsRepository', () => {
       mockPb._mockCollection.mockReturnValue({ update: mockUpdate })
 
       const repo = new FeedbackSettingsRepository(mockPb as unknown as PocketBase)
-      await repo.update({ id: 'fs1', sessionRatingMode: 'numeric' })
+      await repo.update({ id: 'fs1', sessionRatingMode: 'scale_10' })
 
-      expect(mockUpdate).toHaveBeenCalledWith('fs1', { sessionRatingMode: 'numeric' })
+      expect(mockUpdate).toHaveBeenCalledWith('fs1', { sessionRatingMode: 'scale_10' })
     })
   })
 

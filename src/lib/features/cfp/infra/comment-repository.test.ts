@@ -102,7 +102,13 @@ describe('CommentRepository', () => {
   describe('create', () => {
     it('should create a comment with default isInternal=true', async () => {
       mockPb.mockCollection.create.mockResolvedValue(MOCK_RECORD)
-      await getRepo().create({ talkId: 'talk1', userId: 'user1', content: 'Nice!' })
+      await getRepo().create({
+        talkId: 'talk1',
+        userId: 'user1',
+        content: 'Nice!',
+        isInternal: true,
+        visibility: 'internal'
+      })
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(
         expect.objectContaining({ isInternal: true })
@@ -115,7 +121,8 @@ describe('CommentRepository', () => {
         talkId: 'talk1',
         userId: 'user1',
         content: 'Public',
-        isInternal: false
+        isInternal: false,
+        visibility: 'public'
       })
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(
@@ -229,6 +236,7 @@ describe('CommentRepository', () => {
         talkId: 'talk1',
         userId: 'user1',
         content: 'Public message',
+        isInternal: false,
         visibility: 'public'
       })
 
@@ -243,7 +251,8 @@ describe('CommentRepository', () => {
         talkId: 'talk1',
         userId: 'user1',
         content: 'Internal note',
-        isInternal: true
+        isInternal: true,
+        visibility: 'internal'
       })
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(
@@ -257,7 +266,8 @@ describe('CommentRepository', () => {
         talkId: 'talk1',
         userId: 'user1',
         content: 'Public note',
-        isInternal: false
+        isInternal: false,
+        visibility: 'public'
       })
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(

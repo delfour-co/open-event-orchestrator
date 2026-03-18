@@ -72,7 +72,7 @@ const isActive = $derived(data.auditLogRetentionDays > 0 && data.apiLogRetention
 						id="auditLogRetentionDays"
 						name="auditLogRetentionDays"
 						type="number"
-						value={data.auditLogRetentionDays}
+						value={String(data.auditLogRetentionDays)}
 						min="1"
 						placeholder="90"
 					/>
@@ -88,7 +88,7 @@ const isActive = $derived(data.auditLogRetentionDays > 0 && data.apiLogRetention
 						id="apiLogRetentionDays"
 						name="apiLogRetentionDays"
 						type="number"
-						value={data.apiLogRetentionDays}
+						value={String(data.apiLogRetentionDays)}
 						min="1"
 						placeholder="30"
 					/>

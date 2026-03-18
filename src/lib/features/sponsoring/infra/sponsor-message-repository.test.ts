@@ -170,7 +170,8 @@ describe('SponsorMessageRepository', () => {
         senderUserId: 'user1',
         senderName: 'Alice',
         subject: 'Welcome',
-        content: 'Hello sponsor!'
+        content: 'Hello sponsor!',
+        attachments: []
       })
 
       expect(result?.id).toBe('msg1')

@@ -93,9 +93,27 @@ describe('TicketTemplateRepository', () => {
   describe('create', () => {
     it('should create a template', async () => {
       mockPb.mockCollection.create.mockResolvedValue(MOCK_RECORD)
-      const result = await getRepo().create({ editionId: 'edition1' })
+      const result = await getRepo().create({
+        editionId: 'edition1',
+        primaryColor: '#3B82F6',
+        accentColor: '#10B981',
+        backgroundColor: '#FFFFFF',
+        textColor: '#1F2937',
+        showVenue: true,
+        showDate: true,
+        showQrCode: true
+      })
 
-      expect(mockPb.mockCollection.create).toHaveBeenCalledWith({ editionId: 'edition1' })
+      expect(mockPb.mockCollection.create).toHaveBeenCalledWith({
+        editionId: 'edition1',
+        primaryColor: '#3B82F6',
+        accentColor: '#10B981',
+        backgroundColor: '#FFFFFF',
+        textColor: '#1F2937',
+        showVenue: true,
+        showDate: true,
+        showQrCode: true
+      })
       expect(result.id).toBe('tpl1')
     })
   })
@@ -126,7 +144,19 @@ describe('TicketTemplateRepository', () => {
       mockPb.mockCollection.create.mockResolvedValue(MOCK_RECORD)
       const logoFile = new File(['img'], 'logo.png', { type: 'image/png' })
 
-      await getRepo().createWithLogo({ editionId: 'edition1' }, logoFile)
+      await getRepo().createWithLogo(
+        {
+          editionId: 'edition1',
+          primaryColor: '#3B82F6',
+          accentColor: '#10B981',
+          backgroundColor: '#FFFFFF',
+          textColor: '#1F2937',
+          showVenue: true,
+          showDate: true,
+          showQrCode: true
+        },
+        logoFile
+      )
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(expect.any(FormData))
     })

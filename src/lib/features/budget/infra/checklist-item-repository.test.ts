@@ -122,6 +122,8 @@ describe('ChecklistItemRepository', () => {
         name: 'Book venue',
         estimatedAmount: 5000,
         priority: 'high',
+        status: 'pending',
+        order: 0,
         createdBy: 'user1'
       })
 
@@ -145,8 +147,24 @@ describe('ChecklistItemRepository', () => {
 
       const repo = createChecklistItemRepository(mockPb as unknown as PocketBase)
       const result = await repo.createMany([
-        { editionId: 'edition1', name: 'Item 1', createdBy: 'user1' },
-        { editionId: 'edition1', name: 'Item 2', createdBy: 'user1' }
+        {
+          editionId: 'edition1',
+          name: 'Item 1',
+          createdBy: 'user1',
+          status: 'pending',
+          order: 0,
+          priority: 'medium',
+          estimatedAmount: 0
+        },
+        {
+          editionId: 'edition1',
+          name: 'Item 2',
+          createdBy: 'user1',
+          status: 'pending',
+          order: 1,
+          priority: 'medium',
+          estimatedAmount: 0
+        }
       ])
 
       expect(result).toHaveLength(2)

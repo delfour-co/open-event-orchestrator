@@ -132,6 +132,7 @@ describe('SimulationScenarioRepository', () => {
       const result = await repo.create({
         editionId: 'edition1',
         name: 'Optimistic Scenario',
+        isBaseline: false,
         parameters: {
           expectedAttendees: 500,
           ticketPrice: 100,
@@ -170,12 +171,15 @@ describe('SimulationScenarioRepository', () => {
     it('should update simulation results', async () => {
       const results = {
         totalRevenue: 70000,
-        totalExpenses: 35000,
+        ticketRevenue: 50000,
+        sponsorshipRevenue: 20000,
+        totalCosts: 35000,
+        fixedCostsTotal: 5000,
+        variableCostsTotal: 30000,
         netProfit: 35000,
         breakEvenAttendees: 250,
-        profitMargin: 50,
-        revenueBreakdown: { tickets: 50000, sponsorship: 20000 },
-        expenseBreakdown: { fixed: 5000, variable: 30000 }
+        breakEvenTicketPrice: 70,
+        profitMargin: 50
       }
       const record = makeScenarioRecord({ results: JSON.stringify(results) })
       const mockUpdate = vi.fn().mockResolvedValue(record)

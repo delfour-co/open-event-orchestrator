@@ -68,10 +68,10 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
   let linkedAccounts: Array<{ id: string; provider: string; providerId: string }> = []
   try {
     const accounts = await locals.pb.collection('users').listExternalAuths(user.id as string)
-    linkedAccounts = accounts.map((a: { id: string; provider: string; providerId: string }) => ({
-      id: a.id,
-      provider: a.provider,
-      providerId: a.providerId
+    linkedAccounts = accounts.map((a) => ({
+      id: a.id as string,
+      provider: (a as Record<string, unknown>).provider as string,
+      providerId: (a as Record<string, unknown>).providerId as string
     }))
   } catch {
     /* ignore */

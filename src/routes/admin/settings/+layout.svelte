@@ -9,7 +9,7 @@ interface Props {
   children: import('svelte').Snippet
 }
 
-const { data, children }: Props = $props()
+const { children }: Props = $props()
 </script>
 
 <svelte:head>

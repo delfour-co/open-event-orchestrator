@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { AlertLevel, MetricSource, ThresholdOperator } from '../domain/alert-threshold'
+import type { AlertLevel, ComparisonOperator, MetricSource } from '../domain/alert-threshold'
 import { createAlertThresholdRepository } from './alert-threshold-repository'
 
 const NOW = new Date().toISOString()
@@ -200,9 +200,12 @@ describe('createAlertThresholdRepository', () => {
         editionId: 'ed-1',
         name: 'New Threshold',
         metricSource: 'billing_sales' as MetricSource,
-        operator: 'lt' as ThresholdOperator,
+        operator: 'lt' as ComparisonOperator,
         thresholdValue: 100,
         level: 'critical' as AlertLevel,
+        enabled: true,
+        notifyByEmail: true,
+        notifyInApp: true,
         emailRecipients: ['test@example.com']
       })
 
@@ -222,9 +225,13 @@ describe('createAlertThresholdRepository', () => {
         editionId: 'ed-1',
         name: 'New Threshold',
         metricSource: 'billing_sales' as MetricSource,
-        operator: 'lt' as ThresholdOperator,
+        operator: 'lt' as ComparisonOperator,
         thresholdValue: 100,
-        level: 'critical' as AlertLevel
+        level: 'critical' as AlertLevel,
+        enabled: true,
+        notifyByEmail: false,
+        notifyInApp: true,
+        emailRecipients: []
       })
 
       expect(collection().create).toHaveBeenCalledWith(

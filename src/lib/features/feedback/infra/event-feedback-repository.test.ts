@@ -61,7 +61,9 @@ describe('EventFeedbackRepository', () => {
         editionId: 'ed1',
         userId: 'user1',
         feedbackType: 'general',
-        message: 'Nice!'
+        message: 'Nice!',
+        status: 'open',
+        numericValue: null
       })
 
       expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ status: 'open' }))

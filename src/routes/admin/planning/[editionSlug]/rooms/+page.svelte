@@ -212,9 +212,10 @@ function toggleEquipment(value: string) {
                 <Button variant="ghost" size="icon" onclick={() => startEditRoom(room)} title={m.action_edit()}>
                   <Pencil class="h-4 w-4" />
                 </Button>
-                <form method="POST" action="?/deleteRoom" use:enhance={() => {
+                <form method="POST" action="?/deleteRoom" use:enhance={({ cancel }) => {
                   if (!confirm('Are you sure you want to delete this room?')) {
-                    return ({ cancel }) => cancel()
+                    cancel()
+                    return
                   }
                 }}>
                   <input type="hidden" name="id" value={room.id} />

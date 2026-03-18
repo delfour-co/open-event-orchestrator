@@ -58,8 +58,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 export const actions: Actions = {
   // Accept invitation — either create account or login
-  default: async ({ request, locals, params }) => {
-    const { token } = params
+  default: async ({ request, locals, params: _params }) => {
     const formData = await request.formData()
     const mode = formData.get('mode') as string // 'register' or 'login'
     const email = formData.get('email') as string

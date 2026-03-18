@@ -20,7 +20,7 @@ describe('audit-log-service', () => {
     mockCreate = vi.fn().mockResolvedValue({
       id: 'log1',
       organizationId: 'org1',
-      action: 'org.created',
+      action: 'org_create',
       created: new Date().toISOString()
     })
 
@@ -37,7 +37,7 @@ describe('audit-log-service', () => {
         organizationId: 'org1',
         userId: 'user1',
         userName: 'John Doe',
-        action: 'org.created' as const,
+        action: 'org_create' as const,
         entityType: 'organization' as const,
         entityId: 'org1',
         entityName: 'My Org',
@@ -59,7 +59,7 @@ describe('audit-log-service', () => {
       await expect(
         writeAuditLog(mockPb, {
           organizationId: 'org1',
-          action: 'org.created' as const
+          action: 'org_create' as const
         })
       ).resolves.toBeUndefined()
 
@@ -74,7 +74,7 @@ describe('audit-log-service', () => {
     it('should handle params with optional fields omitted', async () => {
       const params = {
         organizationId: 'org1',
-        action: 'org.updated' as const
+        action: 'org_update' as const
       }
 
       await writeAuditLog(mockPb, params)

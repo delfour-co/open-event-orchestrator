@@ -14,8 +14,6 @@ export type LinkedAccount = {
   providerId: string
 }
 
-const SUPPORTED_PROVIDERS: readonly SocialProvider[] = ['google', 'github'] as const
-
 export async function getAvailableProviders(pb: PocketBase): Promise<SocialProvider[]> {
   try {
     // Read OAuth2 config from app_settings

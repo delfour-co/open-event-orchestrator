@@ -91,11 +91,12 @@ describe('QuoteRepository', () => {
       const repo = createQuoteRepository(mockPb as unknown as PocketBase)
       const result = await repo.create({
         editionId: 'edition1',
-        quoteNumber: 'QT-001',
         vendor: 'ACME Corp',
         vendorEmail: 'acme@example.com',
-        items: [],
+        items: [{ description: 'Item', quantity: 1, unitPrice: 1500 }],
         totalAmount: 1500,
+        currency: 'EUR',
+        status: 'draft',
         validUntil: new Date('2024-06-01')
       })
 
@@ -103,7 +104,7 @@ describe('QuoteRepository', () => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           vendor: 'ACME Corp',
-          quoteNumber: 'QT-001'
+          editionId: 'edition1'
         })
       )
     })
@@ -116,10 +117,11 @@ describe('QuoteRepository', () => {
       const repo = createQuoteRepository(mockPb as unknown as PocketBase)
       await repo.create({
         editionId: 'edition1',
-        quoteNumber: 'QT-002',
         vendor: 'Vendor',
-        items: [],
-        totalAmount: 500
+        items: [{ description: 'Item', quantity: 1, unitPrice: 500 }],
+        totalAmount: 500,
+        currency: 'EUR',
+        status: 'draft'
       })
 
       expect(mockCreate).toHaveBeenCalledWith(

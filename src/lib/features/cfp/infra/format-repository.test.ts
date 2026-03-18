@@ -76,7 +76,8 @@ describe('FormatRepository', () => {
       await getRepo().create({
         editionId: 'edition1',
         name: 'Workshop',
-        duration: 120
+        duration: 120,
+        order: 0
       })
 
       expect(mockPb.mockCollection.create).toHaveBeenCalledWith(

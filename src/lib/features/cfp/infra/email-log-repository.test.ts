@@ -95,7 +95,7 @@ describe('EmailLogRepository', () => {
   describe('findByType', () => {
     it('should filter by edition and type', async () => {
       mockPb.mockCollection.getFullList.mockResolvedValue([MOCK_RECORD])
-      const result = await getRepo().findByType('edition1', 'acceptance')
+      const result = await getRepo().findByType('edition1', 'talk_accepted')
 
       expect(mockPb.mockCollection.getFullList).toHaveBeenCalledWith({
         filter: expect.stringContaining('&&'),
@@ -111,7 +111,7 @@ describe('EmailLogRepository', () => {
       await getRepo().create({
         speakerId: 'speaker1',
         editionId: 'edition1',
-        type: 'acceptance',
+        type: 'talk_accepted',
         to: 'speaker@example.com',
         subject: 'Accepted',
         status: 'sent'

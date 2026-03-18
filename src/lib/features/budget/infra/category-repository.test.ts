@@ -112,7 +112,7 @@ describe('CategoryRepository', () => {
       mockPb._mockCollection.mockReturnValue({ create: mockCreate })
 
       const repo = createCategoryRepository(mockPb as unknown as PocketBase)
-      await repo.create({ budgetId: 'budget1', name: 'Other' })
+      await repo.create({ budgetId: 'budget1', name: 'Other', plannedAmount: 0 })
 
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({

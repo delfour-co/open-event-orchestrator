@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
@@ -6,7 +7,14 @@ import tailwindcss from '@tailwindcss/vite'
 import { svelteTesting } from '@testing-library/svelte/vite'
 import { defineConfig } from 'vitest/config'
 
+const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
+const pkg = JSON.parse(execSync('cat package.json').toString())
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_COMMIT__: JSON.stringify(commitHash)
+  },
   plugins: [
     tailwindcss(),
     sveltekit(),

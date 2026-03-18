@@ -17,7 +17,7 @@ const createMockPb = () => {
 const makeAssetRecord = (overrides: Record<string, unknown> = {}) => ({
   id: 'asset1',
   editionSponsorId: 'es1',
-  category: 'logo',
+  category: 'logo_color' as const,
   name: 'Main Logo',
   description: 'Primary logo',
   file: 'logo.png',
@@ -48,7 +48,7 @@ describe('SponsorAssetRepository', () => {
       const result = await repo.findById('asset1')
 
       expect(result?.id).toBe('asset1')
-      expect(result?.category).toBe('logo')
+      expect(result?.category).toBe('logo_color')
       expect(result?.name).toBe('Main Logo')
     })
 
@@ -86,7 +86,7 @@ describe('SponsorAssetRepository', () => {
       mockPb._mockCollection.mockReturnValue({ getFullList: mockGetFullList })
 
       const repo = createSponsorAssetRepository(mockPb as unknown as PocketBase)
-      const result = await repo.findByEditionSponsorAndCategory('es1', 'logo')
+      const result = await repo.findByEditionSponsorAndCategory('es1', 'logo_color')
 
       expect(result).toHaveLength(1)
     })
@@ -121,7 +121,7 @@ describe('SponsorAssetRepository', () => {
       const result = await repo.create(
         {
           editionSponsorId: 'es1',
-          category: 'logo',
+          category: 'logo_color',
           name: 'Main Logo',
           fileSize: 12345,
           mimeType: 'image/png',
@@ -149,6 +149,7 @@ describe('SponsorAssetRepository', () => {
           editionSponsorId: 'es1',
           category: 'document',
           name: 'Contract',
+          file: 'contract.pdf',
           fileSize: 5000,
           mimeType: 'application/pdf'
         },
@@ -207,7 +208,9 @@ describe('SponsorAssetRepository', () => {
       const repo = createSponsorAssetRepository(mockPb as unknown as PocketBase)
       const asset = makeAssetRecord()
       const url = repo.getFileUrl(
-        asset as ReturnType<typeof repo.findById> extends Promise<infer T> ? NonNullable<T> : never
+        asset as unknown as ReturnType<typeof repo.findById> extends Promise<infer T>
+          ? NonNullable<T>
+          : never
       )
 
       expect(mockPb.files.getURL).toHaveBeenCalled()
@@ -220,7 +223,9 @@ describe('SponsorAssetRepository', () => {
       const repo = createSponsorAssetRepository(mockPb as unknown as PocketBase)
       const asset = makeAssetRecord()
       const url = repo.getThumbUrl(
-        asset as ReturnType<typeof repo.findById> extends Promise<infer T> ? NonNullable<T> : never,
+        asset as unknown as ReturnType<typeof repo.findById> extends Promise<infer T>
+          ? NonNullable<T>
+          : never,
         '400x400'
       )
 
