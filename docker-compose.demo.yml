@@ -1,0 +1,19 @@
+# =============================================================================
+# Open Event Orchestrator - Demo Environment
+# =============================================================================
+# Extends docker-compose.prod.yml with demo-specific settings.
+# Auto-creates a PocketBase superuser on startup.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.demo.yml up -d
+#
+# Credentials are injected via environment variables (not stored in this file).
+# Set PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD in your .env or CI secrets.
+# =============================================================================
+
+services:
+  frontend:
+    environment:
+      - DEMO_MODE=true
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}

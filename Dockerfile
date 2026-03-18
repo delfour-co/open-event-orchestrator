@@ -65,6 +65,10 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 # Copy built application
 COPY --from=builder /app/build ./build
 
+# Copy entrypoint script
+COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Create non-root user
 RUN addgroup -g 1001 app && adduser -D -u 1001 -G app app
 RUN chown -R app:app /app
@@ -98,5 +102,8 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget -q --spider http://localhost:3000 || exit 1
 
-# Run the application
-CMD ["node", "build"]
+# Demo mode (optional - auto-creates PocketBase superuser on startup)
+ENV DEMO_MODE=false
+
+# Run the application via entrypoint
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

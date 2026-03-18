@@ -1,0 +1,114 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Every day at 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ==========================================================================
+  # Check if there are new commits in the last 24 hours
+  # ==========================================================================
+  check:
+    name: Check for new commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      has_commits: ${{ steps.check.outputs.has_commits }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for recent commits
+        id: check
+        run: |
+          COMMITS=$(git log --since="24 hours ago" --oneline)
+          if [ -z "$COMMITS" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "No new commits in the last 24 hours. Skipping build."
+            echo "has_commits=false" >> $GITHUB_OUTPUT
+          else
+            echo "New commits found (or manual trigger):"
+            echo "$COMMITS"
+            echo "has_commits=true" >> $GITHUB_OUTPUT
+          fi
+
+  # ==========================================================================
+  # Build and push Docker image with nightly tag
+  # ==========================================================================
+  docker:
+    name: Build Docker Image
+    needs: check
+    if: needs.check.outputs.has_commits == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=nightly
+            type=raw,value=nightly-{{date 'YYYYMMDD'}}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  # ==========================================================================
+  # Deploy to demo environment via infra repo
+  # ==========================================================================
+  deploy:
+    name: Deploy to Demo
+    needs: docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger deploy on infra repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_DEPLOY_TOKEN }}
+          repository: delfour-co/my-infra
+          event-type: deploy-app
+          client-payload: |
+            {
+              "app": "oeo",
+              "version": "nightly",
+              "environment": "demo",
+              "demo_mode": true,
+              "pb_admin_email": "${{ secrets.DEMO_PB_ADMIN_EMAIL }}",
+              "pb_admin_password": "${{ secrets.DEMO_PB_ADMIN_PASSWORD }}"
+            }
