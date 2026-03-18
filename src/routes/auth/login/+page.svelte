@@ -24,7 +24,7 @@ const resetSuccess = $derived($page.url.searchParams.get('resetSuccess') === 'tr
   <title>{m.auth_login_page_title()}</title>
 </svelte:head>
 
-<div class="flex min-h-screen items-center justify-center bg-muted/50 p-4">
+<div class="flex min-h-screen flex-col items-center justify-center bg-muted/50 p-4">
   <Card.Root class="w-full max-w-md">
     <Card.Header class="space-y-1">
       <Card.Title class="text-2xl font-bold">{m.auth_login_welcome()}</Card.Title>
@@ -73,6 +73,6 @@ const resetSuccess = $derived($page.url.searchParams.get('resetSuccess') === 'tr
   </Card.Root>
 
   <p class="mt-4 text-center text-xs text-muted-foreground/50">
-    v{__APP_VERSION__} · {__APP_COMMIT__}
+    v{__APP_VERSION__}
   </p>
 </div>

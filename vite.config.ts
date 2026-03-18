@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import { sveltekit } from '@sveltejs/kit/vite'
@@ -6,21 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 import { svelteTesting } from '@testing-library/svelte/vite'
 import { defineConfig } from 'vitest/config'
 
-function tryExec(cmd: string, fallback: string): string {
-  try {
-    return execSync(cmd).toString().trim()
-  } catch {
-    return fallback
-  }
-}
-
-const commitHash = tryExec('git rev-parse --short HEAD', 'unknown')
 const pkg = JSON.parse(readFileSync('package.json', 'utf-8'))
 
 export default defineConfig({
   define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
-    __APP_COMMIT__: JSON.stringify(commitHash)
+    __APP_VERSION__: JSON.stringify(pkg.version)
   },
   plugins: [
     tailwindcss(),
