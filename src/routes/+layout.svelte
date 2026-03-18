@@ -15,11 +15,13 @@ const { children }: Props = $props()
   <script>
     // Prevent flash of wrong theme
     (function () {
-      const theme = localStorage.getItem('theme')
-      const parsed = theme ? JSON.parse(theme) : 'system'
-      const isDark =
-        parsed === 'dark' ||
-        (parsed === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      var raw = localStorage.getItem('theme') || 'system'
+      // Handle both plain strings and JSON-encoded strings from older versions
+      var theme = raw
+      try { theme = JSON.parse(raw) } catch (e) { /* plain string, use as-is */ }
+      var isDark =
+        theme === 'dark' ||
+        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
       if (isDark) document.documentElement.classList.add('dark')
     })()
   </script>

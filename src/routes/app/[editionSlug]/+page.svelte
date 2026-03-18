@@ -909,15 +909,11 @@ let currentTheme = $state<'light' | 'dark' | 'system'>('system')
 // Initialize theme from localStorage
 $effect(() => {
   if (!browser) return
-  try {
-    const stored = localStorage.getItem('theme')
-    if (stored) {
-      currentTheme = JSON.parse(stored) as 'light' | 'dark' | 'system'
-    }
-    applyTheme(currentTheme)
-  } catch {
-    // Ignore errors
+  const stored = localStorage.getItem('theme')
+  if (stored === 'light' || stored === 'dark' || stored === 'system') {
+    currentTheme = stored
   }
+  applyTheme(currentTheme)
 })
 
 function applyTheme(value: 'light' | 'dark' | 'system'): void {
@@ -930,7 +926,7 @@ function applyTheme(value: 'light' | 'dark' | 'system'): void {
 
 function toggleTheme(): void {
   currentTheme = currentTheme === 'dark' ? 'light' : 'dark'
-  localStorage.setItem('theme', JSON.stringify(currentTheme))
+  localStorage.setItem('theme', currentTheme)
   applyTheme(currentTheme)
 }
 

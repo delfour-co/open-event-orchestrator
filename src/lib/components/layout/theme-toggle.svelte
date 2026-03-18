@@ -8,13 +8,20 @@ let currentTheme = $state<'light' | 'dark' | 'system'>('system')
 
 // Initialize theme from localStorage
 if (browser) {
-  try {
-    const stored = localStorage.getItem('theme')
-    if (stored) {
-      currentTheme = JSON.parse(stored) as 'light' | 'dark' | 'system'
+  const stored = localStorage.getItem('theme')
+  if (stored === 'light' || stored === 'dark' || stored === 'system') {
+    currentTheme = stored
+  } else if (stored) {
+    // Handle JSON-encoded strings from older versions
+    try {
+      const parsed = JSON.parse(stored)
+      if (parsed === 'light' || parsed === 'dark' || parsed === 'system') {
+        currentTheme = parsed
+        localStorage.setItem('theme', parsed) // Migrate to plain string
+      }
+    } catch {
+      // Ignore invalid values
     }
-  } catch {
-    // Ignore errors
   }
 }
 
@@ -30,7 +37,7 @@ function applyTheme(value: 'light' | 'dark' | 'system') {
 
 function toggleTheme() {
   currentTheme = currentTheme === 'dark' ? 'light' : 'dark'
-  localStorage.setItem('theme', JSON.stringify(currentTheme))
+  localStorage.setItem('theme', currentTheme)
   applyTheme(currentTheme)
 }
 
