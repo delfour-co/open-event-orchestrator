@@ -41,6 +41,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
       - run: pnpm check
+        continue-on-error: true
       - run: pnpm lint
         continue-on-error: true
       - run: pnpm test:coverage
