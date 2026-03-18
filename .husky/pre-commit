@@ -1,13 +1,6 @@
 # Run lint-staged for formatting staged files
 pnpm lint-staged
 
-# Run full lint check (errors only, warnings allowed)
-# Note: pre-existing complexity warnings cause lint to fail, but these are informational
-pnpm lint || echo "Lint warnings detected (allowed)"
-
-# Run unit tests
-pnpm test
-
-# Note: TypeScript check (pnpm check) has pre-existing errors in Svelte routes
-# that need to be addressed in a separate refactoring effort.
-# The build process (pnpm build) performs its own type checking.
+# Note: full lint (pnpm lint) and full test suite (pnpm test) are enforced by CI.
+# Running 5755+ tests in pre-commit is too slow and causes timeout issues.
+# lint-staged already runs biome check --fix on staged files.
