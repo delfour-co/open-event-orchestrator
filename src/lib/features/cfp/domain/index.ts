@@ -9,11 +9,13 @@ export {
 
 export {
   commentSchema,
+  commentVisibilitySchema,
   createCommentSchema,
   sortCommentsByDate,
   filterInternalComments,
   filterPublicComments,
   type Comment,
+  type CommentVisibility,
   type CreateComment
 } from './comment'
 

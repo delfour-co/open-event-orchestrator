@@ -1,11 +1,17 @@
 import { z } from 'zod'
 
+export const commentVisibilitySchema = z.enum(['internal', 'public'])
+
+export type CommentVisibility = z.infer<typeof commentVisibilitySchema>
+
 export const commentSchema = z.object({
   id: z.string(),
   talkId: z.string(),
   userId: z.string(),
   content: z.string().min(1).max(5000),
   isInternal: z.boolean().default(true),
+  visibility: commentVisibilitySchema.default('internal'),
+  authorName: z.string().optional(),
   createdAt: z.date()
 })
 

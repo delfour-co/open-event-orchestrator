@@ -37,17 +37,23 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 
   const speakers = await speakerRepo.findByIds(talk.speakerIds)
 
-  // Load reviews and comments
+  // Load reviews and comments (all comments, not just internal)
   const reviews = await reviewRepo.findByTalk(params.talkId)
   const ratingStats = await reviewRepo.getAverageRating(params.talkId)
-  const comments = await commentRepo.findByTalk(params.talkId, true)
+  const allComments = await commentRepo.findByTalk(params.talkId, false)
+
+  // Split comments by visibility
+  const internalComments = allComments.filter((c) => (c.visibility || 'internal') !== 'public')
+  const publicComments = allComments.filter((c) => c.visibility === 'public')
 
   // Get current user's review if exists
   const userId = locals.user?.id
   const userReview = userId ? reviews.find((r) => r.userId === userId) : undefined
 
   // Get user names for reviews and comments
-  const userIds = [...new Set([...reviews.map((r) => r.userId), ...comments.map((c) => c.userId)])]
+  const userIds = [
+    ...new Set([...reviews.map((r) => r.userId), ...allComments.map((c) => c.userId)])
+  ]
 
   const users = await Promise.all(
     userIds.map(async (id) => {
@@ -94,7 +100,11 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
     })),
     ratingStats,
     userReview,
-    comments: comments.map((c) => ({
+    internalComments: internalComments.map((c) => ({
+      ...c,
+      user: userMap.get(c.userId)
+    })),
+    publicComments: publicComments.map((c) => ({
       ...c,
       user: userMap.get(c.userId)
     })),
@@ -206,6 +216,7 @@ export const actions: Actions = {
 
     const formData = await request.formData()
     const content = formData.get('content') as string
+    const visibility = (formData.get('visibility') as string) || 'internal'
 
     if (!content || content.trim().length === 0) {
       return fail(400, { commentError: 'Comment cannot be empty' })
@@ -215,6 +226,7 @@ export const actions: Actions = {
       return fail(400, { commentError: 'Comment is too long (max 5000 characters)' })
     }
 
+    const isPublic = visibility === 'public'
     const commentRepo = createCommentRepository(locals.pb)
 
     try {
@@ -222,7 +234,8 @@ export const actions: Actions = {
         talkId: params.talkId,
         userId: locals.user.id,
         content: content.trim(),
-        isInternal: true
+        isInternal: !isPublic,
+        visibility: isPublic ? 'public' : 'internal'
       })
       return { commentSuccess: true, message: 'Comment added' }
     } catch (err) {

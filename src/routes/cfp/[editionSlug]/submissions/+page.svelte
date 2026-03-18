@@ -4,6 +4,7 @@ import { Button } from '$lib/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card'
 import { Input } from '$lib/components/ui/input'
 import { Label } from '$lib/components/ui/label'
+import { Textarea } from '$lib/components/ui/textarea'
 import { type TalkStatus, getStatusColor, getStatusLabel } from '$lib/features/cfp/domain'
 import * as m from '$lib/paraglide/messages'
 import {
@@ -17,7 +18,9 @@ import {
   Loader2,
   Mail,
   MessageCircle,
+  MessageSquare,
   Plus,
+  Send,
   Star,
   ThumbsDown,
   ThumbsUp,
@@ -41,6 +44,9 @@ let showDeclineConfirm = $state<string | null>(null)
 let showInviteForm = $state<string | null>(null)
 let cospeakerEmail = $state('')
 let expandedFeedback = $state<string | null>(null)
+let expandedDiscussion = $state<string | null>(null)
+let newMessage = $state('')
+let isSubmittingMessage = $state(false)
 
 function renderStars(rating: number | null, max = 5): string {
   if (rating === null) return '-'
@@ -517,6 +523,102 @@ const statusColors: Record<string, string> = {
                             </div>
                           </div>
                         {/if}
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
+                <!-- Discussion section -->
+                {#if talk.discussion && talk.discussion.length > 0 || expandedDiscussion === talk.id}
+                  <div class="border-t pt-4">
+                    <button
+                      class="flex w-full items-center justify-between text-left"
+                      onclick={() => {
+                        expandedDiscussion = expandedDiscussion === talk.id ? null : talk.id
+                        newMessage = ''
+                      }}
+                    >
+                      <div class="flex items-center gap-3">
+                        <MessageSquare class="h-4 w-4 text-blue-500" />
+                        <span class="text-sm font-medium">{m.cfp_discussion_title()}</span>
+                        {#if talk.discussion.length > 0}
+                          <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            {talk.discussion.length}
+                          </span>
+                        {/if}
+                      </div>
+                      <div class="text-muted-foreground">
+                        {#if expandedDiscussion === talk.id}
+                          <ChevronUp class="h-4 w-4" />
+                        {:else}
+                          <ChevronDown class="h-4 w-4" />
+                        {/if}
+                      </div>
+                    </button>
+
+                    {#if expandedDiscussion === talk.id}
+                      <div class="mt-4 space-y-4">
+                        {#if talk.discussion.length === 0}
+                          <p class="text-center text-sm text-muted-foreground">
+                            {m.cfp_discussion_no_messages()}
+                          </p>
+                        {:else}
+                          <div class="space-y-3">
+                            {#each talk.discussion as msg}
+                              <div class="flex gap-3">
+                                <div
+                                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium {msg.isOwn ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-muted'}"
+                                >
+                                  {msg.authorName[0] || '?'}
+                                </div>
+                                <div class="flex-1">
+                                  <div class="flex items-center gap-2">
+                                    <span class="text-sm font-medium">{msg.authorName}</span>
+                                    <span class="text-xs text-muted-foreground">
+                                      {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(msg.createdAt)}
+                                    </span>
+                                  </div>
+                                  <p class="mt-0.5 whitespace-pre-wrap text-sm">{msg.content}</p>
+                                </div>
+                              </div>
+                            {/each}
+                          </div>
+                        {/if}
+
+                        <!-- Send message form -->
+                        <form
+                          method="POST"
+                          action="?/addMessage&token={data.token}"
+                          use:enhance={() => {
+                            isSubmittingMessage = true
+                            return async ({ update }) => {
+                              isSubmittingMessage = false
+                              newMessage = ''
+                              await update()
+                            }
+                          }}
+                          class="space-y-2"
+                        >
+                          <input type="hidden" name="talkId" value={talk.id} />
+                          <Textarea
+                            name="content"
+                            placeholder={m.cfp_discussion_placeholder()}
+                            bind:value={newMessage}
+                            rows={2}
+                          />
+                          {#if form?.messageError}
+                            <p class="text-sm text-destructive">{form.messageError}</p>
+                          {/if}
+                          <div class="flex justify-end">
+                            <Button
+                              type="submit"
+                              size="sm"
+                              disabled={isSubmittingMessage || !newMessage.trim()}
+                            >
+                              <Send class="mr-2 h-4 w-4" />
+                              {m.cfp_discussion_send()}
+                            </Button>
+                          </div>
+                        </form>
                       </div>
                     {/if}
                   </div>

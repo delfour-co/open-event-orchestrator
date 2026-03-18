@@ -12,6 +12,8 @@ import {
   Check,
   Clock,
   ExternalLink,
+  Eye,
+  Lock,
   Mail,
   MapPin,
   MessageSquare,
@@ -33,6 +35,8 @@ let showDeleteConfirm = $state(false)
 let reviewRating = $state(0)
 let reviewComment = $state('')
 let newComment = $state('')
+let newCommentVisibility = $state<'internal' | 'public'>('internal')
+let activeCommentTab = $state<'internal' | 'public'>('internal')
 let isSubmittingReview = $state(false)
 let isSubmittingComment = $state(false)
 
@@ -298,16 +302,32 @@ $effect(() => {
         </Card.Content>
       </Card.Root>
 
-      <!-- Comments Section -->
+      <!-- Comments Section with Tabs -->
       <Card.Root>
         <Card.Header>
           <Card.Title class="flex items-center gap-2">
             <MessageSquare class="h-5 w-5" />
-            {m.cfp_comments_title()} ({data.comments.length})
+            {m.cfp_discussion_title()}
           </Card.Title>
-          <Card.Description>
-            {m.cfp_comments_description()}
-          </Card.Description>
+          <!-- Tab navigation -->
+          <div class="flex gap-1 border-b">
+            <button
+              type="button"
+              class="flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors {activeCommentTab === 'internal' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+              onclick={() => { activeCommentTab = 'internal' }}
+            >
+              <Lock class="h-3.5 w-3.5" />
+              {m.cfp_discussion_internal_notes()} ({data.internalComments.length})
+            </button>
+            <button
+              type="button"
+              class="flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors {activeCommentTab === 'public' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}"
+              onclick={() => { activeCommentTab = 'public' }}
+            >
+              <Eye class="h-3.5 w-3.5" />
+              {m.cfp_discussion_with_speaker()} ({data.publicComments.length})
+            </button>
+          </div>
         </Card.Header>
         <Card.Content class="space-y-4">
           <!-- Add Comment Form -->
@@ -324,71 +344,130 @@ $effect(() => {
               }}
               class="space-y-3"
             >
+              <input type="hidden" name="visibility" value={activeCommentTab} />
               <Textarea
                 name="content"
-                placeholder={m.cfp_comments_add_placeholder()}
+                placeholder={m.cfp_discussion_placeholder()}
                 bind:value={newComment}
                 rows={3}
               />
               {#if form?.commentError}
                 <p class="text-sm text-destructive">{form.commentError}</p>
               {/if}
-              <div class="flex justify-end">
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  {#if activeCommentTab === 'internal'}
+                    <Lock class="h-3 w-3" />
+                    {m.cfp_discussion_visibility_internal()}
+                  {:else}
+                    <Eye class="h-3 w-3" />
+                    {m.cfp_discussion_visibility_public()}
+                  {/if}
+                </span>
                 <Button
                   type="submit"
                   size="sm"
                   disabled={isSubmittingComment || !newComment.trim()}
                 >
                   <Send class="mr-2 h-4 w-4" />
-                  {m.cfp_comments_post()}
+                  {m.cfp_discussion_send()}
                 </Button>
               </div>
             </form>
           {/if}
 
-          <!-- Comments List -->
-          {#if data.comments.length === 0}
-            <p class="py-8 text-center text-sm text-muted-foreground">
-              {m.cfp_comments_no_comments()}
-            </p>
-          {:else}
-            <div class="space-y-4 pt-4">
-              {#each data.comments as comment}
-                <div class="flex gap-3">
-                  <div
-                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium"
-                  >
-                    {comment.user?.name?.[0] || '?'}
-                  </div>
-                  <div class="flex-1">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium">
-                          {comment.user?.name || 'Unknown'}
-                        </span>
-                        <span class="text-xs text-muted-foreground">
-                          {formatShortDate(comment.createdAt)}
-                        </span>
-                      </div>
-                      {#if comment.userId === data.currentUserId}
-                        <form method="POST" action="?/deleteComment" use:enhance>
-                          <input type="hidden" name="commentId" value={comment.id} />
-                          <Button
-                            type="submit"
-                            variant="ghost"
-                            size="icon"
-                            class="h-6 w-6 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 class="h-3 w-3" />
-                          </Button>
-                        </form>
-                      {/if}
+          <!-- Internal Comments -->
+          {#if activeCommentTab === 'internal'}
+            {#if data.internalComments.length === 0}
+              <p class="py-8 text-center text-sm text-muted-foreground">
+                {m.cfp_discussion_no_messages()}
+              </p>
+            {:else}
+              <div class="space-y-4 pt-4">
+                {#each data.internalComments as comment}
+                  <div class="flex gap-3">
+                    <div
+                      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium"
+                    >
+                      {comment.user?.name?.[0] || '?'}
                     </div>
-                    <p class="mt-1 whitespace-pre-wrap text-sm">{comment.content}</p>
+                    <div class="flex-1">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-medium">
+                            {comment.user?.name || 'Unknown'}
+                          </span>
+                          <span class="text-xs text-muted-foreground">
+                            {formatShortDate(comment.createdAt)}
+                          </span>
+                        </div>
+                        {#if comment.userId === data.currentUserId}
+                          <form method="POST" action="?/deleteComment" use:enhance>
+                            <input type="hidden" name="commentId" value={comment.id} />
+                            <Button
+                              type="submit"
+                              variant="ghost"
+                              size="icon"
+                              class="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 class="h-3 w-3" />
+                            </Button>
+                          </form>
+                        {/if}
+                      </div>
+                      <p class="mt-1 whitespace-pre-wrap text-sm">{comment.content}</p>
+                    </div>
                   </div>
-                </div>
-              {/each}
-            </div>
+                {/each}
+              </div>
+            {/if}
+          {/if}
+
+          <!-- Public Comments (Discussion with Speaker) -->
+          {#if activeCommentTab === 'public'}
+            {#if data.publicComments.length === 0}
+              <p class="py-8 text-center text-sm text-muted-foreground">
+                {m.cfp_discussion_no_messages()}
+              </p>
+            {:else}
+              <div class="space-y-4 pt-4">
+                {#each data.publicComments as comment}
+                  <div class="flex gap-3">
+                    <div
+                      class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium"
+                    >
+                      {comment.authorName?.[0] || comment.user?.name?.[0] || '?'}
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-medium">
+                            {comment.authorName || comment.user?.name || 'Unknown'}
+                          </span>
+                          <span class="text-xs text-muted-foreground">
+                            {formatShortDate(comment.createdAt)}
+                          </span>
+                        </div>
+                        {#if comment.userId === data.currentUserId}
+                          <form method="POST" action="?/deleteComment" use:enhance>
+                            <input type="hidden" name="commentId" value={comment.id} />
+                            <Button
+                              type="submit"
+                              variant="ghost"
+                              size="icon"
+                              class="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 class="h-3 w-3" />
+                            </Button>
+                          </form>
+                        {/if}
+                      </div>
+                      <p class="mt-1 whitespace-pre-wrap text-sm">{comment.content}</p>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            {/if}
           {/if}
         </Card.Content>
       </Card.Root>

@@ -1,4 +1,8 @@
-import { createSpeakerRepository, createTalkRepository } from '$lib/features/cfp/infra'
+import {
+  createCommentRepository,
+  createSpeakerRepository,
+  createTalkRepository
+} from '$lib/features/cfp/infra'
 import { createGetSpeakerSubmissionsUseCase } from '$lib/features/cfp/usecases'
 import { calculateFeedbackSummary } from '$lib/features/feedback/domain/session-feedback'
 import { sendCfpNotification } from '$lib/server/cfp-notifications'
@@ -25,6 +29,14 @@ interface TalkFeedback {
   comments: Array<{ comment: string; rating: number | null; createdAt: string }>
 }
 
+interface DiscussionMessage {
+  id: string
+  content: string
+  authorName: string
+  createdAt: Date
+  isOwn: boolean
+}
+
 interface TalkWithCoSpeakers {
   id: string
   title: string
@@ -35,6 +47,7 @@ interface TalkWithCoSpeakers {
   coSpeakerInvitations: CoSpeakerInvitation[]
   coSpeakers: Array<{ id: string; firstName: string; lastName: string; email: string }>
   feedback: TalkFeedback | null
+  discussion: DiscussionMessage[]
 }
 
 async function getSpeakerFromAuth(
@@ -180,6 +193,22 @@ export const load: PageServerLoad = async ({ parent, url, locals, cookies, param
         // Feedback loading is non-critical
       }
 
+      // Load public discussion comments
+      const commentRepo = createCommentRepository(locals.pb)
+      let discussion: DiscussionMessage[] = []
+      try {
+        const publicComments = await commentRepo.findPublicByTalk(talk.id)
+        discussion = publicComments.map((c) => ({
+          id: c.id,
+          content: c.content,
+          authorName: c.authorName || 'Reviewer',
+          createdAt: c.createdAt,
+          isOwn: c.userId === speakerId
+        }))
+      } catch {
+        // Discussion loading is non-critical
+      }
+
       return {
         ...talk,
         coSpeakerInvitations,
@@ -191,7 +220,8 @@ export const load: PageServerLoad = async ({ parent, url, locals, cookies, param
             lastName: s.lastName,
             email: s.email
           })),
-        feedback
+        feedback,
+        discussion
       }
     })
   )
@@ -611,6 +641,66 @@ export const actions: Actions = {
     return {
       accessRequested: true,
       message: 'If you have submissions with this email, you will receive an access link shortly.'
+    }
+  },
+
+  addMessage: async ({ request, locals, url, params, cookies }) => {
+    const formData = await request.formData()
+    const talkId = formData.get('talkId') as string
+    const content = formData.get('content') as string
+
+    if (!talkId || !content || content.trim().length === 0) {
+      return fail(400, { messageError: 'Message cannot be empty' })
+    }
+
+    if (content.length > 5000) {
+      return fail(400, { messageError: 'Message is too long (max 5000 characters)' })
+    }
+
+    const edition = await locals.pb
+      .collection('editions')
+      .getFirstListItem(`slug="${params.editionSlug}"`)
+
+    const { speaker, error } = await validateTokenAndGetSpeaker(
+      locals,
+      url,
+      edition.id,
+      cookies,
+      params.editionSlug
+    )
+    if (error || !speaker) {
+      return fail(401, { error: error || 'Authentication required' })
+    }
+
+    // Verify the talk belongs to this speaker
+    const talkRepository = createTalkRepository(locals.pb)
+    const speakerRepository = createSpeakerRepository(locals.pb)
+
+    const talk = await talkRepository.findById(talkId)
+    if (!talk) {
+      return fail(404, { error: 'Talk not found' })
+    }
+
+    const fullSpeaker = await speakerRepository.findById(speaker.id)
+    if (!fullSpeaker || !talk.speakerIds.includes(fullSpeaker.id)) {
+      return fail(403, { error: 'You are not authorized to post on this talk' })
+    }
+
+    const commentRepo = createCommentRepository(locals.pb)
+
+    try {
+      await commentRepo.create({
+        talkId,
+        userId: fullSpeaker.id,
+        content: content.trim(),
+        isInternal: false,
+        visibility: 'public',
+        authorName: `${fullSpeaker.firstName} ${fullSpeaker.lastName}`
+      })
+      return { messageSuccess: true }
+    } catch (err) {
+      console.error('Failed to add message:', err)
+      return fail(500, { messageError: 'Failed to send message. Please try again.' })
     }
   }
 }
