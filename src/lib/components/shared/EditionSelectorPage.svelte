@@ -4,7 +4,7 @@ import { formatDate } from '$lib/components/shared/utils'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
 import { ArrowRight, Calendar, CalendarDays, Eye, EyeOff, Settings } from 'lucide-svelte'
-import type { Component } from 'svelte'
+import type { Component, ComponentType } from 'svelte'
 
 interface Edition {
   id: string
@@ -21,7 +21,8 @@ interface Props {
   title: string
   description: string
   manageLabel: string
-  emptyIcon?: Component<Record<string, unknown>>
+  // biome-ignore lint/suspicious/noExplicitAny: Lucide icons use specific props types incompatible with Component<{}>
+  emptyIcon?: Component<any> | ComponentType
   emptyTitle: string
   emptyDescription: string
   allArchivedText: string
@@ -31,7 +32,8 @@ interface Props {
   settingsPath?: string
   settingsTitle?: string
   manageSuffix?: string
-  manageIcon?: Component<Record<string, unknown>>
+  // biome-ignore lint/suspicious/noExplicitAny: Lucide icons use specific props types incompatible with Component<{}>
+  manageIcon?: Component<any> | ComponentType
   showSettingsIcon?: boolean
   linkStatusBadge?: boolean
 }

@@ -40,7 +40,15 @@ const {
   form
 }: {
   data: PageData
-  form: { error?: string; action?: string; success?: boolean; [key: string]: unknown } | null
+  form: {
+    error?: string
+    errors?: Record<string, string>
+    action?: string
+    success?: boolean
+    totpUri?: string
+    backupCodes?: string[]
+    [key: string]: unknown
+  } | null
 } = $props()
 
 // Tab definitions
@@ -67,13 +75,13 @@ let newPassword = $state('')
 let isRevokingSession = $state<string | null>(null)
 let isRevokingAll = $state(false)
 let isDeletingAccount = $state(false)
-let qrCanvas: HTMLCanvasElement
+let qrCanvas = $state<HTMLCanvasElement | null>(null)
 
 // Generate QR code client-side when TOTP URI is available
 $effect(() => {
   if (form?.totpUri && qrCanvas) {
     import('qrcode').then((QRCode) => {
-      QRCode.toCanvas(qrCanvas, form.totpUri, { width: 192, margin: 2 })
+      QRCode.toCanvas(qrCanvas, form.totpUri as string, { width: 192, margin: 2 })
     })
   }
 })
@@ -483,7 +491,7 @@ const otherSessions = $derived(data.sessions.filter((s) => s.id !== data.current
                       <Label for="totp-code">{m.profile_2fa_verify_code()}</Label>
                       <Input id="totp-code" name="code" type="text" inputmode="numeric" maxlength={6} placeholder="000000" autocomplete="one-time-code" required class="text-center text-lg tracking-widest" />
                     </div>
-                    {#if form?.error && form?.action === 'enable2fa'}
+                    {#if form?.error && (form?.action as string) === 'enable2fa'}
                       <p class="text-sm text-destructive">{form.error}</p>
                     {/if}
                     <Button type="submit">{m.profile_2fa_enable_button()}</Button>
