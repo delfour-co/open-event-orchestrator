@@ -15,6 +15,7 @@ import {
   Building2,
   Calendar,
   CalendarDays,
+  Copy,
   ExternalLink,
   Eye,
   EyeOff,
@@ -38,6 +39,17 @@ let showNewEdition = $state<string | null>(null)
 let selectedOrgId = $state<string>($page.url.searchParams.get('org') || '')
 let showArchived = $state(false)
 let hideEmptyEvents = $state(false)
+let showDuplicateDialog = $state<string | null>(null)
+let duplicateEditionSource = $state<{ name: string; year: number; slug: string } | null>(null)
+
+function startDuplicate(edition: { id: string; name: string; year: number; slug: string }): void {
+  showDuplicateDialog = edition.id
+  duplicateEditionSource = {
+    name: edition.name.replace(String(edition.year), String(edition.year + 1)),
+    year: edition.year + 1,
+    slug: edition.slug.replace(String(edition.year), String(edition.year + 1))
+  }
+}
 
 // Filter events by selected organization
 const filteredEvents = $derived(
@@ -348,6 +360,9 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
                         <a href="/admin/editions/{edition.slug}/settings" title="Change edition status">
                           <StatusBadge status={edition.status} size="sm" />
                         </a>
+                        <Button variant="ghost" size="icon" class="h-8 w-8" title={m.admin_events_duplicate_edition()} onclick={() => startDuplicate(edition)}>
+                          <Copy class="h-4 w-4" />
+                        </Button>
                         <a href="/admin/app/{edition.slug}">
                           <Button variant="ghost" size="icon" class="h-8 w-8" title={m.admin_events_attendee_app()}>
                             <Smartphone class="h-4 w-4" />
@@ -511,3 +526,59 @@ const selectedOrg = $derived(data.organizations.find((o) => o.id === selectedOrg
     </div>
   {/if}
 </div>
+
+{#if showDuplicateDialog && duplicateEditionSource}
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <Card.Root class="w-full max-w-md">
+      <Card.Header>
+        <Card.Title>{m.admin_events_duplicate_title()}</Card.Title>
+        <Card.Description>{m.admin_events_duplicate_description()}</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        <form
+          method="POST"
+          action="?/duplicateEdition"
+          use:enhance={() => {
+            return async ({ update }) => {
+              await update()
+              showDuplicateDialog = null
+              duplicateEditionSource = null
+              await invalidateAll()
+            }
+          }}
+          class="space-y-4"
+        >
+          <input type="hidden" name="sourceEditionId" value={showDuplicateDialog} />
+          <div class="space-y-2">
+            <Label>{m.admin_events_duplicate_new_name()}</Label>
+            <Input name="name" value={duplicateEditionSource.name} required />
+          </div>
+          <div class="space-y-2">
+            <Label>Slug</Label>
+            <Input name="slug" value={duplicateEditionSource.slug} required />
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div class="space-y-2">
+              <Label>{m.admin_events_duplicate_new_year()}</Label>
+              <Input name="year" type="number" value={String(duplicateEditionSource.year)} required />
+            </div>
+            <div class="space-y-2">
+              <Label>{m.admin_events_duplicate_start_date()}</Label>
+              <Input name="startDate" type="date" required />
+            </div>
+            <div class="space-y-2">
+              <Label>{m.admin_events_duplicate_end_date()}</Label>
+              <Input name="endDate" type="date" required />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <Button variant="ghost" type="button" onclick={() => (showDuplicateDialog = null)}>
+              {m.action_cancel()}
+            </Button>
+            <Button type="submit">{m.admin_events_duplicate_edition()}</Button>
+          </div>
+        </form>
+      </Card.Content>
+    </Card.Root>
+  </div>
+{/if}

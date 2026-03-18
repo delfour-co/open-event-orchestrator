@@ -6,6 +6,7 @@ export { default as ImageCropUpload } from './ImageCropUpload.svelte'
 export { default as Pagination } from './Pagination.svelte'
 export { default as PasswordStrengthIndicator } from './PasswordStrengthIndicator.svelte'
 export { default as StatusBadge } from './StatusBadge.svelte'
+export { default as UrlCopyBar } from './UrlCopyBar.svelte'
 
 // Available but not yet adopted — import directly from the file if needed:
 // - EditionCard.svelte

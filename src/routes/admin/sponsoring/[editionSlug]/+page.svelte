@@ -1,6 +1,6 @@
 <script lang="ts">
 import { enhance } from '$app/forms'
-import { AdminSubNav, formatDate } from '$lib/components/shared'
+import { AdminSubNav, UrlCopyBar, formatDate } from '$lib/components/shared'
 import { Badge } from '$lib/components/ui/badge'
 import { Button } from '$lib/components/ui/button'
 import * as Card from '$lib/components/ui/card'
@@ -47,25 +47,7 @@ let editingSponsor = $state<(typeof data.sponsors)[0] | null>(null)
 let selectedEditionSponsor = $state<(typeof data.editionSponsors)[0] | null>(null)
 let isSubmitting = $state(false)
 let copiedLink = $state<string | null>(null)
-let copiedContact = $state(false)
-let copiedPackages = $state(false)
 let generatedPortalUrl = $state<string | null>(null)
-
-function copyContactUrl() {
-  navigator.clipboard.writeText(`${window.location.origin}/sponsor/${data.edition.slug}/contact`)
-  copiedContact = true
-  setTimeout(() => {
-    copiedContact = false
-  }, 2000)
-}
-
-function copyPackagesUrl() {
-  navigator.clipboard.writeText(`${window.location.origin}/sponsor/${data.edition.slug}/packages`)
-  copiedPackages = true
-  setTimeout(() => {
-    copiedPackages = false
-  }, 2000)
-}
 
 const currency = $derived(data.packages[0]?.currency || 'EUR')
 
@@ -160,40 +142,8 @@ $effect(() => {
 			</div>
 		</div>
 		<div class="flex flex-wrap items-center gap-2">
-			<!-- Contact Form URL -->
-			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-				<span class="text-xs text-muted-foreground">Contact:</span>
-				<code class="text-xs">/sponsor/{data.edition.slug}/contact</code>
-				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyContactUrl}>
-					{#if copiedContact}
-						<Check class="h-3 w-3 text-green-500" />
-					{:else}
-						<Copy class="h-3 w-3" />
-					{/if}
-				</Button>
-				<a href="/sponsor/{data.edition.slug}/contact" target="_blank" rel="noopener noreferrer">
-					<Button variant="ghost" size="icon" class="h-6 w-6">
-						<ExternalLink class="h-3 w-3" />
-					</Button>
-				</a>
-			</div>
-			<!-- Packages URL -->
-			<div class="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1">
-				<span class="text-xs text-muted-foreground">Packages:</span>
-				<code class="text-xs">/sponsor/{data.edition.slug}/packages</code>
-				<Button variant="ghost" size="icon" class="h-6 w-6" onclick={copyPackagesUrl}>
-					{#if copiedPackages}
-						<Check class="h-3 w-3 text-green-500" />
-					{:else}
-						<Copy class="h-3 w-3" />
-					{/if}
-				</Button>
-				<a href="/sponsor/{data.edition.slug}/packages" target="_blank" rel="noopener noreferrer">
-					<Button variant="ghost" size="icon" class="h-6 w-6">
-						<ExternalLink class="h-3 w-3" />
-					</Button>
-				</a>
-			</div>
+			<UrlCopyBar label="Contact" path="/sponsor/{data.edition.slug}/contact" />
+			<UrlCopyBar label="Packages" path="/sponsor/{data.edition.slug}/packages" />
 			<!-- Actions -->
 			<Button variant="outline" onclick={() => { editingSponsor = null; showSponsorForm = true }}>
 				<Building2 class="mr-2 h-4 w-4" />
