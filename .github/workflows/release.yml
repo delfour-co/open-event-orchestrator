@@ -180,6 +180,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -276,3 +278,26 @@ jobs:
             release/*.zip
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+
+  # ==========================================================================
+  # Deploy to demo environment via infra repo
+  # ==========================================================================
+  deploy:
+    name: Deploy to Demo
+    needs: [release]
+    if: ${{ !contains(github.ref, '-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger deploy on infra repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_DEPLOY_TOKEN }}
+          repository: delfour-co/my-infra
+          event-type: deploy-app
+          client-payload: |
+            {
+              "app": "oeo",
+              "version": "${{ needs.release.outputs.version || github.ref_name }}",
+              "environment": "demo"
+            }
